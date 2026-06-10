@@ -17,6 +17,7 @@ import PatientHeader from "../../components/PatientHeader/PatientHeader";
 import LabPanel from "../../components/LabPanel/LabPanel";
 import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
 import NarrativePanel from "../../components/NarrativePanel/NarrativePanel";
+import QAConversation from "../../components/QAConversation/QAConversation";
 
 export default function PatientDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +28,8 @@ export default function PatientDetailPage(): JSX.Element {
   const [obsNextCursor, setObsNextCursor] = useState<string | null>(null);
   const [medications, setMedications] = useState<MedicationItem[]>([]);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "narrative">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "narrative" | "qa">("overview");
+  const [qaLanguage, setQaLanguage] = useState<"en" | "ar">("en");
 
   const [isLoadingPatient, setIsLoadingPatient] = useState(true);
   const [isLoadingObs, setIsLoadingObs] = useState(true);
@@ -142,26 +144,19 @@ export default function PatientDetailPage(): JSX.Element {
 
         {/* Tab navigation */}
         <div className="border-b border-slate-700 flex gap-4">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`pb-2 text-sm transition-colors ${
-              activeTab === "overview"
-                ? "text-white border-b-2 border-white"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("narrative")}
-            className={`pb-2 text-sm transition-colors ${
-              activeTab === "narrative"
-                ? "text-white border-b-2 border-white"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Narrative
-          </button>
+          {(["overview", "narrative", "qa"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-2 text-sm capitalize transition-colors ${
+                activeTab === tab
+                  ? "text-white border-b-2 border-white"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              {tab === "qa" ? "Q&A" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
         </div>
 
         {activeTab === "overview" && (
@@ -187,6 +182,18 @@ export default function PatientDetailPage(): JSX.Element {
             patientId={patient.id}
             preferredLanguage={patient.preferred_language ?? "en"}
           />
+        )}
+
+        {activeTab === "qa" && (
+          <div className="bg-white rounded-xl h-[600px] flex flex-col overflow-hidden">
+            <QAConversation
+              patientId={patient.id}
+              language={qaLanguage}
+              onLanguageToggle={() =>
+                setQaLanguage((l) => (l === "en" ? "ar" : "en"))
+              }
+            />
+          </div>
         )}
       </div>
     </div>
