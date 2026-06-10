@@ -1,0 +1,41 @@
+syntax = "proto3";
+package narrative.v1;
+
+service NarrativeService {
+  rpc GenerateNarrative (GenerateNarrativeRequest) returns (GenerateNarrativeResponse);
+}
+
+message GenerateNarrativeRequest {
+  string patient_id = 1;
+  string language = 2;    // "en" | "ar"
+  string scope = 3;       // "full" | "current_encounter" | "last_30_days"
+  bool force_regenerate = 4;
+}
+
+message ProvenanceEntry {
+  int32 sentence_index = 1;
+  int32 char_start = 2;
+  int32 char_end = 3;
+  repeated SourceRef sources = 4;
+}
+
+message SourceRef {
+  string type = 1;
+  string id = 2;
+  string field = 3;
+}
+
+message GenerateNarrativeResponse {
+  string narrative_id = 1;
+  string patient_id = 2;
+  string text = 3;
+  string fallback_message = 4;
+  repeated ProvenanceEntry provenance = 5;
+  string model_version = 6;
+  string prompt_template_version = 7;
+  string generated_at = 8;
+  string language = 9;
+  string scope = 10;
+  bool blocklist_triggered = 11;
+  int32 blocklist_retries = 12;
+}
