@@ -1,0 +1,6 @@
+packages:
+  - "apps/web"
+  - "apps/core"
+  - "packages/shared-types"
+  - "packages/audit"
+  - "packages/fhir-client"

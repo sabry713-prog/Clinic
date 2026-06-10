@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html[lang="ar"] {
+  direction: rtl;
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+
+html[lang="en"] {
+  direction: ltr;
+  font-family: system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}

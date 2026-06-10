@@ -1,0 +1,16 @@
+# Global owner — CTO must approve all PRs
+* @cto
+
+# Prompt templates, classifier, blocklist — CTO-only per CLAUDE.md §6
+docs/prompts/ @cto
+docs/classifier/02-rules.md @cto
+apps/core/src/auth/ @cto
+packages/blocklist/ @cto
+packages/classifier/ @cto
+
+# Migrations and audit schema
+apps/core/migrations/ @cto
+packages/audit/ @cto
+
+# CI/CD pipeline
+.github/ @cto

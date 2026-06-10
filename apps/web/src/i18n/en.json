@@ -1,0 +1,20 @@
+{
+  "login": {
+    "title": "Clinical Copilot",
+    "subtitle": "Healthcare AI Platform",
+    "description": "Clinical information support system for licensed healthcare professionals",
+    "button": "Sign in with Hospital Identity",
+    "loading": "Redirecting...",
+    "error": "Login failed. Please try again.",
+    "language_toggle": "عربي"
+  },
+  "home": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "patients_placeholder": "Patient list will be available in the next release"
+  },
+  "common": {
+    "logout": "Sign Out",
+    "loading": "Loading..."
+  }
+}
