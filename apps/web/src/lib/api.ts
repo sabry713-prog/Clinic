@@ -180,6 +180,96 @@ export interface QAResponse {
   readonly blocklist_triggered: boolean;
 }
 
+// ─── Handoff types ─────────────────────────────────────────────────────────
+
+export interface HandoffSection {
+  readonly identity_and_admission: readonly string[];
+  readonly documented_today: readonly string[];
+  readonly current_medications: readonly string[];
+  readonly recent_vitals: readonly string[];
+  readonly recent_labs: readonly string[];
+  readonly pending_orders: readonly string[];
+}
+
+export interface HandoffProvenance {
+  readonly section: string;
+  readonly row_index: number;
+  readonly source_type: string;
+  readonly source_id: string;
+  readonly field: string;
+}
+
+export interface HandoffOutput {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly ward_id: string | null;
+  readonly generated_at: string;
+  readonly language: string;
+  readonly scope: string;
+  readonly text: string;
+  readonly sections: HandoffSection;
+  readonly provenance: readonly HandoffProvenance[];
+  readonly disclaimer: string;
+}
+
+export interface WardHandoffOutput {
+  readonly ward_id: string;
+  readonly scope: string;
+  readonly language: string;
+  readonly generated_at: string;
+  readonly patient_count: number;
+  readonly handoffs: readonly HandoffOutput[];
+}
+
+// ─── Audit types ────────────────────────────────────────────────────────────
+
+export interface AuditActor {
+  readonly id: string | null;
+  readonly display_name: string | null;
+  readonly role: string | null;
+}
+
+export interface AuditEventItem {
+  readonly id: string;
+  readonly ts: string;
+  readonly actor: AuditActor;
+  readonly action: string;
+  readonly target_type: string | null;
+  readonly target_id: string | null;
+  readonly outcome: string;
+  readonly metadata_json: Record<string, unknown>;
+  readonly request_id: string | null;
+}
+
+export interface AuditVerifyResult {
+  readonly passed: boolean;
+  readonly events_verified: number;
+  readonly violations: readonly { event_id: string; reason: string }[];
+  readonly started_at: string;
+  readonly finished_at: string;
+}
+
+// ─── DSR types ──────────────────────────────────────────────────────────────
+
+export interface DsrRequest {
+  readonly id: string;
+  readonly type: "access" | "erase";
+  readonly status: string;
+  readonly due_at: string | null;
+  readonly requested_at: string;
+}
+
+// ─── Admin user types ───────────────────────────────────────────────────────
+
+export interface AdminUser {
+  readonly id: string;
+  readonly display_name: string | null;
+  readonly email: string | null;
+  readonly roles: readonly string[];
+  readonly disabled_at: string | null;
+  readonly created_at: string;
+}
+
 export interface QAInteractionSummary {
   readonly id: string;
   readonly conversation_id: string | null;
@@ -313,6 +403,108 @@ export const api = {
 
     deleteConversation: (conversationId: string) =>
       request<void>(`/api/v1/conversations/${conversationId}`, { method: "DELETE" }),
+  },
+
+  handoff: {
+    generatePatient: (
+      patientId: string,
+      params: { scope?: string; language?: string },
+    ) =>
+      request<HandoffOutput>(`/api/v1/patients/${patientId}/handoff`, {
+        method: "POST",
+        body: JSON.stringify(params),
+      }),
+
+    generateWard: (
+      wardId: string,
+      params: { scope?: string; language?: string },
+    ) =>
+      request<WardHandoffOutput>(`/api/v1/wards/${wardId}/handoff`, {
+        method: "POST",
+        body: JSON.stringify(params),
+      }),
+  },
+
+  admin: {
+    listUsers: (params?: { cursor?: string; limit?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.cursor) qs.set("cursor", params.cursor);
+      if (params?.limit !== undefined) qs.set("limit", String(params.limit));
+      const query = qs.toString();
+      return request<{ data: AdminUser[]; pagination: { next_cursor: string | null; has_more: boolean } }>(
+        `/api/v1/admin/users${query ? `?${query}` : ""}`,
+      );
+    },
+
+    createUser: (body: {
+      external_subject: string;
+      display_name: string;
+      email: string;
+      preferred_language?: "ar" | "en";
+      roles: string[];
+    }) =>
+      request<{ id: string }>("/api/v1/admin/users", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+
+    updateUserRoles: (id: string, roles: string[]) =>
+      request<{ message: string }>(`/api/v1/admin/users/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ roles }),
+      }),
+
+    disableUser: (id: string) =>
+      request<{ message: string }>(`/api/v1/admin/users/${id}`, {
+        method: "DELETE",
+      }),
+
+    listAudit: (filters?: {
+      actor_id?: string;
+      target_type?: string;
+      target_id?: string;
+      action?: string;
+      since?: string;
+      until?: string;
+      outcome?: string;
+      cursor?: string;
+      limit?: number;
+    }) => {
+      const qs = new URLSearchParams();
+      if (filters?.actor_id) qs.set("actor_id", filters.actor_id);
+      if (filters?.target_type) qs.set("target_type", filters.target_type);
+      if (filters?.target_id) qs.set("target_id", filters.target_id);
+      if (filters?.action) qs.set("action", filters.action);
+      if (filters?.since) qs.set("since", filters.since);
+      if (filters?.until) qs.set("until", filters.until);
+      if (filters?.outcome) qs.set("outcome", filters.outcome);
+      if (filters?.cursor) qs.set("cursor", filters.cursor);
+      if (filters?.limit !== undefined) qs.set("limit", String(filters.limit));
+      const query = qs.toString();
+      return request<{ data: AuditEventItem[]; pagination: { next_cursor: string | null; has_more: boolean } }>(
+        `/api/v1/admin/audit${query ? `?${query}` : ""}`,
+      );
+    },
+
+    verifyAudit: () =>
+      request<AuditVerifyResult>("/api/v1/admin/audit/verify", { method: "POST" }),
+  },
+
+  dsr: {
+    access: (subjectId: string, reason: string) =>
+      request<DsrRequest>("/api/v1/dsr/access", {
+        method: "POST",
+        body: JSON.stringify({ subject_id: subjectId, reason }),
+      }),
+
+    erase: (subjectId: string, reason: string) =>
+      request<DsrRequest & { note: string }>("/api/v1/dsr/erase", {
+        method: "POST",
+        body: JSON.stringify({ subject_id: subjectId, reason }),
+      }),
+
+    getStatus: (id: string) =>
+      request<DsrRequest>(`/api/v1/dsr/${id}`),
   },
 
   auth: {

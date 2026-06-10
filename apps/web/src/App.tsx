@@ -8,6 +8,8 @@ import { useTranslation } from "react-i18next";
 const PatientListPage = lazy(() => import("./pages/PatientListPage/PatientListPage"));
 const PatientDetailPage = lazy(() => import("./pages/PatientDetailPage/PatientDetailPage"));
 const QuarantinePage = lazy(() => import("./pages/admin/QuarantinePage/QuarantinePage"));
+const AuditPage = lazy(() => import("./pages/admin/AuditPage/AuditPage"));
+const UserManagementPage = lazy(() => import("./pages/admin/UserManagementPage/UserManagementPage"));
 
 function AppRoutes(): JSX.Element {
   const { user, loading } = useAuth();
@@ -42,6 +44,14 @@ function AppRoutes(): JSX.Element {
       <Route
         path="/admin/quarantine"
         element={user != null ? <QuarantinePage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/admin/audit"
+        element={user != null ? <AuditPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/admin/users"
+        element={user != null ? <UserManagementPage /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

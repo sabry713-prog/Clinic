@@ -17,6 +17,40 @@
     "logout": "تسجيل الخروج",
     "loading": "جارٍ التحميل..."
   },
+  "handoff": {
+    "title": "تقرير التسليم",
+    "generated_at": "تم الإنشاء في",
+    "scope": "النطاق",
+    "language": "اللغة",
+    "copy": "نسخ",
+    "print": "طباعة",
+    "section": {
+      "identity": "الهوية والقبول",
+      "documented_today": "موثق اليوم",
+      "medications": "الأدوية الحالية",
+      "vitals": "العلامات الحيوية الأخيرة",
+      "labs": "نتائج المختبر الأخيرة",
+      "orders": "الطلبات المعلقة"
+    }
+  },
+  "audit": {
+    "title": "سجل المراجعة",
+    "filters": "فلاتر",
+    "search": "بحث",
+    "verify": "التحقق من السلامة",
+    "verifying": "جارٍ التحقق...",
+    "passed": "نجح",
+    "failed": "فشل",
+    "events_verified": "الأحداث المتحقق منها"
+  },
+  "admin": {
+    "users_title": "إدارة المستخدمين",
+    "edit_roles": "تعديل الأدوار",
+    "disable": "تعطيل",
+    "confirm_disable": "تأكيد التعطيل",
+    "active": "نشط",
+    "disabled": "معطل"
+  },
   "qa": {
     "title": "الأسئلة والأجوبة الواقعية",
     "placeholder": "اطرح سؤالاً واقعياً عن سجل هذا المريض…",

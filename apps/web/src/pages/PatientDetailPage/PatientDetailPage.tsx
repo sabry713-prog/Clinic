@@ -12,12 +12,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api, type PatientDetail, type ObservationItem, type MedicationItem, ApiError } from "../../lib/api";
+import { api, type PatientDetail, type ObservationItem, type MedicationItem, type HandoffOutput, ApiError } from "../../lib/api";
 import PatientHeader from "../../components/PatientHeader/PatientHeader";
 import LabPanel from "../../components/LabPanel/LabPanel";
 import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
 import NarrativePanel from "../../components/NarrativePanel/NarrativePanel";
 import QAConversation from "../../components/QAConversation/QAConversation";
+import HandoffView from "../../components/HandoffView/HandoffView";
 
 export default function PatientDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -28,8 +29,10 @@ export default function PatientDetailPage(): JSX.Element {
   const [obsNextCursor, setObsNextCursor] = useState<string | null>(null);
   const [medications, setMedications] = useState<MedicationItem[]>([]);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "narrative" | "qa">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "narrative" | "qa" | "handoff">("overview");
   const [qaLanguage, setQaLanguage] = useState<"en" | "ar">("en");
+  const [handoff, setHandoff] = useState<HandoffOutput | null>(null);
+  const [isLoadingHandoff, setIsLoadingHandoff] = useState(false);
 
   const [isLoadingPatient, setIsLoadingPatient] = useState(true);
   const [isLoadingObs, setIsLoadingObs] = useState(true);
@@ -144,10 +147,20 @@ export default function PatientDetailPage(): JSX.Element {
 
         {/* Tab navigation */}
         <div className="border-b border-slate-700 flex gap-4">
-          {(["overview", "narrative", "qa"] as const).map((tab) => (
+          {(["overview", "narrative", "qa", "handoff"] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                if (tab === "handoff" && !handoff && !isLoadingHandoff) {
+                  setIsLoadingHandoff(true);
+                  api.handoff
+                    .generatePatient(patientId, { scope: "current_shift", language: patient.preferred_language ?? "en" })
+                    .then((data) => setHandoff(data))
+                    .catch(() => { /* handled silently */ })
+                    .finally(() => setIsLoadingHandoff(false));
+                }
+              }}
               className={`pb-2 text-sm capitalize transition-colors ${
                 activeTab === tab
                   ? "text-white border-b-2 border-white"
@@ -194,6 +207,30 @@ export default function PatientDetailPage(): JSX.Element {
               }
             />
           </div>
+        )}
+
+        {activeTab === "handoff" && (
+          handoff
+            ? <HandoffView handoff={handoff} isLoading={isLoadingHandoff} />
+            : <HandoffView handoff={{
+                id: "",
+                patient_id: patientId,
+                ward_id: null,
+                generated_at: new Date().toISOString(),
+                language: "en",
+                scope: "current_shift",
+                text: "",
+                sections: {
+                  identity_and_admission: [],
+                  documented_today: [],
+                  current_medications: [],
+                  recent_vitals: [],
+                  recent_labs: [],
+                  pending_orders: [],
+                },
+                provenance: [],
+                disclaimer: "Reproduces documented information from the patient record. For clinician reference only. Not a clinical assessment.",
+              }} isLoading={isLoadingHandoff} />
         )}
       </div>
     </div>
