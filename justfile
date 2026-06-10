@@ -53,7 +53,87 @@ typecheck:
 build:
     pnpm run build
 
-# Smoke test
+# Install all dependencies
+install:
+    pnpm install
+    cd apps/narrative && uv sync
+    cd apps/qa && uv sync
+    cd packages/classifier && uv sync
+    cd packages/retrieval && uv sync
+    cd packages/blocklist && uv sync
+
+# ─── Security ────────────────────────────────────────────────────────────────
+
+# Run all security checks locally
+test-security: npm-audit pip-audit semgrep
+
+npm-audit:
+    pnpm audit --audit-level=high
+
+pip-audit:
+    #!/usr/bin/env bash
+    set -e
+    for dir in apps/narrative apps/qa packages/classifier packages/blocklist packages/retrieval; do
+      echo "=== pip-audit: $dir ==="
+      (cd "$dir" && uv run pip-audit --require-hashes=0 --strict)
+    done
+
+semgrep:
+    semgrep --config=auto --severity=ERROR --error .
+
+# ─── Load tests ──────────────────────────────────────────────────────────────
+
+# Run a single load test (default: patient-view)
+test-load service="patient-view":
+    k6 run tests/load/{{service}}.js
+
+# Run all load tests sequentially
+test-load-all:
+    just test-load patient-view
+    just test-load qa-refused
+    just test-load qa-allowed
+    just test-load narrative
+    just test-load ward-handoff
+
+# ─── Classifier evaluation ───────────────────────────────────────────────────
+
+# Evaluate classifier against holdout corpus
+eval-classifier lang="en":
+    cd packages/classifier && uv run python -m classifier.eval --corpus holdout --lang {{lang}}
+
+# Evaluate classifier against stress corpus
+eval-classifier-stress:
+    cd packages/classifier && uv run python -m classifier.eval --corpus stress --lang en
+
+# ─── Database backup ─────────────────────────────────────────────────────────
+
+# Run a manual database backup
+backup-db:
+    ./infra/scripts/backup-db.sh
+
+# ─── Helm ────────────────────────────────────────────────────────────────────
+
+# Preview Helm diff against a live environment
+helm-diff env="dev":
+    helm diff upgrade clinical-copilot infra/helm -f infra/helm/values-{{env}}.yaml
+
+# Deploy / upgrade Helm release
+helm-deploy env="dev":
+    helm upgrade --install clinical-copilot infra/helm \
+        -f infra/helm/values-{{env}}.yaml \
+        --namespace clinical-copilot-{{env}} \
+        --create-namespace
+
+# ─── WORM audit export ───────────────────────────────────────────────────────
+
+# Manually trigger yesterday's WORM audit export
+audit-worm-export:
+    curl -X POST http://localhost:4000/api/v1/admin/audit/export-worm \
+      -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# ─── Smoke test (updated) ─────────────────────────────────────────────────────
+
+# Full smoke test including metrics endpoints
 smoke:
     #!/usr/bin/env bash
     set -e
@@ -63,13 +143,6 @@ smoke:
     curl -sf http://localhost:5001/health | jq .
     echo "Checking qa health..."
     curl -sf http://localhost:5002/health | jq .
+    echo "Checking core metrics..."
+    curl -sf http://localhost:4000/metrics | grep "http_requests_total" | head -3
     echo "All services healthy!"
-
-# Install all dependencies
-install:
-    pnpm install
-    cd apps/narrative && uv sync
-    cd apps/qa && uv sync
-    cd packages/classifier && uv sync
-    cd packages/retrieval && uv sync
-    cd packages/blocklist && uv sync

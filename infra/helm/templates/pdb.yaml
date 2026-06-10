@@ -1,0 +1,48 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "clinical-copilot.fullname" . }}-core
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "clinical-copilot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  minAvailable: {{ .Values.pdb.core.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: core
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "clinical-copilot.fullname" . }}-narrative
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "clinical-copilot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: narrative
+spec:
+  minAvailable: {{ .Values.pdb.narrative.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: narrative
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "clinical-copilot.fullname" . }}-qa
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "clinical-copilot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: qa
+spec:
+  minAvailable: {{ .Values.pdb.qa.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: qa

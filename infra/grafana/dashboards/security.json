@@ -1,0 +1,87 @@
+{
+  "uid": "cc-security",
+  "title": "Clinical Copilot — Security",
+  "description": "Auth events, break-glass access, audit chain integrity",
+  "tags": ["clinical-copilot", "security"],
+  "timezone": "Asia/Riyadh",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Audit Chain Integrity Violations",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "description": "ANY non-zero value is a SEV-1 incident. Page CTO immediately.",
+      "targets": [
+        {
+          "expr": "audit_chain_integrity_violation_total",
+          "legendFormat": "Violations"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Break-Glass Access (per hour)",
+      "type": "timeseries",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 6 },
+      "description": "Alert threshold: > 5/hour",
+      "targets": [
+        {
+          "expr": "sum(increase(break_glass_access_total[1h]))",
+          "legendFormat": "Break-glass accesses"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Authentication Events (login / failure)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"core\",path=\"/api/v1/auth/login\",status=\"200\"}[5m]))",
+          "legendFormat": "Login success"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{service=\"core\",path=\"/api/v1/auth/login\",status=~\"4..\"}[5m]))",
+          "legendFormat": "Login failure"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Audit Events per Hour by Action Type",
+      "type": "barchart",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(increase(http_requests_total{service=\"core\"}[1h])) by (path)",
+          "legendFormat": "{{path}}"
+        }
+      ]
+    }
+  ]
+}

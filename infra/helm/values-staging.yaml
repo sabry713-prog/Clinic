@@ -1,0 +1,31 @@
+# Staging environment overrides
+global:
+  namespace: clinical-copilot-staging
+
+image:
+  tag: "latest"  # overridden by CI to specific SHA
+
+core:
+  replicaCount: 2
+  env:
+    NODE_ENV: production
+    LOG_LEVEL: info
+
+narrative:
+  replicaCount: 1
+
+qa:
+  replicaCount: 2
+
+ingress:
+  host: clinical-copilot.staging.hospital.local
+  tls:
+    enabled: true
+    secretName: clinical-copilot-tls-staging
+
+config:
+  FHIR_BASE_URL: "http://fhir-server.staging.hospital.local/fhir"
+  OIDC_ISSUER: "https://keycloak.staging.hospital.local/realms/clinical-copilot"
+
+secrets:
+  secretName: clinical-copilot-secrets-staging

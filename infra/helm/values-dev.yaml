@@ -1,0 +1,40 @@
+# Dev environment overrides
+global:
+  namespace: clinical-copilot-dev
+
+image:
+  tag: "latest"
+
+core:
+  replicaCount: 1
+  env:
+    NODE_ENV: development
+    LOG_LEVEL: debug
+
+narrative:
+  replicaCount: 1
+
+qa:
+  replicaCount: 1
+
+hpa:
+  core:
+    minReplicas: 1
+    maxReplicas: 2
+  qa:
+    minReplicas: 1
+    maxReplicas: 2
+
+ingress:
+  host: clinical-copilot.dev.hospital.local
+  tls:
+    enabled: false
+
+config:
+  FHIR_BASE_URL: "http://fhir-server.dev.hospital.local/fhir"
+  OIDC_ISSUER: "http://keycloak.dev.hospital.local/realms/clinical-copilot"
+  FEATURE_FLAG_QA_ALLOW_RESPONSES: "true"
+  FEATURE_FLAG_NARRATIVE_ENABLED: "true"
+
+secrets:
+  secretName: clinical-copilot-secrets-dev

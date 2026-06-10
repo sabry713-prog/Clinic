@@ -14,6 +14,8 @@ import { NarrativeProxyModule } from "./narrative-proxy/narrative-proxy.module";
 import { QAProxyModule } from "./qa-proxy/qa-proxy.module";
 import { HandoffModule } from "./handoff/handoff.module";
 import { DsrModule } from "./dsr/dsr.module";
+import { MetricsModule } from "./metrics/metrics.module";
+import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 
 @Module({
   imports: [
@@ -66,6 +68,8 @@ import { DsrModule } from "./dsr/dsr.module";
     QAProxyModule,
     HandoffModule,
     DsrModule,
+    MetricsModule,
+    FeatureFlagsModule,
   ],
 })
 export class AppModule implements NestModule {

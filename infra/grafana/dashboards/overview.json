@@ -1,0 +1,154 @@
+{
+  "uid": "cc-overview",
+  "title": "Clinical Copilot — Overview",
+  "description": "Traffic, errors, latency, and availability across all services",
+  "tags": ["clinical-copilot", "overview"],
+  "timezone": "Asia/Riyadh",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"core\"}[1m])) by (path)",
+          "legendFormat": "{{path}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Error Rate (%)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"core\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{service=\"core\"}[5m])) * 100",
+          "legendFormat": "Error rate %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "P95 Latency by Endpoint",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"core\"}[5m])) by (path, le))",
+          "legendFormat": "P95 {{path}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Availability (SLO: 99.5%)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 14, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "(1 - sum(rate(http_requests_total{service=\"core\",status=~\"5..\"}[30d])) / sum(rate(http_requests_total{service=\"core\"}[30d]))) * 100",
+          "legendFormat": "Availability %"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 99 },
+              { "color": "green", "value": 99.5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Patient View P95 (budget: 2s)",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 14, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"core\",path=\"/api/v1/patients/:id\"}[5m])) by (le))",
+          "legendFormat": "P95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1.5 },
+              { "color": "red", "value": 2 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Q&A Allowed P95 (budget: 7s)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 14, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"core\",path=\"/api/v1/patients/:id/qa\"}[5m])) by (le))",
+          "legendFormat": "P95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 7 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Narrative P95 (budget: 8s)",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 14, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"core\",path=\"/api/v1/patients/:id/narrative\"}[5m])) by (le))",
+          "legendFormat": "P95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 6 },
+              { "color": "red", "value": 8 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
