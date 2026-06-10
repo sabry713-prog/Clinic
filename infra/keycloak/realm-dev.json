@@ -1,0 +1,61 @@
+{
+  "realm": "dev",
+  "enabled": true,
+  "displayName": "Clinical Copilot Dev",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "clients": [
+    {
+      "clientId": "copilot-core",
+      "name": "Clinical Copilot Core",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "dev-secret-change-me",
+      "redirectUris": [
+        "http://localhost:4000/api/v1/auth/callback",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": ["http://localhost:3000", "http://localhost:4000"],
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "physician1",
+      "email": "physician1@dev.local",
+      "firstName": "Ahmad",
+      "lastName": "Al-Zahrani",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["physician"]
+    },
+    {
+      "username": "nurse1",
+      "email": "nurse1@dev.local",
+      "firstName": "Sara",
+      "lastName": "Al-Otaibi",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["nurse"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "physician" },
+      { "name": "pharmacist" },
+      { "name": "nurse" },
+      { "name": "hospital_admin" },
+      { "name": "sysadmin" }
+    ]
+  }
+}
