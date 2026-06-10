@@ -16,5 +16,21 @@
   "common": {
     "logout": "Sign Out",
     "loading": "Loading..."
+  },
+  "qa": {
+    "title": "Factual Q&A",
+    "placeholder": "Ask a factual question about this patient's record…",
+    "input_label": "Question input",
+    "send": "Send",
+    "enter_hint": "Press Enter to send, Shift+Enter for a new line",
+    "thinking": "Looking up…",
+    "empty_state": "Ask a factual question about this patient's documented record.",
+    "disclaimer": "Factual lookup only. Not a clinical interpretation. For clinician review only.",
+    "factual_only": "Factual questions only — this query requires interpretation.",
+    "show_sources": "Show sources",
+    "hide_sources": "Hide sources",
+    "sources_header": "Record sources",
+    "toggle_language": "Toggle language",
+    "error_generic": "Request failed. Please try again."
   }
 }

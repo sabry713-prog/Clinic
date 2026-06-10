@@ -152,6 +152,44 @@ export interface NarrativeItem {
   readonly disclaimer: string;
 }
 
+export interface AnswerSource {
+  readonly fact_segment: string;
+  readonly type: string;
+  readonly id: string;
+  readonly code: string;
+  readonly source_system: string;
+  readonly field: string;
+}
+
+export interface QAResponse {
+  readonly interaction_id: string;
+  readonly patient_id: string;
+  readonly conversation_id: string;
+  readonly question: string;
+  readonly classification: "ALLOWED" | "REFUSED";
+  readonly classifier_confidence: number;
+  readonly refusal_category: string | null;
+  readonly rule_matches: readonly string[];
+  readonly language: string;
+  readonly answer_text: string;
+  readonly sources: readonly AnswerSource[];
+  readonly model_version: string;
+  readonly prompt_template_version: string;
+  readonly latency_ms: number;
+  readonly disclaimer: string;
+  readonly blocklist_triggered: boolean;
+}
+
+export interface QAInteractionSummary {
+  readonly id: string;
+  readonly conversation_id: string | null;
+  readonly patient_id: string;
+  readonly classification: string;
+  readonly refusal_category: string | null;
+  readonly language: string;
+  readonly created_at: string;
+}
+
 // ─── API client ───────────────────────────────────────────────────────────────
 
 export const api = {
@@ -248,6 +286,33 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ action, reason }),
       }),
+  },
+
+  qa: {
+    ask: (
+      patientId: string,
+      params: { question: string; language: string; conversation_id: string | null },
+    ) =>
+      request<QAResponse>(`/api/v1/patients/${patientId}/qa`, {
+        method: "POST",
+        body: JSON.stringify(params),
+      }),
+
+    get: (patientId: string, qaId: string) =>
+      request<QAResponse>(`/api/v1/patients/${patientId}/qa/${qaId}`),
+
+    list: (patientId: string, params?: { cursor?: string; limit?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.cursor) qs.set("cursor", params.cursor);
+      if (params?.limit !== undefined) qs.set("limit", String(params.limit));
+      const query = qs.toString();
+      return request<{ data: QAInteractionSummary[]; next_cursor: string | null }>(
+        `/api/v1/patients/${patientId}/qa${query ? `?${query}` : ""}`,
+      );
+    },
+
+    deleteConversation: (conversationId: string) =>
+      request<void>(`/api/v1/conversations/${conversationId}`, { method: "DELETE" }),
   },
 
   auth: {

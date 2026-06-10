@@ -1,0 +1,41 @@
+syntax = "proto3";
+package qa.v1;
+
+service QAService {
+  rpc Answer (AnswerRequest) returns (AnswerResponse);
+}
+
+message AnswerRequest {
+  string patient_id = 1;
+  string question = 2;
+  string language = 3;
+  string conversation_id = 4;
+}
+
+message AnswerSource {
+  string fact_segment = 1;
+  string type = 2;
+  string id = 3;
+  string code = 4;
+  string source_system = 5;
+  string field = 6;
+}
+
+message AnswerResponse {
+  string interaction_id = 1;
+  string patient_id = 2;
+  string conversation_id = 3;
+  string question = 4;
+  string classification = 5;   // "ALLOWED" | "REFUSED"
+  float classifier_confidence = 6;
+  string refusal_category = 7;
+  repeated string rule_matches = 8;
+  string language = 9;
+  string answer_text = 10;
+  repeated AnswerSource sources = 11;
+  string model_version = 12;
+  string prompt_template_version = 13;
+  int32 latency_ms = 14;
+  string disclaimer = 15;
+  bool blocklist_triggered = 16;
+}
