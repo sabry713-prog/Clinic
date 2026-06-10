@@ -1,9 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { HomePage } from "./pages/HomePage";
 import { useTranslation } from "react-i18next";
+
+const PatientListPage = lazy(() => import("./pages/PatientListPage/PatientListPage"));
+const PatientDetailPage = lazy(() => import("./pages/PatientDetailPage/PatientDetailPage"));
+const QuarantinePage = lazy(() => import("./pages/admin/QuarantinePage/QuarantinePage"));
 
 function AppRoutes(): JSX.Element {
   const { user, loading } = useAuth();
@@ -26,6 +30,18 @@ function AppRoutes(): JSX.Element {
       <Route
         path="/"
         element={user != null ? <HomePage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/patients"
+        element={user != null ? <PatientListPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/patients/:id"
+        element={user != null ? <PatientDetailPage /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/admin/quarantine"
+        element={user != null ? <QuarantinePage /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

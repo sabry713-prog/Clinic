@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@clinical-copilot/audit": "workspace:*",
+    "@clinical-copilot/fhir-client": "workspace:*",
     "@clinical-copilot/shared-types": "workspace:*",
     "@nestjs/common": "^10.3.8",
     "@nestjs/config": "^3.2.2",

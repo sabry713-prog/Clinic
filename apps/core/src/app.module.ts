@@ -6,6 +6,10 @@ import { HealthModule } from "./health/health.module";
 import { AuthModule } from "./auth/auth.module";
 import { DatabaseModule } from "./database/database.module";
 import { AuditMiddleware } from "./audit/audit.middleware";
+import { IngestionModule } from "./ingestion/ingestion.module";
+import { PatientModule } from "./patient/patient.module";
+import { RbacModule } from "./rbac/rbac.module";
+import { AdminModule } from "./admin/admin.module";
 
 @Module({
   imports: [
@@ -50,6 +54,10 @@ import { AuditMiddleware } from "./audit/audit.middleware";
     DatabaseModule,
     HealthModule,
     AuthModule,
+    RbacModule,
+    PatientModule,
+    IngestionModule,
+    AdminModule,
   ],
 })
 export class AppModule implements NestModule {

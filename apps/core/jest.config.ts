@@ -15,6 +15,8 @@ const config: Config = {
       "<rootDir>/../../packages/shared-types/src/index.ts",
     "^@clinical-copilot/audit$":
       "<rootDir>/../../packages/audit/src/index.ts",
+    "^@clinical-copilot/fhir-client$":
+      "<rootDir>/../../packages/fhir-client/src/index.ts",
   },
 };
 
