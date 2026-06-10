@@ -126,6 +126,32 @@ export interface QuarantineItem {
   readonly created_at: string;
 }
 
+export interface SourceRef {
+  readonly type: string;
+  readonly id: string;
+  readonly field: string;
+}
+
+export interface ProvenanceEntry {
+  readonly sentence_index: number;
+  readonly char_range: readonly [number, number];
+  readonly sources: readonly SourceRef[];
+}
+
+export interface NarrativeItem {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly generated_at: string;
+  readonly language: string;
+  readonly scope: string;
+  readonly text: string | null;
+  readonly fallback_message: string | null;
+  readonly provenance: readonly ProvenanceEntry[];
+  readonly model_version: string | null;
+  readonly prompt_template_version: string;
+  readonly disclaimer: string;
+}
+
 // ─── API client ───────────────────────────────────────────────────────────────
 
 export const api = {
@@ -190,6 +216,29 @@ export const api = {
 
     document: (patientId: string, docId: string) =>
       request<DocumentItem>(`/api/v1/patients/${patientId}/documents/${docId}`),
+  },
+
+  narrative: {
+    generate: (
+      patientId: string,
+      params: { language: string; scope: string; regenerate?: boolean },
+    ) =>
+      request<NarrativeItem>(`/api/v1/patients/${patientId}/narrative`, {
+        method: "POST",
+        body: JSON.stringify({
+          language: params.language,
+          scope: params.scope,
+          regenerate: params.regenerate ?? false,
+        }),
+      }),
+
+    get: (patientId: string, narrativeId: string) =>
+      request<NarrativeItem>(`/api/v1/patients/${patientId}/narrative/${narrativeId}`),
+
+    sources: (patientId: string, narrativeId: string) =>
+      request<{ sources: readonly SourceRef[] }>(
+        `/api/v1/patients/${patientId}/narrative/${narrativeId}/sources`,
+      ),
   },
 
   quarantine: {

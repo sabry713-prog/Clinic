@@ -1,26 +1,46 @@
-"""
-Retrieval package.
+"""Retrieval package — chunking, embedding, and hybrid retrieval.
 
-Slice 0 stub — returns empty chunk list.
-Real implementation ships in Slice 2.
+Public surface::
+
+    from retrieval.chunker import chunk_patient_record
+    from retrieval.embedder import EmbeddingProvider, StubEmbeddingProvider
+    from retrieval.indexer import index_patient_chunks
+    from retrieval.retriever import hybrid_retrieve
+    from retrieval.types import Chunk, RetrievalResult, SourceRef, PatientChunkInput
 """
 from __future__ import annotations
 
-from pydantic import BaseModel
+from .chunker import chunk_patient_record
+from .embedder import EmbeddingProvider, StubEmbeddingProvider
+from .indexer import index_patient_chunks
+from .retriever import hybrid_retrieve
+from .types import (
+    AllergyInput,
+    Chunk,
+    ConditionInput,
+    DocumentInput,
+    EncounterInput,
+    MedicationInput,
+    ObservationInput,
+    PatientChunkInput,
+    RetrievalResult,
+    SourceRef,
+)
 
-
-class RetrievalChunk(BaseModel):
-    source_type: str
-    source_id: str
-    content_text: str
-    score: float
-
-
-def retrieve(
-    patient_id: str,
-    query: str,
-    language: str = "ar",
-    top_k: int = 10,
-) -> list[RetrievalChunk]:
-    """Stub retrieval — returns empty list. Replace in Slice 2."""
-    return []
+__all__ = [
+    "chunk_patient_record",
+    "EmbeddingProvider",
+    "StubEmbeddingProvider",
+    "index_patient_chunks",
+    "hybrid_retrieve",
+    "Chunk",
+    "RetrievalResult",
+    "SourceRef",
+    "PatientChunkInput",
+    "ObservationInput",
+    "MedicationInput",
+    "ConditionInput",
+    "AllergyInput",
+    "EncounterInput",
+    "DocumentInput",
+]

@@ -1,0 +1,35 @@
+Creatinine: 168 μmol/L on 24 May 2026. Reference range: 59-104 μmol/L.
+The patient was admitted on 22 May 2026 with a documented diagnosis of community-acquired pneumonia.
+Active medications include Metformin 500 mg PO BID, started 2022-03-01.
+Documented allergy to Penicillin, reaction: rash, recorded 2019-04-15.
+White blood cell count: 11.2 × 10⁹/L on 23 May. Reference range: 4.0-10.0 × 10⁹/L.
+Blood pressure: 138/82 mmHg recorded on 24 May at 06:00.
+The progress note dated 23 May 2026 was authored by Dr. Ahmed Al-Rashid.
+Sodium: 138 mEq/L on 24 May 2026. Reference range: 136-145 mEq/L.
+Discharge summary dated 15 February 2025, author Dr. Khalid Al-Faisal.
+The patient has a documented condition of Type 2 Diabetes Mellitus (E11.9), onset 2014.
+CKD Stage 3b (N18.32) documented, onset 2022.
+Prior admission: admitted 11 February 2025, discharged 15 February 2025, admitting diagnosis Acute kidney injury on CKD.
+Temperature: 38.2°C recorded on 22 May at 14:45.
+Hemoglobin: 10.8 g/dL on 23 May. Reference range: 13.5-17.5 g/dL.
+The documented ward is IM-3B, bed 12.
+Potassium: 4.1 mEq/L on 24 May.
+The encounter type is inpatient, started 22 May 2026.
+Documented medications: Lisinopril 10 mg PO daily, Metformin 500 mg PO BID.
+SpO2: 94% on room air, recorded 24 May at 06:30.
+Heart rate: 88 bpm recorded 24 May at 06:00.
+المريض يبلغ من العمر 68 سنة وتم قبوله في 22 مايو 2026.
+التشخيص الموثق هو الالتهاب الرئوي المكتسب من المجتمع.
+الكرياتينين: 168 ميكرومول/لتر في 24 مايو 2026. النطاق المرجعي: 59-104 ميكرومول/لتر.
+الدواء الموصوف: ميتفورمين 500 ملغ مرتين يومياً منذ 2022.
+تم التوثيق في ملاحظة التقدم بتاريخ 23 مايو 2026.
+The patient was documented as «improving» in the progress note of 23 May 2026.
+«Severe sepsis» is the documented admitting diagnosis from 11 February 2025.
+The medication Atorvastatin 40 mg PO nightly was started on 2023-06-15.
+Respiratory rate: 18 breaths/min recorded 24 May at 06:00.
+Urea: 12.4 mmol/L on 24 May. Reference range: 2.5-7.8 mmol/L.
+The encounter started on 22 May 2026 and the admitting ward is recorded as IM-3B.
+Documented active problem: hypertension (I10), onset 2018.
+The last recorded weight was 82 kg on 20 May 2026.
+Platelet count: 142 × 10⁹/L on 23 May 2026. Reference range: 150-400 × 10⁹/L.
+The physician on record is Dr. Nora Al-Ghamdi, specialty internal medicine.

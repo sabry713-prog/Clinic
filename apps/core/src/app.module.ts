@@ -10,6 +10,7 @@ import { IngestionModule } from "./ingestion/ingestion.module";
 import { PatientModule } from "./patient/patient.module";
 import { RbacModule } from "./rbac/rbac.module";
 import { AdminModule } from "./admin/admin.module";
+import { NarrativeProxyModule } from "./narrative-proxy/narrative-proxy.module";
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { AdminModule } from "./admin/admin.module";
     PatientModule,
     IngestionModule,
     AdminModule,
+    NarrativeProxyModule,
   ],
 })
 export class AppModule implements NestModule {

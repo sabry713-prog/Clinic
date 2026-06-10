@@ -16,6 +16,7 @@ import { api, type PatientDetail, type ObservationItem, type MedicationItem, Api
 import PatientHeader from "../../components/PatientHeader/PatientHeader";
 import LabPanel from "../../components/LabPanel/LabPanel";
 import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
+import NarrativePanel from "../../components/NarrativePanel/NarrativePanel";
 
 export default function PatientDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,8 @@ export default function PatientDetailPage(): JSX.Element {
   const [observations, setObservations] = useState<ObservationItem[]>([]);
   const [obsNextCursor, setObsNextCursor] = useState<string | null>(null);
   const [medications, setMedications] = useState<MedicationItem[]>([]);
+
+  const [activeTab, setActiveTab] = useState<"overview" | "narrative">("overview");
 
   const [isLoadingPatient, setIsLoadingPatient] = useState(true);
   const [isLoadingObs, setIsLoadingObs] = useState(true);
@@ -137,19 +140,54 @@ export default function PatientDetailPage(): JSX.Element {
           conditions={patient.conditions}
         />
 
-        {/* Observations — plain text, no color-coding */}
-        <LabPanel
-          observations={observations}
-          isLoading={isLoadingObs}
-          onLoadMore={handleLoadMoreObs}
-          hasMore={obsNextCursor !== null}
-        />
+        {/* Tab navigation */}
+        <div className="border-b border-slate-700 flex gap-4">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`pb-2 text-sm transition-colors ${
+              activeTab === "overview"
+                ? "text-white border-b-2 border-white"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("narrative")}
+            className={`pb-2 text-sm transition-colors ${
+              activeTab === "narrative"
+                ? "text-white border-b-2 border-white"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            Narrative
+          </button>
+        </div>
 
-        {/* Medications — no interaction checking */}
-        <MedicationPanel
-          medications={medications}
-          isLoading={isLoadingMeds}
-        />
+        {activeTab === "overview" && (
+          <>
+            {/* Observations — plain text, no color-coding */}
+            <LabPanel
+              observations={observations}
+              isLoading={isLoadingObs}
+              onLoadMore={handleLoadMoreObs}
+              hasMore={obsNextCursor !== null}
+            />
+
+            {/* Medications — no interaction checking */}
+            <MedicationPanel
+              medications={medications}
+              isLoading={isLoadingMeds}
+            />
+          </>
+        )}
+
+        {activeTab === "narrative" && (
+          <NarrativePanel
+            patientId={patient.id}
+            preferredLanguage={patient.preferred_language ?? "en"}
+          />
+        )}
       </div>
     </div>
   );
