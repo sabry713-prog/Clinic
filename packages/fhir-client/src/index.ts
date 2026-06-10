@@ -1,47 +1,32 @@
-/**
- * FHIR client stub for Slice 0.
- * Real implementation (SMART on FHIR, oauth2, resource fetching) ships in Slice 1.
- */
-export interface FhirClientConfig {
-  readonly baseUrl: string;
-  readonly authMode: "none" | "oauth2" | "smart";
-  readonly accessToken?: string;
-}
-
-export interface FhirResource {
-  readonly resourceType: string;
-  readonly id: string;
-  readonly [key: string]: unknown;
-}
-
-export interface FhirBundle<T extends FhirResource = FhirResource> {
-  readonly resourceType: "Bundle";
-  readonly total?: number;
-  readonly entry?: ReadonlyArray<{ readonly resource?: T }>;
-}
-
-export class FhirClient {
-  constructor(private readonly config: FhirClientConfig) {}
-
-  async read<T extends FhirResource>(
-    resourceType: string,
-    id: string,
-  ): Promise<T> {
-    throw new Error(
-      `FhirClient.read(${resourceType}/${id}) — stub not implemented. Implement in Slice 1.`,
-    );
-  }
-
-  async search<T extends FhirResource>(
-    resourceType: string,
-    params: Record<string, string>,
-  ): Promise<FhirBundle<T>> {
-    throw new Error(
-      `FhirClient.search(${resourceType}, ${JSON.stringify(params)}) — stub not implemented. Implement in Slice 1.`,
-    );
-  }
-}
-
-export function createFhirClient(config: FhirClientConfig): FhirClient {
-  return new FhirClient(config);
-}
+export { FhirClient, FhirRequestError, FhirCircuitOpenError } from "./client";
+export type { FhirClientConfig } from "./client";
+export { OAuth2TokenProvider } from "./auth";
+export type { AuthConfig, AuthMode, OAuth2Config } from "./auth";
+export { iteratePages, collectPages, getNextPageUrl } from "./pagination";
+export type {
+  FhirResource,
+  FhirBundle,
+  FhirBundleLink,
+  FhirBundleEntry,
+  FhirCoding,
+  FhirCodeableConcept,
+  FhirIdentifier,
+  FhirHumanName,
+  FhirPeriod,
+  FhirReference,
+  FhirQuantity,
+  FhirRange,
+  FhirObservationReferenceRange,
+  FhirPatient,
+  FhirEncounter,
+  FhirEncounterParticipant,
+  FhirEncounterLocation,
+  FhirObservation,
+  FhirAllergyIntolerance,
+  FhirAllergyReaction,
+  FhirCondition,
+  FhirMedicationRequest,
+  FhirDosageInstruction,
+  FhirDocumentReference,
+  FhirDocumentReferenceContent,
+} from "./types";
