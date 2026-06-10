@@ -1,0 +1,97 @@
+{
+  "uid": "cc-qa-safety",
+  "title": "Clinical Copilot — Q&A Safety",
+  "description": "Classification distribution, refusals, blocklist triggers, classifier confidence — regulatory evidence dashboard",
+  "tags": ["clinical-copilot", "safety", "qa"],
+  "timezone": "Asia/Riyadh",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Classification Distribution (ALLOWED vs REFUSED)",
+      "type": "piechart",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(qa_classification_total[1h])) by (label)",
+          "legendFormat": "{{label}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Refusal Categories (last 1h)",
+      "type": "barchart",
+      "gridPos": { "x": 8, "y": 0, "w": 16, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(qa_classification_total{label=\"REFUSED\"}[1h])) by (refusal_category)",
+          "legendFormat": "{{refusal_category}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Blocklist Trigger Rate (per min)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(qa_blocklist_triggered_total[1m]))",
+          "legendFormat": "Blocklist triggers/min"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Blocklist Triggers by Retry Count",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(qa_blocklist_triggered_total[5m])) by (retry_count)",
+          "legendFormat": "retry={{retry_count}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Classifier Confidence Distribution",
+      "type": "histogram",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 6 },
+      "description": "Distribution of classifier confidence scores. Low-confidence zone (0.5-0.85) drives refusals — watch for widening.",
+      "targets": [
+        {
+          "expr": "sum(rate(qa_classification_total[5m])) by (label)",
+          "legendFormat": "{{label}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Q&A Feature Flag Status",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 20, "w": 8, "h": 4 },
+      "description": "1 = Q&A enabled, 0 = kill switch active",
+      "targets": [
+        {
+          "expr": "up{job=\"core\"} * on() group_left() (1)",
+          "legendFormat": "Q&A enabled"
+        }
+      ]
+    }
+  ]
+}

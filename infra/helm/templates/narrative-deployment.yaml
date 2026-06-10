@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "clinical-copilot.fullname" . }}-narrative
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "clinical-copilot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: narrative
+spec:
+  replicas: {{ .Values.narrative.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: narrative
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: narrative
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.narrative.service.port }}"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: narrative
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.narrative.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.narrative.service.port }}
+              protocol: TCP
+          env:
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: ANTHROPIC_API_KEY
+          resources:
+            {{- toYaml .Values.narrative.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false

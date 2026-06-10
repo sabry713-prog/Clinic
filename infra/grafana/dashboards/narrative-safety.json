@@ -1,0 +1,80 @@
+{
+  "uid": "cc-narrative-safety",
+  "title": "Clinical Copilot — Narrative Safety",
+  "description": "Generation latency, blocklist triggers, fallback rate for narrative service",
+  "tags": ["clinical-copilot", "safety", "narrative"],
+  "timezone": "Asia/Riyadh",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Narrative Generation P50 / P95 / P99",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(grpc_request_duration_seconds_bucket{service=\"narrative\"}[5m])) by (le))",
+          "legendFormat": "P50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(grpc_request_duration_seconds_bucket{service=\"narrative\"}[5m])) by (le))",
+          "legendFormat": "P95 (budget: 8s)"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(grpc_request_duration_seconds_bucket{service=\"narrative\"}[5m])) by (le))",
+          "legendFormat": "P99"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 6 },
+              { "color": "red", "value": 8 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Narrative Blocklist Triggers (per min)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(blocklist_triggered_total{service=\"narrative\"}[1m])) by (retry_count)",
+          "legendFormat": "retry={{retry_count}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Narrative Fallback Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(fallback_total{service=\"narrative\"}[5m])) by (reason)",
+          "legendFormat": "reason={{reason}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Narrative Request Rate",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 14, "w": 8, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(grpc_requests_total{service=\"narrative\"}[1m]))",
+          "legendFormat": "req/s"
+        }
+      ]
+    }
+  ]
+}

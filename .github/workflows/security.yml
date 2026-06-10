@@ -1,0 +1,189 @@
+name: Security
+
+on:
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Nightly at 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_call: {}
+
+env:
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.12"
+  PNPM_VERSION: "9.1.0"
+
+jobs:
+  # ─── SAST via Semgrep ─────────────────────────────────────────────────────────
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep (auto config, fail on HIGH/CRITICAL)
+        run: |
+          semgrep \
+            --config=auto \
+            --severity=ERROR \
+            --severity=WARNING \
+            --error \
+            --json \
+            --output semgrep-results.json \
+            . || true
+          # Parse results and fail on HIGH/CRITICAL
+          python3 - <<'EOF'
+          import json, sys
+
+          with open("semgrep-results.json") as f:
+              data = json.load(f)
+
+          findings = data.get("results", [])
+          critical_high = [
+              r for r in findings
+              if r.get("extra", {}).get("severity", "").upper() in ("ERROR", "HIGH", "CRITICAL")
+          ]
+
+          if critical_high:
+              print(f"SAST FAILED: {len(critical_high)} HIGH/CRITICAL finding(s):")
+              for r in critical_high:
+                  print(f"  {r['path']}:{r['start']['line']} [{r['check_id']}]")
+              sys.exit(1)
+          else:
+              print(f"SAST passed. {len(findings)} informational finding(s).")
+          EOF
+
+      - name: Upload Semgrep results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results
+          path: semgrep-results.json
+
+  # ─── npm / pnpm audit ─────────────────────────────────────────────────────────
+  npm-audit:
+    name: npm Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: pnpm audit (high+)
+        run: pnpm audit --audit-level=high
+
+  # ─── pip-audit ────────────────────────────────────────────────────────────────
+  pip-audit:
+    name: pip-audit (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - apps/narrative
+          - apps/qa
+          - packages/classifier
+          - packages/blocklist
+          - packages/retrieval
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh && echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: uv sync (${{ matrix.app }})
+        working-directory: ${{ matrix.app }}
+        run: uv sync
+
+      - name: pip-audit (${{ matrix.app }})
+        working-directory: ${{ matrix.app }}
+        run: uv run pip-audit --require-hashes=0 --strict
+
+  # ─── Trivy image scan ─────────────────────────────────────────────────────────
+  trivy-images:
+    name: Trivy (${{ matrix.service.name }})
+    runs-on: ubuntu-latest
+    # Only run on pushes where images are built, or nightly
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - name: core
+            context: .
+            file: apps/core/Dockerfile
+          - name: web
+            context: .
+            file: apps/web/Dockerfile
+          - name: narrative
+            context: apps/narrative
+            file: apps/narrative/Dockerfile
+          - name: qa
+            context: apps/qa
+            file: apps/qa/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (${{ matrix.service.name }})
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.file }}
+          push: false
+          load: true
+          tags: clinical-copilot/${{ matrix.service.name }}:scan
+
+      - name: Run Trivy (CRITICAL CVEs with fix)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "clinical-copilot/${{ matrix.service.name }}:scan"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: "CRITICAL"
+
+  # ─── Secrets scan ─────────────────────────────────────────────────────────────
+  secrets-scan:
+    name: Secrets Scan (TruffleHog)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog filesystem scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified

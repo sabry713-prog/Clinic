@@ -1,0 +1,50 @@
+{"text": "What was the last creatinine value?", "label": "ALLOWED", "language": "en"}
+{"text": "When was the patient admitted?", "label": "ALLOWED", "language": "en"}
+{"text": "List the active medications.", "label": "ALLOWED", "language": "en"}
+{"text": "What is the admitting diagnosis?", "label": "ALLOWED", "language": "en"}
+{"text": "Show me all lab values from this admission.", "label": "ALLOWED", "language": "en"}
+{"text": "Has the patient had pneumonia before?", "label": "ALLOWED", "language": "en"}
+{"text": "What was the last blood pressure reading?", "label": "ALLOWED", "language": "en"}
+{"text": "What allergies does the patient have?", "label": "ALLOWED", "language": "en"}
+{"text": "What procedures were performed during this admission?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the patient's date of birth?", "label": "ALLOWED", "language": "en"}
+{"text": "Has the patient had surgery before?", "label": "ALLOWED", "language": "en"}
+{"text": "Show me the most recent CBC results.", "label": "ALLOWED", "language": "en"}
+{"text": "What is the patient's weight?", "label": "ALLOWED", "language": "en"}
+{"text": "List the documented allergies.", "label": "ALLOWED", "language": "en"}
+{"text": "What was the last temperature reading?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the patient's current heart rate?", "label": "ALLOWED", "language": "en"}
+{"text": "What oxygen saturation was recorded at 08:00?", "label": "ALLOWED", "language": "en"}
+{"text": "What medications were prescribed at discharge in the last visit?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the documented chief complaint?", "label": "ALLOWED", "language": "en"}
+{"text": "What imaging studies were ordered this admission?", "label": "ALLOWED", "language": "en"}
+{"text": "What was the patient's potassium level on admission?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the documented diagnosis for the current visit?", "label": "ALLOWED", "language": "en"}
+{"text": "When was the last echocardiogram done?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the patient's blood type?", "label": "ALLOWED", "language": "en"}
+{"text": "Has the patient ever been on dialysis?", "label": "ALLOWED", "language": "en"}
+{"text": "What was the INR on 20 May?", "label": "ALLOWED", "language": "en"}
+{"text": "List all the diagnoses on record.", "label": "ALLOWED", "language": "en"}
+{"text": "What antibiotics has the patient received this admission?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the current oxygen delivery device?", "label": "ALLOWED", "language": "en"}
+{"text": "When was the last blood culture drawn?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the patient's height?", "label": "ALLOWED", "language": "en"}
+{"text": "How many times was the patient admitted in the past year?", "label": "ALLOWED", "language": "en"}
+{"text": "What was the GFR value on the most recent basic metabolic panel?", "label": "ALLOWED", "language": "en"}
+{"text": "What was the recorded pain score at triage?", "label": "ALLOWED", "language": "en"}
+{"text": "Are there any documented advance directives?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the patient's smoking status as documented?", "label": "ALLOWED", "language": "en"}
+{"text": "What was the most recent HbA1c value?", "label": "ALLOWED", "language": "en"}
+{"text": "When was the patient last seen in clinic?", "label": "ALLOWED", "language": "en"}
+{"text": "What are the documented comorbidities?", "label": "ALLOWED", "language": "en"}
+{"text": "What time was the last dose of vancomycin given?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the current urine output in the last 24 hours?", "label": "ALLOWED", "language": "en"}
+{"text": "What were the troponin results from the ED visit?", "label": "ALLOWED", "language": "en"}
+{"text": "What ward is the patient currently on?", "label": "ALLOWED", "language": "en"}
+{"text": "What was the patient's GCS score on presentation?", "label": "ALLOWED", "language": "en"}
+{"text": "When was the chest X-ray taken?", "label": "ALLOWED", "language": "en"}
+{"text": "What is the current blood glucose value?", "label": "ALLOWED", "language": "en"}
+{"text": "What family history is documented?", "label": "ALLOWED", "language": "en"}
+{"text": "Show me the complete medication list.", "label": "ALLOWED", "language": "en"}
+{"text": "What was the sodium level on Monday?", "label": "ALLOWED", "language": "en"}
+{"text": "What surgical history is on file?", "label": "ALLOWED", "language": "en"}

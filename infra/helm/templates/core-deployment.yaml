@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "clinical-copilot.fullname" . }}-core
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "clinical-copilot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  replicas: {{ .Values.core.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: core
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: core
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.core.service.port }}"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: core
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.core.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.core.service.port }}
+              protocol: TCP
+          env:
+            # Non-secret config from ConfigMap
+            {{- range $key, $value := .Values.core.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: FHIR_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: FHIR_BASE_URL
+            - name: OIDC_ISSUER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: OIDC_ISSUER
+            - name: NARRATIVE_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: NARRATIVE_SERVICE_URL
+            - name: QA_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: QA_SERVICE_URL
+            - name: FEATURE_FLAG_QA_ALLOW_RESPONSES
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: FEATURE_FLAG_QA_ALLOW_RESPONSES
+            - name: FEATURE_FLAG_NARRATIVE_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: FEATURE_FLAG_NARRATIVE_ENABLED
+            - name: FEATURE_FLAG_HANDOFF_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: FEATURE_FLAG_HANDOFF_ENABLED
+            - name: FEATURE_FLAG_INGESTION_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinical-copilot.fullname" . }}-config
+                  key: FEATURE_FLAG_INGESTION_ENABLED
+            # Secrets from K8s Secret
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: DATABASE_URL
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: SESSION_SECRET
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: ANTHROPIC_API_KEY
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: S3_SECRET_ACCESS_KEY
+          resources:
+            {{- toYaml .Values.core.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false

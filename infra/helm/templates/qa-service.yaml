@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clinical-copilot.fullname" . }}-qa
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "clinical-copilot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: qa
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.qa.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: {{ include "clinical-copilot.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: qa

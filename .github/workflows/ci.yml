@@ -190,11 +190,17 @@ jobs:
         working-directory: apps/qa
         run: uv run pytest --tb=short
 
+  # ─── Security gates ───────────────────────────────────────────────────────────
+  security:
+    name: Security
+    uses: ./.github/workflows/security.yml
+    secrets: inherit
+
   # ─── Build ────────────────────────────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint-typecheck, test]
+    needs: [lint-typecheck, test, security]
 
     steps:
       - uses: actions/checkout@v4

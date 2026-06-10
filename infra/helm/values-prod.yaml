@@ -1,0 +1,62 @@
+# Production environment overrides
+# IMPORTANT: No real secrets in this file.
+# All secret values are populated by Vault / external-secrets at deploy time.
+# This file contains only structural config and non-sensitive settings.
+
+global:
+  namespace: clinical-copilot-prod
+
+# Image tag is set by CI to the exact git SHA — never "latest" in prod
+# Override at deploy time: --set image.tag=<sha>
+image:
+  tag: "REPLACE_WITH_SHA"
+
+core:
+  replicaCount: 3
+  env:
+    NODE_ENV: production
+    LOG_LEVEL: info
+
+narrative:
+  replicaCount: 2
+
+qa:
+  replicaCount: 3
+
+hpa:
+  core:
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  qa:
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+
+ingress:
+  host: clinical-copilot.hospital.local  # Replace with actual hospital FQDN
+  tls:
+    enabled: true
+    secretName: clinical-copilot-tls-prod
+
+config:
+  FHIR_BASE_URL: "https://fhir-server.hospital.local/fhir"  # Replace with actual
+  OIDC_ISSUER: "https://keycloak.hospital.local/realms/clinical-copilot"  # Replace with actual
+  AUDIT_HASH_ALGORITHM: "sha256"
+  FEATURE_FLAG_QA_ALLOW_RESPONSES: "true"
+  FEATURE_FLAG_NARRATIVE_ENABLED: "true"
+  FEATURE_FLAG_HANDOFF_ENABLED: "true"
+  FEATURE_FLAG_INGESTION_ENABLED: "true"
+
+# Secret keys must exist in the K8s Secret named below.
+# The Secret is managed by external-secrets / HashiCorp Vault.
+# DO NOT put actual secret values here.
+secrets:
+  secretName: clinical-copilot-secrets-prod
+  # Required keys in the Secret (populated by Vault):
+  #   DATABASE_URL
+  #   SESSION_SECRET
+  #   ANTHROPIC_API_KEY
+  #   GPG_PASSPHRASE
+  #   S3_ACCESS_KEY_ID
+  #   S3_SECRET_ACCESS_KEY

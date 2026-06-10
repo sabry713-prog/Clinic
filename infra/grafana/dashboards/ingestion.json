@@ -1,0 +1,89 @@
+{
+  "uid": "cc-ingestion",
+  "title": "Clinical Copilot — Data Ingestion",
+  "description": "FHIR sync success/failure, identity quarantine queue depth",
+  "tags": ["clinical-copilot", "ingestion"],
+  "timezone": "Asia/Riyadh",
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Identity Quarantine Queue Depth",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "description": "Unresolved identity quarantine records. Alert threshold: 50",
+      "targets": [
+        {
+          "expr": "identity_quarantine_open_total",
+          "legendFormat": "Quarantined"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Identity Quarantine Trend",
+      "type": "timeseries",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 4 },
+      "targets": [
+        {
+          "expr": "identity_quarantine_open_total",
+          "legendFormat": "Open quarantine records"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "FHIR Ingestion Events (success / failure)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=\"core\",path=~\"/api/v1/ingestion.*\",status=\"200\"}[5m]))",
+          "legendFormat": "Success"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{service=\"core\",path=~\"/api/v1/ingestion.*\",status=~\"5..\"}[5m]))",
+          "legendFormat": "Failure"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Time Since Last Successful Sync",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 10, "w": 8, "h": 4 },
+      "description": "Staleness indicator. Alert if > 60 minutes.",
+      "targets": [
+        {
+          "expr": "time() - max(http_requests_total{service=\"core\",path=~\"/api/v1/ingestion.*\",status=\"200\"})",
+          "legendFormat": "Seconds since last sync"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1800 },
+              { "color": "red", "value": 3600 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

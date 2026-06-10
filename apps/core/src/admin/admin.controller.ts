@@ -39,6 +39,7 @@ import { writeAuditEvent } from "@clinical-copilot/audit";
 import type { RequestId, UserId, UserRole } from "@clinical-copilot/shared-types";
 import { v4 as uuidv4 } from "uuid";
 import { AuditVerifyService } from "../audit/audit-verify.service";
+import { WormExportService } from "../audit/worm-export.service";
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
@@ -123,6 +124,7 @@ export class AdminController {
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly sessions: SessionService,
     private readonly auditVerify: AuditVerifyService,
+    private readonly wormExport: WormExportService,
   ) {}
 
   private assertAdmin(req: Request): string {
@@ -463,6 +465,15 @@ export class AdminController {
   async verifyAudit(@Req() req: Request) {
     this.assertAdmin(req);
     return this.auditVerify.verifyChain();
+  }
+
+  @Post("audit/export-worm")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Manually trigger yesterday's WORM audit export" })
+  async exportWorm(@Req() req: Request): Promise<{ message: string }> {
+    this.assertAdmin(req);
+    await this.wormExport.exportYesterday();
+    return { message: "WORM export triggered successfully" };
   }
 
   @Get("audit/export")

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: clinical-copilot
+description: >
+  Hospital-grade clinical AI assistant — aggregated patient view, factual
+  narrative summary, factual Q&A, and shift-change handoff.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - healthcare
+  - clinical-ai
+  - health-it
+home: https://github.com/your-org/clinical-copilot
+maintainers:
+  - name: Clinical Copilot Engineering

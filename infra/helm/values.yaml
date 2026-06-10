@@ -1,0 +1,131 @@
+# Default values for clinical-copilot Helm chart.
+# This file is suitable for local dev / stub mode.
+# Override with values-dev.yaml, values-staging.yaml, or values-prod.yaml.
+
+global:
+  imageRegistry: "ghcr.io/your-org"
+  imagePullPolicy: IfNotPresent
+  namespace: clinical-copilot-dev
+
+image:
+  tag: "latest"
+
+# ─── web (React SPA served by nginx) ─────────────────────────────────────────
+web:
+  replicaCount: 1
+  image:
+    repository: clinical-copilot/web
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  service:
+    port: 80
+
+# ─── core (NestJS API gateway) ────────────────────────────────────────────────
+core:
+  replicaCount: 3
+  image:
+    repository: clinical-copilot/core
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+  service:
+    port: 4000
+  env:
+    NODE_ENV: production
+    PORT: "4000"
+    LOG_LEVEL: info
+
+# ─── narrative (FastAPI / Python) ─────────────────────────────────────────────
+narrative:
+  replicaCount: 2
+  image:
+    repository: clinical-copilot/narrative
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
+  service:
+    port: 5001
+
+# ─── qa (FastAPI / Python) ────────────────────────────────────────────────────
+qa:
+  replicaCount: 3
+  image:
+    repository: clinical-copilot/qa
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
+  service:
+    port: 5002
+
+# ─── HPA ──────────────────────────────────────────────────────────────────────
+hpa:
+  core:
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  qa:
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+
+# ─── PDB ──────────────────────────────────────────────────────────────────────
+pdb:
+  core:
+    minAvailable: 1
+  narrative:
+    minAvailable: 1
+  qa:
+    minAvailable: 1
+
+# ─── Ingress ──────────────────────────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: nginx
+  # Host will be overridden per environment
+  host: clinical-copilot.hospital.local
+  tls:
+    enabled: true
+    # secretName must exist in the namespace (created by cert-manager or pre-provisioned)
+    secretName: clinical-copilot-tls
+
+# ─── Config (non-secret) ──────────────────────────────────────────────────────
+config:
+  FHIR_BASE_URL: "http://fhir-server.hospital.local/fhir"
+  OIDC_ISSUER: "http://keycloak.hospital.local/realms/clinical-copilot"
+  NARRATIVE_SERVICE_URL: "http://narrative:5001"
+  QA_SERVICE_URL: "http://qa:5002"
+  AUDIT_HASH_ALGORITHM: "sha256"
+  FEATURE_FLAG_QA_ALLOW_RESPONSES: "true"
+  FEATURE_FLAG_NARRATIVE_ENABLED: "true"
+  FEATURE_FLAG_HANDOFF_ENABLED: "true"
+  FEATURE_FLAG_INGESTION_ENABLED: "true"
+
+# ─── Secrets (all values sourced from K8s Secret objects) ─────────────────────
+# Set secretName to the K8s Secret that holds the keys below.
+# In production, this Secret is populated by external-secrets / Vault.
+secrets:
+  secretName: clinical-copilot-secrets
+  # Keys that must exist in the Secret:
+  #   DATABASE_URL          — PostgreSQL connection string
+  #   SESSION_SECRET        — 256-bit random string for session signing
+  #   ANTHROPIC_API_KEY     — Model API key (in-Kingdom endpoint)
+  #   GPG_PASSPHRASE        — For backup encryption
+  #   S3_ACCESS_KEY_ID      — Object storage access
+  #   S3_SECRET_ACCESS_KEY  — Object storage secret
