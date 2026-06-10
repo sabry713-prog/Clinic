@@ -1,29 +1,46 @@
 /**
- * Admin endpoints for quarantine management.
+ * Admin endpoints — quarantine, user management, audit search, audit verify,
+ * config, and DSR coordination.
+ *
+ * All endpoints require hospital_admin or sysadmin role.
  */
 
 import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Param,
   Body,
+  Query,
   Req,
+  Res,
   ForbiddenException,
   NotFoundException,
   Logger,
   HttpCode,
+  Inject,
 } from "@nestjs/common";
-import type { Request } from "express";
+import type { Request, Response } from "express";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { IsString, IsIn } from "class-validator";
-import { Inject } from "@nestjs/common";
+import {
+  IsString,
+  IsIn,
+  IsEmail,
+  IsArray,
+  IsOptional,
+  IsDateString,
+} from "class-validator";
 import { PG_POOL } from "../database/database.module";
 import type { Pool } from "pg";
 import { SessionService } from "../auth/session.service";
 import { writeAuditEvent } from "@clinical-copilot/audit";
 import type { RequestId, UserId, UserRole } from "@clinical-copilot/shared-types";
 import { v4 as uuidv4 } from "uuid";
+import { AuditVerifyService } from "../audit/audit-verify.service";
+
+// ─── DTOs ─────────────────────────────────────────────────────────────────────
 
 class ResolveQuarantineDto {
   @IsIn(["merge", "keep_separate"])
@@ -33,6 +50,70 @@ class ResolveQuarantineDto {
   reason!: string;
 }
 
+class CreateUserDto {
+  @IsString()
+  external_subject!: string;
+
+  @IsString()
+  display_name!: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsIn(["ar", "en"])
+  @IsOptional()
+  preferred_language?: "ar" | "en";
+
+  @IsArray()
+  @IsString({ each: true })
+  roles!: string[];
+}
+
+class UpdateUserRolesDto {
+  @IsArray()
+  @IsString({ each: true })
+  roles!: string[];
+}
+
+class AuditQueryDto {
+  @IsOptional()
+  @IsString()
+  actor_id?: string;
+
+  @IsOptional()
+  @IsString()
+  target_type?: string;
+
+  @IsOptional()
+  @IsString()
+  target_id?: string;
+
+  @IsOptional()
+  @IsString()
+  action?: string;
+
+  @IsOptional()
+  @IsDateString()
+  since?: string;
+
+  @IsOptional()
+  @IsDateString()
+  until?: string;
+
+  @IsOptional()
+  @IsIn(["SUCCESS", "FAILURE", "REFUSED"])
+  outcome?: string;
+
+  @IsOptional()
+  @IsString()
+  cursor?: string;
+
+  @IsOptional()
+  limit?: string;
+}
+
+// ─── Controller ───────────────────────────────────────────────────────────────
+
 @ApiTags("admin")
 @Controller("admin")
 export class AdminController {
@@ -41,6 +122,7 @@ export class AdminController {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly sessions: SessionService,
+    private readonly auditVerify: AuditVerifyService,
   ) {}
 
   private assertAdmin(req: Request): string {
@@ -56,6 +138,8 @@ export class AdminController {
     req.authenticatedUserRole = session.roles[0] ?? undefined;
     return session.userId;
   }
+
+  // ─── Quarantine ────────────────────────────────────────────────────────────
 
   @Get("quarantine")
   @ApiOperation({ summary: "List open quarantine records" })
@@ -116,13 +200,348 @@ export class AdminController {
       request_id: requestId,
     });
 
-    this.logger.log({
-      event: "quarantine_resolved",
-      quarantine_id: id,
-      action: body.action,
-      resolved_by: userId,
+    return { message: `Quarantine record ${newStatus}` };
+  }
+
+  // ─── User management ───────────────────────────────────────────────────────
+
+  @Get("users")
+  @ApiOperation({ summary: "List users (cursor paginated)" })
+  async listUsers(
+    @Req() req: Request,
+    @Query("cursor") cursor?: string,
+    @Query("limit") limitStr?: string,
+  ) {
+    this.assertAdmin(req);
+    const limit = Math.min(parseInt(limitStr ?? "20", 10) || 20, 100);
+
+    let rows;
+    if (cursor) {
+      rows = await this.pool.query(
+        `SELECT id, display_name, email, roles, disabled_at, created_at
+         FROM app."user"
+         WHERE created_at < (SELECT created_at FROM app."user" WHERE id = $1)
+         ORDER BY created_at DESC
+         LIMIT $2`,
+        [cursor, limit + 1],
+      );
+    } else {
+      rows = await this.pool.query(
+        `SELECT id, display_name, email, roles, disabled_at, created_at
+         FROM app."user"
+         ORDER BY created_at DESC
+         LIMIT $1`,
+        [limit + 1],
+      );
+    }
+
+    const data = rows.rows.slice(0, limit);
+    const hasMore = rows.rows.length > limit;
+    const nextCursor = hasMore ? (data[data.length - 1] as { id: string } | undefined)?.id ?? null : null;
+
+    return {
+      data,
+      pagination: { next_cursor: nextCursor, has_more: hasMore },
+    };
+  }
+
+  @Post("users")
+  @HttpCode(201)
+  @ApiOperation({ summary: "Create user" })
+  async createUser(
+    @Req() req: Request,
+    @Body() body: CreateUserDto,
+  ) {
+    const userId = this.assertAdmin(req);
+    const requestId = uuidv4() as RequestId;
+
+    const result = await this.pool.query<{ id: string }>(
+      `INSERT INTO app."user"
+         (external_subject, display_name, email, preferred_language, roles, tenant_id)
+       VALUES ($1, $2, $3, $4, $5,
+         (SELECT id FROM app.tenant LIMIT 1))
+       RETURNING id`,
+      [
+        body.external_subject,
+        body.display_name,
+        body.email,
+        body.preferred_language ?? "ar",
+        JSON.stringify(body.roles),
+      ],
+    );
+
+    const newUserId = result.rows[0]!.id;
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "USER_CREATED",
+      target_type: "user",
+      target_id: newUserId,
+      outcome: "SUCCESS",
+      metadata_json: { roles: body.roles },
+      request_id: requestId,
     });
 
-    return { message: `Quarantine record ${newStatus}` };
+    return { id: newUserId };
+  }
+
+  @Patch("users/:id")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Update user roles" })
+  async updateUserRoles(
+    @Req() req: Request,
+    @Param("id") targetId: string,
+    @Body() body: UpdateUserRolesDto,
+  ): Promise<{ message: string }> {
+    const userId = this.assertAdmin(req);
+    const requestId = uuidv4() as RequestId;
+
+    const existing = await this.pool.query<{ id: string }>(
+      `SELECT id FROM app."user" WHERE id = $1`,
+      [targetId],
+    );
+    if (!existing.rows[0]) throw new NotFoundException("User not found");
+
+    await this.pool.query(
+      `UPDATE app."user" SET roles = $1 WHERE id = $2`,
+      [JSON.stringify(body.roles), targetId],
+    );
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "ROLE_CHANGED",
+      target_type: "user",
+      target_id: targetId,
+      outcome: "SUCCESS",
+      metadata_json: { new_roles: body.roles },
+      request_id: requestId,
+    });
+
+    return { message: "Roles updated" };
+  }
+
+  @Delete("users/:id")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Soft-disable a user" })
+  async disableUser(
+    @Req() req: Request,
+    @Param("id") targetId: string,
+  ): Promise<{ message: string }> {
+    const userId = this.assertAdmin(req);
+    const requestId = uuidv4() as RequestId;
+
+    const existing = await this.pool.query<{ id: string; disabled_at: Date | null }>(
+      `SELECT id, disabled_at FROM app."user" WHERE id = $1`,
+      [targetId],
+    );
+    if (!existing.rows[0]) throw new NotFoundException("User not found");
+    if (existing.rows[0].disabled_at) {
+      throw new ForbiddenException("User already disabled");
+    }
+
+    await this.pool.query(
+      `UPDATE app."user" SET disabled_at = now() WHERE id = $1`,
+      [targetId],
+    );
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "USER_DISABLED",
+      target_type: "user",
+      target_id: targetId,
+      outcome: "SUCCESS",
+      metadata_json: {},
+      request_id: requestId,
+    });
+
+    return { message: "User disabled" };
+  }
+
+  // ─── Audit search ──────────────────────────────────────────────────────────
+
+  @Get("audit")
+  @ApiOperation({ summary: "Search audit log" })
+  async searchAudit(@Req() req: Request, @Query() query: AuditQueryDto) {
+    const userId = this.assertAdmin(req);
+    const requestId = uuidv4() as RequestId;
+
+    const limit = Math.min(parseInt(query.limit ?? "50", 10) || 50, 200);
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+
+    if (query.actor_id) {
+      conditions.push(`e.actor_id = $${idx++}`);
+      params.push(query.actor_id);
+    }
+    if (query.target_type) {
+      conditions.push(`e.target_type = $${idx++}`);
+      params.push(query.target_type);
+    }
+    if (query.target_id) {
+      conditions.push(`e.target_id = $${idx++}`);
+      params.push(query.target_id);
+    }
+    if (query.action) {
+      conditions.push(`e.action = $${idx++}`);
+      params.push(query.action);
+    }
+    if (query.since) {
+      conditions.push(`e.ts >= $${idx++}`);
+      params.push(query.since);
+    }
+    if (query.until) {
+      conditions.push(`e.ts <= $${idx++}`);
+      params.push(query.until);
+    }
+    if (query.outcome) {
+      conditions.push(`e.outcome = $${idx++}`);
+      params.push(query.outcome);
+    }
+    if (query.cursor) {
+      conditions.push(`e.ts < (SELECT ts FROM audit.event WHERE id = $${idx++})`);
+      params.push(query.cursor);
+    }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    const result = await this.pool.query(
+      `SELECT e.id, e.ts, e.actor_id, u.display_name AS actor_display_name,
+              e.actor_role, e.action, e.target_type, e.target_id,
+              e.outcome, e.metadata_json, e.request_id
+       FROM audit.event e
+       LEFT JOIN app."user" u ON u.id = e.actor_id
+       ${where}
+       ORDER BY e.ts DESC, e.id DESC
+       LIMIT $${idx}`,
+      [...params, limit + 1],
+    );
+
+    const data = result.rows.slice(0, limit).map((row: Record<string, unknown>) => ({
+      id: row["id"],
+      ts: row["ts"],
+      actor: {
+        id: row["actor_id"],
+        display_name: row["actor_display_name"],
+        role: row["actor_role"],
+      },
+      action: row["action"],
+      target_type: row["target_type"],
+      target_id: row["target_id"],
+      outcome: row["outcome"],
+      metadata_json: row["metadata_json"],
+      request_id: row["request_id"],
+    }));
+
+    const hasMore = result.rows.length > limit;
+    const nextCursor = hasMore ? (data[data.length - 1] as { id: string } | undefined)?.id ?? null : null;
+
+    // Audit the access (per spec: AUDIT_LOG_ACCESSED)
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "AUDIT_LOG_ACCESSED",
+      target_type: "audit.event",
+      target_id: null,
+      outcome: "SUCCESS",
+      metadata_json: { filters: { action: query.action, since: query.since, until: query.until } },
+      request_id: requestId,
+    });
+
+    return {
+      data,
+      pagination: { next_cursor: nextCursor, has_more: hasMore },
+    };
+  }
+
+  @Post("audit/verify")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Verify audit log hash-chain integrity" })
+  async verifyAudit(@Req() req: Request) {
+    this.assertAdmin(req);
+    return this.auditVerify.verifyChain();
+  }
+
+  @Get("audit/export")
+  @ApiOperation({ summary: "Export audit log as NDJSON stream" })
+  async exportAudit(@Req() req: Request, @Query() query: AuditQueryDto, @Res() res: Response) {
+    this.assertAdmin(req);
+
+    res.setHeader("Content-Type", "application/x-ndjson");
+    res.setHeader("Transfer-Encoding", "chunked");
+
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+    if (query.since) { conditions.push(`ts >= $${idx++}`); params.push(query.since); }
+    if (query.until) { conditions.push(`ts <= $${idx++}`); params.push(query.until); }
+    if (query.action) { conditions.push(`action = $${idx++}`); params.push(query.action); }
+    if (query.actor_id) { conditions.push(`actor_id = $${idx++}`); params.push(query.actor_id); }
+    if (query.outcome) { conditions.push(`outcome = $${idx++}`); params.push(query.outcome); }
+
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    const client = await this.pool.connect();
+    try {
+      const queryResult = await client.query(
+        `SELECT id, ts, actor_id, actor_role, action, target_type, target_id, outcome, metadata_json, request_id
+         FROM audit.event ${where} ORDER BY ts ASC`,
+        params,
+      );
+      for (const row of queryResult.rows) {
+        res.write(JSON.stringify(row) + "\n");
+      }
+      res.end();
+    } catch {
+      res.end();
+    } finally {
+      client.release();
+    }
+  }
+
+  // ─── Config ────────────────────────────────────────────────────────────────
+
+  @Get("config")
+  @ApiOperation({ summary: "Get hospital configuration" })
+  async getConfig(@Req() req: Request) {
+    this.assertAdmin(req);
+
+    const result = await this.pool.query<{ config_json: Record<string, unknown> }>(
+      `SELECT config_json FROM app.tenant LIMIT 1`,
+    );
+    return result.rows[0]?.config_json ?? {};
+  }
+
+  @Patch("config")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Update hospital configuration" })
+  async updateConfig(
+    @Req() req: Request,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ message: string }> {
+    const userId = this.assertAdmin(req);
+    const requestId = uuidv4() as RequestId;
+
+    await this.pool.query(
+      `UPDATE app.tenant
+       SET config_json = config_json || $1::jsonb`,
+      [JSON.stringify(body)],
+    );
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "CONFIG_CHANGED",
+      target_type: "tenant",
+      target_id: null,
+      outcome: "SUCCESS",
+      metadata_json: { keys_updated: Object.keys(body) },
+      request_id: requestId,
+    });
+
+    return { message: "Config updated" };
   }
 }

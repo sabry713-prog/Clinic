@@ -12,6 +12,8 @@ import { RbacModule } from "./rbac/rbac.module";
 import { AdminModule } from "./admin/admin.module";
 import { NarrativeProxyModule } from "./narrative-proxy/narrative-proxy.module";
 import { QAProxyModule } from "./qa-proxy/qa-proxy.module";
+import { HandoffModule } from "./handoff/handoff.module";
+import { DsrModule } from "./dsr/dsr.module";
 
 @Module({
   imports: [
@@ -62,6 +64,8 @@ import { QAProxyModule } from "./qa-proxy/qa-proxy.module";
     AdminModule,
     NarrativeProxyModule,
     QAProxyModule,
+    HandoffModule,
+    DsrModule,
   ],
 })
 export class AppModule implements NestModule {

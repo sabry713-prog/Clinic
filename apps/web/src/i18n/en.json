@@ -17,6 +17,40 @@
     "logout": "Sign Out",
     "loading": "Loading..."
   },
+  "handoff": {
+    "title": "Shift Handoff",
+    "generated_at": "Generated at",
+    "scope": "Scope",
+    "language": "Language",
+    "copy": "Copy",
+    "print": "Print",
+    "section": {
+      "identity": "Identity and Admission",
+      "documented_today": "Documented Today",
+      "medications": "Current Medications",
+      "vitals": "Recent Vitals",
+      "labs": "Recent Labs",
+      "orders": "Pending Orders"
+    }
+  },
+  "audit": {
+    "title": "Audit Log",
+    "filters": "Filters",
+    "search": "Search",
+    "verify": "Verify Integrity",
+    "verifying": "Verifying...",
+    "passed": "Passed",
+    "failed": "Failed",
+    "events_verified": "Events verified"
+  },
+  "admin": {
+    "users_title": "User Management",
+    "edit_roles": "Edit roles",
+    "disable": "Disable",
+    "confirm_disable": "Confirm disable",
+    "active": "Active",
+    "disabled": "Disabled"
+  },
   "qa": {
     "title": "Factual Q&A",
     "placeholder": "Ask a factual question about this patient's record…",
