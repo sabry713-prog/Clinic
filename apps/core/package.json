@@ -12,7 +12,8 @@
     "test:cov": "jest --coverage",
     "migrate:dev": "node-pg-migrate up -m migrations --envPath ../../.env",
     "migrate:create": "node-pg-migrate create -m migrations",
-    "seed:dev": "ts-node src/seed/dev.ts"
+    "seed:dev": "ts-node src/seed/dev.ts",
+    "seed:enrich": "ts-node src/seed/enrich.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1066.0",

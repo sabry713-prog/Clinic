@@ -107,7 +107,7 @@ class StubModelProvider:
             return "No matching data found in this patient's record."
 
         scored.sort(key=lambda s: s[0], reverse=True)
-        top = [c for _, c in scored[:5]]
+        top = [c for _, c in scored[:8]]
         if len(top) == 1:
             return f"Based on the documented record: {top[0]}"
         bullets = "\n".join(f"• {c}" for c in top)
