@@ -264,6 +264,27 @@ language: en
 pattern: \bred flag(s)?\b
 ```
 
+```
+id: RED_FLAG_IDENTIFICATION:ar_qalaq
+language: ar
+pattern: (مثير للقلق|يستدعي القلق|\bمقلق(ة)?\b|\bالقلق\b|\bقلق(ة)?\b|\bخطير(ة)?\b)
+positive:
+  - "هل وضعه يستدعي القلق؟"
+  - "هل الكرياتينين في مستوى مثير للقلق؟"
+  - "هل التحاليل مقلقة؟"
+  - "هل وضعه خطير؟"
+```
+
+```
+id: RED_FLAG_IDENTIFICATION:ar_tabiei
+language: ar
+pattern: \bهل\b.{0,60}\bطبيعي(ة|ه)?\b
+positive:
+  - "هل نسبة السكر طبيعية؟"
+negative:
+  - "ما هي قيم الكرياتينين الموثقة؟" (factual lookup — must remain ALLOWED)
+```
+
 ### COMPARATIVE_JUDGMENT
 
 ```
