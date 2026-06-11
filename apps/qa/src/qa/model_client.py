@@ -79,6 +79,13 @@ _TERM_ALIASES = {
     "symptoms": "symptom", "clinics": "clinic",
 }
 
+# Summary-style questions ask for the record as a whole rather than one
+# record type; answered with a factual cross-section instead of keyword match
+_SUMMARY_TERMS = frozenset({
+    "summary", "summarize", "summarise", "overview", "history",
+    "ملخص", "موجز", "نبذة", "نبذه", "خلاصة", "خلاصه", "تلخيص", "تاريخ",
+})
+
 # Arabic stopwords (question filler that carries no retrieval signal)
 _STOPWORDS_AR = frozenset({
     "ما", "ماذا", "هل", "كيف", "متى", "اين", "أين", "من", "عن", "في", "على",
@@ -94,6 +101,14 @@ def _normalize_token(t: str) -> str:
     if len(t) > 4 and t.startswith("ال"):
         return t[2:]
     return t
+
+
+def _is_summary_question(question: str) -> bool:
+    tokens = re.findall(r"[\w^/%]+", question.lower())
+    return any(
+        t in _SUMMARY_TERMS or _normalize_token(t) in _SUMMARY_TERMS
+        for t in tokens
+    )
 
 
 def _question_terms(question: str) -> list[str]:
@@ -145,6 +160,25 @@ class StubModelProvider:
         chunk_matches = _CHUNK_RE.findall(user_prompt)
         if not chunk_matches:
             return no_data
+
+        # Summary-style question: reproduce a cross-section of the record,
+        # round-robin across record types so no single type dominates.
+        # Factual reproduction only — no synthesis or prioritization.
+        if _is_summary_question(question):
+            by_type: dict[str, list[str]] = {}
+            for chunk in chunk_matches:
+                kind = chunk.split(":", 1)[0].strip().lower()
+                by_type.setdefault(kind, []).append(chunk)
+            queues = list(by_type.values())
+            selected: list[str] = []
+            i = 0
+            while len(selected) < 8 and any(queues):
+                queue = queues[i % len(queues)]
+                if queue:
+                    selected.append(queue.pop(0))
+                i += 1
+            bullets = "\n".join(f"• {c}" for c in selected)
+            return f"{preamble}\n{bullets}"
 
         # Score chunks by how many question terms they contain
         terms = _question_terms(question)
