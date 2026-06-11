@@ -53,19 +53,58 @@ _TERM_ALIASES = {
     "hb": "hemoglobin", "hgb": "hemoglobin",
     "bp": "blood pressure", "temp": "temperature",
     "cr": "creatinine", "glu": "glucose", "sugar": "glucose",
+    # Arabic clinical vocabulary → English chunk vocabulary
+    # (chunk text is English; Arabic questions must map to it)
+    "اشعه": "imaging", "اشعة": "imaging", "اشاعات": "imaging", "اشاعه": "imaging",
+    "أشعة": "imaging", "أشعه": "imaging", "تصوير": "imaging",
+    "تحاليل": "laboratory", "تحليل": "laboratory", "مختبر": "laboratory",
+    "فحوصات": "laboratory", "فحص": "laboratory",
+    "ادويه": "medication", "ادوية": "medication", "أدوية": "medication",
+    "دواء": "medication", "علاج": "medication", "علاجات": "medication",
+    "وصفات": "medication", "وصفه": "medication",
+    "حساسيه": "allergy", "حساسية": "allergy", "حساسيات": "allergy",
+    "امراض": "condition", "مرض": "condition", "مشاكل": "condition",
+    "سكر": "glucose", "السكري": "glucose", "جلوكوز": "glucose",
+    "ضغط": "blood pressure", "حراره": "temperature", "حرارة": "temperature",
+    "نبض": "heart rate", "اكسجين": "spo2", "أكسجين": "spo2",
+    "هيموجلوبين": "hemoglobin", "كرياتينين": "creatinine",
+    "صوديوم": "sodium", "بوتاسيوم": "potassium",
+    "ملاحظات": "note", "تقارير": "note", "تقرير": "note",
+    "تنويم": "encounter", "دخول": "encounter", "زيارات": "encounter",
+    "علامات": "vital", "حيويه": "vital", "حيوية": "vital",
 }
+
+# Arabic stopwords (question filler that carries no retrieval signal)
+_STOPWORDS_AR = frozenset({
+    "ما", "ماذا", "هل", "كيف", "متى", "اين", "أين", "من", "عن", "في", "على",
+    "هي", "هو", "هذا", "هذه", "ذلك", "محتاج", "محتاجه", "اعرف", "أعرف",
+    "اريد", "أريد", "ابغى", "أبغى", "تفاصيل", "اكتر", "أكثر", "اكثر",
+    "المريض", "المريضه", "المريضة", "السابقه", "السابقة", "الحاليه", "الحالية",
+    "الاخيره", "الأخيرة", "الاخيرة", "نتائج", "نتيجة", "قيم", "قيمة",
+})
+
+
+def _normalize_token(t: str) -> str:
+    # Strip Arabic definite article so "الاشاعات" matches "اشاعات"
+    if len(t) > 4 and t.startswith("ال"):
+        return t[2:]
+    return t
 
 
 def _question_terms(question: str) -> list[str]:
-    tokens = re.findall(r"[a-zA-Z0-9^/%؀-ۿ]+", question.lower())
+    # \w covers Arabic letters in Python 3 and excludes Arabic punctuation (، ؛ ؟)
+    tokens = re.findall(r"[\w^/%]+", question.lower())
     terms = []
-    for t in tokens:
-        if t in _STOPWORDS:
-            continue
-        if t in _TERM_ALIASES:
-            terms.append(_TERM_ALIASES[t])
-        elif len(t) >= 3:
-            terms.append(t)
+    for raw in tokens:
+        for t in (raw, _normalize_token(raw)):
+            if t in _STOPWORDS or t in _STOPWORDS_AR:
+                break
+            if t in _TERM_ALIASES:
+                terms.append(_TERM_ALIASES[t])
+                break
+        else:
+            if len(raw) >= 3:
+                terms.append(raw)
     return terms
 
 
@@ -85,14 +124,22 @@ class StubModelProvider:
         user_prompt: str,
         params: ModelParams,
     ) -> str:
-        # Extract question
+        # Extract question and requested language
         q_match = _QUESTION_RE.search(user_prompt)
         question = q_match.group(1).strip() if q_match else ""
+        lang_match = re.search(r"LANGUAGE:\s*(\w+)", user_prompt)
+        lang = lang_match.group(1).strip().lower() if lang_match else "en"
+        no_data = (
+            "لا توجد بيانات مطابقة في سجل هذا المريض."
+            if lang == "ar"
+            else "No matching data found in this patient's record."
+        )
+        preamble = "حسب السجل الموثق:" if lang == "ar" else "Based on the documented record:"
 
         # Extract chunk contents for grounding
         chunk_matches = _CHUNK_RE.findall(user_prompt)
         if not chunk_matches:
-            return "No matching data found in this patient's record."
+            return no_data
 
         # Score chunks by how many question terms they contain
         terms = _question_terms(question)
@@ -104,11 +151,11 @@ class StubModelProvider:
                 scored.append((score, chunk))
 
         if not scored:
-            return "No matching data found in this patient's record."
+            return no_data
 
         scored.sort(key=lambda s: s[0], reverse=True)
         top = [c for _, c in scored[:8]]
         if len(top) == 1:
-            return f"Based on the documented record: {top[0]}"
+            return f"{preamble} {top[0]}"
         bullets = "\n".join(f"• {c}" for c in top)
-        return f"Based on the documented record:\n{bullets}"
+        return f"{preamble}\n{bullets}"
