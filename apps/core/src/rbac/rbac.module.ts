@@ -5,6 +5,6 @@ import { AuthModule } from "../auth/auth.module";
 @Module({
   imports: [AuthModule],
   providers: [RbacGuard],
-  exports: [RbacGuard],
+  exports: [RbacGuard, AuthModule],
 })
 export class RbacModule {}

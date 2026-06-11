@@ -17,6 +17,16 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   `);
   pgm.sql(`CREATE INDEX ON app.indexing_run (patient_id, started_at DESC)`);
 
+  // Add chunk_index and language columns needed for unique upsert key
+  pgm.sql(`
+    ALTER TABLE hospital.retrieval_chunk
+    ADD COLUMN IF NOT EXISTS chunk_index integer NOT NULL DEFAULT 0
+  `);
+  pgm.sql(`
+    ALTER TABLE hospital.retrieval_chunk
+    ADD COLUMN IF NOT EXISTS language text NOT NULL DEFAULT 'en'
+  `);
+
   // Add updated_at to retrieval_chunk for cache invalidation
   pgm.sql(`
     ALTER TABLE hospital.retrieval_chunk

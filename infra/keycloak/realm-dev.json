@@ -19,7 +19,10 @@
         "http://localhost:4000/api/v1/auth/callback",
         "http://localhost:3000/*"
       ],
-      "webOrigins": ["http://localhost:3000", "http://localhost:4000"],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:4000"
+      ],
       "protocol": "openid-connect",
       "publicClient": false,
       "standardFlowEnabled": true,
@@ -36,8 +39,17 @@
       "firstName": "Ahmad",
       "lastName": "Al-Zahrani",
       "enabled": true,
-      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
-      "realmRoles": ["physician"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Test1234!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "physician"
+      ],
+      "id": "dev-physician-001"
     },
     {
       "username": "nurse1",
@@ -45,17 +57,36 @@
       "firstName": "Sara",
       "lastName": "Al-Otaibi",
       "enabled": true,
-      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
-      "realmRoles": ["nurse"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Test1234!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "nurse"
+      ],
+      "id": "dev-nurse-001"
     }
   ],
   "roles": {
     "realm": [
-      { "name": "physician" },
-      { "name": "pharmacist" },
-      { "name": "nurse" },
-      { "name": "hospital_admin" },
-      { "name": "sysadmin" }
+      {
+        "name": "physician"
+      },
+      {
+        "name": "pharmacist"
+      },
+      {
+        "name": "nurse"
+      },
+      {
+        "name": "hospital_admin"
+      },
+      {
+        "name": "sysadmin"
+      }
     ]
   }
 }
