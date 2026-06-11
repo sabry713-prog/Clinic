@@ -72,6 +72,11 @@ _TERM_ALIASES = {
     "ملاحظات": "note", "تقارير": "note", "تقرير": "note",
     "تنويم": "encounter", "دخول": "encounter", "زيارات": "encounter",
     "علامات": "vital", "حيويه": "vital", "حيوية": "vital",
+    "اعراض": "symptom", "أعراض": "symptom", "عرض": "symptom",
+    "شكوى": "symptom", "شكاوى": "symptom",
+    "عيادة": "clinic", "عياده": "clinic", "عيادات": "clinic",
+    # English plurals → singular used in chunk text
+    "symptoms": "symptom", "clinics": "clinic",
 }
 
 # Arabic stopwords (question filler that carries no retrieval signal)
