@@ -82,6 +82,33 @@ export interface EncounterItem {
   readonly ward: string | null;
 }
 
+export interface ConditionEpisode {
+  readonly id: string;
+  readonly status: string | null;
+  readonly onset_date: string | null;
+  readonly encounter: {
+    readonly id: string;
+    readonly ward: string | null;
+    readonly started_at: string | null;
+  } | null;
+  readonly note: {
+    readonly id: string;
+    readonly type: string | null;
+    readonly authored_at: string | null;
+    readonly author_display: string | null;
+    readonly content_text: string | null;
+  } | null;
+}
+
+export interface ConditionHistory {
+  readonly code: {
+    readonly system: string | null;
+    readonly code: string | null;
+    readonly display: string | null;
+  };
+  readonly episodes: readonly ConditionEpisode[];
+}
+
 export interface CursorPage<T> {
   readonly data: readonly T[];
   readonly next_cursor: string | null;
@@ -314,6 +341,111 @@ export class PatientService {
       : null;
 
     return { data, next_cursor, total: null };
+  }
+
+  // ─── Condition history ────────────────────────────────────────────────────
+
+  async getConditionHistory(
+    userId: string,
+    patientId: string,
+    conditionId: string,
+  ): Promise<ConditionHistory> {
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const baseResult = await this.pool.query<{
+      code_system: string | null;
+      code: string | null;
+      code_display: string | null;
+    }>(
+      `SELECT code_system, code, code_display
+       FROM hospital.condition
+       WHERE id = $1 AND patient_id = $2`,
+      [conditionId, patientId],
+    );
+
+    const base = baseResult.rows[0];
+    if (!base) throw new NotFoundException("Condition not found");
+
+    // All episodes of the same coded condition for this patient, each linked
+    // (by date) to the encounter and clinical note documented that day.
+    const episodesResult = await this.pool.query<{
+      id: string;
+      status: string | null;
+      onset_date: string | null;
+      encounter_id: string | null;
+      encounter_ward: string | null;
+      encounter_started_at: string | null;
+      note_id: string | null;
+      note_type: string | null;
+      note_authored_at: string | null;
+      note_author_display: string | null;
+      note_content_text: string | null;
+    }>(
+      `SELECT c.id,
+              c.status,
+              c.onset_date::text AS onset_date,
+              e.id AS encounter_id,
+              e.ward AS encounter_ward,
+              e.started_at::text AS encounter_started_at,
+              d.id AS note_id,
+              d.type AS note_type,
+              d.authored_at::text AS note_authored_at,
+              d.author_display AS note_author_display,
+              d.content_text AS note_content_text
+       FROM hospital.condition c
+       LEFT JOIN LATERAL (
+         SELECT id, ward, started_at
+         FROM hospital.encounter
+         WHERE patient_id = c.patient_id
+           AND started_at::date = c.onset_date
+         ORDER BY started_at
+         LIMIT 1
+       ) e ON true
+       LEFT JOIN LATERAL (
+         SELECT id, type, authored_at, author_display, content_text
+         FROM hospital.document_reference
+         WHERE patient_id = c.patient_id
+           AND authored_at::date = c.onset_date
+         ORDER BY authored_at
+         LIMIT 1
+       ) d ON true
+       WHERE c.patient_id = $1
+         AND c.code IS NOT DISTINCT FROM $2
+         AND c.code_system IS NOT DISTINCT FROM $3
+       ORDER BY c.onset_date DESC NULLS LAST`,
+      [patientId, base.code, base.code_system],
+    );
+
+    const episodes: ConditionEpisode[] = episodesResult.rows.map((r) => ({
+      id: r.id,
+      status: r.status,
+      onset_date: r.onset_date,
+      encounter: r.encounter_id
+        ? {
+            id: r.encounter_id,
+            ward: r.encounter_ward,
+            started_at: r.encounter_started_at,
+          }
+        : null,
+      note: r.note_id
+        ? {
+            id: r.note_id,
+            type: r.note_type,
+            authored_at: r.note_authored_at,
+            author_display: r.note_author_display,
+            content_text: r.note_content_text,
+          }
+        : null,
+    }));
+
+    return {
+      code: {
+        system: base.code_system,
+        code: base.code,
+        display: base.code_display,
+      },
+      episodes,
+    };
   }
 
   // ─── Document ─────────────────────────────────────────────────────────────

@@ -73,6 +73,33 @@ export interface PatientDetail extends PatientSummary {
   readonly conditions: readonly ConditionItem[];
 }
 
+export interface ConditionEpisode {
+  readonly id: string;
+  readonly status: string | null;
+  readonly onset_date: string | null;
+  readonly encounter: {
+    readonly id: string;
+    readonly ward: string | null;
+    readonly started_at: string | null;
+  } | null;
+  readonly note: {
+    readonly id: string;
+    readonly type: string | null;
+    readonly authored_at: string | null;
+    readonly author_display: string | null;
+    readonly content_text: string | null;
+  } | null;
+}
+
+export interface ConditionHistory {
+  readonly code: {
+    readonly system: string | null;
+    readonly code: string | null;
+    readonly display: string | null;
+  };
+  readonly episodes: readonly ConditionEpisode[];
+}
+
 export interface ObservationItem {
   readonly id: string;
   readonly category: string | null;
@@ -284,7 +311,12 @@ export interface QAInteractionSummary {
 
 export const api = {
   patients: {
-    list: (params?: { cursor?: string; limit?: number; q?: string; ward?: string }) => {
+    list: (params?: {
+      cursor?: string | undefined;
+      limit?: number | undefined;
+      q?: string | undefined;
+      ward?: string | undefined;
+    }) => {
       const qs = new URLSearchParams();
       if (params?.cursor) qs.set("cursor", params.cursor);
       if (params?.limit !== undefined) qs.set("limit", String(params.limit));
@@ -344,6 +376,11 @@ export const api = {
 
     document: (patientId: string, docId: string) =>
       request<DocumentItem>(`/api/v1/patients/${patientId}/documents/${docId}`),
+
+    conditionHistory: (patientId: string, conditionId: string) =>
+      request<ConditionHistory>(
+        `/api/v1/patients/${patientId}/conditions/${conditionId}/history`,
+      ),
   },
 
   narrative: {
@@ -460,15 +497,15 @@ export const api = {
       }),
 
     listAudit: (filters?: {
-      actor_id?: string;
-      target_type?: string;
-      target_id?: string;
-      action?: string;
-      since?: string;
-      until?: string;
-      outcome?: string;
-      cursor?: string;
-      limit?: number;
+      actor_id?: string | undefined;
+      target_type?: string | undefined;
+      target_id?: string | undefined;
+      action?: string | undefined;
+      since?: string | undefined;
+      until?: string | undefined;
+      outcome?: string | undefined;
+      cursor?: string | undefined;
+      limit?: number | undefined;
     }) => {
       const qs = new URLSearchParams();
       if (filters?.actor_id) qs.set("actor_id", filters.actor_id);
