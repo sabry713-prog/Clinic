@@ -10,6 +10,9 @@
  */
 
 import { useState } from "react";
+import { useShowMore, ShowMoreButton } from "../ShowMore/ShowMore";
+
+const INITIAL_ROWS = 5;
 
 export interface ObservationItem {
   readonly id: string;
@@ -79,6 +82,8 @@ export default function LabPanel({
       ? observations
       : observations.filter((o) => o.category === activeCategory);
 
+  const rows = useShowMore(filtered, INITIAL_ROWS);
+
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
       <h2 className="text-base font-semibold text-white mb-4">Observations</h2>
@@ -117,7 +122,7 @@ export default function LabPanel({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((obs) => (
+              {rows.visible.map((obs) => (
                 <tr
                   key={obs.id}
                   className="border-b border-slate-800 last:border-0"
@@ -139,10 +144,11 @@ export default function LabPanel({
               ))}
             </tbody>
           </table>
+          <ShowMoreButton state={rows} itemLabel="observations" />
         </div>
       )}
 
-      {hasMore && onLoadMore && (
+      {hasMore && onLoadMore && rows.expanded && (
         <button
           onClick={onLoadMore}
           className="mt-4 text-sm text-slate-400 hover:text-white transition-colors"
