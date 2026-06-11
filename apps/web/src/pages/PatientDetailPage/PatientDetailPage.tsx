@@ -13,6 +13,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api, type PatientDetail, type ObservationItem, type MedicationItem, type HandoffOutput, ApiError } from "../../lib/api";
+import { useCopilot } from "../../context/CopilotContext";
 import PatientHeader from "../../components/PatientHeader/PatientHeader";
 import LabPanel from "../../components/LabPanel/LabPanel";
 import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
@@ -23,8 +24,9 @@ import HandoffView from "../../components/HandoffView/HandoffView";
 export default function PatientDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { setPatient } = useCopilot();
 
-  const [patient, setPatient] = useState<PatientDetail | null>(null);
+  const [patient, setPatientData] = useState<PatientDetail | null>(null);
   const [observations, setObservations] = useState<ObservationItem[]>([]);
   const [obsNextCursor, setObsNextCursor] = useState<string | null>(null);
   const [medications, setMedications] = useState<MedicationItem[]>([]);
@@ -50,7 +52,8 @@ export default function PatientDetailPage(): JSX.Element {
     api.patients
       .get(patientId)
       .then((data) => {
-        setPatient(data);
+        setPatientData(data);
+        setPatient(data.id, data.display_name ?? data.mrn ?? "Unknown patient");
       })
       .catch((err: unknown) => {
         if (err instanceof ApiError) {

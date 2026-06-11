@@ -26,11 +26,12 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: dev-mem
+      KC_DB: dev-file
     ports:
       - "8080:8080"
     volumes:
       - ./infra/keycloak/realm-dev.json:/opt/keycloak/data/import/realm-dev.json:ro
+      - keycloak_data:/opt/keycloak/data
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
       interval: 10s
@@ -86,3 +87,4 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  keycloak_data:

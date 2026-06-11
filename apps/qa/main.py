@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from dataclasses import asdict
+from datetime import datetime
+from typing import Any, AsyncGenerator, Optional
 
+import asyncpg
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from pydantic import BaseModel
 
 from src.qa.config import settings
 from src.qa.grpc_server import create_grpc_server
 from src.qa.logging_config import configure_logging
+from src.qa.qa_service import answer as qa_answer
 from src.qa.tracing import configure_tracing
 
 configure_logging(settings.otel_service_name)
@@ -19,11 +25,12 @@ configure_tracing(settings.otel_service_name, settings.otel_exporter_otlp_endpoi
 logger = structlog.get_logger()
 
 _grpc_server = None
+_db_pool: Optional[asyncpg.Pool] = None  # type: ignore[type-arg]
 
 
 @asynccontextmanager
 async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
-    global _grpc_server  # noqa: PLW0603
+    global _grpc_server, _db_pool  # noqa: PLW0603
     _grpc_server = create_grpc_server(settings.qa_grpc_port)
     _grpc_server.start()
     logger.info(
@@ -31,9 +38,18 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         port=settings.qa_grpc_port,
         service=settings.otel_service_name,
     )
+    db_url = os.environ.get("DATABASE_URL", "")
+    if db_url:
+        try:
+            _db_pool = await asyncpg.create_pool(db_url, min_size=1, max_size=5)
+            logger.info("db_pool_created")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("db_pool_failed", error=str(exc))
     yield
     _grpc_server.stop(grace=5)
     logger.info("grpc_server_stopped")
+    if _db_pool:
+        await _db_pool.close()
 
 
 app = FastAPI(
@@ -46,6 +62,13 @@ app = FastAPI(
 FastAPIInstrumentor.instrument_app(app)
 
 
+class AskRequest(BaseModel):
+    patient_id: str
+    question: str
+    language: str = "en"
+    conversation_id: Optional[str] = None
+
+
 @app.get("/health", response_class=JSONResponse)
 async def health() -> dict[str, str]:
     """HTTP health endpoint for Docker / k8s liveness probes."""
@@ -53,6 +76,200 @@ async def health() -> dict[str, str]:
         "status": "ok",
         "service": settings.otel_service_name,
     }
+
+
+async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
+    """
+    Fetch patient facts directly from the DB and format them as retrieval chunks.
+    Used in stub/dev mode when the vector index is not populated.
+    """
+    if _db_pool is None:
+        return []
+
+    chunks: list[dict[str, Any]] = []
+    now = datetime.utcnow().isoformat()
+
+    async with _db_pool.acquire() as conn:
+        # Conditions
+        rows = await conn.fetch(
+            """SELECT code, code_display, status, onset_date
+               FROM hospital.condition
+               WHERE patient_id = $1""",
+            patient_id,
+        )
+        for r in rows:
+            chunks.append({
+                "source_type": "condition",
+                "source_id": patient_id,
+                "content_text": (
+                    f"Condition: {r['code_display']} (code: {r['code']}) "
+                    f"status: {r['status']}, onset: {r['onset_date'] or 'unknown'}"
+                ),
+                "language": "en",
+                "effective_at": str(r["onset_date"]) if r["onset_date"] else now,
+                "code": r["code"] or "",
+                "source_system": "hospital",
+                "field": "condition",
+            })
+
+        # Observations (vitals, labs)
+        rows = await conn.fetch(
+            """SELECT code, code_display, category, value_numeric, unit,
+                      value_text, effective_at, ref_range_low, ref_range_high, ref_range_text
+               FROM hospital.observation
+               WHERE patient_id = $1
+               ORDER BY effective_at DESC
+               LIMIT 30""",
+            patient_id,
+        )
+        for r in rows:
+            val = (
+                f"{r['value_numeric']} {r['unit'] or ''}".strip()
+                if r["value_numeric"] is not None
+                else (r["value_text"] or "")
+            )
+            ref = ""
+            if r["ref_range_low"] is not None and r["ref_range_high"] is not None:
+                ref = f" (ref: {r['ref_range_low']}-{r['ref_range_high']} {r['unit'] or ''})"
+            elif r["ref_range_text"]:
+                ref = f" (ref: {r['ref_range_text']})"
+            chunks.append({
+                "source_type": "observation",
+                "source_id": patient_id,
+                "content_text": (
+                    f"{r['category'] or 'Lab'}: {r['code_display']} = {val}{ref} "
+                    f"(recorded: {r['effective_at']})"
+                ),
+                "language": "en",
+                "effective_at": str(r["effective_at"]),
+                "code": r["code"] or "",
+                "source_system": "hospital",
+                "field": r["category"] or "observation",
+            })
+
+        # Allergies
+        rows = await conn.fetch(
+            """SELECT code, code_display, reaction, recorded_at
+               FROM hospital.allergy_intolerance
+               WHERE patient_id = $1""",
+            patient_id,
+        )
+        for r in rows:
+            chunks.append({
+                "source_type": "allergy",
+                "source_id": patient_id,
+                "content_text": (
+                    f"Allergy: {r['code_display']} "
+                    f"reaction: {r['reaction'] or 'unspecified'} "
+                    f"(recorded: {r['recorded_at']})"
+                ),
+                "language": "en",
+                "effective_at": str(r["recorded_at"]) if r["recorded_at"] else now,
+                "code": r["code"] or "",
+                "source_system": "hospital",
+                "field": "allergy",
+            })
+
+        # Encounters
+        rows = await conn.fetch(
+            """SELECT encounter_type, status, started_at, ended_at, ward
+               FROM hospital.encounter
+               WHERE patient_id = $1
+               ORDER BY started_at DESC
+               LIMIT 5""",
+            patient_id,
+        )
+        for r in rows:
+            chunks.append({
+                "source_type": "encounter",
+                "source_id": patient_id,
+                "content_text": (
+                    f"Encounter: {r['encounter_type']} status: {r['status']} "
+                    f"ward: {r['ward'] or 'unknown'} "
+                    f"from {r['started_at']} to {r['ended_at'] or 'ongoing'}"
+                ),
+                "language": "en",
+                "effective_at": str(r["started_at"]),
+                "code": "",
+                "source_system": "hospital",
+                "field": "encounter",
+            })
+
+        # Medications
+        rows = await conn.fetch(
+            """SELECT medication_display, status, prescriber_display, dose, route, frequency, started_at
+               FROM hospital.medication_request
+               WHERE patient_id = $1
+               ORDER BY started_at DESC
+               LIMIT 10""",
+            patient_id,
+        )
+        for r in rows:
+            chunks.append({
+                "source_type": "medication",
+                "source_id": patient_id,
+                "content_text": (
+                    f"Medication: {r['medication_display']} "
+                    f"dose: {r['dose'] or 'unspecified'} "
+                    f"route: {r['route'] or ''} "
+                    f"frequency: {r['frequency'] or ''} "
+                    f"status: {r['status']} "
+                    f"(started: {r['started_at']})"
+                ),
+                "language": "en",
+                "effective_at": str(r["started_at"]) if r["started_at"] else now,
+                "code": "",
+                "source_system": "hospital",
+                "field": "medication",
+            })
+
+        # Documents (notes)
+        rows = await conn.fetch(
+            """SELECT type, content_text, authored_at
+               FROM hospital.document_reference
+               WHERE patient_id = $1
+               ORDER BY authored_at DESC
+               LIMIT 5""",
+            patient_id,
+        )
+        for r in rows:
+            content = (r["content_text"] or "")[:500]
+            chunks.append({
+                "source_type": "document",
+                "source_id": patient_id,
+                "content_text": f"Note ({r['type']}): {content}",
+                "language": "en",
+                "effective_at": str(r["authored_at"]) if r["authored_at"] else now,
+                "code": "",
+                "source_system": "hospital",
+                "field": r["type"] or "note",
+            })
+
+    return chunks
+
+
+@app.post("/qa/answer", response_class=JSONResponse)
+async def ask(body: AskRequest) -> dict:
+    """Classify and answer a factual question about a patient."""
+    try:
+        # In stub/dev mode: fetch patient facts directly from DB as context chunks
+        chunks = await _fetch_patient_chunks(body.patient_id)
+
+        result = await qa_answer(
+            patient_id=body.patient_id,
+            question=body.question,
+            language=body.language,
+            conversation_id=body.conversation_id,
+            pool=None,    # vector retrieval disabled in stub mode
+            embedder=None,
+            model=None,
+            classifier_model=None,
+            _override_chunks=chunks,  # pass DB facts directly
+        )
+        return asdict(result)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("qa_answer_error", error=str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 if __name__ == "__main__":

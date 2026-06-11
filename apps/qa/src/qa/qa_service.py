@@ -41,6 +41,7 @@ async def answer(
     embedder: Optional["EmbeddingProvider"] = None,
     model: Optional["ModelProvider"] = None,
     classifier_model: Optional["ModelClassifier"] = None,
+    _override_chunks: Optional[list[dict[str, Any]]] = None,
 ) -> QAResponse:
     """
     Full Q&A pipeline:
@@ -99,7 +100,7 @@ async def answer(
         )
 
     # Step 2: Retrieve (ALLOWED path only)
-    chunks: list[dict[str, Any]] = []
+    chunks: list[dict[str, Any]] = _override_chunks if _override_chunks is not None else []
     if pool is not None and embedder is not None:
         try:
             from retrieval.retriever import hybrid_retrieve  # type: ignore[import-untyped]

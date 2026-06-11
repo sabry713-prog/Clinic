@@ -30,7 +30,23 @@
       "directAccessGrantsEnabled": false,
       "attributes": {
         "pkce.code.challenge.method": "S256"
-      }
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
     }
   ],
   "users": [
@@ -50,7 +66,7 @@
       "realmRoles": [
         "physician"
       ],
-      "id": "dev-physician-001"
+      "id": "00000000-0000-0000-0000-000000000010"
     },
     {
       "username": "nurse1",
@@ -68,7 +84,7 @@
       "realmRoles": [
         "nurse"
       ],
-      "id": "dev-nurse-001"
+      "id": "00000000-0000-0000-0000-000000000011"
     }
   ],
   "roles": {

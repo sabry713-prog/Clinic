@@ -4,6 +4,8 @@ import { useAuth } from "./hooks/useAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { HomePage } from "./pages/HomePage";
 import { useTranslation } from "react-i18next";
+import { CopilotProvider } from "./context/CopilotContext";
+import CopilotPanel from "./components/CopilotPanel/CopilotPanel";
 
 const PatientListPage = lazy(() => import("./pages/PatientListPage/PatientListPage"));
 const PatientDetailPage = lazy(() => import("./pages/PatientDetailPage/PatientDetailPage"));
@@ -31,7 +33,7 @@ function AppRoutes(): JSX.Element {
       />
       <Route
         path="/"
-        element={user != null ? <HomePage /> : <Navigate to="/login" replace />}
+        element={user != null ? <Navigate to="/patients" replace /> : <Navigate to="/login" replace />}
       />
       <Route
         path="/patients"
@@ -61,9 +63,12 @@ function AppRoutes(): JSX.Element {
 export function App(): JSX.Element {
   return (
     <BrowserRouter>
-      <Suspense>
-        <AppRoutes />
-      </Suspense>
+      <CopilotProvider>
+        <Suspense>
+          <AppRoutes />
+        </Suspense>
+        <CopilotPanel />
+      </CopilotProvider>
     </BrowserRouter>
   );
 }

@@ -26,7 +26,7 @@ const pool = new Pool({
 const TENANT_ID = "00000000-0000-0000-0000-000000000001";
 
 // Dev physician user -- linked to Keycloak dev realm user
-const DEV_PHYSICIAN_EXTERNAL_SUBJECT = "dev-physician-001";
+const DEV_PHYSICIAN_EXTERNAL_SUBJECT = "00000000-0000-0000-0000-000000000010";
 const DEV_PHYSICIAN_DISPLAY_NAME = "Dr. Tariq Al-Mansouri (Dev)";
 
 // Synthetic patient data -- no real PHI
