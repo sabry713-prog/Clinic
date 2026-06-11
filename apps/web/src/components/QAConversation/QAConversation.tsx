@@ -205,6 +205,61 @@ export default function QAConversation({
   );
 }
 
+// ── AnswerBody ────────────────────────────────────────────────────────────────
+//
+// Renders bulleted answers ("• Label: text" lines) as a structured list with
+// a neutral record-type tag per row. All tags share one muted style — no
+// color-coding by record type or content. Non-bulleted answers (refusals,
+// single-fact answers) render as plain text.
+
+function prettyLabel(raw: string): string {
+  const cleaned = raw.replace(/-/g, " ").trim();
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
+function AnswerBody({ text }: { readonly text: string }): React.ReactElement {
+  const lines = text.split("\n");
+  const hasBullets = lines.some((l) => l.startsWith("• "));
+
+  if (!hasBullets) {
+    return <span className="whitespace-pre-wrap">{text}</span>;
+  }
+
+  const preamble = lines.filter((l) => !l.startsWith("• ") && l.trim() !== "");
+  const bullets = lines
+    .filter((l) => l.startsWith("• "))
+    .map((l) => l.slice(2));
+
+  return (
+    <div className="space-y-2">
+      {preamble.map((line, i) => (
+        <p key={`p-${i}`} className="font-medium">
+          {line}
+        </p>
+      ))}
+      <ul className="space-y-1.5">
+        {bullets.map((item, i) => {
+          const match = /^([^:]{2,40}?(?:\([^)]*\))?):\s+(.*)$/s.exec(item);
+          return (
+            <li key={`b-${i}`} className="flex items-start gap-2">
+              {match ? (
+                <>
+                  <span className="shrink-0 mt-0.5 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600 whitespace-nowrap">
+                    {prettyLabel(match[1]!)}
+                  </span>
+                  <span className="min-w-0">{match[2]}</span>
+                </>
+              ) : (
+                <span className="min-w-0">{item}</span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 // ── TurnItem ──────────────────────────────────────────────────────────────────
 
 interface TurnItemProps {
@@ -239,14 +294,14 @@ function TurnItem({
         <div className="max-w-[85%] space-y-2">
           {/* Response bubble — neutral muted style for both ALLOWED and REFUSED */}
           <div
-            className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
+            className={`rounded-2xl px-4 py-3 text-sm ${
               isAllowed
                 ? "bg-gray-100 text-gray-800"
                 : "bg-gray-50 text-gray-700 border border-gray-200 italic"
             }`}
             // No red/warning/alert styling for refused — neutral italic is sufficient
           >
-            {turn.response.answer_text}
+            <AnswerBody text={turn.response.answer_text} />
           </div>
 
           {/* Classification label — small, neutral */}

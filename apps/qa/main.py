@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from dataclasses import asdict
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, AsyncGenerator, Optional
 
 import asyncpg
@@ -77,6 +77,17 @@ async def health() -> dict[str, str]:
     }
 
 
+def _fmt_dt(value: Any) -> str:
+    """Render DB timestamps as readable text for chunk content."""
+    if value is None:
+        return "unknown"
+    if isinstance(value, datetime):
+        return value.strftime("%d %b %Y %H:%M")
+    if isinstance(value, date):
+        return value.strftime("%d %b %Y")
+    return str(value)
+
+
 async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
     """
     Fetch patient facts directly from the DB and format them as retrieval chunks.
@@ -102,7 +113,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                 "source_id": patient_id,
                 "content_text": (
                     f"Condition: {r['code_display']} (code: {r['code']}) "
-                    f"status: {r['status']}, onset: {r['onset_date'] or 'unknown'}"
+                    f"status: {r['status']}, onset: {_fmt_dt(r['onset_date'])}"
                 ),
                 "language": "en",
                 "effective_at": str(r["onset_date"]) if r["onset_date"] else now,
@@ -137,7 +148,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                 "source_id": patient_id,
                 "content_text": (
                     f"{r['category'] or 'Lab'}: {r['code_display']} = {val}{ref} "
-                    f"(recorded: {r['effective_at']})"
+                    f"(recorded: {_fmt_dt(r['effective_at'])})"
                 ),
                 "language": "en",
                 "effective_at": str(r["effective_at"]),
@@ -160,7 +171,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                 "content_text": (
                     f"Allergy: {r['code_display']} "
                     f"reaction: {r['reaction'] or 'unspecified'} "
-                    f"(recorded: {r['recorded_at']})"
+                    f"(recorded: {_fmt_dt(r['recorded_at'])})"
                 ),
                 "language": "en",
                 "effective_at": str(r["recorded_at"]) if r["recorded_at"] else now,
@@ -185,7 +196,8 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                 "content_text": (
                     f"Encounter: {r['encounter_type']} status: {r['status']} "
                     f"ward: {r['ward'] or 'unknown'} "
-                    f"from {r['started_at']} to {r['ended_at'] or 'ongoing'}"
+                    f"from {_fmt_dt(r['started_at'])} "
+                    f"to {_fmt_dt(r['ended_at']) if r['ended_at'] else 'ongoing'}"
                 ),
                 "language": "en",
                 "effective_at": str(r["started_at"]),
@@ -213,7 +225,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                     f"route: {r['route'] or ''} "
                     f"frequency: {r['frequency'] or ''} "
                     f"status: {r['status']} "
-                    f"(started: {r['started_at']})"
+                    f"(started: {_fmt_dt(r['started_at'])})"
                 ),
                 "language": "en",
                 "effective_at": str(r["started_at"]) if r["started_at"] else now,
