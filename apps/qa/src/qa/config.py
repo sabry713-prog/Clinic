@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file="../../.env", extra="ignore")
 
     qa_grpc_port: int = 5002
+    database_url: str = ""
     otel_exporter_otlp_endpoint: str = "http://localhost:4318"
     otel_service_name: str = "clinical-copilot-qa"
     node_env: str = "development"

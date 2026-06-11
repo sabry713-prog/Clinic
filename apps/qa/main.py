@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from datetime import datetime
@@ -38,7 +37,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         port=settings.qa_grpc_port,
         service=settings.otel_service_name,
     )
-    db_url = os.environ.get("DATABASE_URL", "")
+    db_url = settings.database_url
     if db_url:
         try:
             _db_pool = await asyncpg.create_pool(db_url, min_size=1, max_size=5)
@@ -176,7 +175,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                FROM hospital.encounter
                WHERE patient_id = $1
                ORDER BY started_at DESC
-               LIMIT 5""",
+               LIMIT 40""",
             patient_id,
         )
         for r in rows:
@@ -201,7 +200,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                FROM hospital.medication_request
                WHERE patient_id = $1
                ORDER BY started_at DESC
-               LIMIT 10""",
+               LIMIT 40""",
             patient_id,
         )
         for r in rows:
@@ -229,7 +228,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                FROM hospital.document_reference
                WHERE patient_id = $1
                ORDER BY authored_at DESC
-               LIMIT 5""",
+               LIMIT 40""",
             patient_id,
         )
         for r in rows:
