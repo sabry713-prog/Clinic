@@ -221,6 +221,31 @@ class TestRedFlagIdentification:
         cat, _ = apply_rules("Are there any red flags?")
         assert cat == "RED_FLAG_IDENTIFICATION"
 
+    def test_ar_yastadi_alqalaq(self):
+        cat, _ = apply_rules("هل وضعه يستدعي القلق؟")
+        assert cat == "RED_FLAG_IDENTIFICATION"
+
+    def test_ar_muthir_lilqalaq(self):
+        cat, _ = apply_rules("هل الكرياتينين في مستوى مثير للقلق؟")
+        assert cat == "RED_FLAG_IDENTIFICATION"
+
+    def test_ar_muqliq(self):
+        cat, _ = apply_rules("هل التحاليل مقلقة؟")
+        assert cat == "RED_FLAG_IDENTIFICATION"
+
+    def test_ar_khatir(self):
+        cat, _ = apply_rules("هل وضعه خطير؟")
+        assert cat == "RED_FLAG_IDENTIFICATION"
+
+    def test_ar_tabiei(self):
+        cat, _ = apply_rules("هل نسبة السكر طبيعية؟")
+        assert cat == "RED_FLAG_IDENTIFICATION"
+
+    def test_ar_factual_not_refused(self):
+        # Plain factual Arabic lookup must not trip the new rules
+        cat, _ = apply_rules("ما هي قيم الكرياتينين الموثقة؟")
+        assert cat is None
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # COMPARATIVE_JUDGMENT
