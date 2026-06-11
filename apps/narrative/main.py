@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Optional
 
+import asyncpg
 import structlog
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -23,6 +25,7 @@ logger = structlog.get_logger()
 
 # gRPC server singleton
 _grpc_server = None
+_db_pool: Optional[asyncpg.Pool] = None  # type: ignore[type-arg]
 
 # Model provider — replaced with real implementation when model is selected
 _model = StubModelProvider()
@@ -30,7 +33,7 @@ _model = StubModelProvider()
 
 @asynccontextmanager
 async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
-    global _grpc_server  # noqa: PLW0603
+    global _grpc_server, _db_pool  # noqa: PLW0603
     _grpc_server = create_grpc_server(settings.narrative_grpc_port)
     _grpc_server.start()
     logger.info(
@@ -38,9 +41,18 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         port=settings.narrative_grpc_port,
         service=settings.otel_service_name,
     )
+    db_url = os.environ.get("DATABASE_URL", "")
+    if db_url:
+        try:
+            _db_pool = await asyncpg.create_pool(db_url, min_size=1, max_size=5)
+            logger.info("db_pool_created")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("db_pool_failed", error=str(exc))
     yield
     _grpc_server.stop(grace=5)
     logger.info("grpc_server_stopped")
+    if _db_pool:
+        await _db_pool.close()
 
 
 app = FastAPI(
@@ -76,13 +88,11 @@ async def generate(request: GenerateNarrativeRequest) -> dict[str, Any]:
     The gRPC path is preferred in production; this HTTP path is provided
     for Slice 2 integration simplicity before grpc-js is wired in NestJS.
     """
-    # In Slice 2 the database pool is None — assembly falls back gracefully
-    # (real pool injected at Slice 3 when DB is fully wired)
     output = await generate_narrative(
         patient_id=request.patient_id,
         language=request.language,
         scope=request.scope,
-        pool=None,  # type: ignore[arg-type]
+        pool=_db_pool,  # type: ignore[arg-type]
         model=_model,
     )
 

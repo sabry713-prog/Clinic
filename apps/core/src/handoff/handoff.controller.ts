@@ -105,9 +105,10 @@ export class HandoffController {
       actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
       action: "HANDOFF_GENERATE",
       target_type: "ward",
-      target_id: wardId,
+      // audit.event.target_id is uuid; ward ids are text, so record the ward in metadata
+      target_id: null,
       outcome: "SUCCESS",
-      metadata_json: { scope: result.scope, language: result.language, patient_count: result.patient_count },
+      metadata_json: { ward_id: wardId, scope: result.scope, language: result.language, patient_count: result.patient_count },
       request_id: requestId,
     });
 

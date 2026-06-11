@@ -95,9 +95,8 @@ export class HandoffService {
       date_of_birth: string | null;
       sex: string | null;
       preferred_language: string | null;
-      ward: string | null;
     }>(
-      `SELECT id, mrn, display_name, date_of_birth, sex, preferred_language, ward
+      `SELECT id, mrn, display_name, date_of_birth::text, sex, preferred_language
        FROM hospital.patient WHERE id = $1`,
       [patientId],
     );
@@ -124,7 +123,7 @@ export class HandoffService {
     );
 
     const encounter = encounterRow.rows[0] ?? null;
-    const wardId = encounter?.ward ?? patient.ward ?? null;
+    const wardId = encounter?.ward ?? null;
 
     const provenance: ProvenanceItem[] = [];
 
