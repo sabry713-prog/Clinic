@@ -119,7 +119,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                FROM hospital.observation
                WHERE patient_id = $1
                ORDER BY effective_at DESC
-               LIMIT 30""",
+               LIMIT 200""",
             patient_id,
         )
         for r in rows:
