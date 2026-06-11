@@ -25,10 +25,10 @@ import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
     }),
     LoggerModule.forRoot({
       pinoHttp: {
-        transport:
-          process.env["NODE_ENV"] !== "production"
-            ? { target: "pino-pretty", options: { colorize: true } }
-            : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+        transport: (process.env["NODE_ENV"] !== "production"
+          ? { target: "pino-pretty", options: { colorize: true } }
+          : undefined) as any,
         serializers: {
           req: (req: { id: unknown; method: unknown; url: unknown }) => ({
             id: req.id,

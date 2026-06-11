@@ -33,7 +33,7 @@ export class AuthController {
   ) {}
 
   @Post("login")
-  @ApiOperation({ summary: "Initiate OIDC login — returns auth_url" })
+  @ApiOperation({ summary: "Initiate OIDC login -- returns auth_url" })
   async login(@Body() body: LoginDto): Promise<{ auth_url: string }> {
     const returnTo = body.return_to ?? "/";
     const auth_url = await this.authService.buildAuthUrl(returnTo);
@@ -41,7 +41,7 @@ export class AuthController {
   }
 
   @Get("callback")
-  @ApiOperation({ summary: "OIDC callback — sets session cookie and redirects" })
+  @ApiOperation({ summary: "OIDC callback -- sets session cookie and redirects" })
   async callback(
     @Query("code") code: string,
     @Query("state") state: string,
@@ -76,7 +76,7 @@ export class AuthController {
 
   @Post("logout")
   @ApiCookieAuth("session_id")
-  @ApiOperation({ summary: "Logout — invalidates session and returns IdP logout URL" })
+  @ApiOperation({ summary: "Logout -- invalidates session and returns IdP logout URL" })
   async logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -99,7 +99,7 @@ export class AuthController {
 
     // Attach to request for audit middleware
     req.authenticatedUserId = session.userId;
-    req.authenticatedUserRole = session.roles[0] ?? undefined;
+    if (session.roles[0] !== undefined) req.authenticatedUserRole = session.roles[0];
 
     return this.sessionService.toAuthUser(session);
   }
@@ -107,7 +107,7 @@ export class AuthController {
   @Post("refresh")
   @HttpCode(204)
   @ApiCookieAuth("session_id")
-  @ApiOperation({ summary: "Refresh session — 204 No Content" })
+  @ApiOperation({ summary: "Refresh session -- 204 No Content" })
   refresh(@Req() req: Request): void {
     const sessionId = req.cookies["session_id"] as string | undefined;
     if (!sessionId) throw new UnauthorizedException("No session");

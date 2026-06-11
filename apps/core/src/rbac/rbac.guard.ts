@@ -45,7 +45,7 @@ export class RbacGuard implements CanActivate {
 
     // Attach to request for downstream use
     req.authenticatedUserId = session.userId;
-    req.authenticatedUserRole = session.roles[0] ?? undefined;
+    if (session.roles[0] !== undefined) req.authenticatedUserRole = session.roles[0];
 
     // If no permission required, authentication is enough
     if (!requiredPerm) return true;

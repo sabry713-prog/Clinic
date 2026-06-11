@@ -231,7 +231,7 @@ export class IngestionService {
         // Point all references to the earliest-created patient
         // (simple: just ensure the newer record knows about the older one)
         // For now, upsert handles this via source_system/source_id uniqueness.
-        // True merging would update patient_id FK references — deferred for admin flow.
+        // True merging would update patient_id FK references -- deferred for admin flow.
         this.logger.log({
           event: "identity_auto_merge",
           patient_a: patientId,

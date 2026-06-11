@@ -42,7 +42,7 @@ interface S3PutResult {
  *   - Uploaded to: audit/{YYYY}/{MM}/{DD}/audit-{YYYY-MM-DD}.ndjson.gz
  *   - Integrity verified via ETag / SHA-256 checksum
  *
- * The S3 bucket MUST have Object Lock (WORM) configured in Terraform/Helm —
+ * The S3 bucket MUST have Object Lock (WORM) configured in Terraform/Helm --
  * this is an infrastructure concern, not application code.
  *
  * PHI note: audit events may contain patient_id (UUID) and action codes but
@@ -169,7 +169,7 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
     } catch {
       this.logger.warn(
         { key },
-        "WORM export: @aws-sdk/client-s3 not installed — skipping S3 upload (stub mode)",
+        "WORM export: @aws-sdk/client-s3 not installed -- skipping S3 upload (stub mode)",
       );
       return;
     }
@@ -203,7 +203,7 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
 
     if (!result.ETag) {
       throw new Error(
-        `WORM export upload for ${dateStr} returned no ETag — integrity unverified`,
+        `WORM export upload for ${dateStr} returned no ETag -- integrity unverified`,
       );
     }
 

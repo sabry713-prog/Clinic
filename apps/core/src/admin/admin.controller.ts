@@ -1,5 +1,5 @@
 /**
- * Admin endpoints — quarantine, user management, audit search, audit verify,
+ * Admin endpoints -- quarantine, user management, audit search, audit verify,
  * config, and DSR coordination.
  *
  * All endpoints require hospital_admin or sysadmin role.
@@ -137,7 +137,7 @@ export class AdminController {
       session.roles.includes("sysadmin");
     if (!isAdmin) throw new ForbiddenException("Admin role required");
     req.authenticatedUserId = session.userId;
-    req.authenticatedUserRole = session.roles[0] ?? undefined;
+    if (session.roles[0] !== undefined) req.authenticatedUserRole = session.roles[0];
     return session.userId;
   }
 

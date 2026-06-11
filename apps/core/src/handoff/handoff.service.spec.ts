@@ -59,7 +59,7 @@ describe("handoff-formatter", () => {
       const sections = {
         identity_and_admission: ["Name: Test Patient"],
         documented_today: [],
-        current_medications: ["Metformin 500 mg — oral — twice daily"],
+        current_medications: ["Metformin 500 mg -- oral -- twice daily"],
         recent_vitals: ["HR: 80 bpm (2026-06-10)"],
         recent_labs: ["Creatinine: 90 μmol/L [59–104 μmol/L] (2026-06-10)"],
         pending_orders: [],
@@ -77,7 +77,7 @@ describe("handoff-formatter", () => {
       const sections = {
         identity_and_admission: ["Name: Test Patient", "Ward: ICU-3"],
         documented_today: ["[2026-06-10] Note by Dr. Smith: Patient reviewed."],
-        current_medications: ["Paracetamol 1g — IV — every 6h"],
+        current_medications: ["Paracetamol 1g -- IV -- every 6h"],
         recent_vitals: ["BP: 130/85 mmHg (2026-06-10)"],
         recent_labs: ["WBC: 8.2 × 10⁹/L [4.0–11.0 × 10⁹/L] (2026-06-10)"],
         pending_orders: [],

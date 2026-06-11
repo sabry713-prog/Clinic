@@ -4,7 +4,7 @@
  * Seeds:
  *   - 1 dev tenant (already seeded in migration)
  *   - 1 dev physician user
- *   - 50 synthetic patients (no real PHI — obviously fake names)
+ *   - 50 synthetic patients (no real PHI -- obviously fake names)
  *   - Encounters linking 5 patients to dev physician (in scope)
  *   - 1 patient explicitly NOT linked (out-of-scope for E2E test)
  *   - Observations, conditions, and medications for each patient
@@ -25,11 +25,11 @@ const pool = new Pool({
 
 const TENANT_ID = "00000000-0000-0000-0000-000000000001";
 
-// Dev physician user — linked to Keycloak dev realm user
+// Dev physician user -- linked to Keycloak dev realm user
 const DEV_PHYSICIAN_EXTERNAL_SUBJECT = "dev-physician-001";
 const DEV_PHYSICIAN_DISPLAY_NAME = "Dr. Tariq Al-Mansouri (Dev)";
 
-// Synthetic patient data — no real PHI
+// Synthetic patient data -- no real PHI
 const FAKE_PATIENTS: Array<{
   givenName: string;
   familyName: string;
@@ -48,7 +48,7 @@ const FAKE_PATIENTS: Array<{
   { givenName: "Yousef", familyName: "Fakename-Al-Mutairi", dob: "1970-12-03", sex: "male", mrn: "MRN-008" },
   { givenName: "Sara", familyName: "Fakename-Al-Anazi", dob: "1993-04-17", sex: "female", mrn: "MRN-009" },
   { givenName: "Ahmad", familyName: "Fakename-Al-Bishi", dob: "1962-08-25", sex: "male", mrn: "MRN-010" },
-  // Out-of-scope patient (index 10, MRN-011) — NOT linked to dev physician
+  // Out-of-scope patient (index 10, MRN-011) -- NOT linked to dev physician
   { givenName: "Layla", familyName: "Fakename-Al-Subaie", dob: "1988-02-09", sex: "female", mrn: "MRN-011" },
   // Remaining patients
   { givenName: "Mansour", familyName: "Fakename-Al-Johani", dob: "1972-10-16", sex: "male", mrn: "MRN-012" },
@@ -172,7 +172,7 @@ async function seed(): Promise<void> {
 
     console.log(`Seeded ${patientIds.length} patients`);
 
-    // ── Encounters — in-scope patients ─────────────────────────────────────
+    // ── Encounters -- in-scope patients ─────────────────────────────────────
 
     for (const idx of IN_SCOPE_INDICES) {
       const patientId = patientIds[idx];

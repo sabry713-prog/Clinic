@@ -22,7 +22,7 @@ export interface SessionData {
 
 @Injectable()
 export class SessionService {
-  // Simple in-memory map — replace with DB in Slice 1
+  // Simple in-memory map -- replace with DB in Slice 1
   private readonly store = new Map<string, SessionData>();
 
   create(data: SessionData): string {

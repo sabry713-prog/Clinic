@@ -1,5 +1,5 @@
 /**
- * AuditVerifyService — verifies the audit log hash chain.
+ * AuditVerifyService -- verifies the audit log hash chain.
  *
  * Runs hourly via setInterval on module init.
  * Also called synchronously by POST /api/v1/admin/audit/verify.

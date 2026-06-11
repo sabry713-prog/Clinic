@@ -44,7 +44,7 @@ export class IngestionController {
       user_id: session.userId,
     });
 
-    // Start async — respond immediately with run ID
+    // Start async -- respond immediately with run ID
     let runIdCapture = "";
     this.ingestionService
       .runIngestion()
@@ -60,7 +60,7 @@ export class IngestionController {
       });
 
     // We can't easily get the run_id here since it's generated inside the service.
-    // Return a placeholder — in production use a job queue with pre-assigned IDs.
+    // Return a placeholder -- in production use a job queue with pre-assigned IDs.
     void runIdCapture;
     return { run_id: "pending", message: "Ingestion run started" };
   }

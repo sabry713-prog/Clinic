@@ -1,9 +1,9 @@
 /**
  * DSR endpoints
  *
- * POST /api/v1/dsr/access — access request
- * POST /api/v1/dsr/erase  — erasure request
- * GET  /api/v1/dsr/:id    — status check
+ * POST /api/v1/dsr/access -- access request
+ * POST /api/v1/dsr/erase  -- erasure request
+ * GET  /api/v1/dsr/:id    -- status check
  */
 
 import {

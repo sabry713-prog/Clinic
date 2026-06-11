@@ -6,7 +6,7 @@ import { ConfigService } from "@nestjs/config";
  *
  * Flags are backed by environment variables (set per-environment via ConfigMap
  * in Kubernetes, or in .env for local dev). In production they can be toggled
- * by updating the ConfigMap and rolling the deployment — no code change needed.
+ * by updating the ConfigMap and rolling the deployment -- no code change needed.
  *
  * The most important flag is `qa.allow_responses`: setting it to false puts
  * Q&A into refusal-only mode as the SEV-1 "stop the bleed" mechanism

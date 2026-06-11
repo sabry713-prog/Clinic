@@ -1,8 +1,8 @@
 /**
  * Handoff endpoints
  *
- * POST /api/v1/patients/:id/handoff  — single-patient handoff
- * POST /api/v1/wards/:ward_id/handoff — ward handoff (≤ 20 patients)
+ * POST /api/v1/patients/:id/handoff  -- single-patient handoff
+ * POST /api/v1/wards/:ward_id/handoff -- ward handoff (≤ 20 patients)
  */
 
 import {

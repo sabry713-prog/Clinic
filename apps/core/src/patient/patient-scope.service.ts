@@ -37,7 +37,7 @@ export class PatientScopeService {
       return new Set(cached.rows.map((r) => r.patient_id));
     }
 
-    // Cache miss — rebuild scope
+    // Cache miss -- rebuild scope
     return this.rebuildScope(userId);
   }
 
@@ -140,7 +140,7 @@ export class PatientScopeService {
       count: patientIds.length,
     });
 
-    return new Set(patientIds) as ReadonlySet<PatientId & string>;
+    return new Set(patientIds) as unknown as ReadonlySet<PatientId>;
   }
 
   /**

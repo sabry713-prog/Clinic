@@ -1,6 +1,6 @@
 /**
  * Maps FHIR R4 resources to internal hospital.* table row shapes.
- * No PHI is logged in this module — only IDs and codes.
+ * No PHI is logged in this module -- only IDs and codes.
  */
 
 import { createHash } from "node:crypto";
@@ -132,7 +132,7 @@ function firstCoding(cc: FhirCodeableConcept | undefined): FhirCoding | undefine
 
 function refToSourceId(ref: string | undefined): string | null {
   if (!ref) return null;
-  // Relative references: "ResourceType/id" — extract id
+  // Relative references: "ResourceType/id" -- extract id
   const parts = ref.split("/");
   return parts[parts.length - 1] ?? null;
 }
@@ -164,14 +164,13 @@ export function mapPatient(
     resource.name?.find((n) => n.use === "official") ?? resource.name?.[0];
 
   const displayName =
-    officialName?.text ??
+    (officialName?.text ??
     [
       ...(officialName?.given ?? []),
       officialName?.family,
     ]
       .filter(Boolean)
-      .join(" ") ||
-    null;
+      .join(" ")) || null;
 
   const familyName = officialName?.family ?? null;
   const givenName = officialName?.given?.join(" ") ?? null;

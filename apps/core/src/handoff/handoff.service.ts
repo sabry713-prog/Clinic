@@ -1,5 +1,5 @@
 /**
- * HandoffService — structured assembly of handoff summaries.
+ * HandoffService -- structured assembly of handoff summaries.
  *
  * No model calls. Data assembled directly from hospital.* tables.
  * Blocklist filter runs as defense-in-depth even on structured text.
@@ -45,7 +45,7 @@ export interface WardHandoffOutput {
   readonly handoffs: readonly HandoffOutput[];
 }
 
-// Simple blocklist check — mirrors the Python blocklist patterns for defense in depth
+// Simple blocklist check -- mirrors the Python blocklist patterns for defense in depth
 const BLOCKLIST_PATTERNS: readonly RegExp[] = [
   /\bworsening\b/i,
   /\bimproving\b/i,
@@ -143,7 +143,7 @@ export class HandoffService {
       identityItems.push(`Sex: ${patient.sex}`);
     }
     if (encounter) {
-      identityItems.push(`Encounter: ${encounter.encounter_type ?? "Inpatient"} — ${encounter.status ?? ""}, admitted ${encounter.started_at ?? "unknown"}`);
+      identityItems.push(`Encounter: ${encounter.encounter_type ?? "Inpatient"} -- ${encounter.status ?? ""}, admitted ${encounter.started_at ?? "unknown"}`);
       provenance.push({ section: "identity_and_admission", row_index: identityItems.length - 1, source_type: "encounter", source_id: encounter.id, field: "status" });
     }
     if (wardId) {
@@ -198,7 +198,7 @@ export class HandoffService {
       if (row.dose) parts.push(row.dose);
       if (row.route) parts.push(row.route);
       if (row.frequency) parts.push(row.frequency);
-      return parts.join(" — ");
+      return parts.join(" -- ");
     });
 
     // --- Section 4: Recent vitals (last value per code) ---

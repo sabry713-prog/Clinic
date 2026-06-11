@@ -5,7 +5,7 @@ import { metricsRegistry } from "./metrics.registry";
 /**
  * Exposes GET /metrics for Prometheus scraping.
  *
- * Security: this endpoint is protected at the K8s NetworkPolicy level —
+ * Security: this endpoint is protected at the K8s NetworkPolicy level --
  * only the Prometheus pod within the cluster can reach it. It intentionally
  * has no authentication middleware applied so the scrape can succeed without
  * a service-account token.
