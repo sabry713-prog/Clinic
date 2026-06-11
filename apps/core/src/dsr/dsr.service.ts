@@ -52,7 +52,7 @@ export class DsrService {
     const row = result.rows[0]!;
 
     await writeAuditEvent(this.pool, {
-      actor_id: actorId as UserId | null,
+      actor_id: actorId as unknown as UserId | null,
       actor_role: actorRole as UserRole | null,
       action: "DSR_RECEIVED",
       target_type: "dsr_request",
@@ -94,7 +94,7 @@ export class DsrService {
     const row = result.rows[0]!;
 
     await writeAuditEvent(this.pool, {
-      actor_id: actorId as UserId | null,
+      actor_id: actorId as unknown as UserId | null,
       actor_role: actorRole as UserRole | null,
       action: "DSR_RECEIVED",
       target_type: "dsr_request",

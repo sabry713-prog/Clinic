@@ -6,16 +6,16 @@ import type { Request, Response, NextFunction } from "express";
 import { FeatureFlagsService } from "./feature-flags.service";
 
 /**
- * Feature-flag middleware — "stop the bleed" mechanism.
+ * Feature-flag middleware -- "stop the bleed" mechanism.
  *
  * Checks the relevant feature flag before routing requests to Q&A, narrative,
  * or handoff. If a flag is disabled the middleware returns 503 immediately
  * with a structured JSON body. The LLM is never called.
  *
  * Flags checked:
- *   qa.allow_responses  — POST /api/v1/patients/*/qa
- *   narrative.enabled   — POST /api/v1/patients/*/narrative
- *   handoff.enabled     — POST /api/v1/handoff
+ *   qa.allow_responses  -- POST /api/v1/patients/:id/qa
+ *   narrative.enabled   -- POST /api/v1/patients/:id/narrative
+ *   handoff.enabled     -- POST /api/v1/handoff
  *
  * This is the first line of defence described in the SEV-1 playbook in
  * docs/ops/03-incident-response.md.

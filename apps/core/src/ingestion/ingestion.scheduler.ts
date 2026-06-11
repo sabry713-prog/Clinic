@@ -9,7 +9,7 @@ import { IngestionService } from "./ingestion.service";
  * The interval is every 15 minutes (900_000 ms).
  *
  * In a multi-instance deployment, the ingestion lock should be handled via
- * a PostgreSQL advisory lock — deferred to Slice 2.
+ * a PostgreSQL advisory lock -- deferred to Slice 2.
  */
 @Injectable()
 export class IngestionScheduler {

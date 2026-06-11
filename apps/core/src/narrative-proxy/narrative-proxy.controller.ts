@@ -95,14 +95,14 @@ export class NarrativeProxyController {
       forceRegenerate,
     });
 
-    // Audit event (no narrative text in audit event body — PHI-adjacent)
+    // Audit event (no narrative text in audit event body -- PHI-adjacent)
     await writeAuditEvent(this.pool, {
       actor_id: userId as import("@clinical-copilot/shared-types").UserId,
       actor_role: null,
       action: "NARRATIVE_GENERATED",
       target_type: "narrative_output",
       target_id: narrative.id,
-      outcome: "success",
+      outcome: "SUCCESS",
       metadata_json: {
         patient_id: patientId,
         language,

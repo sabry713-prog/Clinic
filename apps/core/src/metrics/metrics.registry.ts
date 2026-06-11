@@ -49,7 +49,7 @@ export const qaBlocklistTriggeredTotal = new Counter({
 // ─── Audit metrics ─────────────────────────────────────────────────────────
 export const auditChainIntegrityViolationTotal = new Counter({
   name: "audit_chain_integrity_violation_total",
-  help: "Audit log hash-chain integrity violations detected — any non-zero value requires immediate investigation",
+  help: "Audit log hash-chain integrity violations detected -- any non-zero value requires immediate investigation",
   labelNames: [] as const,
   registers: [metricsRegistry],
 });

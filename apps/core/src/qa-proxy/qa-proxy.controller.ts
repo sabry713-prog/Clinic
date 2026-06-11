@@ -23,7 +23,6 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
-  TooManyRequestsException,
   Inject,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
@@ -85,9 +84,8 @@ export class QAProxyController {
     if (!checkRateLimit(userId)) {
       res.setHeader("X-RateLimit-Limit", String(QA_RATE_LIMIT));
       res.setHeader("X-RateLimit-Remaining", "0");
-      throw new TooManyRequestsException({
-        error: { code: "RATE_LIMITED", message: "Q&A rate limit exceeded (30/min)", trace_id: requestId },
-      });
+      res.status(429).json({ error: { code: "RATE_LIMITED", message: "Q&A rate limit exceeded (30/min)", trace_id: requestId } });
+      return;
     }
 
     const language = body.language ?? "en";
@@ -102,16 +100,16 @@ export class QAProxyController {
       conversationId,
     });
 
-    // 4. Audit event — no PHI; classification + category only
+    // 4. Audit event -- no PHI; classification + category only
     const auditEventId = await writeAuditEvent(this.pool, {
-      actorId: userId,
-      actorRole: userRole,
+      actor_id: userId as unknown as import("@clinical-copilot/shared-types").UserId,
+      actor_role: userRole as unknown as import("@clinical-copilot/shared-types").UserRole | null,
       action: response.classification === "ALLOWED" ? "QA_ANSWERED" : "QA_REFUSED",
-      targetType: "PATIENT",
-      targetId: patientId,
+      target_type: "PATIENT",
+      target_id: patientId,
       outcome: "SUCCESS",
-      requestId,
-      metadata: {
+      request_id: requestId as unknown as import("@clinical-copilot/shared-types").RequestId,
+      metadata_json: {
         classification: response.classification,
         refusal_category: response.refusal_category,
         interaction_id: response.interaction_id,
@@ -119,7 +117,7 @@ export class QAProxyController {
       },
     });
 
-    res.setHeader("X-Audit-Event-Id", auditEventId);
+    res.setHeader("X-Audit-Event-Id", auditEventId.id);
     res.setHeader("X-Trace-Id", requestId);
     res.status(HttpStatus.OK).json(response);
   }
@@ -193,14 +191,14 @@ export class ConversationController {
     await this.qaSvc.softDeleteConversation(conversationId, userId);
 
     await writeAuditEvent(this.pool, {
-      actorId: userId,
-      actorRole: req.authenticatedUserRole ?? "physician",
+      actor_id: userId as unknown as import("@clinical-copilot/shared-types").UserId,
+      actor_role: (req.authenticatedUserRole ?? "physician") as unknown as import("@clinical-copilot/shared-types").UserRole | null,
       action: "QA_CONVERSATION_ENDED",
-      targetType: "QA_CONVERSATION",
-      targetId: conversationId,
+      target_type: "QA_CONVERSATION",
+      target_id: conversationId,
       outcome: "SUCCESS",
-      requestId: req.requestId ?? "",
-      metadata: {},
+      request_id: (req.requestId as unknown as import("@clinical-copilot/shared-types").RequestId) ?? null,
+      metadata_json: {},
     });
 
     res.status(HttpStatus.NO_CONTENT).send();

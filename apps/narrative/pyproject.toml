@@ -18,7 +18,12 @@ dependencies = [
     "structlog>=24.1.0",
     "asyncpg>=0.29.0",
     "blocklist",
+    "retrieval",
 ]
+
+[tool.uv.sources]
+blocklist = { path = "../../packages/blocklist", editable = true }
+retrieval = { path = "../../packages/retrieval", editable = true }
 
 [project.optional-dependencies]
 dev = [

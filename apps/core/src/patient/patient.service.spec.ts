@@ -1,5 +1,5 @@
 /**
- * Unit tests for PatientService — list and detail operations.
+ * Unit tests for PatientService -- list and detail operations.
  */
 
 import { PatientService } from "./patient.service";

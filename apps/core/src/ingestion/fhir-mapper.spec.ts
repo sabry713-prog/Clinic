@@ -38,7 +38,7 @@ describe("fhir-mapper", () => {
       expect(row.mrn).toBe("MRN-001");
     });
 
-    it("hashes national ID — never stores raw value", () => {
+    it("hashes national ID -- never stores raw value", () => {
       const row = mapPatient(fhirPatient, "hapi");
       expect(row.national_id_hash).not.toBe("1234567890");
       expect(row.national_id_hash).toHaveLength(64); // SHA-256 hex

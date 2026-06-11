@@ -1,5 +1,5 @@
 /**
- * Handoff formatter — assembles structured sections into plain text.
+ * Handoff formatter -- assembles structured sections into plain text.
  *
  * Constraints:
  * - No interpretive language
