@@ -1,9 +1,10 @@
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import HandoffView from "./HandoffView";
 import type { HandoffOutput } from "../../lib/api";
 
 // Mock i18next
-jest.mock("react-i18next", () => ({
+vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const map: Record<string, string> = {
@@ -23,7 +24,7 @@ jest.mock("react-i18next", () => ({
       };
       return map[key] ?? key;
     },
-    i18n: { changeLanguage: jest.fn() },
+    i18n: { changeLanguage: vi.fn() },
   }),
 }));
 
