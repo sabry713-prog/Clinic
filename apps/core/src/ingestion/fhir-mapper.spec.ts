@@ -123,7 +123,7 @@ describe("fhir-mapper", () => {
     });
 
     it("returns null when no patient reference", () => {
-      const noSubject: FhirEncounter = { ...fhirEncounter, subject: undefined };
+      const noSubject = { ...fhirEncounter, subject: undefined } as unknown as FhirEncounter;
       const row = mapEncounter(noSubject, "hapi");
       expect(row).toBeNull();
     });
