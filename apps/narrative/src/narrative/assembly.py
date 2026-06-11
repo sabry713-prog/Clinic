@@ -76,7 +76,7 @@ async def assemble_patient_data(
         # Demographics
         patient_row = await conn.fetchrow(
             """
-            SELECT id, mrn, display_name, date_of_birth, sex, preferred_language, ward
+            SELECT id, mrn, display_name, date_of_birth, sex, preferred_language
             FROM hospital.patient
             WHERE id = $1
             """,
@@ -91,10 +91,10 @@ async def assemble_patient_data(
         # Active conditions
         condition_rows = await conn.fetch(
             """
-            SELECT id, code_display, code, code_system, clinical_status, onset_date
+            SELECT id, code_display, code, code_system, status AS clinical_status, onset_date
             FROM hospital.condition
             WHERE patient_id = $1
-              AND clinical_status != 'inactive'
+              AND status != 'inactive'
             ORDER BY onset_date DESC NULLS LAST
             """,
             patient_id,
@@ -129,8 +129,7 @@ async def assemble_patient_data(
         # Current encounter
         enc_row = await conn.fetchrow(
             """
-            SELECT id, encounter_type, status, started_at, ended_at, ward, bed,
-                   admitting_diagnosis_display
+            SELECT id, encounter_type, status, started_at, ended_at, ward, bed
             FROM hospital.encounter
             WHERE patient_id = $1
               AND status IN ('in-progress', 'arrived')
@@ -140,12 +139,13 @@ async def assemble_patient_data(
             patient_id,
         )
         current_enc: dict[str, Any] = dict(enc_row) if enc_row else {}
+        if current_enc.get("ward") and demographics:
+            demographics["ward"] = str(current_enc["ward"])
 
         # Prior admissions (completed encounters)
         prior_enc_rows = await conn.fetch(
             """
-            SELECT id, encounter_type, status, started_at, ended_at,
-                   admitting_diagnosis_display
+            SELECT id, encounter_type, status, started_at, ended_at
             FROM hospital.encounter
             WHERE patient_id = $1
               AND status = 'finished'
@@ -181,7 +181,7 @@ async def assemble_patient_data(
         # Document references
         doc_rows = await conn.fetch(
             """
-            SELECT id, type_display, content_text, author_display, authored_at
+            SELECT id, type AS type_display, content_text, author_display, authored_at
             FROM hospital.document_reference
             WHERE patient_id = $1
             ORDER BY authored_at DESC NULLS LAST

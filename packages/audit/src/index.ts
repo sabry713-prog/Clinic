@@ -196,7 +196,11 @@ export async function verifyAuditChain(
     hash_prev: string | null;
     hash_self: string;
   }>(
-    `SELECT id, ts::text, actor_id::text, actor_role, action, target_type,
+    // ts must be reconstructed exactly as it was hashed at write time
+    // (JS Date.toISOString(): YYYY-MM-DDTHH:MM:SS.mmmZ), not pg's text format
+    `SELECT id,
+            to_char(ts AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS ts,
+            actor_id::text, actor_role, action, target_type,
             target_id::text, outcome, metadata_json, request_id, hash_prev, hash_self
      FROM audit.event
      ORDER BY ts ASC, id ASC`,

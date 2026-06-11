@@ -220,18 +220,26 @@ export class AdminController {
     let rows;
     if (cursor) {
       rows = await this.pool.query(
-        `SELECT id, display_name, email, roles, disabled_at, created_at
-         FROM app."user"
-         WHERE created_at < (SELECT created_at FROM app."user" WHERE id = $1)
-         ORDER BY created_at DESC
+        `SELECT u.id, u.display_name, u.email,
+                COALESCE(array_agg(r.role) FILTER (WHERE r.role IS NOT NULL), '{}') AS roles,
+                u.disabled_at, u.created_at
+         FROM app."user" u
+         LEFT JOIN app.user_role r ON r.user_id = u.id
+         WHERE u.created_at < (SELECT created_at FROM app."user" WHERE id = $1)
+         GROUP BY u.id
+         ORDER BY u.created_at DESC
          LIMIT $2`,
         [cursor, limit + 1],
       );
     } else {
       rows = await this.pool.query(
-        `SELECT id, display_name, email, roles, disabled_at, created_at
-         FROM app."user"
-         ORDER BY created_at DESC
+        `SELECT u.id, u.display_name, u.email,
+                COALESCE(array_agg(r.role) FILTER (WHERE r.role IS NOT NULL), '{}') AS roles,
+                u.disabled_at, u.created_at
+         FROM app."user" u
+         LEFT JOIN app.user_role r ON r.user_id = u.id
+         GROUP BY u.id
+         ORDER BY u.created_at DESC
          LIMIT $1`,
         [limit + 1],
       );
