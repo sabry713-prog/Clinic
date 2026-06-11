@@ -52,3 +52,6 @@ logs/
 
 # Test coverage
 coverage/
+
+# TypeScript incremental build info
+*.tsbuildinfo
