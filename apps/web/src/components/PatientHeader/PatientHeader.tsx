@@ -1,11 +1,17 @@
 /**
  * PatientHeader — displays patient identity, allergies, and conditions.
  *
+ * Conditions are expandable: clicking a row loads every documented episode
+ * of the same coded condition with the clinic visit note from that date.
+ *
  * Constraints:
  * - No severity color-coding
  * - No clinical interpretation language
  * - All information is plain factual text from the record
  */
+
+import { useState } from "react";
+import { api, type ConditionHistory, ApiError } from "../../lib/api";
 
 interface AllergyItem {
   readonly id: string;
@@ -52,7 +58,117 @@ function ageFromDob(dob: string | null): string {
   return `${age}y`;
 }
 
+interface HistoryState {
+  readonly loading: boolean;
+  readonly error: string | null;
+  readonly history: ConditionHistory | null;
+}
+
+function ConditionRow({
+  patientId,
+  condition,
+}: {
+  readonly patientId: string;
+  readonly condition: ConditionItem;
+}): JSX.Element {
+  const [expanded, setExpanded] = useState(false);
+  const [state, setState] = useState<HistoryState>({
+    loading: false,
+    error: null,
+    history: null,
+  });
+
+  const toggle = (): void => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !state.history && !state.loading) {
+      setState({ loading: true, error: null, history: null });
+      api.patients
+        .conditionHistory(patientId, condition.id)
+        .then((history) => setState({ loading: false, error: null, history }))
+        .catch((err: unknown) => {
+          const message =
+            err instanceof ApiError ? err.message : "Failed to load history";
+          setState({ loading: false, error: message, history: null });
+        });
+    }
+  };
+
+  return (
+    <li className="text-sm text-white">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={expanded}
+        className="w-full text-left hover:bg-slate-800 rounded px-1 py-0.5"
+      >
+        <span className="text-slate-500 mr-1">{expanded ? "▾" : "▸"}</span>
+        {condition.code_display ?? "Unknown condition"}
+        <span className="text-slate-400 ml-2">
+          Status: {condition.status ?? "unknown"}
+        </span>
+        {condition.onset_date ? (
+          <span className="text-slate-500 ml-2">
+            (Onset: {formatDate(condition.onset_date)})
+          </span>
+        ) : null}
+      </button>
+
+      {expanded && (
+        <div className="ml-5 mt-1 mb-2 border-l border-slate-700 pl-3 space-y-2">
+          {state.loading && (
+            <p className="text-sm text-slate-500">Loading episode history…</p>
+          )}
+          {state.error && (
+            <p className="text-sm text-slate-400">{state.error}</p>
+          )}
+          {state.history && (
+            <>
+              <p className="text-xs text-slate-500">
+                Code: {state.history.code.code ?? "—"}
+                {state.history.code.system ? ` (${state.history.code.system})` : ""}
+                {" · "}
+                {state.history.episodes.length} documented episode(s)
+              </p>
+              <ul className="space-y-2">
+                {state.history.episodes.map((ep) => (
+                  <li key={ep.id} className="text-sm">
+                    <p className="text-white">
+                      {formatDate(ep.onset_date)}
+                      <span className="text-slate-400 ml-2">
+                        Status: {ep.status ?? "unknown"}
+                      </span>
+                      {ep.encounter?.ward ? (
+                        <span className="text-slate-400 ml-2">
+                          — {ep.encounter.ward}
+                        </span>
+                      ) : null}
+                    </p>
+                    {ep.note ? (
+                      <p className="text-slate-400 mt-0.5">
+                        {ep.note.type ?? "Note"}
+                        {ep.note.author_display ? ` — ${ep.note.author_display}` : ""}
+                        {": "}
+                        {ep.note.content_text ?? ""}
+                      </p>
+                    ) : (
+                      <p className="text-slate-500 mt-0.5">
+                        No note documented on this date.
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
 export default function PatientHeader({
+  id,
   mrn,
   display_name,
   date_of_birth,
@@ -135,17 +251,7 @@ export default function PatientHeader({
         ) : (
           <ul className="space-y-1">
             {conditions.map((c) => (
-              <li key={c.id} className="text-sm text-white">
-                {c.code_display ?? "Unknown condition"}
-                <span className="text-slate-400 ml-2">
-                  Status: {c.status ?? "unknown"}
-                </span>
-                {c.onset_date ? (
-                  <span className="text-slate-500 ml-2">
-                    (Onset: {formatDate(c.onset_date)})
-                  </span>
-                ) : null}
-              </li>
+              <ConditionRow key={c.id} patientId={id} condition={c} />
             ))}
           </ul>
         )}

@@ -145,6 +145,33 @@ export class PatientController {
     return result;
   }
 
+  @Get(":id/conditions/:condition_id/history")
+  @HttpCode(200)
+  @ApiOperation({ summary: "All documented episodes of a coded condition with linked visit notes" })
+  async getConditionHistory(
+    @Req() req: Request,
+    @Param("id") id: string,
+    @Param("condition_id") conditionId: string,
+  ) {
+    const userId = getRequestingUserId(req);
+    const requestId = (req.requestId ?? uuidv4()) as RequestId;
+
+    const result = await this.patientService.getConditionHistory(userId, id, conditionId);
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "PATIENT_CONDITION_HISTORY_VIEW",
+      target_type: "condition",
+      target_id: conditionId,
+      outcome: "SUCCESS",
+      metadata_json: { patient_id: id },
+      request_id: requestId,
+    });
+
+    return result;
+  }
+
   @Get(":id/documents/:doc_id")
   @HttpCode(200)
   @ApiOperation({ summary: "Full document content" })

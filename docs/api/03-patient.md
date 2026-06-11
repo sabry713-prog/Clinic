@@ -162,6 +162,43 @@ Medications.
 
 Response shape similar to `medications` array above.
 
+## GET /api/v1/patients/:id/conditions/:condition_id/history
+
+All documented episodes of the same coded condition (same `code_system` + `code`)
+for this patient, newest first. Each episode is linked — by record date — to the
+encounter and the clinical note documented that day, when present. Factual
+reproduction only: no grouping by severity, no episode interpretation.
+
+**Response:**
+```json
+{
+  "code": { "system": "http://snomed.info/sct", "code": "41652007", "display": "Eye pain" },
+  "episodes": [
+    {
+      "id": "uuid",
+      "status": "resolved",
+      "onset_date": "2025-06-11",
+      "encounter": { "id": "uuid", "ward": "Ophthalmology Clinic", "started_at": "..." },
+      "note": {
+        "id": "uuid",
+        "type": "Clinic visit note",
+        "authored_at": "...",
+        "author_display": "Dr. ...",
+        "content_text": "..."
+      }
+    }
+  ]
+}
+```
+
+`encounter` / `note` are `null` when no record exists for that date.
+
+**Errors:**
+- 403 PATIENT_OUT_OF_SCOPE
+- 404 NOT_FOUND (condition does not exist or belongs to another patient)
+
+Audit action: `PATIENT_CONDITION_HISTORY_VIEW`.
+
 ## GET /api/v1/patients/:id/documents/:doc_id
 
 Returns full document content (e.g., progress notes). Document body is returned verbatim from the source system.
