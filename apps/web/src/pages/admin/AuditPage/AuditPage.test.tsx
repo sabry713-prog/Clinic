@@ -1,12 +1,13 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import AuditPage from "./AuditPage";
 import { api } from "../../../lib/api";
 
-jest.mock("../../../lib/api", () => ({
+vi.mock("../../../lib/api", () => ({
   api: {
     admin: {
-      listAudit: jest.fn(),
-      verifyAudit: jest.fn(),
+      listAudit: vi.fn(),
+      verifyAudit: vi.fn(),
     },
   },
   ApiError: class extends Error {
@@ -40,7 +41,7 @@ const mockVerifyResult = {
 
 describe("AuditPage", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("renders filter form", () => {
@@ -55,7 +56,7 @@ describe("AuditPage", () => {
   });
 
   it("shows results table after search", async () => {
-    (api.admin.listAudit as jest.Mock).mockResolvedValue({
+    vi.mocked(api.admin.listAudit).mockResolvedValue({
       data: mockEvents,
       pagination: { next_cursor: null, has_more: false },
     });
@@ -72,7 +73,7 @@ describe("AuditPage", () => {
   });
 
   it("verify button calls api and shows passed result", async () => {
-    (api.admin.verifyAudit as jest.Mock).mockResolvedValue(mockVerifyResult);
+    vi.mocked(api.admin.verifyAudit).mockResolvedValue(mockVerifyResult);
 
     render(<AuditPage />);
     fireEvent.click(screen.getByText("Verify Integrity"));
@@ -86,7 +87,7 @@ describe("AuditPage", () => {
   });
 
   it("shows failed result with violations", async () => {
-    (api.admin.verifyAudit as jest.Mock).mockResolvedValue({
+    vi.mocked(api.admin.verifyAudit).mockResolvedValue({
       passed: false,
       events_verified: 50,
       violations: [{ event_id: "evt-bad", reason: "hash_self mismatch" }],
