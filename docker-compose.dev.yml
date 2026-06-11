@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -27,13 +25,17 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: dev-file
+      KC_HEALTH_ENABLED: "true"
     ports:
       - "8080:8080"
     volumes:
       - ./infra/keycloak/realm-dev.json:/opt/keycloak/data/import/realm-dev.json:ro
       - keycloak_data:/opt/keycloak/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
+      # The Keycloak image has no curl/wget; probe /health/ready with bash's /dev/tcp instead
+      test:
+        - CMD-SHELL
+        - 'exec 3<>/dev/tcp/localhost/8080 && printf ''GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n'' >&3 && grep -q ''UP'' <&3'
       interval: 10s
       timeout: 10s
       retries: 15
