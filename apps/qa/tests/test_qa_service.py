@@ -54,6 +54,68 @@ async def test_allowed_path_no_retrieval_when_pool_none():
     assert result.classification == "ALLOWED"
 
 
+@pytest.mark.asyncio
+async def test_vector_mode_maps_retrieval_results() -> None:
+    """ALLOWED with pool + embedder: RetrievalResult fields map to chunks without error."""
+    from retrieval.types import RetrievalResult
+
+    results = [
+        RetrievalResult(
+            chunk_id="c1",
+            source_type="Observation",
+            source_id="11111111-1111-1111-1111-111111111111",
+            content_text="Creatinine = 168 umol/L",
+            score=0.03,
+            language="en",
+            effective_at="2026-05-24T08:00:00",
+        ),
+        RetrievalResult(
+            chunk_id="c2",
+            source_type="Condition",
+            source_id="22222222-2222-2222-2222-222222222222",
+            content_text="Condition: chronic kidney disease, status: active",
+            score=0.02,
+        ),
+    ]
+
+    async def fake_retrieve(**kwargs: object) -> list[RetrievalResult]:
+        return results
+
+    captured: dict[str, object] = {}
+
+    async def fake_synthesize(
+        question: str,
+        chunks: list[dict[str, object]],
+        language: str,
+        patient_id: str,
+        model: object,
+    ) -> tuple[str, list[object], bool]:
+        captured["chunks"] = chunks
+        return ("Creatinine values: 168 (24 May).", [], False)
+
+    with patch("retrieval.retriever.hybrid_retrieve", fake_retrieve), \
+         patch("src.qa.qa_service.synthesize", fake_synthesize):
+        result = await answer(
+            patient_id="00000000-0000-0000-0000-000000000001",
+            question="What is the last creatinine?",
+            language="en",
+            conversation_id=None,
+            pool=make_mock_pool(),
+            embedder=MagicMock(),
+            model=StubModelProvider(),
+        )
+
+    assert result.classification == "ALLOWED"
+    chunks = captured["chunks"]
+    # Mapping must not raise (and so must not fall back to empty chunks)
+    assert isinstance(chunks, list)
+    assert len(chunks) == 2
+    assert chunks[0]["language"] == "en"
+    assert chunks[0]["effective_at"] == "2026-05-24T08:00:00"
+    assert chunks[1]["language"] == "en"
+    assert chunks[1]["effective_at"] is None
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # REFUSED path
 # ──────────────────────────────────────────────────────────────────────────────

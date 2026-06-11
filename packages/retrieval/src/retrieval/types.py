@@ -35,6 +35,10 @@ class RetrievalResult:
     score: float
     vector_rank: int | None = None
     bm25_rank: int | None = None
+    language: str = "en"
+    # retrieval_chunk has no effective_at column; stays None unless a future
+    # schema change surfaces it
+    effective_at: str | None = None
 
 
 # ── Input types for chunker ───────────────────────────────────────────────────

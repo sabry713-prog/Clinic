@@ -110,6 +110,7 @@ async def answer(
                 pool=pool,
                 embedder=embedder,
                 top_k=8,
+                language=lang,
             )
             chunks = [
                 {
@@ -117,7 +118,7 @@ async def answer(
                     "source_id": r.source_id,
                     "content_text": r.content_text,
                     "language": r.language,
-                    "effective_at": str(r.effective_at) if r.effective_at else None,
+                    "effective_at": r.effective_at,
                     "code": getattr(r, "code", ""),
                     "source_system": getattr(r, "source_system", "hospital"),
                     "field": getattr(r, "field", ""),

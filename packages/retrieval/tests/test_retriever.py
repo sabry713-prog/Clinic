@@ -53,6 +53,17 @@ def test_rrf_fuse_all_empty() -> None:
     assert results == []
 
 
+def test_rrf_fuse_sets_language() -> None:
+    results = _rrf_fuse([_make_row("a")], [], top_k=1, language="ar")
+    assert results[0].language == "ar"
+    assert results[0].effective_at is None
+
+
+def test_rrf_fuse_language_defaults_to_en() -> None:
+    results = _rrf_fuse([_make_row("a")], [], top_k=1)
+    assert results[0].language == "en"
+
+
 def test_rrf_result_has_rank_fields() -> None:
     vector_rows = [_make_row("a"), _make_row("b")]
     bm25_rows = [_make_row("a")]
