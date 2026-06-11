@@ -7,6 +7,10 @@
  * - No interpretation of medication appropriateness
  */
 
+import { useShowMore, ShowMoreButton } from "../ShowMore/ShowMore";
+
+const INITIAL_ROWS = 5;
+
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -35,6 +39,8 @@ export default function MedicationPanel({
   medications,
   isLoading,
 }: MedicationPanelProps): JSX.Element {
+  const rows = useShowMore(medications, INITIAL_ROWS);
+
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
       <h2 className="text-base font-semibold text-white mb-4">Medications</h2>
@@ -57,7 +63,7 @@ export default function MedicationPanel({
               </tr>
             </thead>
             <tbody>
-              {medications.map((med) => (
+              {rows.visible.map((med) => (
                 <tr key={med.id} className="border-b border-slate-800 last:border-0">
                   <td className="py-2 pr-4 text-white">
                     {med.medication_display ?? med.code ?? "Unknown"}
@@ -74,6 +80,7 @@ export default function MedicationPanel({
               ))}
             </tbody>
           </table>
+          <ShowMoreButton state={rows} itemLabel="medications" />
         </div>
       )}
     </div>
