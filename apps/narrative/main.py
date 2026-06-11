@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Optional
 
@@ -41,7 +40,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         port=settings.narrative_grpc_port,
         service=settings.otel_service_name,
     )
-    db_url = os.environ.get("DATABASE_URL", "")
+    db_url = settings.database_url
     if db_url:
         try:
             _db_pool = await asyncpg.create_pool(db_url, min_size=1, max_size=5)
