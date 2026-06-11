@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Logger, UnauthorizedException, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   Issuer,
@@ -6,6 +6,8 @@ import {
   type Client,
   type IssuerMetadata,
 } from "openid-client";
+import { type Pool } from "pg";
+import { PG_POOL } from "../database/database.module";
 import { SessionService, type SessionData } from "./session.service";
 
 interface OidcState {
@@ -24,6 +26,7 @@ export class AuthService {
   constructor(
     private readonly config: ConfigService,
     private readonly sessions: SessionService,
+    @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
   private async getClient(): Promise<Client> {
@@ -115,8 +118,31 @@ export class AuthService {
 
     const roles = this.extractRoles(claims);
 
+    // Resolve the DB-internal UUID from the OIDC external_subject claim
+    const tenantId = "00000000-0000-0000-0000-000000000001";
+    let dbUserId: string = sub;
+    try {
+      const result = await this.pool.query<{ id: string }>(
+        `SELECT id FROM app."user" WHERE external_subject = $1 AND tenant_id = $2 LIMIT 1`,
+        [sub, tenantId],
+      );
+      if (result.rows[0]?.id) {
+        dbUserId = result.rows[0].id;
+      } else {
+        this.logger.warn(
+          { event: "user_not_found_in_db", externalSubject: sub },
+          "AuthService",
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        { event: "user_lookup_failed", error: String(err) },
+        "AuthService",
+      );
+    }
+
     const sessionData: SessionData = {
-      userId: sub,
+      userId: dbUserId,
       tenantId: "00000000-0000-0000-0000-000000000001",
       externalSubject: sub,
       displayName:

@@ -24,6 +24,7 @@ import {
   HttpStatus,
   NotFoundException,
   Inject,
+  UseGuards,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
@@ -34,6 +35,7 @@ import { PatientScopeService } from "../patient/patient-scope.service";
 import { writeAuditEvent } from "@clinical-copilot/audit";
 import { AskQuestionDto } from "./dto/ask-question.dto";
 import type { QAResponseDto, QAInteractionListDto } from "./dto/qa-response.dto";
+import { RbacGuard, RequirePermission } from "../rbac/rbac.guard";
 
 // In-memory sliding-window rate limiter (30 req/min per user per endpoint)
 // Replace with Redis in production (Slice 5).
@@ -54,7 +56,9 @@ function checkRateLimit(userId: string): boolean {
 }
 
 @ApiTags("qa")
-@Controller("api/v1/patients/:patientId/qa")
+@UseGuards(RbacGuard)
+@RequirePermission("qa:ask")
+@Controller("patients/:patientId/qa")
 export class QAProxyController {
   constructor(
     private readonly qaSvc: QAProxyService,
@@ -172,7 +176,7 @@ export class QAProxyController {
 // ── DELETE /api/v1/conversations/:conversationId ─────────────────────────────
 
 @ApiTags("qa")
-@Controller("api/v1/conversations")
+@Controller("conversations")
 export class ConversationController {
   constructor(
     private readonly qaSvc: QAProxyService,

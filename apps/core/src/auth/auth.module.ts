@@ -3,8 +3,10 @@ import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { SessionService } from "./session.service";
 import { DevSessionController } from "./dev-session.controller";
+import { DatabaseModule } from "../database/database.module";
 
 @Module({
+  imports: [DatabaseModule],
   controllers: [AuthController, DevSessionController],
   providers: [AuthService, SessionService],
   exports: [SessionService],
