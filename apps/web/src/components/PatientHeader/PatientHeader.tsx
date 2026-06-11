@@ -213,7 +213,8 @@ export default function PatientHeader({
         </div>
         <div>
           <p className="text-sm text-slate-400">Date of Birth</p>
-          <p className="text-base text-white">
+          {/* dir=ltr: keep day-month-year order intact in RTL layouts */}
+          <p className="text-base text-white" dir="ltr">
             {formatDate(date_of_birth)}{" "}
             <span className="text-slate-400 text-sm">({ageFromDob(date_of_birth)})</span>
           </p>

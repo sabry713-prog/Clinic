@@ -133,12 +133,13 @@ export default function LabPanel({
                   <td className="py-2 pr-4 text-white">
                     {obs.code_display ?? obs.code ?? "Unknown"}
                   </td>
-                  {/* Plain text value — no color-coding */}
+                  {/* Plain text value — no color-coding.
+                      dir=ltr isolates "16 /min"-style values in RTL layouts */}
                   <td className="py-2 pr-4 text-white font-mono">
-                    {formatValue(obs)}
+                    <span dir="ltr">{formatValue(obs)}</span>
                   </td>
                   <td className="py-2 pr-4 text-slate-400">
-                    {formatRefRange(obs)}
+                    <span dir="ltr">{formatRefRange(obs)}</span>
                   </td>
                 </tr>
               ))}
