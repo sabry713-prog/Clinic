@@ -147,7 +147,7 @@ export class AuthService {
       client.issuer.metadata["end_session_endpoint"] as string | undefined ??
       `${issuerUrl}/protocol/openid-connect/logout`;
 
-    const postLogoutUri = `${this.config.get<string>("VITE_API_BASE_URL") ?? "http://localhost:3000"}/`;
+    const postLogoutUri = `${this.config.get<string>("WEB_URL") ?? this.config.get<string>("VITE_API_BASE_URL") ?? "http://localhost:3000"}/`;
 
     if (session?.accessToken) {
       return `${endSessionUrl}?post_logout_redirect_uri=${encodeURIComponent(postLogoutUri)}&id_token_hint=${encodeURIComponent(session.accessToken)}`;

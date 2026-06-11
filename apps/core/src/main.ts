@@ -14,6 +14,14 @@ async function bootstrap(): Promise<void> {
   // Pino structured logger
   app.useLogger(app.get(Logger));
 
+  // CORS -- allow the React dev server (port 3000) to call the API with cookies
+  app.enableCors({
+    origin: process.env["WEB_URL"] ?? "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  });
+
   // Cookie parser (for session_id cookie)
   app.use(cookieParser());
 

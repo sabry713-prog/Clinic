@@ -73,7 +73,11 @@ function computeHashSelf(row: {
  *
  * Uses a transaction with SERIALIZABLE isolation to prevent hash-chain races.
  */
-export async function writeAuditEvent(
+/**
+ * Inner write attempt — called by writeAuditEvent with retry logic.
+ * Throws on SERIALIZABLE failure (pg error code 40001) so the caller can retry.
+ */
+async function writeAuditEventOnce(
   pool: Pool,
   input: AuditWriteInput,
 ): Promise<AuditWriteResult> {
@@ -136,11 +140,38 @@ export async function writeAuditEvent(
 
     return { id: id as AuditEventId, hash_self };
   } catch (err) {
-    await client.query("ROLLBACK");
+    await client.query("ROLLBACK").catch(() => { /* ignore rollback errors */ });
     throw err;
   } finally {
     client.release();
   }
+}
+
+/**
+ * Writes a single audit event to the database.
+ * Retries up to 5 times on SERIALIZABLE isolation failures (pg error 40001).
+ * Adds a small random jitter between retries to reduce contention.
+ */
+export async function writeAuditEvent(
+  pool: Pool,
+  input: AuditWriteInput,
+): Promise<AuditWriteResult> {
+  const MAX_RETRIES = 5;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await writeAuditEventOnce(pool, input);
+    } catch (err) {
+      lastErr = err;
+      const pgCode = (err as { code?: string }).code;
+      // 40001 = serialization failure, 40P01 = deadlock — both are retryable
+      if (pgCode !== "40001" && pgCode !== "40P01") throw err;
+      // Exponential backoff with jitter: 10-50ms, 20-100ms, 40-200ms, …
+      const delay = (10 * Math.pow(2, attempt)) + Math.random() * 10 * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastErr;
 }
 
 /**
