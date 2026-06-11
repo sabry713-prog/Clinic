@@ -52,6 +52,7 @@ def _rrf_fuse(
     vector_rows: list[dict[str, object]],
     bm25_rows: list[dict[str, object]],
     top_k: int,
+    language: str = "en",
 ) -> list[RetrievalResult]:
     """Reciprocal Rank Fusion: score = 1/(k+rank_v) + 1/(k+rank_b)."""
     scores: dict[str, float] = {}
@@ -88,6 +89,7 @@ def _rrf_fuse(
             score=scores[cid],
             vector_rank=vector_rank.get(cid),
             bm25_rank=bm25_rank.get(cid),
+            language=language,
         )
         for cid in sorted_ids
     ]
@@ -128,7 +130,7 @@ async def hybrid_retrieve(
     vector_rows = [dict(r) for r in vector_records]
     bm25_rows = [dict(r) for r in bm25_records]
 
-    results = _rrf_fuse(vector_rows, bm25_rows, top_k=top_k)
+    results = _rrf_fuse(vector_rows, bm25_rows, top_k=top_k, language=language)
 
     logger.debug(
         "hybrid_retrieve_done",
