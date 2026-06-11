@@ -180,6 +180,19 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "RED_FLAG_IDENTIFICATION:red_flag",
         re.compile(r"\bred flag(s)?\b", re.IGNORECASE),
     ),
+    (
+        # Arabic: قلق (worry/concern), مقلق (worrying), مثير للقلق (concerning),
+        # يستدعي القلق (warrants concern), خطير (serious/dangerous)
+        "RED_FLAG_IDENTIFICATION",
+        "RED_FLAG_IDENTIFICATION:ar_qalaq",
+        re.compile(r"(مثير للقلق|يستدعي القلق|\bمقلق(ة)?\b|\bالقلق\b|\bقلق(ة)?\b|\bخطير(ة)?\b)"),
+    ),
+    (
+        # Arabic: "هل ... طبيعي/طبيعية" (is it normal?) — asks for value judgment
+        "RED_FLAG_IDENTIFICATION",
+        "RED_FLAG_IDENTIFICATION:ar_tabiei",
+        re.compile(r"\bهل\b.{0,60}\bطبيعي(ة|ه)?\b", re.DOTALL),
+    ),
     # COMPARATIVE_JUDGMENT
     (
         "COMPARATIVE_JUDGMENT",
