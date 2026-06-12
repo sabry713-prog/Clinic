@@ -1,6 +1,7 @@
 """Q&A service orchestration: classify → retrieve → synthesize OR refuse."""
 from __future__ import annotations
 
+import re
 import time
 import uuid
 from typing import TYPE_CHECKING, Any, Optional
@@ -32,6 +33,25 @@ def _elapsed(start_ms: float) -> int:
     return int((time.monotonic() * 1000) - start_ms)
 
 
+_ARABIC_RE = re.compile("[؀-ۿ]")  # Arabic Unicode block
+_LATIN_RE = re.compile(r"[A-Za-z]")
+
+
+def _detect_language(question: str, fallback: str) -> str:
+    """Answer in the language the question was asked in (CLAUDE.md §8:
+    Q&A must work in both languages, including code-switching).
+
+    Any Arabic script wins (code-switched questions are answered in
+    Arabic); otherwise Latin script means English; a question with
+    neither (e.g. "CBC?") falls back to the caller's UI language.
+    """
+    if _ARABIC_RE.search(question):
+        return "ar"
+    if _LATIN_RE.search(question):
+        return "en"
+    return fallback if fallback in ("en", "ar") else "en"
+
+
 async def answer(
     patient_id: str,
     question: str,
@@ -54,7 +74,7 @@ async def answer(
     start_ms = time.monotonic() * 1000
     interaction_id = str(uuid.uuid4())
     conv_id = conversation_id or str(uuid.uuid4())
-    lang = language if language in ("en", "ar") else "en"
+    lang = _detect_language(question, language)
     disc = DISCLAIMER if lang == "en" else DISCLAIMER_AR
 
     # Step 1: Classify
