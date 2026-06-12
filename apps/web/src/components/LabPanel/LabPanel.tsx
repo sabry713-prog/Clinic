@@ -128,7 +128,7 @@ export default function LabPanel({
                   className="border-b border-slate-800 last:border-0"
                 >
                   <td className="py-2 pr-4 text-slate-400 whitespace-nowrap">
-                    {formatDate(obs.effective_at)}
+                    <span dir="ltr">{formatDate(obs.effective_at)}</span>
                   </td>
                   <td className="py-2 pr-4 text-white">
                     {obs.code_display ?? obs.code ?? "Unknown"}

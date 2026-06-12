@@ -68,13 +68,16 @@ export default function MedicationPanel({
                   <td className="py-2 pr-4 text-white">
                     {med.medication_display ?? med.code ?? "Unknown"}
                   </td>
-                  <td className="py-2 pr-4 text-white">{med.dose ?? "—"}</td>
+                  {/* dir=ltr isolates "20 mg"-style values in RTL layouts */}
+                  <td className="py-2 pr-4 text-white">
+                    <span dir="ltr">{med.dose ?? "—"}</span>
+                  </td>
                   <td className="py-2 pr-4 text-white">{med.route ?? "—"}</td>
                   <td className="py-2 pr-4 text-white">{med.frequency ?? "—"}</td>
                   {/* Status shown as plain text — no color coding */}
                   <td className="py-2 pr-4 text-slate-300">{med.status ?? "—"}</td>
                   <td className="py-2 pr-4 text-slate-400 whitespace-nowrap">
-                    {formatDate(med.started_at)}
+                    <span dir="ltr">{formatDate(med.started_at)}</span>
                   </td>
                 </tr>
               ))}
