@@ -75,8 +75,30 @@ _TERM_ALIASES = {
     "اعراض": "symptom", "أعراض": "symptom", "عرض": "symptom",
     "شكوى": "symptom", "شكاوى": "symptom",
     "عيادة": "clinic", "عياده": "clinic", "عيادات": "clinic",
+    # Arabic symptom names → English chunk vocabulary (seeded symptom set)
+    "صداع": "headache",
+    "دوخة": "dizziness", "دوخه": "dizziness", "دوار": "dizziness",
+    "سعال": "cough", "كحة": "cough", "كحه": "cough",
+    "غثيان": "nausea", "استفراغ": "nausea",
+    "تعب": "fatigue", "ارهاق": "fatigue", "إرهاق": "fatigue", "خمول": "fatigue",
+    "الم": "pain", "ألم": "pain", "آلام": "pain", "الام": "pain", "وجع": "pain",
+    "صدر": "chest", "بطن": "abdominal", "ظهر": "back",
+    "مفاصل": "joint", "مفصل": "joint",
+    "حلق": "throat", "زور": "throat",
+    "خفقان": "palpitations",
+    "تنفس": "breath", "نهجان": "breath",
+    "تنميل": "numbness", "خدر": "numbness", "خدران": "numbness",
+    "رؤية": "vision", "رؤيه": "vision", "نظر": "vision",
+    "عين": "eye", "عيون": "eye",
+    "اذن": "ear", "أذن": "ear",
+    "ارق": "insomnia", "أرق": "insomnia",
+    "حكة": "itching", "حكه": "itching", "هرش": "itching",
+    "عطاس": "sneezing",
+    "رعشة": "tremor", "رعشه": "tremor", "رجفة": "tremor", "رجفه": "tremor",
+    "تورم": "swelling", "انتفاخ": "swelling", "كاحل": "ankle",
+    "عطش": "thirst", "تبول": "urination",
     # English plurals → singular used in chunk text
-    "symptoms": "symptom", "clinics": "clinic",
+    "symptoms": "symptom", "clinics": "clinic", "headaches": "headache",
 }
 
 # Summary-style questions ask for the record as a whole rather than one
@@ -93,6 +115,9 @@ _STOPWORDS_AR = frozenset({
     "اريد", "أريد", "ابغى", "أبغى", "تفاصيل", "اكتر", "أكثر", "اكثر",
     "المريض", "المريضه", "المريضة", "السابقه", "السابقة", "الحاليه", "الحالية",
     "الاخيره", "الأخيرة", "الاخيرة", "نتائج", "نتيجة", "قيم", "قيمة",
+    # question filler: "did he suffer / complain ... before / previously"
+    "عانى", "يعاني", "تعاني", "عانت", "اشتكى", "يشتكي", "تشتكي", "اشتكت",
+    "مسبق", "مسبقا", "سابق", "سابقا", "قبل", "يوجد", "توجد", "فيه", "عند", "لديه", "لديها",
 })
 
 
