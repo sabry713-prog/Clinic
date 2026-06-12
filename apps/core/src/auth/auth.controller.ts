@@ -70,7 +70,9 @@ export class AuthController {
       maxAge: 8 * 60 * 60 * 1000, // 8 hours
     });
 
-    const webUrl = process.env["WEB_URL"] ?? process.env["VITE_API_BASE_URL"] ?? "http://localhost:3000";
+    // VITE_API_BASE_URL must not be used here: it points at this API, not
+    // the web app, and would bounce the user to a 404 after login.
+    const webUrl = process.env["WEB_URL"] ?? "http://localhost:3000";
     res.redirect(302, `${webUrl}${returnTo}`);
   }
 
