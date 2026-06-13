@@ -109,11 +109,22 @@ export interface ConditionHistory {
   readonly episodes: readonly ConditionEpisode[];
 }
 
+export interface BriefMedication {
+  readonly display: string | null;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly status: string | null;
+}
+
 export interface BriefCondition {
   readonly code: string | null;
   readonly code_display: string | null;
   readonly status: string | null;
   readonly onset_date: string | null;
+  // Active medications whose *documented* indication is this condition.
+  // Never inferred — only present when the prescription records the link.
+  readonly active_medications: readonly BriefMedication[];
 }
 
 export interface BriefClinic {
@@ -151,6 +162,9 @@ export interface PatientBrief {
   readonly clinics: readonly BriefClinic[];
   readonly labs: readonly BriefLab[];
   readonly imaging: readonly BriefImaging[];
+  // Active medications with no documented condition indication — listed
+  // separately rather than guessed onto a disease.
+  readonly other_active_medications: readonly BriefMedication[];
 }
 
 export interface CursorPage<T> {
@@ -409,13 +423,69 @@ export class PatientService {
       [patientId],
     );
 
+    // Active medications with their documented indication (if any). The link
+    // condition <- medication is reproduced only where the prescription
+    // records indication_code; it is never inferred from drug/disease names.
+    const activeMedsResult = await this.pool.query<{
+      medication_display: string | null;
+      dose: string | null;
+      route: string | null;
+      frequency: string | null;
+      status: string | null;
+      indication_code: string | null;
+    }>(
+      `SELECT medication_display, dose, route, frequency, status, indication_code
+       FROM hospital.medication_request
+       WHERE patient_id = $1 AND status = 'active'
+       ORDER BY started_at DESC NULLS LAST`,
+      [patientId],
+    );
+    // De-duplicate the same drug appearing from more than one source (e.g. a
+    // chronic order and a clinic order for the same medication). Indication-
+    // bearing rows are processed first so the documented link is the one kept.
+    const medsByIndication = new Map<string, BriefMedication[]>();
+    const otherActiveMeds: BriefMedication[] = [];
+    const seenMeds = new Set<string>();
+    const orderedMeds = [...activeMedsResult.rows].sort(
+      (a, b) => (a.indication_code ? 0 : 1) - (b.indication_code ? 0 : 1),
+    );
+    for (const m of orderedMeds) {
+      const key = `${(m.medication_display ?? "").toLowerCase()}|${(m.dose ?? "").toLowerCase()}`;
+      if (seenMeds.has(key)) continue;
+      seenMeds.add(key);
+      const med: BriefMedication = {
+        display: m.medication_display,
+        dose: m.dose,
+        route: m.route,
+        frequency: m.frequency,
+        status: m.status,
+      };
+      if (m.indication_code) {
+        const list = medsByIndication.get(m.indication_code) ?? [];
+        list.push(med);
+        medsByIndication.set(m.indication_code, list);
+      } else {
+        otherActiveMeds.push(med);
+      }
+    }
+
+    // One row per distinct condition code (the same problem can be documented
+    // by more than one source); keep the most recent, which sorts first.
+    const seenConditionCodes = new Set<string>();
     const documented_conditions: BriefCondition[] = conditionsResult.rows
       .filter((r) => !r.is_symptom)
+      .filter((r) => {
+        const key = r.code ?? r.code_display ?? "";
+        if (seenConditionCodes.has(key)) return false;
+        seenConditionCodes.add(key);
+        return true;
+      })
       .map((r) => ({
         code: r.code,
         code_display: r.code_display,
         status: r.status,
         onset_date: r.onset_date,
+        active_medications: (r.code && medsByIndication.get(r.code)) || [],
       }));
 
     // Per-clinic symptom records (parse the clinic from the display suffix).
@@ -497,6 +567,7 @@ export class PatientService {
       clinics,
       labs: labsResult.rows,
       imaging: imagingResult.rows,
+      other_active_medications: otherActiveMeds,
     };
   }
 
