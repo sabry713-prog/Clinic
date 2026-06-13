@@ -80,6 +80,14 @@ _TERM_ALIASES = {
     "صوديوم": "sodium", "بوتاسيوم": "potassium",
     "ملاحظات": "note", "تقارير": "note", "تقرير": "note",
     "تنويم": "encounter", "دخول": "encounter", "زيارات": "encounter",
+    # Procedures / interventions
+    "operation": "procedure", "operations": "procedure", "procedures": "procedure",
+    "intervention": "procedure", "interventions": "procedure",
+    "عملية": "procedure", "عمليه": "procedure", "عمليات": "procedure",
+    "اجراء": "procedure", "إجراء": "procedure", "اجراءات": "procedure",
+    "دعامة": "stent", "دعامه": "stent", "دعامات": "stent",
+    "قسطرة": "catheterization", "قسطره": "catheterization",
+    "تمييل": "catheterization",
     "علامات": "vital", "حيويه": "vital", "حيوية": "vital",
     "اعراض": "symptom", "أعراض": "symptom", "عرض": "symptom",
     "شكوى": "symptom", "شكاوى": "symptom",
@@ -309,7 +317,7 @@ class StubModelProvider:
         if _is_detail_question(question):
             buckets: dict[str, list[str]] = {
                 "condition": [], "diagnostic": [], "medication": [],
-                "allergy": [], "note": [],
+                "procedure": [], "allergy": [], "note": [],
             }
             for chunk in chunk_matches:
                 prefix = chunk.split(":", 1)[0].strip().lower()
@@ -321,14 +329,16 @@ class StubModelProvider:
                     buckets["diagnostic"].append(chunk)
                 elif prefix == "medication":
                     buckets["medication"].append(chunk)
+                elif prefix == "procedure":
+                    buckets["procedure"].append(chunk)
                 elif prefix == "allergy":
                     buckets["allergy"].append(chunk)
             caps = {
                 "condition": 10, "diagnostic": 8, "medication": 8,
-                "allergy": 4, "note": 4,
+                "procedure": 6, "allergy": 4, "note": 4,
             }
             selected = []
-            for key in ("condition", "diagnostic", "medication", "allergy", "note"):
+            for key in ("condition", "diagnostic", "medication", "procedure", "allergy", "note"):
                 selected.extend(buckets[key][: caps[key]])
             if not selected:
                 return no_data
