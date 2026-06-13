@@ -73,6 +73,30 @@ function round1(v: number): number {
   return Math.round(v * 10) / 10;
 }
 
+// Documented procedures / interventions per patient (factual report notes
+// only — no interpretation). MRN-009 intentionally has none, to exercise the
+// "none documented" path.
+const PROCEDURES: Record<
+  string,
+  Array<{ code: string; display: string; daysAgo: number; performer: string; note: string }>
+> = {
+  "MRN-006": [
+    { code: "33367005", display: "Coronary angiography", daysAgo: 380, performer: "Dr. Salem Al-Harthi (Dev)", note: "Coronary angiography performed in the catheterization laboratory. Findings documented in the procedure report." },
+  ],
+  "MRN-007": [
+    { code: "23426006", display: "Pulmonary function test (spirometry)", daysAgo: 180, performer: "Dr. Lama Al-Fadhli (Dev)", note: "Spirometry performed. Results recorded in the pulmonary function report." },
+  ],
+  "MRN-008": [
+    { code: "33367005", display: "Coronary angiography", daysAgo: 300, performer: "Dr. Salem Al-Harthi (Dev)", note: "Coronary angiography performed in the catheterization laboratory. Report documented." },
+    { code: "40701008", display: "Echocardiography", daysAgo: 120, performer: "Dr. Salem Al-Harthi (Dev)", note: "Transthoracic echocardiography performed. Measurements recorded in the report." },
+  ],
+  "MRN-010": [
+    { code: "33367005", display: "Coronary angiography", daysAgo: 160, performer: "Dr. Salem Al-Harthi (Dev)", note: "Coronary angiography performed in the catheterization laboratory (cath lab). Report documented." },
+    { code: "36969009", display: "Placement of stent in coronary artery", daysAgo: 160, performer: "Dr. Salem Al-Harthi (Dev)", note: "Percutaneous coronary intervention with coronary stent placement performed in the catheterization laboratory. Procedure report documented." },
+    { code: "180325003", display: "Direct current cardioversion", daysAgo: 90, performer: "Dr. Salem Al-Harthi (Dev)", note: "Elective direct current cardioversion performed. Procedure and rhythm documented in the report." },
+  ],
+};
+
 async function main(): Promise<void> {
   const client = await pool.connect();
   try {
@@ -410,6 +434,25 @@ async function main(): Promise<void> {
           [
             pid, SRC, e.id, e.type, e.startDaysAgo, e.lengthDays,
             JSON.stringify({ resourceType: "Encounter", _synthetic: true }),
+          ],
+        );
+      }
+
+      // ── Procedures / interventions (operations, cath lab, stents) ────────────
+      const procedures = PROCEDURES[profile.mrn] ?? [];
+      for (const p of procedures) {
+        await client.query(
+          `INSERT INTO hospital.procedure
+             (patient_id, source_system, source_id, code_system, code, code_display,
+              status, performed_at, performer_display, note,
+              fhir_resource_json, last_synced_at)
+           VALUES ($1,$2,$3,'http://snomed.info/sct',$4,$5,'completed',
+                   now() - $6 * interval '1 day', $7, $8, $9::jsonb, now())
+           ON CONFLICT (source_system, source_id) DO NOTHING`,
+          [
+            pid, SRC, `PROC-${profile.mrn}-${p.code}`, p.code, p.display,
+            p.daysAgo, p.performer, p.note,
+            JSON.stringify({ resourceType: "Procedure", _synthetic: true }),
           ],
         );
       }

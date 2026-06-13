@@ -203,6 +203,27 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
         )}
       </div>
 
+      {/* Procedures / interventions */}
+      <div>
+        <h3 className="text-sm font-medium text-slate-300 mb-2">Procedures &amp; interventions</h3>
+        {brief.procedures.length === 0 ? (
+          <p className="text-sm text-slate-500">None documented</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {brief.procedures.map((p, i) => (
+              <li key={i} className="text-sm text-white">
+                <span dir="ltr">{p.code_display}</span>
+                <span className="text-slate-500 ml-1">
+                  ({p.status ?? "—"}, {formatDate(p.performed_at)})
+                </span>
+                {p.performer_display ? <span className="text-slate-500 ml-1">— {p.performer_display}</span> : null}
+                {p.note ? <p className="text-slate-400 mt-0.5">{p.note}</p> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       {/* Imaging */}
       <div>
         <h3 className="text-sm font-medium text-slate-300 mb-2">Imaging reports</h3>

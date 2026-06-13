@@ -137,6 +137,13 @@ export interface PatientBrief {
     readonly value_text: string | null;
     readonly effective_at: string | null;
   }[];
+  readonly procedures: readonly {
+    readonly code_display: string | null;
+    readonly status: string | null;
+    readonly performed_at: string | null;
+    readonly performer_display: string | null;
+    readonly note: string | null;
+  }[];
   readonly other_active_medications: readonly BriefMedication[];
 }
 
