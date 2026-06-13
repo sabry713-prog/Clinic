@@ -100,12 +100,21 @@ export interface ConditionHistory {
   readonly episodes: readonly ConditionEpisode[];
 }
 
+export interface BriefMedication {
+  readonly display: string | null;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly status: string | null;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
     readonly code_display: string | null;
     readonly status: string | null;
     readonly onset_date: string | null;
+    readonly active_medications: readonly BriefMedication[];
   }[];
   readonly clinics: readonly {
     readonly clinic: string;
@@ -128,6 +137,7 @@ export interface PatientBrief {
     readonly value_text: string | null;
     readonly effective_at: string | null;
   }[];
+  readonly other_active_medications: readonly BriefMedication[];
 }
 
 export interface ObservationItem {

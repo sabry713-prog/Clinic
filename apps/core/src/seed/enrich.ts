@@ -186,7 +186,7 @@ async function main(): Promise<void> {
     interface Profile {
       mrn: string;
       conditions: Array<{ code: string; display: string; status: string; onsetDaysAgo: number }>;
-      medications: Array<{ code: string; display: string; dose: string; route: string; freq: string; status: string; startedDaysAgo: number }>;
+      medications: Array<{ code: string; display: string; dose: string; route: string; freq: string; status: string; startedDaysAgo: number; indication?: { code: string; display: string } }>;
       allergies: Array<{ code: string; display: string; reaction: string; severity: string }>;
     }
 
@@ -198,9 +198,9 @@ async function main(): Promise<void> {
           { code: "13644009", display: "Hypercholesterolemia", status: "active", onsetDaysAgo: 900 },
         ],
         medications: [
-          { code: "372511001", display: "Amlodipine 5mg", dose: "5 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 400 },
-          { code: "108600003", display: "Atorvastatin 20mg", dose: "20 mg", route: "Oral", freq: "Once daily at night", status: "active", startedDaysAgo: 300 },
-          { code: "7947003", display: "Aspirin 100mg", dose: "100 mg", route: "Oral", freq: "Once daily", status: "stopped", startedDaysAgo: 700 },
+          { code: "372511001", display: "Amlodipine 5mg", dose: "5 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 400, indication: { code: "38341003", display: "Hypertension" } },
+          { code: "108600003", display: "Atorvastatin 20mg", dose: "20 mg", route: "Oral", freq: "Once daily at night", status: "active", startedDaysAgo: 300, indication: { code: "13644009", display: "Hypercholesterolemia" } },
+          { code: "7947003", display: "Aspirin 100mg", dose: "100 mg", route: "Oral", freq: "Once daily", status: "stopped", startedDaysAgo: 700, indication: { code: "38341003", display: "Hypertension" } },
         ],
         allergies: [
           { code: "7980", display: "Penicillin", reaction: "Rash", severity: "moderate" },
@@ -212,8 +212,8 @@ async function main(): Promise<void> {
           { code: "195967001", display: "Asthma", status: "active", onsetDaysAgo: 3000 },
         ],
         medications: [
-          { code: "108606002", display: "Salbutamol inhaler 100mcg", dose: "2 puffs", route: "Inhalation", freq: "As needed", status: "active", startedDaysAgo: 200 },
-          { code: "108605003", display: "Budesonide inhaler 200mcg", dose: "1 puff", route: "Inhalation", freq: "Twice daily", status: "active", startedDaysAgo: 200 },
+          { code: "108606002", display: "Salbutamol inhaler 100mcg", dose: "2 puffs", route: "Inhalation", freq: "As needed", status: "active", startedDaysAgo: 200, indication: { code: "195967001", display: "Asthma" } },
+          { code: "108605003", display: "Budesonide inhaler 200mcg", dose: "1 puff", route: "Inhalation", freq: "Twice daily", status: "active", startedDaysAgo: 200, indication: { code: "195967001", display: "Asthma" } },
         ],
         allergies: [
           { code: "293586001", display: "Ibuprofen", reaction: "Urticaria", severity: "mild" },
@@ -227,10 +227,10 @@ async function main(): Promise<void> {
           { code: "38341003", display: "Hypertension", status: "active", onsetDaysAgo: 1800 },
         ],
         medications: [
-          { code: "372567009", display: "Metformin 500mg", dose: "500 mg", route: "Oral", freq: "Twice daily", status: "active", startedDaysAgo: 1500 },
-          { code: "386872004", display: "Lisinopril 10mg", dose: "10 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 1000 },
+          { code: "372567009", display: "Metformin 500mg", dose: "500 mg", route: "Oral", freq: "Twice daily", status: "active", startedDaysAgo: 1500, indication: { code: "44054006", display: "Diabetes mellitus type 2" } },
+          { code: "386872004", display: "Lisinopril 10mg", dose: "10 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 1000, indication: { code: "38341003", display: "Hypertension" } },
           { code: "108600003", display: "Atorvastatin 40mg", dose: "40 mg", route: "Oral", freq: "Once daily at night", status: "active", startedDaysAgo: 500 },
-          { code: "325072002", display: "Insulin glargine", dose: "12 units", route: "Subcutaneous", freq: "Once daily at bedtime", status: "active", startedDaysAgo: 90 },
+          { code: "325072002", display: "Insulin glargine", dose: "12 units", route: "Subcutaneous", freq: "Once daily at bedtime", status: "active", startedDaysAgo: 90, indication: { code: "44054006", display: "Diabetes mellitus type 2" } },
         ],
         allergies: [
           { code: "387467008", display: "Sulfamethoxazole", reaction: "Skin eruption", severity: "moderate" },
@@ -244,8 +244,8 @@ async function main(): Promise<void> {
           { code: "40930008", display: "Hypothyroidism", status: "active", onsetDaysAgo: 800 },
         ],
         medications: [
-          { code: "126202002", display: "Levothyroxine 50mcg", dose: "50 mcg", route: "Oral", freq: "Once daily before breakfast", status: "active", startedDaysAgo: 800 },
-          { code: "108406007", display: "Sumatriptan 50mg", dose: "50 mg", route: "Oral", freq: "As needed", status: "active", startedDaysAgo: 400 },
+          { code: "126202002", display: "Levothyroxine 50mcg", dose: "50 mcg", route: "Oral", freq: "Once daily before breakfast", status: "active", startedDaysAgo: 800, indication: { code: "40930008", display: "Hypothyroidism" } },
+          { code: "108406007", display: "Sumatriptan 50mg", dose: "50 mg", route: "Oral", freq: "As needed", status: "active", startedDaysAgo: 400, indication: { code: "70153002", display: "Migraine" } },
         ],
         allergies: [],
       },
@@ -257,10 +257,10 @@ async function main(): Promise<void> {
           { code: "49436004", display: "Atrial fibrillation", status: "active", onsetDaysAgo: 150 },
         ],
         medications: [
-          { code: "372567009", display: "Metformin 850mg", dose: "850 mg", route: "Oral", freq: "Twice daily", status: "active", startedDaysAgo: 700 },
-          { code: "372756006", display: "Warfarin 5mg", dose: "5 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 150 },
-          { code: "318859000", display: "Bisoprolol 2.5mg", dose: "2.5 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 150 },
-          { code: "108600003", display: "Atorvastatin 20mg", dose: "20 mg", route: "Oral", freq: "Once daily at night", status: "active", startedDaysAgo: 400 },
+          { code: "372567009", display: "Metformin 850mg", dose: "850 mg", route: "Oral", freq: "Twice daily", status: "active", startedDaysAgo: 700, indication: { code: "44054006", display: "Diabetes mellitus type 2" } },
+          { code: "372756006", display: "Warfarin 5mg", dose: "5 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 150, indication: { code: "49436004", display: "Atrial fibrillation" } },
+          { code: "318859000", display: "Bisoprolol 2.5mg", dose: "2.5 mg", route: "Oral", freq: "Once daily", status: "active", startedDaysAgo: 150, indication: { code: "49436004", display: "Atrial fibrillation" } },
+          { code: "108600003", display: "Atorvastatin 20mg", dose: "20 mg", route: "Oral", freq: "Once daily at night", status: "active", startedDaysAgo: 400, indication: { code: "13644009", display: "Hypercholesterolemia" } },
         ],
         allergies: [
           { code: "7980", display: "Penicillin", reaction: "Anaphylaxis", severity: "severe" },
@@ -297,13 +297,17 @@ async function main(): Promise<void> {
           `INSERT INTO hospital.medication_request
              (patient_id, source_system, source_id, medication_display, code_system,
               code, dose, route, frequency, status, started_at,
+              indication_code, indication_display,
               fhir_resource_json, last_synced_at)
            VALUES ($1,$2,$3,$4,'http://snomed.info/sct',$5,$6,$7,$8,$9,
-                   now() - $10 * interval '1 day', $11::jsonb, now())
-           ON CONFLICT (source_system, source_id) DO NOTHING`,
+                   now() - $10 * interval '1 day', $11, $12, $13::jsonb, now())
+           ON CONFLICT (source_system, source_id) DO UPDATE
+             SET indication_code = EXCLUDED.indication_code,
+                 indication_display = EXCLUDED.indication_display`,
           [
             pid, SRC, `MED-${profile.mrn}-${m.code}`, m.display, m.code,
             m.dose, m.route, m.freq, m.status, m.startedDaysAgo,
+            m.indication?.code ?? null, m.indication?.display ?? null,
             JSON.stringify({ resourceType: "MedicationRequest", _synthetic: true }),
           ],
         );

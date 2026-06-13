@@ -113,23 +113,60 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
         <span className="text-xs text-slate-500">Factual reproduction — not a clinical risk assessment</span>
       </div>
 
-      {/* Documented conditions (problem list) */}
+      {/* Documented conditions (problem list) with their active medications */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">Documented conditions</h3>
+        <h3 className="text-sm font-medium text-slate-300 mb-2">
+          Documented conditions &amp; current medications
+        </h3>
         {brief.documented_conditions.length === 0 ? (
           <p className="text-sm text-slate-500">None documented</p>
         ) : (
           <>
-            <ul className="flex flex-wrap gap-2">
+            <ul className="space-y-2">
               {conditions.visible.map((c, i) => (
-                <li key={i} className="text-sm text-white border border-slate-700 rounded px-2 py-1" dir="ltr">
-                  {c.code_display ?? "Unknown"}
-                  <span className="text-slate-500 ml-1">({c.status ?? "—"}, {formatDate(c.onset_date)})</span>
+                <li key={i} className="border border-slate-700 rounded px-3 py-2">
+                  <p className="text-sm text-white" dir="ltr">
+                    {c.code_display ?? "Unknown"}
+                    <span className="text-slate-500 ml-1">({c.status ?? "—"}, {formatDate(c.onset_date)})</span>
+                  </p>
+                  {c.active_medications.length > 0 ? (
+                    <ul className="mt-1 ml-3 space-y-0.5">
+                      {c.active_medications.map((m, j) => (
+                        <li key={j} className="text-sm text-slate-300" dir="ltr">
+                          • {m.display}
+                          <span className="text-slate-500 ml-1">
+                            {[m.dose, m.route, m.frequency].filter(Boolean).join(", ")}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1 ml-3 text-xs text-slate-500">
+                      No medication with a documented indication for this condition
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
             <ShowMoreButton state={conditions} itemLabel="conditions" />
           </>
+        )}
+        {brief.other_active_medications.length > 0 && (
+          <div className="mt-3">
+            <p className="text-xs text-slate-400 mb-1">
+              Other active medications (no documented condition indication)
+            </p>
+            <ul className="ml-3 space-y-0.5">
+              {brief.other_active_medications.map((m, i) => (
+                <li key={i} className="text-sm text-slate-300" dir="ltr">
+                  • {m.display}
+                  <span className="text-slate-500 ml-1">
+                    {[m.dose, m.route, m.frequency].filter(Boolean).join(", ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 

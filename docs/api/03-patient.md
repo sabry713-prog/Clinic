@@ -173,7 +173,15 @@ posture; see `CLAUDE.md` sections 2-3).
 ```json
 {
   "documented_conditions": [
-    { "code": "38341003", "code_display": "Hypertension", "status": "active", "onset_date": "2022-05-03" }
+    {
+      "code": "38341003", "code_display": "Hypertension", "status": "active", "onset_date": "2022-05-03",
+      "active_medications": [
+        { "display": "Lisinopril 10mg", "dose": "10 mg", "route": "Oral", "frequency": "Once daily", "status": "active" }
+      ]
+    }
+  ],
+  "other_active_medications": [
+    { "display": "Carmellose eye drops 0.5%", "dose": "1 drop", "route": "Ophthalmic", "frequency": "As needed", "status": "active" }
   ],
   "clinics": [
     {
@@ -193,6 +201,11 @@ posture; see `CLAUDE.md` sections 2-3).
 
 - `documented_conditions` is the problem list (per-visit symptom records are
   excluded and instead grouped under `clinics`). No item is labelled by risk.
+- Each condition's `active_medications` are the active prescriptions whose
+  **documented** indication is that condition (`medication_request.indication_code`).
+  The link is reproduced only where the prescription records it — never inferred
+  from drug/disease names. Active medications without a documented indication
+  appear in `other_active_medications`, not guessed onto a condition.
 - `labs` is the latest value per laboratory code, with the reference range as
   the source lab provided it — no high/low/abnormal flag.
 - Audit action: `PATIENT_BRIEF_VIEW`. Errors: 403 PATIENT_OUT_OF_SCOPE, 404.
