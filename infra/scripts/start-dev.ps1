@@ -9,6 +9,11 @@
 # ANSI, and non-ASCII bytes can mangle into quote characters and break parsing.
 #
 # Usage:  powershell -ExecutionPolicy Bypass -File infra\scripts\start-dev.ps1
+#         add -NoBrowser to skip opening the web app (used by the logon task).
+
+param(
+    [switch]$NoBrowser
+)
 
 $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
@@ -104,8 +109,12 @@ foreach ($k in $checks.Keys) {
 
 if ($allUp) {
     Write-Host ""
-    Write-Host "All services up -- opening http://localhost:3000" -ForegroundColor Green
-    Start-Process "http://localhost:3000"
+    if ($NoBrowser) {
+        Write-Host "All services up at http://localhost:3000" -ForegroundColor Green
+    } else {
+        Write-Host "All services up -- opening http://localhost:3000" -ForegroundColor Green
+        Start-Process "http://localhost:3000"
+    }
 } else {
     Write-Host ""
     Write-Host "Some services did not come up; check their minimized windows for errors." -ForegroundColor Yellow
