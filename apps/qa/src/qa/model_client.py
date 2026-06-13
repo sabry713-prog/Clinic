@@ -39,6 +39,13 @@ _STOPWORDS = frozenset({
     "list", "give", "need", "know", "please", "patient", "patients",
     "record", "documented", "value", "values", "result", "results",
     "level", "levels", "latest", "last", "recent", "current", "now",
+    # Filler verbs/prepositions that appear in chunk boilerplate (e.g. an
+    # encounter reads "... from <date> to <date>"), so they must not count
+    # as retrieval signal or they match unrelated rows.
+    "from", "into", "out", "off", "did", "made", "make", "makes", "making",
+    "suffer", "suffers", "suffering", "suffered", "related", "relate",
+    "relating", "relation", "been", "being", "had", "him", "she", "they",
+    "them", "may", "can", "could", "would", "should", "get", "got", "there",
 })
 
 # Map common question terms to the chunk vocabulary used by retrieval
@@ -108,6 +115,20 @@ _SUMMARY_TERMS = frozenset({
     "ملخص", "موجز", "نبذة", "نبذه", "خلاصة", "خلاصه", "تلخيص", "تاريخ",
 })
 
+# Detail-style questions ask for the documented clinical picture of a case:
+# the recorded symptoms, diagnostics, medications and the doctor's notes.
+# Answered with a factual reproduction grouped into clinical sections. This
+# restates what the record contains; it does NOT assert how anything was
+# caused or resolved (that would be interpretation -- see CLAUDE.md 2-3).
+#
+# Deliberately excludes "diagnosis"/"treatment" and their Arabic equivalents:
+# those phrasings read as asking the system to diagnose or recommend, which
+# the classifier refuses upstream (correctly). The factual triggers below are
+# the ones the classifier allows.
+_DETAIL_TERMS = frozenset({
+    "detail", "details", "تفاصيل",
+})
+
 # Arabic stopwords (question filler that carries no retrieval signal)
 _STOPWORDS_AR = frozenset({
     "ما", "ماذا", "هل", "كيف", "متى", "اين", "أين", "من", "عن", "في", "على",
@@ -132,6 +153,14 @@ def _is_summary_question(question: str) -> bool:
     tokens = re.findall(r"[\w^/%]+", question.lower())
     return any(
         t in _SUMMARY_TERMS or _normalize_token(t) in _SUMMARY_TERMS
+        for t in tokens
+    )
+
+
+def _is_detail_question(question: str) -> bool:
+    tokens = re.findall(r"[\w^/%]+", question.lower())
+    return any(
+        t in _DETAIL_TERMS or _normalize_token(t) in _DETAIL_TERMS
         for t in tokens
     )
 
@@ -202,6 +231,40 @@ class StubModelProvider:
                 if queue:
                     selected.append(queue.pop(0))
                 i += 1
+            bullets = "\n".join(f"• {c}" for c in selected)
+            return f"{preamble}\n{bullets}"
+
+        # Detail-style question: reproduce the documented clinical picture
+        # grouped into sections in clinical order — symptoms/conditions,
+        # diagnostics (labs & imaging), medications (treatment), allergies,
+        # and the doctor's notes. Encounters are omitted as administrative.
+        # Pure factual reproduction; the blocklist remains the final gate.
+        if _is_detail_question(question):
+            buckets: dict[str, list[str]] = {
+                "condition": [], "diagnostic": [], "medication": [],
+                "allergy": [], "note": [],
+            }
+            for chunk in chunk_matches:
+                prefix = chunk.split(":", 1)[0].strip().lower()
+                if prefix.startswith("note"):
+                    buckets["note"].append(chunk)
+                elif prefix == "condition":
+                    buckets["condition"].append(chunk)
+                elif prefix in ("laboratory", "imaging", "vital-signs"):
+                    buckets["diagnostic"].append(chunk)
+                elif prefix == "medication":
+                    buckets["medication"].append(chunk)
+                elif prefix == "allergy":
+                    buckets["allergy"].append(chunk)
+            caps = {
+                "condition": 10, "diagnostic": 8, "medication": 8,
+                "allergy": 4, "note": 4,
+            }
+            selected = []
+            for key in ("condition", "diagnostic", "medication", "allergy", "note"):
+                selected.extend(buckets[key][: caps[key]])
+            if not selected:
+                return no_data
             bullets = "\n".join(f"• {c}" for c in selected)
             return f"{preamble}\n{bullets}"
 
