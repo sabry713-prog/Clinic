@@ -80,10 +80,21 @@ const SYMPTOMS: Record<string, Symptom> = {
 
 // ── Clinics and the symptoms typically reported there ───────────────────────
 
+interface ClinicMed {
+  code: string;
+  display: string;
+  dose: string;
+  route: string;
+  freq: string;
+}
+
 interface Clinic {
   name: string;
   physician: string;
   symptoms: readonly Symptom[];
+  // Medication typically prescribed at this clinic. Linked to the visit
+  // encounter when seeded, so "treatment given at <clinic>" is factual.
+  medication: ClinicMed;
 }
 
 const CLINICS: Record<string, Clinic> = {
@@ -91,46 +102,55 @@ const CLINICS: Record<string, Clinic> = {
     name: "Cardiology Clinic",
     physician: "Dr. Salem Al-Harthi (Dev)",
     symptoms: [SYMPTOMS["chestPain"]!, SYMPTOMS["palpitations"]!, SYMPTOMS["dyspnea"]!, SYMPTOMS["ankleSwelling"]!, SYMPTOMS["dizziness"]!],
+    medication: { code: "318859000", display: "Bisoprolol 2.5mg", dose: "2.5 mg", route: "Oral", freq: "Once daily" },
   },
   endocrinology: {
     name: "Endocrinology Clinic",
     physician: "Dr. Maha Al-Saif (Dev)",
     symptoms: [SYMPTOMS["fatigue"]!, SYMPTOMS["polydipsia"]!, SYMPTOMS["polyuria"]!, SYMPTOMS["tremor"]!, SYMPTOMS["paresthesia"]!],
+    medication: { code: "372567009", display: "Metformin 500mg", dose: "500 mg", route: "Oral", freq: "Twice daily" },
   },
   nephrology: {
     name: "Nephrology Clinic",
     physician: "Dr. Waleed Al-Amri (Dev)",
     symptoms: [SYMPTOMS["ankleSwelling"]!, SYMPTOMS["fatigue"]!, SYMPTOMS["polyuria"]!, SYMPTOMS["nausea"]!],
+    medication: { code: "387165009", display: "Sodium bicarbonate 500mg", dose: "500 mg", route: "Oral", freq: "Twice daily" },
   },
   pulmonology: {
     name: "Pulmonology Clinic",
     physician: "Dr. Lama Al-Fadhli (Dev)",
     symptoms: [SYMPTOMS["cough"]!, SYMPTOMS["wheezing"]!, SYMPTOMS["dyspnea"]!],
+    medication: { code: "108606002", display: "Salbutamol inhaler 100mcg", dose: "2 puffs", route: "Inhalation", freq: "As needed" },
   },
   ent: {
     name: "ENT Clinic",
     physician: "Dr. Faisal Al-Nasser (Dev)",
     symptoms: [SYMPTOMS["soreThroat"]!, SYMPTOMS["nasalCongestion"]!, SYMPTOMS["earPain"]!, SYMPTOMS["dizziness"]!],
+    medication: { code: "395726003", display: "Xylometazoline nasal spray 0.1%", dose: "1 spray", route: "Nasal", freq: "Twice daily" },
   },
   neurology: {
     name: "Neurology Clinic",
     physician: "Dr. Reema Al-Dakhil (Dev)",
     symptoms: [SYMPTOMS["headache"]!, SYMPTOMS["dizziness"]!, SYMPTOMS["paresthesia"]!, SYMPTOMS["blurredVision"]!, SYMPTOMS["tremor"]!],
+    medication: { code: "108406007", display: "Sumatriptan 50mg", dose: "50 mg", route: "Oral", freq: "As needed" },
   },
   internalMedicine: {
     name: "Internal Medicine Clinic",
     physician: "Dr. Tariq Al-Mansouri (Dev)",
     symptoms: [SYMPTOMS["fatigue"]!, SYMPTOMS["backPain"]!, SYMPTOMS["jointPain"]!, SYMPTOMS["insomnia"]!, SYMPTOMS["nausea"]!, SYMPTOMS["abdominalPain"]!],
+    medication: { code: "387517004", display: "Paracetamol 500mg", dose: "500 mg", route: "Oral", freq: "As needed" },
   },
   ophthalmology: {
     name: "Ophthalmology Clinic",
     physician: "Dr. Huda Al-Mutlaq (Dev)",
     symptoms: [SYMPTOMS["blurredVision"]!, SYMPTOMS["eyePain"]!, SYMPTOMS["headache"]!],
+    medication: { code: "421026006", display: "Carmellose eye drops 0.5%", dose: "1 drop", route: "Ophthalmic", freq: "As needed" },
   },
   allergy: {
     name: "Allergy and Immunology Clinic",
     physician: "Dr. Nasser Al-Otaibi (Dev)",
     symptoms: [SYMPTOMS["sneezing"]!, SYMPTOMS["itching"]!, SYMPTOMS["nasalCongestion"]!, SYMPTOMS["wheezing"]!],
+    medication: { code: "330698001", display: "Loratadine 10mg", dose: "10 mg", route: "Oral", freq: "Once daily" },
   },
 };
 
@@ -168,9 +188,13 @@ async function main(): Promise<void> {
 
     let totalVisits = 0;
     let totalSymptoms = 0;
+    let totalMeds = 0;
 
     for (const { id: pid, mrn } of patientsRes.rows) {
       const clinics = PATIENT_CLINICS[mrn]!;
+      // Attach each clinic's medication once, at the patient's first visit
+      // to that clinic, so it is linked to a real clinic encounter.
+      const clinicMedSeeded = new Set<string>();
 
       for (let v = 0; v < VISIT_DAYS_AGO.length; v++) {
         const daysAgo = VISIT_DAYS_AGO[v]!;
@@ -252,12 +276,36 @@ async function main(): Promise<void> {
           );
           totalSymptoms++;
         }
+
+        // ── Medication prescribed at this clinic (once per clinic) ─────────
+        if (encounterId && !clinicMedSeeded.has(clinic.name)) {
+          clinicMedSeeded.add(clinic.name);
+          const med = clinic.medication;
+          await client.query(
+            `INSERT INTO hospital.medication_request
+               (patient_id, encounter_id, source_system, source_id,
+                medication_display, code_system, code, dose, route, frequency,
+                status, started_at, prescriber_display,
+                fhir_resource_json, last_synced_at)
+             VALUES ($1,$2,$3,$4,$5,'http://snomed.info/sct',$6,$7,$8,$9,
+                     'active', now() - $10 * interval '1 day', $11,
+                     $12::jsonb, now())
+             ON CONFLICT (source_system, source_id) DO NOTHING`,
+            [
+              pid, encounterId, SRC, `MED-${mrn}-clinic-${med.code}`,
+              med.display, med.code, med.dose, med.route, med.freq,
+              daysAgo, clinic.physician,
+              JSON.stringify({ resourceType: "MedicationRequest", _synthetic: true }),
+            ],
+          );
+          totalMeds++;
+        }
       }
     }
 
     await client.query("COMMIT");
     console.log(`Symptom-history seed completed for: ${mrns.join(", ")}`);
-    console.log(`Visits: ${totalVisits}, symptom records: ${totalSymptoms}`);
+    console.log(`Visits: ${totalVisits}, symptom records: ${totalSymptoms}, clinic medications: ${totalMeds}`);
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Symptom-history seed failed:", err);
