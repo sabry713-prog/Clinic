@@ -176,12 +176,15 @@ _GROUP_WORDS = (
     "كل", "لكل", "زار", "زيارة", "زياره", "زيارات",
 )
 # Pull the clinic name out of a chunk: "... reported at <X> Clinic ...",
-# "<X> Clinic visit ...", or "... ward: <X> Clinic ...".
+# "... prescribed at <X> Clinic ...", "<X> Clinic visit ...", or
+# "... ward: <X> Clinic ...".
 _CLINIC_RE = re.compile(
-    r"(?:reported at|ward:)\s*([\w/]+(?: [\w/]+)*? Clinic)|\b([\w/]+(?: [\w/]+)*? Clinic) visit",
+    r"(?:reported at|prescribed at|ward:)\s*([\w/]+(?: [\w/]+)*? Clinic)"
+    r"|\b([\w/]+(?: [\w/]+)*? Clinic) visit",
     re.IGNORECASE,
 )
 _REPORTED_AT_RE = re.compile(r"\s*\(reported at [^)]+\)")
+_PRESCRIBED_AT_RE = re.compile(r"\s*\(prescribed at [^)]+\)")
 _CODE_PAREN_RE = re.compile(r"\s*\(code: [^)]+\)")
 
 
@@ -253,7 +256,7 @@ class StubModelProvider:
         # clinic. Pure factual regrouping — no synthesis or interpretation.
         if _is_per_clinic_question(question):
             by_clinic: dict[str, list[str]] = {}
-            meds: list[str] = []
+            unattributed_meds: list[str] = []
             for chunk in chunk_matches:
                 prefix = chunk.split(":", 1)[0].strip().lower()
                 body = chunk.split(":", 1)[1].strip() if ":" in chunk else chunk
@@ -261,15 +264,20 @@ class StubModelProvider:
                     clinic = _clinic_of(chunk) or "Other"
                     body = _REPORTED_AT_RE.sub("", body)
                     body = _CODE_PAREN_RE.sub("", body).strip()
-                    by_clinic.setdefault(clinic, []).append(body)
+                    by_clinic.setdefault(clinic, []).append(f"symptom — {body}")
                 elif prefix == "medication":
-                    meds.append(body)
+                    clinic = _clinic_of(chunk)
+                    body = _PRESCRIBED_AT_RE.sub("", body).strip()
+                    if clinic:
+                        by_clinic.setdefault(clinic, []).append(f"treatment — {body}")
+                    else:
+                        unattributed_meds.append(body)
             lines: list[str] = []
             for clinic in sorted(by_clinic):
-                for body in by_clinic[clinic][:10]:
+                for body in by_clinic[clinic][:12]:
                     lines.append(f"• {clinic}: {body}")
-            for med in meds[:8]:
-                lines.append(f"• Medication: {med}")
+            for med in unattributed_meds[:8]:
+                lines.append(f"• Medication (not clinic-linked): {med}")
             if not lines:
                 return no_data
             return f"{preamble}\n" + "\n".join(lines)

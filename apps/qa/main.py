@@ -207,16 +207,23 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                 "field": "encounter",
             })
 
-        # Medications
+        # Medications (joined to the ordering encounter so clinic-prescribed
+        # treatment can be attributed to its clinic)
         rows = await conn.fetch(
-            """SELECT medication_display, status, prescriber_display, dose, route, frequency, started_at
-               FROM hospital.medication_request
-               WHERE patient_id = $1
-               ORDER BY started_at DESC
+            """SELECT m.medication_display, m.status, m.prescriber_display,
+                      m.dose, m.route, m.frequency, m.started_at, e.ward AS clinic
+               FROM hospital.medication_request m
+               LEFT JOIN hospital.encounter e ON e.id = m.encounter_id
+               WHERE m.patient_id = $1
+               ORDER BY m.started_at DESC
                LIMIT 40""",
             patient_id,
         )
         for r in rows:
+            # Only outpatient clinic encounters carry a meaningful clinic name;
+            # inpatient meds (ward like "Ward-4A") are left unattributed.
+            clinic = r["clinic"] if r["clinic"] and str(r["clinic"]).endswith("Clinic") else None
+            clinic_suffix = f" (prescribed at {clinic})" if clinic else ""
             chunks.append({
                 "source_type": "medication",
                 "source_id": patient_id,
@@ -227,6 +234,7 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                     f"frequency: {r['frequency'] or ''} "
                     f"status: {r['status']} "
                     f"(started: {_fmt_dt(r['started_at'])})"
+                    f"{clinic_suffix}"
                 ),
                 "language": "en",
                 "effective_at": str(r["started_at"]) if r["started_at"] else now,
