@@ -265,6 +265,33 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
                 "field": r["type"] or "note",
             })
 
+        # Procedures / interventions (operations, cath lab, stents)
+        rows = await conn.fetch(
+            """SELECT code_display, status, performed_at, performer_display, note
+               FROM hospital.procedure
+               WHERE patient_id = $1
+               ORDER BY performed_at DESC
+               LIMIT 40""",
+            patient_id,
+        )
+        for r in rows:
+            note = (r["note"] or "")[:400]
+            chunks.append({
+                "source_type": "procedure",
+                "source_id": patient_id,
+                "content_text": (
+                    f"Procedure: {r['code_display']} "
+                    f"status: {r['status']} "
+                    f"(performed: {_fmt_dt(r['performed_at'])}"
+                    f"{f', {note}' if note else ''})"
+                ),
+                "language": "en",
+                "effective_at": str(r["performed_at"]) if r["performed_at"] else now,
+                "code": "",
+                "source_system": "hospital",
+                "field": "procedure",
+            })
+
     return chunks
 
 
