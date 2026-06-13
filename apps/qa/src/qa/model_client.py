@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable
 
 
 @dataclass
@@ -167,6 +167,36 @@ def _is_detail_question(question: str) -> bool:
     )
 
 
+# Per-clinic breakdown: group the documented record by the clinic each fact
+# was reported at. Triggered when the question names clinics AND asks for a
+# per/each/by breakdown or the visit history.
+_CLINIC_WORDS = ("clinic", "clinics", "عيادة", "عياده", "عيادات")
+_GROUP_WORDS = (
+    "each", "per", "every", "by clinic", "across", "visited", "visit", "visits",
+    "كل", "لكل", "زار", "زيارة", "زياره", "زيارات",
+)
+# Pull the clinic name out of a chunk: "... reported at <X> Clinic ...",
+# "<X> Clinic visit ...", or "... ward: <X> Clinic ...".
+_CLINIC_RE = re.compile(
+    r"(?:reported at|ward:)\s*([\w/]+(?: [\w/]+)*? Clinic)|\b([\w/]+(?: [\w/]+)*? Clinic) visit",
+    re.IGNORECASE,
+)
+_REPORTED_AT_RE = re.compile(r"\s*\(reported at [^)]+\)")
+_CODE_PAREN_RE = re.compile(r"\s*\(code: [^)]+\)")
+
+
+def _is_per_clinic_question(question: str) -> bool:
+    ql = question.lower()
+    return any(c in ql for c in _CLINIC_WORDS) and any(g in ql for g in _GROUP_WORDS)
+
+
+def _clinic_of(chunk: str) -> Optional[str]:
+    m = _CLINIC_RE.search(chunk)
+    if not m:
+        return None
+    return (m.group(1) or m.group(2)).strip()
+
+
 def _question_terms(question: str) -> list[str]:
     # \w covers Arabic letters in Python 3 and excludes Arabic punctuation (، ؛ ؟)
     tokens = re.findall(r"[\w^/%]+", question.lower())
@@ -216,6 +246,33 @@ class StubModelProvider:
         chunk_matches = _CHUNK_RE.findall(user_prompt)
         if not chunk_matches:
             return no_data
+
+        # Per-clinic breakdown: group the documented symptoms / diagnoses
+        # (conditions) under the clinic each was reported at. Medications are
+        # listed separately because the record does not tie them to a specific
+        # clinic. Pure factual regrouping — no synthesis or interpretation.
+        if _is_per_clinic_question(question):
+            by_clinic: dict[str, list[str]] = {}
+            meds: list[str] = []
+            for chunk in chunk_matches:
+                prefix = chunk.split(":", 1)[0].strip().lower()
+                body = chunk.split(":", 1)[1].strip() if ":" in chunk else chunk
+                if prefix == "condition":
+                    clinic = _clinic_of(chunk) or "Other"
+                    body = _REPORTED_AT_RE.sub("", body)
+                    body = _CODE_PAREN_RE.sub("", body).strip()
+                    by_clinic.setdefault(clinic, []).append(body)
+                elif prefix == "medication":
+                    meds.append(body)
+            lines: list[str] = []
+            for clinic in sorted(by_clinic):
+                for body in by_clinic[clinic][:10]:
+                    lines.append(f"• {clinic}: {body}")
+            for med in meds[:8]:
+                lines.append(f"• Medication: {med}")
+            if not lines:
+                return no_data
+            return f"{preamble}\n" + "\n".join(lines)
 
         # Summary-style question: reproduce a cross-section of the record,
         # round-robin across record types so no single type dominates.
