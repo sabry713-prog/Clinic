@@ -100,6 +100,36 @@ export interface ConditionHistory {
   readonly episodes: readonly ConditionEpisode[];
 }
 
+export interface PatientBrief {
+  readonly documented_conditions: readonly {
+    readonly code: string | null;
+    readonly code_display: string | null;
+    readonly status: string | null;
+    readonly onset_date: string | null;
+  }[];
+  readonly clinics: readonly {
+    readonly clinic: string;
+    readonly symptoms: readonly { display: string; status: string | null; onset_date: string | null }[];
+    readonly treatments: readonly { display: string; dose: string | null; route: string | null; frequency: string | null; status: string | null }[];
+  }[];
+  readonly labs: readonly {
+    readonly code: string | null;
+    readonly code_display: string | null;
+    readonly value_numeric: number | null;
+    readonly value_text: string | null;
+    readonly unit: string | null;
+    readonly ref_range_low: number | null;
+    readonly ref_range_high: number | null;
+    readonly ref_range_text: string | null;
+    readonly effective_at: string | null;
+  }[];
+  readonly imaging: readonly {
+    readonly code_display: string | null;
+    readonly value_text: string | null;
+    readonly effective_at: string | null;
+  }[];
+}
+
 export interface ObservationItem {
   readonly id: string;
   readonly category: string | null;
@@ -381,6 +411,9 @@ export const api = {
       request<ConditionHistory>(
         `/api/v1/patients/${patientId}/conditions/${conditionId}/history`,
       ),
+
+    brief: (patientId: string) =>
+      request<PatientBrief>(`/api/v1/patients/${patientId}/brief`),
   },
 
   narrative: {

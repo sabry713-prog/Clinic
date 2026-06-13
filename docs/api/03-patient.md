@@ -162,6 +162,41 @@ Medications.
 
 Response shape similar to `medications` array above.
 
+## GET /api/v1/patients/:id/brief
+
+A factual, at-a-glance reproduction of the patient's documented record for the
+patient-file landing view. Contains **no** risk classification, severity flags,
+or interpretation — it restates documented facts only (preserves non-SaMD
+posture; see `CLAUDE.md` sections 2-3).
+
+**Response:**
+```json
+{
+  "documented_conditions": [
+    { "code": "38341003", "code_display": "Hypertension", "status": "active", "onset_date": "2022-05-03" }
+  ],
+  "clinics": [
+    {
+      "clinic": "Cardiology Clinic",
+      "symptoms": [ { "display": "Chest pain", "status": "resolved", "onset_date": "2026-02-11" } ],
+      "treatments": [ { "display": "Bisoprolol 2.5mg", "dose": "2.5 mg", "route": "Oral", "frequency": "Once daily", "status": "active" } ]
+    }
+  ],
+  "labs": [
+    { "code": "2160-0", "code_display": "Creatinine", "value_numeric": 138, "value_text": null, "unit": "μmol/L", "ref_range_low": 59, "ref_range_high": 104, "ref_range_text": null, "effective_at": "..." }
+  ],
+  "imaging": [
+    { "code_display": "Chest X-ray", "value_text": "Chest X-ray performed. Report documented by radiology...", "effective_at": "..." }
+  ]
+}
+```
+
+- `documented_conditions` is the problem list (per-visit symptom records are
+  excluded and instead grouped under `clinics`). No item is labelled by risk.
+- `labs` is the latest value per laboratory code, with the reference range as
+  the source lab provided it — no high/low/abnormal flag.
+- Audit action: `PATIENT_BRIEF_VIEW`. Errors: 403 PATIENT_OUT_OF_SCOPE, 404.
+
 ## GET /api/v1/patients/:id/conditions/:condition_id/history
 
 All documented episodes of the same coded condition (same `code_system` + `code`)

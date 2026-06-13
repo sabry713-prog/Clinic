@@ -109,6 +109,50 @@ export interface ConditionHistory {
   readonly episodes: readonly ConditionEpisode[];
 }
 
+export interface BriefCondition {
+  readonly code: string | null;
+  readonly code_display: string | null;
+  readonly status: string | null;
+  readonly onset_date: string | null;
+}
+
+export interface BriefClinic {
+  readonly clinic: string;
+  readonly symptoms: readonly { display: string; status: string | null; onset_date: string | null }[];
+  readonly treatments: readonly { display: string; dose: string | null; route: string | null; frequency: string | null; status: string | null }[];
+}
+
+export interface BriefLab {
+  readonly code: string | null;
+  readonly code_display: string | null;
+  readonly value_numeric: number | null;
+  readonly value_text: string | null;
+  readonly unit: string | null;
+  readonly ref_range_low: number | null;
+  readonly ref_range_high: number | null;
+  readonly ref_range_text: string | null;
+  readonly effective_at: string | null;
+}
+
+export interface BriefImaging {
+  readonly code_display: string | null;
+  readonly value_text: string | null;
+  readonly effective_at: string | null;
+}
+
+/**
+ * PatientBrief — a factual reproduction of the patient's documented record,
+ * organized for a quick read. It contains NO risk classification, NO severity
+ * flags, and NO interpretation. "documented_conditions" lists the problem-list
+ * conditions exactly as recorded; the caller forms their own judgement.
+ */
+export interface PatientBrief {
+  readonly documented_conditions: readonly BriefCondition[];
+  readonly clinics: readonly BriefClinic[];
+  readonly labs: readonly BriefLab[];
+  readonly imaging: readonly BriefImaging[];
+}
+
 export interface CursorPage<T> {
   readonly data: readonly T[];
   readonly next_cursor: string | null;
@@ -341,6 +385,119 @@ export class PatientService {
       : null;
 
     return { data, next_cursor, total: null };
+  }
+
+  // ─── Patient brief ──────────────────────────────────────────────────────────
+
+  async getPatientBrief(userId: string, patientId: string): Promise<PatientBrief> {
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    // Problem-list conditions = documented conditions that are not per-visit
+    // symptom records (those carry a "(reported at <clinic>)" suffix).
+    const conditionsResult = await this.pool.query<{
+      code: string | null;
+      code_display: string | null;
+      status: string | null;
+      onset_date: string | null;
+      is_symptom: boolean;
+    }>(
+      `SELECT code, code_display, status, onset_date::text AS onset_date,
+              (code_display LIKE '%(reported at%') AS is_symptom
+       FROM hospital.condition
+       WHERE patient_id = $1
+       ORDER BY onset_date DESC NULLS LAST`,
+      [patientId],
+    );
+
+    const documented_conditions: BriefCondition[] = conditionsResult.rows
+      .filter((r) => !r.is_symptom)
+      .map((r) => ({
+        code: r.code,
+        code_display: r.code_display,
+        status: r.status,
+        onset_date: r.onset_date,
+      }));
+
+    // Per-clinic symptom records (parse the clinic from the display suffix).
+    const clinicMap = new Map<string, BriefClinic>();
+    const clinicRe = /\(reported at ([^)]+)\)/;
+    const ensureClinic = (name: string): BriefClinic => {
+      let c = clinicMap.get(name);
+      if (!c) {
+        c = { clinic: name, symptoms: [], treatments: [] };
+        clinicMap.set(name, c);
+      }
+      return c;
+    };
+    for (const r of conditionsResult.rows) {
+      if (!r.is_symptom || !r.code_display) continue;
+      const m = clinicRe.exec(r.code_display);
+      const clinic = m ? m[1]!.trim() : "Other";
+      const display = r.code_display.replace(/\s*\(reported at [^)]+\)/, "").trim();
+      (ensureClinic(clinic).symptoms as { display: string; status: string | null; onset_date: string | null }[]).push({
+        display,
+        status: r.status,
+        onset_date: r.onset_date,
+      });
+    }
+
+    // Clinic-prescribed treatment (medications linked to a clinic encounter).
+    const medsResult = await this.pool.query<{
+      medication_display: string | null;
+      dose: string | null;
+      route: string | null;
+      frequency: string | null;
+      status: string | null;
+      clinic: string | null;
+    }>(
+      `SELECT m.medication_display, m.dose, m.route, m.frequency, m.status,
+              e.ward AS clinic
+       FROM hospital.medication_request m
+       JOIN hospital.encounter e ON e.id = m.encounter_id
+       WHERE m.patient_id = $1 AND e.ward LIKE '%Clinic'
+       ORDER BY m.started_at DESC NULLS LAST`,
+      [patientId],
+    );
+    for (const r of medsResult.rows) {
+      if (!r.clinic) continue;
+      (ensureClinic(r.clinic).treatments as { display: string; dose: string | null; route: string | null; frequency: string | null; status: string | null }[]).push({
+        display: r.medication_display ?? "Unknown",
+        dose: r.dose,
+        route: r.route,
+        frequency: r.frequency,
+        status: r.status,
+      });
+    }
+
+    const clinics = Array.from(clinicMap.values()).sort((a, b) =>
+      a.clinic.localeCompare(b.clinic),
+    );
+
+    // Latest value per laboratory code — factual, with the source ref range.
+    const labsResult = await this.pool.query<BriefLab>(
+      `SELECT DISTINCT ON (code) code, code_display, value_numeric, value_text,
+              unit, ref_range_low, ref_range_high, ref_range_text,
+              effective_at::text AS effective_at
+       FROM hospital.observation
+       WHERE patient_id = $1 AND category = 'laboratory'
+       ORDER BY code, effective_at DESC`,
+      [patientId],
+    );
+
+    const imagingResult = await this.pool.query<BriefImaging>(
+      `SELECT code_display, value_text, effective_at::text AS effective_at
+       FROM hospital.observation
+       WHERE patient_id = $1 AND category = 'imaging'
+       ORDER BY effective_at DESC`,
+      [patientId],
+    );
+
+    return {
+      documented_conditions,
+      clinics,
+      labs: labsResult.rows,
+      imaging: imagingResult.rows,
+    };
   }
 
   // ─── Condition history ────────────────────────────────────────────────────
