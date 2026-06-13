@@ -197,7 +197,7 @@ posture; see `CLAUDE.md` sections 2-3).
     { "code_display": "Chest X-ray", "value_text": "Chest X-ray performed. Report documented by radiology...", "effective_at": "..." }
   ],
   "procedures": [
-    { "code_display": "Placement of stent in coronary artery", "status": "completed", "performed_at": "...", "performer_display": "Dr. ...", "note": "Percutaneous coronary intervention with coronary stent placement performed in the catheterization laboratory. Procedure report documented." }
+    { "code_display": "Placement of stent in coronary artery", "status": "completed", "performed_at": "...", "performer_display": "Dr. ...", "note": "Percutaneous coronary intervention with coronary stent placement performed in the catheterization laboratory (cath lab). Procedure report documented." }
   ]
 }
 ```
