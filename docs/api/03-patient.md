@@ -195,6 +195,9 @@ posture; see `CLAUDE.md` sections 2-3).
   ],
   "imaging": [
     { "code_display": "Chest X-ray", "value_text": "Chest X-ray performed. Report documented by radiology...", "effective_at": "..." }
+  ],
+  "procedures": [
+    { "code_display": "Placement of stent in coronary artery", "status": "completed", "performed_at": "...", "performer_display": "Dr. ...", "note": "Percutaneous coronary intervention with coronary stent placement performed in the catheterization laboratory. Procedure report documented." }
   ]
 }
 ```
@@ -208,6 +211,9 @@ posture; see `CLAUDE.md` sections 2-3).
   appear in `other_active_medications`, not guessed onto a condition.
 - `labs` is the latest value per laboratory code, with the reference range as
   the source lab provided it — no high/low/abnormal flag.
+- `procedures` reproduces documented operations and interventions (e.g. cardiac
+  catheterization, coronary stent placement, cardioversion, endoscopy) with the
+  recorded procedure note — factual report text only, no outcome interpretation.
 - Audit action: `PATIENT_BRIEF_VIEW`. Errors: 403 PATIENT_OUT_OF_SCOPE, 404.
 
 ## GET /api/v1/patients/:id/conditions/:condition_id/history

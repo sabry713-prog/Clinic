@@ -151,6 +151,14 @@ export interface BriefImaging {
   readonly effective_at: string | null;
 }
 
+export interface BriefProcedure {
+  readonly code_display: string | null;
+  readonly status: string | null;
+  readonly performed_at: string | null;
+  readonly performer_display: string | null;
+  readonly note: string | null;
+}
+
 /**
  * PatientBrief — a factual reproduction of the patient's documented record,
  * organized for a quick read. It contains NO risk classification, NO severity
@@ -162,6 +170,7 @@ export interface PatientBrief {
   readonly clinics: readonly BriefClinic[];
   readonly labs: readonly BriefLab[];
   readonly imaging: readonly BriefImaging[];
+  readonly procedures: readonly BriefProcedure[];
   // Active medications with no documented condition indication — listed
   // separately rather than guessed onto a disease.
   readonly other_active_medications: readonly BriefMedication[];
@@ -562,11 +571,22 @@ export class PatientService {
       [patientId],
     );
 
+    const proceduresResult = await this.pool.query<BriefProcedure>(
+      `SELECT code_display, status,
+              performed_at::text AS performed_at,
+              performer_display, note
+       FROM hospital.procedure
+       WHERE patient_id = $1
+       ORDER BY performed_at DESC NULLS LAST`,
+      [patientId],
+    );
+
     return {
       documented_conditions,
       clinics,
       labs: labsResult.rows,
       imaging: imagingResult.rows,
+      procedures: proceduresResult.rows,
       other_active_medications: otherActiveMeds,
     };
   }
