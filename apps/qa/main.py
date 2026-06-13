@@ -104,7 +104,8 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
         rows = await conn.fetch(
             """SELECT code, code_display, status, onset_date
                FROM hospital.condition
-               WHERE patient_id = $1""",
+               WHERE patient_id = $1
+               ORDER BY onset_date DESC NULLS LAST""",
             patient_id,
         )
         for r in rows:
