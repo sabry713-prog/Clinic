@@ -71,6 +71,8 @@ _TERM_ALIASES = {
     "وصفات": "medication", "وصفه": "medication",
     "حساسيه": "allergy", "حساسية": "allergy", "حساسيات": "allergy",
     "امراض": "condition", "مرض": "condition", "مشاكل": "condition",
+    "حالة": "condition", "حالات": "condition", "الحالات": "condition",
+    "تشخيصات": "condition", "التشخيصات": "condition",
     "سكر": "glucose", "السكري": "glucose", "جلوكوز": "glucose",
     "ضغط": "blood pressure", "حراره": "temperature", "حرارة": "temperature",
     "نبض": "heart rate", "اكسجين": "spo2", "أكسجين": "spo2",
