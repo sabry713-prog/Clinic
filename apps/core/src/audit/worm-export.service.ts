@@ -17,15 +17,16 @@ const gzip = promisify(zlib.gzip);
 interface AuditRow {
   id: string;
   ts: string;
-  tenant_id: string;
-  user_id: string;
+  actor_id: string | null;
+  actor_role: string | null;
   action: string;
-  resource_type: string;
-  resource_id: string | null;
-  patient_id: string | null;
-  details: Record<string, unknown> | null;
-  prev_hash: string | null;
-  hash: string;
+  target_type: string | null;
+  target_id: string | null;
+  outcome: string;
+  metadata_json: Record<string, unknown> | null;
+  request_id: string | null;
+  hash_prev: string | null;
+  hash_self: string;
 }
 
 interface S3PutResult {
@@ -85,7 +86,16 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
     );
 
     this.timer = setTimeout(async () => {
-      await this.exportYesterday();
+      // A failed export must not crash the API process; log and continue so the
+      // next day's export is still scheduled.
+      try {
+        await this.exportYesterday();
+      } catch (err) {
+        this.logger.error(
+          { err, event: "AUDIT_WORM_EXPORT_FAILED" },
+          "WORM export failed",
+        );
+      }
       this.scheduleNextExport();
     }, delayMs);
   }
@@ -109,9 +119,8 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
     this.logger.info({ date: dateStr }, "WORM export starting");
 
     const result = await this.pool.query<AuditRow>(
-      `SELECT id, ts, tenant_id, actor_id AS user_id, action, target_type AS resource_type,
-              target_id AS resource_id, NULL::uuid AS patient_id,
-              metadata_json AS details, NULL AS prev_hash, id AS hash
+      `SELECT id, ts, actor_id, actor_role, action, target_type, target_id,
+              outcome, metadata_json, request_id, hash_prev, hash_self
          FROM audit.event
         WHERE ts >= $1::date AND ts < ($1::date + INTERVAL '1 day')
         ORDER BY ts ASC, id ASC`,
