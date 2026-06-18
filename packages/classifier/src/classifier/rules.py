@@ -76,7 +76,7 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         # Verb forms only — bare nouns تدهور/تحسن are dropped because they appear
         # in risk phrasing ("خطر التدهور" = risk of deterioration → RISK_ASSESSMENT).
         "TREND_INTERPRETATION:ar_tadahwur",
-        re.compile(r"(يتدهور|تتدهور|يتحسن|تتحسن|تسوء|يسوء|اتجاه)"),
+        re.compile(r"(يتدهور|تتدهور|يتحسن|تتحسن|تسوء|يسوء|يرتفع|ترتفع|ينخفض|تنخفض|نازل|طالع|اتجاه)"),
     ),
     (
         # Directional characterization of a value over time
@@ -147,7 +147,7 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         # Arabic: "what causes…", "…indicates/suggests…", "most likely"
         "DIAGNOSTIC_SUGGESTION",
         "DIAGNOSTIC_SUGGESTION:ar_cause_indicate",
-        re.compile(r"(يسبب|تسبب|ما الذي يسبب|تشير إلى|يشير إلى|تدل على|يدل على|على الأرجح)"),
+        re.compile(r"(يسبب|تسبب|ما الذي يسبب|السبب المحتمل|تشير إلى|يشير إلى|تدل على|يدل على|على الأرجح|ممكن يكون|يمكن أن يكون)"),
     ),
     (
         # Arabic "is this <acute diagnosis>?" — naming a diagnosis. Enumerated
@@ -181,7 +181,7 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
     (
         "RISK_ASSESSMENT",
         "RISK_ASSESSMENT:ar_khatar",
-        re.compile(r"\b(معرض ل?خطر|في خطر|مدى الخطورة)\b"),
+        re.compile(r"(معرض ل|في خطر|مدى الخطورة)"),
     ),
     (
         "RISK_ASSESSMENT",
@@ -192,7 +192,7 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         # Arabic: "severity/risk of the patient's condition", "prognosis/recovery outlook"
         "RISK_ASSESSMENT",
         "RISK_ASSESSMENT:ar_severity_prognosis",
-        re.compile(r"(ما خطورة|مدى خطورة|خطورة وضع|توقعات الشفاء|توقعات التعافي|المآل|الإنذار)"),
+        re.compile(r"(ما خطورة|مدى خطورة|خطورة وضع|توقعات الشفاء|توقعات التعافي|المآل|الإنذار|احتمال يحتاج|احتمال يدخل|نسبة خطورة)"),
     ),
     # TREATMENT_RECOMMENDATION
     (
@@ -243,7 +243,8 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "TREATMENT_RECOMMENDATION",
         "TREATMENT_RECOMMENDATION:ar_appropriate_dose",
         re.compile(
-            r"(الدواء المناسب|العلاج المناسب|الجرعة المناسبة|أفضل دواء|أفضل علاج|زيادة (ال)?جرعة|تعديل (ال)?جرعة|تخفيض (ال)?جرعة|يجب وصف|وصفه|المناسبة؟)"
+            r"(الدواء المناسب|العلاج المناسب|الجرعة المناسبة|أفضل دواء|أفضل علاج|زيادة (ال)?جرعة|تعديل (ال)?جرعة|تخفيض (ال)?جرعة|يجب وصف|وصفه|المناسبة؟"
+            r"|أزيد|نزيد|أوقف|نوقف|أبدأ|نبدأ|الخطوة الجاية|الخطوة القادمة)"
         ),
     ),
     # MEDICATION_SAFETY_JUDGMENT
@@ -282,7 +283,7 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         # Arabic: "is X safe…", "interaction between drugs"
         "MEDICATION_SAFETY_JUDGMENT",
         "MEDICATION_SAFETY_JUDGMENT:ar_safe_interact",
-        re.compile(r"(آمن|آمنة|تفاعل|تفاعلات|موانع الاستعمال|مضاد استطباب)"),
+        re.compile(r"(آمن|آمنة|تفاعل|تفاعلات|تعارض|موانع الاستعمال|مضاد استطباب)"),
     ),
     # DIFFERENTIAL_DIAGNOSIS
     (
@@ -308,6 +309,12 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "PROGNOSTIC_QUESTION",
         "PROGNOSTIC_QUESTION:prognosis",
         re.compile(r"\bprognosis\b", re.IGNORECASE),
+    ),
+    (
+        # Arabic: "when will he recover / be discharged", recovery outlook
+        "PROGNOSTIC_QUESTION",
+        "PROGNOSTIC_QUESTION:ar_recovery",
+        re.compile(r"(بيتعافى|يتعافى|متى يخرج|متى بيخرج|متى يتعافى|التعافي)"),
     ),
     # RED_FLAG_IDENTIFICATION
     (
@@ -364,7 +371,8 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "REFERRAL_RECOMMENDATION",
         "REFERRAL_RECOMMENDATION:ar_refer",
         re.compile(
-            r"(تحويل (المريض )?(إلى|لطب|لقسم|للعناية|ل)|إحالة|طلب استشارة|استشارة \S+ية|تكرار (تحليل|الفحص|الاختبار)|إعادة (تحليل|الفحص|الاختبار))"
+            r"(تحويل (المريض )?(إلى|لطب|لقسم|للعناية|ل)|إحالة|طلب استشارة|استشارة \S+ية|تكرار (تحليل|الفحص|الاختبار)|إعادة (تحليل|الفحص|الاختبار)"
+            r"|أحوله|أحول|نحوله|نحول|يتحول|نكرر (تحليل|الفحص|الاختبار)|نعيد (تحليل|الفحص|الاختبار))"
         ),
     ),
     # COMPARATIVE_JUDGMENT

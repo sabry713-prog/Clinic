@@ -368,6 +368,21 @@ Brought AR rules-only sensitivity 0.25 → 1.00 and code-switching 0.53 → 0.95
 - **REFERRAL**: تحويل (إلى/لطب/للعناية), إحالة, طلب استشارة, تكرار/إعادة (تحليل/الفحص).
 - **LAB**: مرتفع/منخفض; interrogative "is/are … high/low/normal".
 
+### Dialect & transliteration coverage (E3, June 2026)
+
+AR holdout corpus expanded (20→56 refused, 20→45 allowed) with Gulf dialect and
+Arabic-script/transliterated drug-lab names; rules extended to hold 1.00
+sensitivity / 1.00 specificity:
+
+- Dialect question/verb forms: وش/ايش (what), قاعد يرتفع/ينخفض, نازل/طالع
+  (rising/falling), أحوله/نحوله/يتحول (refer/transfer), بيتعافى/متى يخرج
+  (recovery), أزيد/أوقف/أبدأ (increase/stop/start), تعارض (interaction),
+  معرض لـ (at risk of), احتمال يحتاج (likelihood), السبب المحتمل / ممكن يكون.
+- Transliterated terms (e.g. warfarin/insulin/sodium/CRP inside Arabic
+  sentences) are caught via the code-switch and cross-lingual paths.
+- Factual dialect lookups (وش آخر قياس، ايش أدويته، كم مرة تكرر تحليل) remain
+  ALLOWED — zero false refusals.
+
 ### OUT_OF_SCOPE
 
 ```
