@@ -105,6 +105,30 @@ export interface MedicationReconciliation {
   readonly generated_at: string;
 }
 
+// ─── Record search (E2) ──────────────────────────────────────────────────────
+// Verbatim record excerpts only — no synthesis, no generation, no blocklist
+// exposure (the safest feature shape). Newest-first per group.
+
+export interface SearchResultItem {
+  readonly source_type: string;
+  readonly source_id: string;
+  readonly excerpt: string;          // verbatim record text
+  readonly language: string;
+  readonly recorded_at: string | null;
+}
+
+export interface SearchResultGroup {
+  readonly source_type: string;
+  readonly results: readonly SearchResultItem[];
+}
+
+export interface RecordSearchResponse {
+  readonly patient_id: string;
+  readonly query: string;
+  readonly total: number;
+  readonly groups: readonly SearchResultGroup[];
+}
+
 export interface DocumentItem {
   readonly id: string;
   readonly type: string | null;
@@ -479,6 +503,86 @@ export class PatientService {
       reconciliation,
       generated_at: new Date().toISOString(),
     };
+  }
+
+  async searchRecord(
+    userId: string,
+    patientId: string,
+    query: string,
+  ): Promise<RecordSearchResponse> {
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const q = query.trim();
+    if (!q) {
+      return { patient_id: patientId, query: q, total: 0, groups: [] };
+    }
+
+    // Cross-lingual: records are stored in source form (often English), so map
+    // common Arabic clinical terms to their English equivalents and match both.
+    // This is the search counterpart to the Q&A aliasing; E3 formalizes Arabic.
+    const ilikeTerms = [q, ...PatientService.crossLingualTerms(q)].map((t) => `%${t}%`);
+
+    // Postgres full-text ('simple' config) on the original query, OR an ILIKE
+    // over the query + cross-lingual aliases. Verbatim excerpts, newest first.
+    const result = await this.pool.query<{
+      source_type: string;
+      source_id: string;
+      content_text: string;
+      language: string;
+      recorded_at: string | null;
+    }>(
+      `SELECT source_type, source_id::text AS source_id, content_text,
+              language, updated_at::text AS recorded_at
+         FROM hospital.retrieval_chunk
+        WHERE patient_id = $1
+          AND ( to_tsvector('simple', content_text) @@ plainto_tsquery('simple', $2)
+                OR content_text ILIKE ANY($3::text[]) )
+        ORDER BY source_type ASC, updated_at DESC
+        LIMIT 200`,
+      [patientId, q, ilikeTerms],
+    );
+
+    const groupMap = new Map<string, SearchResultItem[]>();
+    for (const r of result.rows) {
+      const item: SearchResultItem = {
+        source_type: r.source_type,
+        source_id: r.source_id,
+        excerpt: r.content_text,
+        language: r.language,
+        recorded_at: r.recorded_at,
+      };
+      (groupMap.get(r.source_type) ?? groupMap.set(r.source_type, []).get(r.source_type)!).push(item);
+    }
+
+    const groups: SearchResultGroup[] = [...groupMap.entries()]
+      .map(([source_type, results]) => ({ source_type, results }))
+      .sort((a, b) => a.source_type.localeCompare(b.source_type));
+
+    return { patient_id: patientId, query: q, total: result.rows.length, groups };
+  }
+
+  // Common Arabic clinical terms → English (records are stored in source form).
+  private static readonly AR_EN_TERMS: Readonly<Record<string, string>> = {
+    دوخة: "dizziness", دوار: "dizziness", صداع: "headache", سعال: "cough",
+    كحة: "cough", غثيان: "nausea", تعب: "fatigue", إرهاق: "fatigue",
+    ألم: "pain", الم: "pain", وجع: "pain", صدر: "chest", بطن: "abdominal",
+    ظهر: "back", مفاصل: "joint", حلق: "throat", خفقان: "palpitations",
+    تنميل: "numbness", حمى: "fever", حرارة: "temperature", ضغط: "pressure",
+    سكر: "glucose", جلوكوز: "glucose", كرياتينين: "creatinine",
+    هيموجلوبين: "hemoglobin", صوديوم: "sodium", بوتاسيوم: "potassium",
+    دواء: "medication", أدوية: "medication", ادوية: "medication",
+    حساسية: "allergy", حساسيه: "allergy", تحاليل: "laboratory",
+    تحليل: "laboratory", ميتفورمين: "metformin", وارفارين: "warfarin",
+  };
+
+  private static crossLingualTerms(query: string): string[] {
+    const out: string[] = [];
+    for (const tok of query.split(/\s+/)) {
+      const t = tok.replace(/[؟?,.،]/g, "");
+      const alias = PatientService.AR_EN_TERMS[t] ?? (t.startsWith("ال") ? PatientService.AR_EN_TERMS[t.slice(2)] : undefined);
+      if (alias) out.push(alias);
+    }
+    return out;
   }
 
   private shortDate(ts: string | null): string {
