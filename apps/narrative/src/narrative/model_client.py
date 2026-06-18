@@ -1,9 +1,11 @@
-"""Model provider protocol and stub implementation."""
+"""Model provider protocol, stub, and on-prem local provider."""
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
+
+import httpx
 
 
 @dataclass
@@ -178,3 +180,57 @@ class StubModelProvider:
             *_section(priors, _fmt_prior, "No prior admissions documented."),
         ]
         return "\n".join(lines)
+
+
+class LocalModelProvider:
+    """
+    On-prem model provider calling an OpenAI-compatible /chat/completions endpoint
+    (vLLM/Ollama, in-Kingdom). No data leaves the premises — see
+    docs/architecture/on-prem-model.md and CLAUDE.md §7. Never a public cloud API.
+    """
+
+    def __init__(self, endpoint_url: str, model_name: str, api_key: str = "EMPTY",
+                 timeout_s: float = 60.0) -> None:
+        self._url = endpoint_url.rstrip("/") + "/chat/completions"
+        self._model = model_name
+        self._api_key = api_key
+        self._timeout = timeout_s
+
+    def version(self) -> str:
+        return f"local:{self._model}"
+
+    async def complete(self, system_prompt: str, user_prompt: str,
+                       params: ModelParams) -> str:
+        payload = {
+            "model": self._model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": params.temperature,
+            "top_p": params.top_p,
+            "max_tokens": params.max_tokens,
+            "frequency_penalty": params.frequency_penalty,
+            "presence_penalty": params.presence_penalty,
+            "stream": False,
+        }
+        headers = {"Authorization": f"Bearer {self._api_key}"}
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            resp = await client.post(self._url, json=payload, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+        return str(data["choices"][0]["message"]["content"]).strip()
+
+
+def get_model() -> ModelProvider:
+    """Select the narrative model provider from settings (stub | local)."""
+    from .config import settings
+
+    if settings.narrative_model_provider.lower() == "local" and settings.model_name:
+        return LocalModelProvider(
+            endpoint_url=settings.model_endpoint_url,
+            model_name=settings.model_name,
+            api_key=settings.model_api_key,
+            timeout_s=settings.model_timeout_s,
+        )
+    return StubModelProvider()

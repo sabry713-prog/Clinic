@@ -13,7 +13,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from src.narrative.config import settings
 from src.narrative.grpc_server import create_grpc_server
 from src.narrative.logging_config import configure_logging
-from src.narrative.model_client import StubModelProvider
+from src.narrative.model_client import get_model
 from src.narrative.narrative_service import generate_narrative
 from src.narrative.tracing import configure_tracing
 
@@ -27,7 +27,7 @@ _grpc_server = None
 _db_pool: Optional[asyncpg.Pool] = None  # type: ignore[type-arg]
 
 # Model provider — replaced with real implementation when model is selected
-_model = StubModelProvider()
+_model = get_model()
 
 
 @asynccontextmanager

@@ -19,6 +19,7 @@ dependencies = [
     "asyncpg>=0.29.0",
     "blocklist",
     "retrieval",
+    "httpx>=0.28.1",
 ]
 
 [tool.uv.sources]
