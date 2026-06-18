@@ -15,6 +15,8 @@ from pydantic import BaseModel
 from src.qa.config import settings
 from src.qa.grpc_server import create_grpc_server
 from src.qa.logging_config import configure_logging
+from src.qa.model_client import get_model
+from src.qa.model_classifier import get_classifier_model
 from src.qa.qa_service import answer as qa_answer
 from src.qa.tracing import configure_tracing
 
@@ -273,8 +275,8 @@ async def ask(body: AskRequest) -> dict:
             conversation_id=body.conversation_id,
             pool=None,    # vector retrieval disabled in stub mode
             embedder=None,
-            model=None,
-            classifier_model=None,
+            model=get_model(),  # stub, or on-prem local provider when configured
+            classifier_model=get_classifier_model(),
             _override_chunks=chunks,  # pass DB facts directly
         )
         return asdict(result)
