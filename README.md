@@ -43,10 +43,31 @@ The doc files are the source of truth. If a prompt and a doc file disagree, the 
 
 ## Status
 
-Pre-build draft. This specification has not yet been implemented. Slice 0 begins when:
-- Open questions in the product spec are closed (anchor hospital, EHR, cloud, foundation model)
-- Saudi regulatory consultant has signed the IUS Addendum 1 (Factual Q&A)
-- A development environment is provisioned
+**Implemented — MVP running locally; Phase E0 (verification & gate closure) in progress.**
+
+Working end-to-end (local `docker-compose.dev.yml` + dev seed): authentication/RBAC,
+aggregated patient view, factual narrative, factual Q&A (EN/AR/code-switched), shift
+handoff, audit log with hash-chain verification and WORM export.
+
+Phase E0 measured results (June 2026, classifier rules-only):
+
+| Metric | Result |
+|---|---|
+| Classifier unit tests | 73/73 pass |
+| Eval harness | runs in CI-ready form |
+| EN holdout sensitivity / specificity | 1.00 / 1.00 |
+| AR holdout sensitivity / specificity | 1.00 / 1.00 |
+| Code-switching stress sensitivity | 0.95 |
+| Blocklist corpus gates | 107/107 (100% block, 0 false-positive) |
+| Q&A refused-path latency | ~10 ms (budget ≤ 1 s) |
+| Out-of-scope patient access | denied (403 PATIENT_OUT_OF_SCOPE) |
+
+Remaining before the E0 gate fully closes: combined rules+model classifier
+sensitivity ≥ 0.98 (pending the on-prem foundation-model endpoint), and the
+stakeholder evidence pack (`docs/evidence-pack-e0.md`).
+
+Open decisions: on-prem foundation-model endpoint; Saudi regulatory consultant
+sign-off on the IUS Addendum 1 (Factual Q&A).
 
 ## Owners
 
