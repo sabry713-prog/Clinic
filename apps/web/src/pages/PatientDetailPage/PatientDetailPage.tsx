@@ -18,6 +18,7 @@ import PatientHeader from "../../components/PatientHeader/PatientHeader";
 import LabPanel from "../../components/LabPanel/LabPanel";
 import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
 import ReconciliationPanel from "../../components/ReconciliationPanel/ReconciliationPanel";
+import RecordSearch from "../../components/RecordSearch/RecordSearch";
 import NarrativePanel from "../../components/NarrativePanel/NarrativePanel";
 import QAConversation from "../../components/QAConversation/QAConversation";
 import HandoffView from "../../components/HandoffView/HandoffView";
@@ -34,7 +35,7 @@ export default function PatientDetailPage(): JSX.Element {
   const [reconciliation, setReconciliation] = useState<MedicationReconciliation | null>(null);
   const [isLoadingReconciliation, setIsLoadingReconciliation] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "narrative" | "qa" | "handoff">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "search" | "narrative" | "qa" | "handoff">("overview");
   const [qaLanguage, setQaLanguage] = useState<"en" | "ar">("en");
   const [handoff, setHandoff] = useState<HandoffOutput | null>(null);
   const [isLoadingHandoff, setIsLoadingHandoff] = useState(false);
@@ -159,7 +160,7 @@ export default function PatientDetailPage(): JSX.Element {
 
         {/* Tab navigation */}
         <div className="border-b border-slate-700 flex gap-4">
-          {(["overview", "narrative", "qa", "handoff"] as const).map((tab) => (
+          {(["overview", "search", "narrative", "qa", "handoff"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -207,6 +208,8 @@ export default function PatientDetailPage(): JSX.Element {
             />
           </>
         )}
+
+        {activeTab === "search" && <RecordSearch patientId={patient.id} />}
 
         {activeTab === "narrative" && (
           <NarrativePanel
