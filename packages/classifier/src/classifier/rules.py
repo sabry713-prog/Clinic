@@ -25,15 +25,19 @@ class RuleMatch:
 # docs/classifier/02-rules.md.
 CATEGORY_PRECEDENCE: dict[str, int] = {
     "MEDICATION_SAFETY_JUDGMENT": 0,
-    "DIFFERENTIAL_DIAGNOSIS": 1,
-    "PROGNOSTIC_QUESTION": 2,
-    "RED_FLAG_IDENTIFICATION": 3,
-    "COMPARATIVE_JUDGMENT": 4,
-    "DIAGNOSTIC_SUGGESTION": 5,
-    "RISK_ASSESSMENT": 6,
-    "TREND_INTERPRETATION": 7,
-    "TREATMENT_RECOMMENDATION": 8,
-    "OUT_OF_SCOPE": 9,
+    "REFERRAL_RECOMMENDATION": 1,
+    "DIFFERENTIAL_DIAGNOSIS": 2,
+    "PROGNOSTIC_QUESTION": 3,
+    "RED_FLAG_IDENTIFICATION": 4,
+    # TREND beats LAB so "becoming elevated" (directional) is a trend, while a
+    # bare "is X elevated/abnormal" (no trend trigger) stays LAB.
+    "TREND_INTERPRETATION": 5,
+    "LAB_INTERPRETATION": 6,
+    "COMPARATIVE_JUDGMENT": 7,
+    "DIAGNOSTIC_SUGGESTION": 8,
+    "RISK_ASSESSMENT": 9,
+    "TREATMENT_RECOMMENDATION": 10,
+    "OUT_OF_SCOPE": 11,
 }
 
 
@@ -72,6 +76,23 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "TREND_INTERPRETATION:ar_tadahwur",
         re.compile(r"\b(يتدهور|يتحسن|تدهور|تحسن|اتجاه)\b"),
     ),
+    (
+        # Directional characterization of a value over time
+        "TREND_INTERPRETATION",
+        "TREND_INTERPRETATION:direction",
+        re.compile(
+            r"\b(dropping|dropped|rising|risen|climbing|falling|fallen|declining|plummeting|surging)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "TREND_INTERPRETATION",
+        "TREND_INTERPRETATION:showing_change",
+        re.compile(
+            r"\b(show(s|ing)?|showed) (improvement|deterioration|worsening|decline|progression|a (rise|drop|fall|increase|decrease))\b",
+            re.IGNORECASE,
+        ),
+    ),
     # DIAGNOSTIC_SUGGESTION (guarded — see _apply_refused_rules for exclusions)
     (
         "DIAGNOSTIC_SUGGESTION",
@@ -96,6 +117,29 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "DIAGNOSTIC_SUGGESTION:ar_tashkhis",
         re.compile(r"\b(تشخيص|التشخيص|الأسباب المحتملة)\b"),
     ),
+    (
+        "DIAGNOSTIC_SUGGESTION",
+        "DIAGNOSTIC_SUGGESTION:do_you_think",
+        re.compile(r"\bdo you think\b", re.IGNORECASE),
+    ),
+    (
+        "DIAGNOSTIC_SUGGESTION",
+        "DIAGNOSTIC_SUGGESTION:consistent_with",
+        re.compile(r"\bconsistent with\b", re.IGNORECASE),
+    ),
+    (
+        "DIAGNOSTIC_SUGGESTION",
+        "DIAGNOSTIC_SUGGESTION:most_likely_wrong",
+        re.compile(r"\b(most likely|what('?s| is) wrong with)\b", re.IGNORECASE),
+    ),
+    (
+        # "Is this sepsis?" / "Is this pneumonia?" — naming a diagnosis.
+        # Narrow: only fires on "is this <single-word>?" so it won't catch
+        # "is this the latest value?" etc.
+        "DIAGNOSTIC_SUGGESTION",
+        "DIAGNOSTIC_SUGGESTION:is_this_dx",
+        re.compile(r"\bis this (a |an )?[a-z]+\?", re.IGNORECASE),
+    ),
     # RISK_ASSESSMENT
     (
         "RISK_ASSESSMENT",
@@ -111,6 +155,11 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "RISK_ASSESSMENT",
         "RISK_ASSESSMENT:ar_khatar",
         re.compile(r"\b(معرض ل?خطر|في خطر|مدى الخطورة)\b"),
+    ),
+    (
+        "RISK_ASSESSMENT",
+        "RISK_ASSESSMENT:how_likely",
+        re.compile(r"\bhow likely\b", re.IGNORECASE),
     ),
     # TREATMENT_RECOMMENDATION
     (
@@ -138,6 +187,20 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ),
     (
         "TREATMENT_RECOMMENDATION",
+        "TREATMENT_RECOMMENDATION:best_treatment",
+        re.compile(
+            r"\bbest (treatment|management|option|approach|antibiotic|drug|therapy)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        # "surgical candidate", "candidate for surgery/dialysis" — treatment suitability
+        "TREATMENT_RECOMMENDATION",
+        "TREATMENT_RECOMMENDATION:candidate",
+        re.compile(r"\b(surgical candidate|candidate for)\b", re.IGNORECASE),
+    ),
+    (
+        "TREATMENT_RECOMMENDATION",
         "TREATMENT_RECOMMENDATION:ar_madha_a3ti",
         re.compile(r"\b(ماذا أعطي|ماذا أصف|ماذا أفعل|الخطوة التالية|توصية)\b"),
     ),
@@ -146,19 +209,32 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "MEDICATION_SAFETY_JUDGMENT",
         "MEDICATION_SAFETY_JUDGMENT:safe_in",
         re.compile(
-            r"\b(safe|ok|appropriate|contraindicated)\b.{0,30}\b(in|for|with|despite|given)\b",
+            r"\b(safe|ok|appropriate|contraindicated)\b.{0,30}\b(in|for|with|despite|given|to)\b",
             re.IGNORECASE | re.DOTALL,
         ),
     ),
     (
+        # "contraindicated here" / "is it contraindicated?" — standalone judgment
+        "MEDICATION_SAFETY_JUDGMENT",
+        "MEDICATION_SAFETY_JUDGMENT:contraindicated",
+        re.compile(r"\bcontraindicated\b", re.IGNORECASE),
+    ),
+    (
         "MEDICATION_SAFETY_JUDGMENT",
         "MEDICATION_SAFETY_JUDGMENT:will_interact",
-        re.compile(r"\b(interact|interaction)\b", re.IGNORECASE),
+        re.compile(r"\binteract(ion|ions|s|ing)?\b", re.IGNORECASE),
     ),
     (
         "MEDICATION_SAFETY_JUDGMENT",
         "MEDICATION_SAFETY_JUDGMENT:dose_adjustment",
         re.compile(r"\b(adjust|reduce|increase) (the )?dose\b", re.IGNORECASE),
+    ),
+    (
+        # "Can I use contrast … given his kidney function?" — asking permission
+        # to administer is a safety judgment.
+        "MEDICATION_SAFETY_JUDGMENT",
+        "MEDICATION_SAFETY_JUDGMENT:can_i_administer",
+        re.compile(r"\bcan (i|we)\s+(use|give|start|continue|prescribe|administer)\b", re.IGNORECASE),
     ),
     # DIFFERENTIAL_DIAGNOSIS
     (
@@ -213,6 +289,25 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "RED_FLAG_IDENTIFICATION",
         "RED_FLAG_IDENTIFICATION:ar_tabiei",
         re.compile(r"\bهل\b.{0,60}\bطبيعي(ة|ه)?\b", re.DOTALL),
+    ),
+    # LAB_INTERPRETATION — asking whether a value is abnormal/elevated/etc.
+    # (a value judgment, vs. a factual "what is the value")
+    (
+        "LAB_INTERPRETATION",
+        "LAB_INTERPRETATION:abnormal_elevated",
+        re.compile(
+            r"\b(abnormal|elevated|significant|too high|too low|dangerously|adequate|inadequate)\b",
+            re.IGNORECASE,
+        ),
+    ),
+    # REFERRAL_RECOMMENDATION — asking whether to refer/consult/transfer
+    (
+        "REFERRAL_RECOMMENDATION",
+        "REFERRAL_RECOMMENDATION:refer_consult",
+        re.compile(
+            r"\b(referral|refer (him|her|the patient|to)|consult(ed|ation)?|be consulted|transfer)\b",
+            re.IGNORECASE,
+        ),
     ),
     # COMPARATIVE_JUDGMENT
     (
@@ -295,15 +390,17 @@ ALLOWED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
 # Polite phrasing guard: "could you tell me" — should not fire DIAGNOSTIC_SUGGESTION
 _COULD_YOU_TELL_ME = re.compile(r"\bcould you (tell|show|give|list|display)\b", re.IGNORECASE)
 
-# Admitting diagnosis guard
+# Factual-diagnosis guard: asking for an already-DOCUMENTED diagnosis field is
+# a factual lookup, not a request for the model to diagnose. Covers
+# "admitting / documented / recorded / coded diagnosis".
 _ADMITTING_DIAGNOSIS = re.compile(
-    r"\badmitting (diagnosis|diagnos[ei]s)\b", re.IGNORECASE
+    r"\b(admitting|documented|recorded|coded) (diagnosis|diagnos[ei]s)\b", re.IGNORECASE
 )
-_AR_ADMITTING_DIAGNOSIS = re.compile(r"\bتشخيص الدخول\b")
+_AR_ADMITTING_DIAGNOSIS = re.compile(r"\b(تشخيص الدخول|التشخيص الموثق|التشخيص المسجل)\b")
 
 
 def _is_admitting_diagnosis_question(text: str) -> bool:
-    """Return True if the question is asking about admitting diagnosis (ALLOWED)."""
+    """Return True if the question asks about a documented diagnosis field (ALLOWED)."""
     return bool(_ADMITTING_DIAGNOSIS.search(text)) or bool(_AR_ADMITTING_DIAGNOSIS.search(text))
 
 
