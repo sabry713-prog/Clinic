@@ -26,6 +26,9 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: dev-file
       KC_HEALTH_ENABLED: "true"
+      # Trust X-Forwarded-* from the reverse proxy / tunnel so OIDC issuer and
+      # redirect URLs use the public https host (remote testing during build).
+      KC_PROXY_HEADERS: xforwarded
     ports:
       - "8080:8080"
     volumes:
