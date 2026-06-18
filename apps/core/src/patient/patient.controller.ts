@@ -118,6 +118,29 @@ export class PatientController {
     return result;
   }
 
+  @Get(":id/medications/reconciliation")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Medication reconciliation across source feeds (factual diffs only)" })
+  async reconcileMedications(@Req() req: Request, @Param("id") id: string) {
+    const userId = getRequestingUserId(req);
+    const requestId = (req.requestId ?? uuidv4()) as RequestId;
+
+    const result = await this.patientService.reconcileMedications(userId, id);
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "MEDICATIONS_RECONCILIATION_VIEW",
+      target_type: "patient",
+      target_id: id,
+      outcome: "SUCCESS",
+      metadata_json: { sources: result.sources, medication_count: result.reconciliation.length },
+      request_id: requestId,
+    });
+
+    return result;
+  }
+
   @Get(":id/medications")
   @HttpCode(200)
   @ApiOperation({ summary: "Patient medications with status filter" })
