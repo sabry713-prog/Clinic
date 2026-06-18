@@ -14,6 +14,32 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../lib/api";
 import type { QAResponse, AnswerSource } from "../../lib/api";
 
+// Plain-language refusal categories (neutral, non-alarming) — E4 trust surface.
+// Describes the KIND of question, not a severity. Clinical facts are still
+// offered in the answer body via the fact-offer path.
+const REFUSAL_LABELS: Record<string, { en: string; ar: string }> = {
+  TREND_INTERPRETATION: { en: "trend interpretation", ar: "تفسير اتجاه" },
+  DIAGNOSTIC_SUGGESTION: { en: "diagnostic suggestion", ar: "اقتراح تشخيصي" },
+  DIFFERENTIAL_DIAGNOSIS: { en: "differential diagnosis", ar: "تشخيص تفريقي" },
+  RISK_ASSESSMENT: { en: "risk assessment", ar: "تقييم خطورة" },
+  TREATMENT_RECOMMENDATION: { en: "treatment recommendation", ar: "توصية علاجية" },
+  MEDICATION_SAFETY_JUDGMENT: { en: "medication-safety judgement", ar: "حكم على سلامة الدواء" },
+  REFERRAL_RECOMMENDATION: { en: "referral recommendation", ar: "توصية بالإحالة" },
+  LAB_INTERPRETATION: { en: "lab interpretation", ar: "تفسير نتيجة مخبرية" },
+  PROGNOSTIC_QUESTION: { en: "prognostic question", ar: "سؤال عن المآل" },
+  RED_FLAG_IDENTIFICATION: { en: "red-flag identification", ar: "تحديد إشارات تحذيرية" },
+  COMPARATIVE_JUDGMENT: { en: "comparative judgement", ar: "حكم مقارن" },
+  OUT_OF_SCOPE: { en: "outside this record's scope", ar: "خارج نطاق هذا السجل" },
+  OTHER_INTERPRETIVE: { en: "an interpretive question", ar: "سؤال تفسيري" },
+};
+
+function refusalCategoryLabel(category: string | null, isRtl: boolean): string {
+  const entry = (category && REFUSAL_LABELS[category]) || REFUSAL_LABELS["OTHER_INTERPRETIVE"]!;
+  return isRtl
+    ? `النوع: ${entry.ar} — خارج النطاق الواقعي لهذه الأداة.`
+    : `Type: ${entry.en} — outside this tool's factual scope.`;
+}
+
 interface Turn {
   id: string;
   question: string;
@@ -304,10 +330,10 @@ function TurnItem({
             <AnswerBody text={turn.response.answer_text} />
           </div>
 
-          {/* Classification label — small, neutral */}
+          {/* Refusal category in plain language — small, neutral (no alarm) */}
           {!isAllowed && (
             <p className="text-xs text-gray-400 px-1">
-              {t("qa.factual_only")}
+              {refusalCategoryLabel(turn.response.refusal_category, isRtl)}
             </p>
           )}
 
