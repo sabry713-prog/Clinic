@@ -313,6 +313,49 @@ negative:
   - "Show me labs from this admission compared to last admission." (this is a borderline case; classifier should refuse with COMPARATIVE_JUDGMENT and offer both sets of values)
 ```
 
+### LAB_INTERPRETATION
+
+Asking whether a value is abnormal/elevated/etc. is a value judgment (vs. the factual "what is the value").
+
+```
+id: LAB_INTERPRETATION:abnormal_elevated
+language: en
+pattern: \b(abnormal|elevated|significant|too high|too low|dangerously|adequate|inadequate)\b
+positive:
+  - "Is the creatinine abnormal?"
+  - "Are these liver enzymes elevated?"
+  - "Is the CRP result significant?"
+  - "Is the blood pressure dangerously low?"
+  - "Is the urine output adequate?"
+negative:
+  - "Are the values becoming elevated?" (TREND_INTERPRETATION wins — directional trigger)
+```
+
+### REFERRAL_RECOMMENDATION
+
+Asking whether to refer / consult / transfer.
+
+```
+id: REFERRAL_RECOMMENDATION:refer_consult
+language: en
+pattern: \b(referral|refer (him|her|the patient|to)|consult(ed|ation)?|be consulted|transfer)\b
+positive:
+  - "Does the patient need a nephrology referral?"
+  - "Should cardiology be consulted?"
+  - "Does he need an ICU transfer?"
+```
+
+### E0 coverage expansion (June 2026)
+
+Added to existing categories to close the EN rules-only sensitivity gap (0.56 → 1.00, 0 false refusals):
+
+- **TREND_INTERPRETATION**: `:direction` (dropping/rising/falling/declining…), `:showing_change` ("showing improvement/deterioration").
+- **DIAGNOSTIC_SUGGESTION**: `:do_you_think`, `:consistent_with`, `:most_likely_wrong`, `:is_this_dx` ("Is this sepsis?" — narrow `is this <word>?`).
+- **MEDICATION_SAFETY_JUDGMENT**: `:safe_in` connector now includes "to" ("safe to give"); `:contraindicated` standalone; `:will_interact` now matches plurals ("interactions"); `:can_i_administer` ("Can I use … given …").
+- **TREATMENT_RECOMMENDATION**: `:best_treatment`, `:candidate` ("surgical candidate").
+- **RISK_ASSESSMENT**: `:how_likely`.
+- **Factual-diagnosis guard** widened to allow "documented / recorded / coded diagnosis" (and Arabic التشخيص الموثق/المسجل) — these are factual lookups, not diagnosis requests.
+
 ### OUT_OF_SCOPE
 
 ```
