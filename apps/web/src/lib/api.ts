@@ -158,6 +158,26 @@ export interface MedicationReconciliation {
   readonly generated_at: string;
 }
 
+export interface SearchResultItem {
+  readonly source_type: string;
+  readonly source_id: string;
+  readonly excerpt: string;
+  readonly language: string;
+  readonly recorded_at: string | null;
+}
+
+export interface SearchResultGroup {
+  readonly source_type: string;
+  readonly results: readonly SearchResultItem[];
+}
+
+export interface RecordSearchResponse {
+  readonly patient_id: string;
+  readonly query: string;
+  readonly total: number;
+  readonly groups: readonly SearchResultGroup[];
+}
+
 export interface EncounterItem {
   readonly id: string;
   readonly encounter_type: string | null;
@@ -404,6 +424,11 @@ export const api = {
     medicationReconciliation: (id: string) =>
       request<MedicationReconciliation>(
         `/api/v1/patients/${id}/medications/reconciliation`,
+      ),
+
+    searchRecord: (id: string, q: string) =>
+      request<RecordSearchResponse>(
+        `/api/v1/patients/${id}/search?q=${encodeURIComponent(q)}`,
       ),
 
     encounters: (id: string) =>
