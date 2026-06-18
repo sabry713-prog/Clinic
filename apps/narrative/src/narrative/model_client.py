@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
@@ -75,7 +76,12 @@ class StubModelProvider:
         user_prompt: str,
         params: ModelParams,
     ) -> str:
-        """Extract structured data from user_prompt and build a factual narrative."""
+        """Extract structured data from user_prompt and build a factual narrative.
+
+        Bilingual: structural labels/section titles render in the requested
+        language; clinical values (names, codes, numbers, dates, units) are kept
+        verbatim in source form per CLAUDE.md §8.
+        """
         ex = self._extract_json
         demographics = ex(user_prompt, "PATIENT DEMOGRAPHICS", "CURRENT ENCOUNTER:") or {}
         conditions = ex(user_prompt, "DOCUMENTED PROBLEMS / CONDITIONS:", "DOCUMENTED ALLERGIES:") or []
@@ -87,97 +93,132 @@ class StubModelProvider:
         if not isinstance(demographics, dict):
             demographics = {}
 
-        display_name = str(demographics.get("display_name") or "the patient")
+        lang_match = re.search(r"LANGUAGE:\s*(\w+)", user_prompt)
+        ar = bool(lang_match and lang_match.group(1).strip().lower() == "ar")
+
+        # Label sets — Arabic vs English. Only structural text is localized.
+        L = {
+            "titles": [
+                "١. السياق التعريفي والدخول", "٢. المشاكل النشطة الموثقة",
+                "٣. الحساسيات الموثقة", "٤. الأدوية الحالية",
+                "٥. الملاحظات الموثقة الحديثة", "٦. مراجع التوثيق الحديثة",
+                "٧. حالات الدخول السابقة",
+            ] if ar else [
+                "1. Identity and Admission Context", "2. Documented Active Problems",
+                "3. Documented Allergies", "4. Current Medications",
+                "5. Recent Documented Observations", "6. Recent Documentation References",
+                "7. Prior Admissions",
+            ],
+            "status": "الحالة" if ar else "status",
+            "onset": "تاريخ البدء" if ar else "onset",
+            "reaction": "رد الفعل الموثق" if ar else "documented reaction",
+            "recorded": "تاريخ التسجيل" if ar else "recorded",
+            "started": "تاريخ البدء" if ar else "started",
+            "ref": "النطاق المرجعي" if ar else "reference range",
+            "recorded_in": "سُجِّل في" if ar else "recorded",
+            "author": "المؤلف" if ar else "author",
+            "dated": "بتاريخ" if ar else "dated",
+            "from": "من" if ar else "from",
+            "to": "إلى" if ar else "to",
+            "no_problems": "لا توجد مشاكل نشطة موثقة." if ar else "No active problems documented.",
+            "no_allergies": "لا توجد حساسيات موثقة." if ar else "No allergies documented.",
+            "no_meds": "لا توجد أدوية نشطة موثقة." if ar else "No active medications documented.",
+            "no_obs": "لا توجد ملاحظات حديثة موثقة." if ar else "No recent observations documented.",
+            "no_docs": "لا توجد مستندات حديثة في السجل." if ar else "No recent documents in the record.",
+            "no_priors": "لا توجد حالات دخول سابقة موثقة." if ar else "No prior admissions documented.",
+        }
+
+        display_name = str(demographics.get("display_name") or ("المريض" if ar else "the patient"))
         dob = demographics.get("date_of_birth")
-        sex = demographics.get("sex", "")
-        ward = demographics.get("ward") or "the documented ward"
+        sex_raw = str(demographics.get("sex") or "")
+        sex = ({"male": "ذكر", "female": "أنثى"}.get(sex_raw.lower(), sex_raw)) if ar else sex_raw
+        ward = demographics.get("ward") or ("الجناح الموثق" if ar else "the documented ward")
 
         def _fmt_condition(c: dict) -> str:
-            parts = [str(c.get("code_display") or c.get("code") or "Unspecified condition")]
+            parts = [str(c.get("code_display") or c.get("code") or ("حالة غير محددة" if ar else "Unspecified condition"))]
             if c.get("clinical_status"):
-                parts.append(f"status: {c['clinical_status']}")
+                parts.append(f"{L['status']}: {c['clinical_status']}")
             if c.get("onset_date"):
-                parts.append(f"onset: {c['onset_date']}")
-            return ", ".join(parts) + "."
+                parts.append(f"{L['onset']}: {c['onset_date']}")
+            return ("، " if ar else ", ").join(parts) + "."
 
         def _fmt_allergy(a: dict) -> str:
-            parts = [str(a.get("code_display") or "Unspecified allergen")]
+            parts = [str(a.get("code_display") or ("مُحسِّس غير محدد" if ar else "Unspecified allergen"))]
             if a.get("reaction"):
-                parts.append(f"documented reaction: {a['reaction']}")
+                parts.append(f"{L['reaction']}: {a['reaction']}")
             if a.get("recorded_at"):
-                parts.append(f"recorded: {a['recorded_at']}")
-            return ", ".join(parts) + "."
+                parts.append(f"{L['recorded']}: {a['recorded_at']}")
+            return ("، " if ar else ", ").join(parts) + "."
 
         def _fmt_medication(m: dict) -> str:
-            parts = [str(m.get("medication_display") or m.get("code") or "Unspecified medication")]
+            parts = [str(m.get("medication_display") or m.get("code") or ("دواء غير محدد" if ar else "Unspecified medication"))]
             for key in ("dose", "route", "frequency"):
                 if m.get(key):
                     parts.append(str(m[key]))
             if m.get("started_at"):
-                parts.append(f"started: {m['started_at']}")
-            return ", ".join(parts) + "."
+                parts.append(f"{L['started']}: {m['started_at']}")
+            return ("، " if ar else ", ").join(parts) + "."
 
         def _fmt_observation(o: dict) -> str:
-            label = str(o.get("code_display") or o.get("code") or "Observation")
+            label = str(o.get("code_display") or o.get("code") or ("ملاحظة" if ar else "Observation"))
             if o.get("value_numeric") is not None:
                 value = f"{o['value_numeric']} {o.get('unit') or ''}".strip()
             else:
-                value = str(o.get("value_text") or "no value documented")
+                value = str(o.get("value_text") or ("لا قيمة موثقة" if ar else "no value documented"))
             ref = ""
             if o.get("ref_range_low") is not None and o.get("ref_range_high") is not None:
                 unit = f" {o['unit']}" if o.get("unit") else ""
-                ref = f" (reference range: {o['ref_range_low']}-{o['ref_range_high']}{unit})"
+                ref = f" ({L['ref']}: {o['ref_range_low']}-{o['ref_range_high']}{unit})"
             elif o.get("ref_range_text"):
-                ref = f" (reference range: {o['ref_range_text']})"
-            when = f", recorded {o['effective_at']}" if o.get("effective_at") else ""
+                ref = f" ({L['ref']}: {o['ref_range_text']})"
+            when = f"، {L['recorded_in']} {o['effective_at']}" if (ar and o.get("effective_at")) else (f", {L['recorded_in']} {o['effective_at']}" if o.get("effective_at") else "")
             return f"{label}: {value}{ref}{when}."
 
         def _fmt_document(d: dict) -> str:
-            parts = [str(d.get("type_display") or "Document")]
+            parts = [str(d.get("type_display") or ("مستند" if ar else "Document"))]
             if d.get("author_display"):
-                parts.append(f"author: {d['author_display']}")
+                parts.append(f"{L['author']}: {d['author_display']}")
             if d.get("authored_at"):
-                parts.append(f"dated: {d['authored_at']}")
-            return ", ".join(parts) + "."
+                parts.append(f"{L['dated']}: {d['authored_at']}")
+            return ("، " if ar else ", ").join(parts) + "."
 
         def _fmt_prior(p: dict) -> str:
-            parts = [str(p.get("encounter_type") or "Encounter")]
+            parts = [str(p.get("encounter_type") or ("زيارة" if ar else "Encounter"))]
             if p.get("started_at"):
-                parts.append(f"from {p['started_at']}")
+                parts.append(f"{L['from']} {p['started_at']}")
             if p.get("ended_at"):
-                parts.append(f"to {p['ended_at']}")
-            return ", ".join(parts) + "."
+                parts.append(f"{L['to']} {p['ended_at']}")
+            return " ".join(parts) + "."
 
         def _section(items: object, fmt, empty: str) -> list[str]:
             if isinstance(items, list) and items:
                 return [fmt(i) for i in items if isinstance(i, dict)]
             return [empty]
 
-        # Build factual narrative sections — no interpretive language
+        if ar:
+            identity = (
+                f"{display_name} موثق كمريض"
+                + (f" (تاريخ الميلاد: {dob})" if dob else "")
+                + (f"، الجنس: {sex}" if sex else "")
+                + f"، تم إدخاله إلى {ward}."
+            )
+        else:
+            identity = (
+                f"{display_name} is documented as a patient"
+                + (f" (date of birth: {dob})" if dob else "")
+                + (f", sex: {sex}" if sex else "")
+                + f", admitted to {ward}."
+            )
+
+        t = L["titles"]
         lines = [
-            "1. Identity and Admission Context",
-            f"{display_name} is documented as a patient"
-            + (f" (date of birth: {dob})" if dob else "")
-            + (f", sex: {sex}" if sex else "")
-            + f", admitted to {ward}.",
-            "",
-            "2. Documented Active Problems",
-            *_section(conditions, _fmt_condition, "No active problems documented."),
-            "",
-            "3. Documented Allergies",
-            *_section(allergies, _fmt_allergy, "No allergies documented."),
-            "",
-            "4. Current Medications",
-            *_section(medications, _fmt_medication, "No active medications documented."),
-            "",
-            "5. Recent Documented Observations",
-            *_section(observations, _fmt_observation, "No recent observations documented."),
-            "",
-            "6. Recent Documentation References",
-            *_section(documents, _fmt_document, "No recent documents in the record."),
-            "",
-            "7. Prior Admissions",
-            *_section(priors, _fmt_prior, "No prior admissions documented."),
+            t[0], identity, "",
+            t[1], *_section(conditions, _fmt_condition, L["no_problems"]), "",
+            t[2], *_section(allergies, _fmt_allergy, L["no_allergies"]), "",
+            t[3], *_section(medications, _fmt_medication, L["no_meds"]), "",
+            t[4], *_section(observations, _fmt_observation, L["no_obs"]), "",
+            t[5], *_section(documents, _fmt_document, L["no_docs"]), "",
+            t[6], *_section(priors, _fmt_prior, L["no_priors"]),
         ]
         return "\n".join(lines)
 
