@@ -18,6 +18,7 @@ import { ObservationsQueryDto } from "./dto/observations-query.dto";
 import { MedicationsQueryDto } from "./dto/medications-query.dto";
 import { writeAuditEvent } from "@clinical-copilot/audit";
 import { Inject } from "@nestjs/common";
+import { createHash } from "node:crypto";
 import { PG_POOL } from "../database/database.module";
 import type { Pool } from "pg";
 import type { RequestId, UserId, UserRole } from "@clinical-copilot/shared-types";
@@ -112,6 +113,37 @@ export class PatientController {
       target_id: id,
       outcome: "SUCCESS",
       metadata_json: { code: query.code ?? null, category: query.category ?? null },
+      request_id: requestId,
+    });
+
+    return result;
+  }
+
+  @Get(":id/search")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Search the patient record — verbatim excerpts (no synthesis)" })
+  async searchRecord(
+    @Req() req: Request,
+    @Param("id") id: string,
+    @Query("q") q: string,
+  ) {
+    const userId = getRequestingUserId(req);
+    const requestId = (req.requestId ?? uuidv4()) as RequestId;
+    const query = (q ?? "").toString();
+
+    const result = await this.patientService.searchRecord(userId, id, query);
+
+    // PHI: never log the raw query — it may contain patient identifiers (§7).
+    const queryHash = createHash("sha256").update(query).digest("hex").slice(0, 16);
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "PATIENT_RECORD_SEARCH",
+      target_type: "patient",
+      target_id: id,
+      outcome: "SUCCESS",
+      metadata_json: { query_hash: queryHash, query_len: query.length, result_count: result.total },
       request_id: requestId,
     });
 
