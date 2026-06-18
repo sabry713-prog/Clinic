@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from classifier.classifier import classify
-from .report import build_report, print_report, TargetResult
+from .report import build_report, print_report
 
 
 CORPUS_ROOT = Path(__file__).parent / "corpus"

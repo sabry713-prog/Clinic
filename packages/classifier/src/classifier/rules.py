@@ -17,8 +17,29 @@ class RuleMatch:
     span: tuple[int, int]
 
 
+# When a question matches rules from more than one REFUSED category, the most
+# specific category wins (lower number = more specific). This fixes category
+# misattribution where a broad rule (e.g. "should I/we…", bare "recover") would
+# otherwise shadow a precise one. It does NOT affect whether a question is
+# refused — only which refusal category/template is shown. Kept in sync with
+# docs/classifier/02-rules.md.
+CATEGORY_PRECEDENCE: dict[str, int] = {
+    "MEDICATION_SAFETY_JUDGMENT": 0,
+    "DIFFERENTIAL_DIAGNOSIS": 1,
+    "PROGNOSTIC_QUESTION": 2,
+    "RED_FLAG_IDENTIFICATION": 3,
+    "COMPARATIVE_JUDGMENT": 4,
+    "DIAGNOSTIC_SUGGESTION": 5,
+    "RISK_ASSESSMENT": 6,
+    "TREND_INTERPRETATION": 7,
+    "TREATMENT_RECOMMENDATION": 8,
+    "OUT_OF_SCOPE": 9,
+}
+
+
 # ──────────────────────────────────────────────────────────────────────────────
-# REFUSED rules — ordered: first match wins (most specific first within category)
+# REFUSED rules — first match wins for matching; category chosen by precedence
+# above when multiple categories match (most specific first within category)
 # ──────────────────────────────────────────────────────────────────────────────
 
 REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
@@ -202,7 +223,10 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
     (
         "COMPARATIVE_JUDGMENT",
         "COMPARATIVE_JUDGMENT:compared_to",
-        re.compile(r"\bcompared to\b", re.IGNORECASE),
+        # "compared to", "compare to/with/against", "versus/vs" — the temporal
+        # comparison ("today vs yesterday", "compare to last admission") is a
+        # value judgment, not a factual lookup.
+        re.compile(r"\b(compared?\s+(to|with|against)|versus|vs\.?)\b", re.IGNORECASE),
     ),
     # OUT_OF_SCOPE
     (
@@ -294,7 +318,7 @@ def apply_rules(question: str) -> tuple[Optional[str], list[str]]:
         If only ALLOWED rules fire (and no REFUSED), returns "ALLOWED_FACTUAL".
     """
     refused_matches: list[str] = []
-    refused_category: Optional[str] = None
+    matched_categories: list[str] = []
 
     for category, rule_id, pattern in REFUSED_RULES:
         m = pattern.search(question)
@@ -320,10 +344,14 @@ def apply_rules(question: str) -> tuple[Optional[str], list[str]]:
 
         # Rule fires
         refused_matches.append(rule_id)
-        if refused_category is None:
-            refused_category = category
+        matched_categories.append(category)
 
-    if refused_category is not None:
+    if matched_categories:
+        # Most specific category wins (see CATEGORY_PRECEDENCE)
+        refused_category = min(
+            matched_categories,
+            key=lambda c: CATEGORY_PRECEDENCE.get(c, 99),
+        )
         return refused_category, refused_matches
 
     # No REFUSED rule fired — check ALLOWED rules
