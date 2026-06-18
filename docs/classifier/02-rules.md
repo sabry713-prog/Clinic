@@ -15,9 +15,15 @@ Each rule has:
 - `examples_positive` — text that should match
 - `examples_negative` — text that should NOT match (false-positive guards)
 
-Rules are evaluated in order of specificity. The first rule that fires with `REFUSED` short-circuits the classifier. ALLOWED rules require no contradicting REFUSED rule before they short-circuit.
+Rules are evaluated against the question and any that match are recorded. A question that matches any `REFUSED` rule is refused. When matched rules span **more than one** refusal category, the **most specific category wins** (see precedence below) — this only chooses which refusal category/template is shown; it never changes whether the question is refused. ALLOWED rules require no contradicting REFUSED rule before they short-circuit.
 
 If no rule fires decisively, the classifier falls through to the model layer.
+
+### Category precedence (most specific → most general)
+
+`MEDICATION_SAFETY_JUDGMENT` > `DIFFERENTIAL_DIAGNOSIS` > `PROGNOSTIC_QUESTION` > `RED_FLAG_IDENTIFICATION` > `COMPARATIVE_JUDGMENT` > `DIAGNOSTIC_SUGGESTION` > `RISK_ASSESSMENT` > `TREND_INTERPRETATION` > `TREATMENT_RECOMMENDATION` > `OUT_OF_SCOPE`
+
+Rationale: broad rules (e.g. `should I/we…`, bare `recover`) must not shadow a precise category. Examples: "Should we adjust the dose?" → MEDICATION_SAFETY_JUDGMENT (not TREATMENT); "Will he recover?" → PROGNOSTIC_QUESTION (not TREND); "Should I be worried?" → RED_FLAG_IDENTIFICATION (not TREATMENT). Mirrored in `CATEGORY_PRECEDENCE` in `rules.py`.
 
 ## REFUSED rules
 
@@ -299,9 +305,10 @@ positive:
 ```
 id: COMPARATIVE_JUDGMENT:compared_to
 language: en
-pattern: \bcompared to\b
+pattern: \b(compared?\s+(to|with|against)|versus|vs\.?)\b
 positive:
   - "How does today's creatinine compare to last admission?"
+  - "How does his BP today compare to yesterday?"
 negative:
   - "Show me labs from this admission compared to last admission." (this is a borderline case; classifier should refuse with COMPARATIVE_JUDGMENT and offer both sets of values)
 ```
