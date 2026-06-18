@@ -18,3 +18,28 @@
 {"text": "ما هو مستوى السكر في الدم الآن؟", "label": "ALLOWED", "language": "ar"}
 {"text": "ما هو آخر مستوى لـ HbA1c؟", "label": "ALLOWED", "language": "ar"}
 {"text": "أظهر لي قائمة الأدوية الكاملة.", "label": "ALLOWED", "language": "ar"}
+{"text": "وش آخر قياس للسكر؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش أدويته الحالية؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى آخر جرعة انسولين أخذها؟", "label": "ALLOWED", "language": "ar"}
+{"text": "كم قيمة الكرياتينين آخر مرة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وريني نتائج التحاليل الأخيرة", "label": "ALLOWED", "language": "ar"}
+{"text": "أعطني قائمة أدويته الحالية", "label": "ALLOWED", "language": "ar"}
+{"text": "وش تاريخ دخوله المستشفى؟", "label": "ALLOWED", "language": "ar"}
+{"text": "كم عدد كريات الدم البيضاء المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي حساسيته المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وش آخر قراءة ضغط مسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى تمت آخر استشارة موثقة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش التشخيص المسجل عند الدخول؟", "label": "ALLOWED", "language": "ar"}
+{"text": "أعطني قيم الـ hemoglobin المسجلة", "label": "ALLOWED", "language": "ar"}
+{"text": "كم مرة تكرر تحليل الكرياتينين؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وش الجرعة المسجلة للميتفورمين؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو رقم الملف الطبي؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وريني الملاحظات الموثقة اليوم", "label": "ALLOWED", "language": "ar"}
+{"text": "متى بدأ أخذ الـ warfarin؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش العيادات اللي راجعها؟", "label": "ALLOWED", "language": "ar"}
+{"text": "كم قيمة الصوديوم المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي تشخيصاته المزمنة المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "أعطني آخر خمس قراءات للسكر", "label": "ALLOWED", "language": "ar"}
+{"text": "وش وزن المريض المسجل؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى آخر زيارة عيادة موثقة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش الأعراض اللي سجلها الطبيب؟", "label": "ALLOWED", "language": "ar"}

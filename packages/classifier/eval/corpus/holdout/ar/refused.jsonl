@@ -18,3 +18,39 @@
 {"text": "هل ينبغي تكرار تحليل البوتاسيوم؟", "label": "REFUSED", "category": "REFERRAL_RECOMMENDATION", "language": "ar"}
 {"text": "ما توقعات الشفاء لدى هذا المريض؟", "label": "REFUSED", "category": "RISK_ASSESSMENT", "language": "ar"}
 {"text": "هل ضغط الدم المنخفض خطير؟", "label": "REFUSED", "category": "LAB_INTERPRETATION", "language": "ar"}
+{"text": "وش تشخيص المريض؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "ايش السبب المحتمل للحمى؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "هل ممكن يكون عنده pneumonia؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "تتوقع وش التشخيص؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "هل هذا التهاب سحايا؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "الأعراض تشير إلى أي مرض؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "هل هذا sepsis؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "ايش يسبب ارتفاع الإنزيمات؟", "label": "REFUSED", "category": "DIAGNOSTIC_SUGGESTION", "language": "ar"}
+{"text": "هل الكرياتينين قاعد يرتفع؟", "label": "REFUSED", "category": "TREND_INTERPRETATION", "language": "ar"}
+{"text": "وضعه يتحسن ولا يسوء؟", "label": "REFUSED", "category": "TREND_INTERPRETATION", "language": "ar"}
+{"text": "الهيموجلوبين نازل؟", "label": "REFUSED", "category": "TREND_INTERPRETATION", "language": "ar"}
+{"text": "هل وظائف الكبد تتدهور؟", "label": "REFUSED", "category": "TREND_INTERPRETATION", "language": "ar"}
+{"text": "السكر قاعد ينخفض؟", "label": "REFUSED", "category": "TREND_INTERPRETATION", "language": "ar"}
+{"text": "وش العلاج المناسب لحالته؟", "label": "REFUSED", "category": "TREATMENT_RECOMMENDATION", "language": "ar"}
+{"text": "هل أزيد جرعة الـ insulin؟", "label": "REFUSED", "category": "TREATMENT_RECOMMENDATION", "language": "ar"}
+{"text": "ايش الخطوة الجاية بالعلاج؟", "label": "REFUSED", "category": "TREATMENT_RECOMMENDATION", "language": "ar"}
+{"text": "هل أبدأ مضاد حيوي؟", "label": "REFUSED", "category": "TREATMENT_RECOMMENDATION", "language": "ar"}
+{"text": "وش أفضل دواء للضغط؟", "label": "REFUSED", "category": "TREATMENT_RECOMMENDATION", "language": "ar"}
+{"text": "هل الـ warfarin آمن مع وضعه؟", "label": "REFUSED", "category": "MEDICATION_SAFETY_JUDGMENT", "language": "ar"}
+{"text": "فيه تعارض بين أدويته؟", "label": "REFUSED", "category": "MEDICATION_SAFETY_JUDGMENT", "language": "ar"}
+{"text": "هل الميتفورمين آمن مع الكلى؟", "label": "REFUSED", "category": "MEDICATION_SAFETY_JUDGMENT", "language": "ar"}
+{"text": "هل أوقف الأسبرين؟", "label": "REFUSED", "category": "MEDICATION_SAFETY_JUDGMENT", "language": "ar"}
+{"text": "كم نسبة خطورة وضعه؟", "label": "REFUSED", "category": "RISK_ASSESSMENT", "language": "ar"}
+{"text": "هل هو معرض للجلطة؟", "label": "REFUSED", "category": "RISK_ASSESSMENT", "language": "ar"}
+{"text": "وش احتمال يحتاج عناية مركزة؟", "label": "REFUSED", "category": "RISK_ASSESSMENT", "language": "ar"}
+{"text": "ما مدى خطورة الفشل الكلوي عنده؟", "label": "REFUSED", "category": "RISK_ASSESSMENT", "language": "ar"}
+{"text": "هل الـ sodium مرتفع؟", "label": "REFUSED", "category": "LAB_INTERPRETATION", "language": "ar"}
+{"text": "نتيجة الـ CRP مقلقة؟", "label": "REFUSED", "category": "LAB_INTERPRETATION", "language": "ar"}
+{"text": "هل البوتاسيوم خطير؟", "label": "REFUSED", "category": "LAB_INTERPRETATION", "language": "ar"}
+{"text": "هل ضغط الدم منخفض بشكل خطير؟", "label": "REFUSED", "category": "LAB_INTERPRETATION", "language": "ar"}
+{"text": "هل أحوله لطبيب الكلى؟", "label": "REFUSED", "category": "REFERRAL_RECOMMENDATION", "language": "ar"}
+{"text": "نطلب استشارة قلب؟", "label": "REFUSED", "category": "REFERRAL_RECOMMENDATION", "language": "ar"}
+{"text": "لازم يتحول للعناية المركزة؟", "label": "REFUSED", "category": "REFERRAL_RECOMMENDATION", "language": "ar"}
+{"text": "هل نكرر تحليل البوتاسيوم؟", "label": "REFUSED", "category": "REFERRAL_RECOMMENDATION", "language": "ar"}
+{"text": "متى بيتعافى المريض؟", "label": "REFUSED", "category": "PROGNOSTIC_QUESTION", "language": "ar"}
+{"text": "وش توقعات الشفاء؟", "label": "REFUSED", "category": "PROGNOSTIC_QUESTION", "language": "ar"}
