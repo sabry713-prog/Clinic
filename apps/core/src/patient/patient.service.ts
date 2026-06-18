@@ -65,6 +65,46 @@ export interface MedicationItem {
   readonly ended_at: string | null;
 }
 
+// ─── Medication reconciliation (E1) ──────────────────────────────────────────
+// Factual, descriptive only. No severity, no flags, no ordering by importance,
+// no "conflict requiring action" language. Differences are stated as documented
+// facts with provenance. Non-SaMD (CLAUDE.md §2).
+
+export interface ReconciliationEntry {
+  readonly source: string;
+  readonly source_id: string;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly status: string | null;
+  readonly started_at: string | null;
+}
+
+export interface ReconciliationMedication {
+  readonly code: string | null;
+  readonly medication_display: string | null;
+  readonly documented_in: readonly string[];      // sources that document this medication
+  readonly absent_from: readonly string[];         // sources that do NOT document it
+  readonly entries: readonly ReconciliationEntry[]; // one per documenting source
+  // Plain factual difference statements (no severity, no recommendation):
+  //  "Documented in ehr; not documented in pharmacy."
+  //  "Documented dose strings differ: '5 mg' (ehr, 12 May) vs '10 mg' (pharmacy, 14 May)."
+  readonly differences: readonly string[];
+}
+
+export interface ReconciliationSourceList {
+  readonly source: string;
+  readonly medications: readonly MedicationItem[];
+}
+
+export interface MedicationReconciliation {
+  readonly patient_id: string;
+  readonly sources: readonly string[];
+  readonly per_source: readonly ReconciliationSourceList[];
+  readonly reconciliation: readonly ReconciliationMedication[];
+  readonly generated_at: string;
+}
+
 export interface DocumentItem {
   readonly id: string;
   readonly type: string | null;
@@ -341,6 +381,112 @@ export class PatientService {
       : null;
 
     return { data, next_cursor, total: null };
+  }
+
+  // ─── Medication reconciliation (E1) ─────────────────────────────────────────
+
+  async reconcileMedications(
+    userId: string,
+    patientId: string,
+  ): Promise<MedicationReconciliation> {
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    // Active medications across all source feeds (source_system = the feed).
+    const result = await this.pool.query<MedicationItem & { source: string; source_id: string }>(
+      `SELECT id, source_system AS source, source_id, medication_display, code,
+              dose, route, frequency, status, started_at::text AS started_at,
+              ended_at::text AS ended_at
+         FROM hospital.medication_request
+        WHERE patient_id = $1 AND status = 'active'
+        ORDER BY source_system ASC, medication_display ASC`,
+      [patientId],
+    );
+    const rows = result.rows;
+
+    const sources = [...new Set(rows.map((r) => r.source))].sort();
+
+    // Per-source documented lists (each source's own list, alphabetical).
+    const per_source: ReconciliationSourceList[] = sources.map((source) => ({
+      source,
+      medications: rows
+        .filter((r) => r.source === source)
+        .map(({ source: _s, source_id: _sid, ...med }) => med),
+    }));
+
+    // Merge by code when present, else by normalized display name.
+    const keyOf = (r: { code: string | null; medication_display: string | null }): string =>
+      (r.code && r.code.trim()) || (r.medication_display ?? "").trim().toLowerCase();
+
+    const groups = new Map<string, typeof rows>();
+    for (const r of rows) {
+      const k = keyOf(r);
+      (groups.get(k) ?? groups.set(k, []).get(k)!).push(r);
+    }
+
+    const reconciliation: ReconciliationMedication[] = [];
+    for (const group of groups.values()) {
+      const documented_in = [...new Set(group.map((g) => g.source))].sort();
+      const absent_from = sources.filter((s) => !documented_in.includes(s));
+      const entries: ReconciliationEntry[] = group.map((g) => ({
+        source: g.source,
+        source_id: g.source_id,
+        dose: g.dose,
+        route: g.route,
+        frequency: g.frequency,
+        status: g.status,
+        started_at: g.started_at,
+      }));
+
+      const differences: string[] = [];
+
+      // Presence difference — stated factually, no severity.
+      if (absent_from.length > 0 && sources.length > 1) {
+        differences.push(
+          `Documented in ${documented_in.join(", ")}; not documented in ${absent_from.join(", ")}.`,
+        );
+      }
+
+      // Attribute differences (dose/route/frequency) — restate values verbatim.
+      for (const field of ["dose", "route", "frequency"] as const) {
+        const distinct = [...new Set(entries.map((e) => (e[field] ?? "").trim()).filter(Boolean))];
+        if (distinct.length > 1) {
+          const parts = entries
+            .filter((e) => (e[field] ?? "").trim())
+            .map((e) => `'${e[field]}' (${e.source}, ${this.shortDate(e.started_at)})`);
+          differences.push(`Documented ${field} strings differ: ${parts.join(" vs ")}.`);
+        }
+      }
+
+      reconciliation.push({
+        code: group[0]!.code,
+        medication_display: group[0]!.medication_display,
+        documented_in,
+        absent_from,
+        entries,
+        differences,
+      });
+    }
+
+    // Alphabetical only — never ordered by importance/severity.
+    reconciliation.sort((a, b) =>
+      (a.medication_display ?? "").localeCompare(b.medication_display ?? ""),
+    );
+
+    return {
+      patient_id: patientId,
+      sources,
+      per_source,
+      reconciliation,
+      generated_at: new Date().toISOString(),
+    };
+  }
+
+  private shortDate(ts: string | null): string {
+    if (!ts) return "date unknown";
+    const d = new Date(ts);
+    return Number.isNaN(d.getTime())
+      ? "date unknown"
+      : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
 
   // ─── Condition history ────────────────────────────────────────────────────
