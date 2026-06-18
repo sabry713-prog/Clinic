@@ -126,6 +126,38 @@ export interface MedicationItem {
   readonly ended_at: string | null;
 }
 
+export interface ReconciliationEntry {
+  readonly source: string;
+  readonly source_id: string;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly status: string | null;
+  readonly started_at: string | null;
+}
+
+export interface ReconciliationMedication {
+  readonly code: string | null;
+  readonly medication_display: string | null;
+  readonly documented_in: readonly string[];
+  readonly absent_from: readonly string[];
+  readonly entries: readonly ReconciliationEntry[];
+  readonly differences: readonly string[];
+}
+
+export interface ReconciliationSourceList {
+  readonly source: string;
+  readonly medications: readonly MedicationItem[];
+}
+
+export interface MedicationReconciliation {
+  readonly patient_id: string;
+  readonly sources: readonly string[];
+  readonly per_source: readonly ReconciliationSourceList[];
+  readonly reconciliation: readonly ReconciliationMedication[];
+  readonly generated_at: string;
+}
+
 export interface EncounterItem {
   readonly id: string;
   readonly encounter_type: string | null;
@@ -368,6 +400,11 @@ export const api = {
         total: number | null;
       }>(`/api/v1/patients/${id}/medications${query ? `?${query}` : ""}`);
     },
+
+    medicationReconciliation: (id: string) =>
+      request<MedicationReconciliation>(
+        `/api/v1/patients/${id}/medications/reconciliation`,
+      ),
 
     encounters: (id: string) =>
       request<{ data: EncounterItem[]; next_cursor: string | null; total: number | null }>(

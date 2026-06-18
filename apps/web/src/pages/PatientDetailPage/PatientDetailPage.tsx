@@ -12,11 +12,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api, type PatientDetail, type ObservationItem, type MedicationItem, type HandoffOutput, ApiError } from "../../lib/api";
+import { api, type PatientDetail, type ObservationItem, type MedicationItem, type MedicationReconciliation, type HandoffOutput, ApiError } from "../../lib/api";
 import { useCopilot } from "../../context/CopilotContext";
 import PatientHeader from "../../components/PatientHeader/PatientHeader";
 import LabPanel from "../../components/LabPanel/LabPanel";
 import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
+import ReconciliationPanel from "../../components/ReconciliationPanel/ReconciliationPanel";
 import NarrativePanel from "../../components/NarrativePanel/NarrativePanel";
 import QAConversation from "../../components/QAConversation/QAConversation";
 import HandoffView from "../../components/HandoffView/HandoffView";
@@ -30,6 +31,8 @@ export default function PatientDetailPage(): JSX.Element {
   const [observations, setObservations] = useState<ObservationItem[]>([]);
   const [obsNextCursor, setObsNextCursor] = useState<string | null>(null);
   const [medications, setMedications] = useState<MedicationItem[]>([]);
+  const [reconciliation, setReconciliation] = useState<MedicationReconciliation | null>(null);
+  const [isLoadingReconciliation, setIsLoadingReconciliation] = useState(true);
 
   const [activeTab, setActiveTab] = useState<"overview" | "narrative" | "qa" | "handoff">("overview");
   const [qaLanguage, setQaLanguage] = useState<"en" | "ar">("en");
@@ -78,6 +81,12 @@ export default function PatientDetailPage(): JSX.Element {
       .then((data) => setMedications(data.data))
       .catch(() => { /* handled silently */ })
       .finally(() => setIsLoadingMeds(false));
+
+    api.patients
+      .medicationReconciliation(patientId)
+      .then((data) => setReconciliation(data))
+      .catch(() => { /* handled silently */ })
+      .finally(() => setIsLoadingReconciliation(false));
   }, [patientId]);
 
   const handleLoadMoreObs = useCallback((): void => {
@@ -189,6 +198,12 @@ export default function PatientDetailPage(): JSX.Element {
             <MedicationPanel
               medications={medications}
               isLoading={isLoadingMeds}
+            />
+
+            {/* Medication reconciliation — factual source-feed comparison (E1) */}
+            <ReconciliationPanel
+              data={reconciliation}
+              isLoading={isLoadingReconciliation}
             />
           </>
         )}
