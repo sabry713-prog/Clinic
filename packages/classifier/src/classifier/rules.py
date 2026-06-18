@@ -73,8 +73,10 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ),
     (
         "TREND_INTERPRETATION",
+        # Verb forms only — bare nouns تدهور/تحسن are dropped because they appear
+        # in risk phrasing ("خطر التدهور" = risk of deterioration → RISK_ASSESSMENT).
         "TREND_INTERPRETATION:ar_tadahwur",
-        re.compile(r"\b(يتدهور|يتحسن|تدهور|تحسن|اتجاه)\b"),
+        re.compile(r"(يتدهور|تتدهور|يتحسن|تتحسن|تسوء|يسوء|اتجاه)"),
     ),
     (
         # Directional characterization of a value over time
@@ -89,7 +91,8 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "TREND_INTERPRETATION",
         "TREND_INTERPRETATION:showing_change",
         re.compile(
-            r"\b(show(s|ing)?|showed) (improvement|deterioration|worsening|decline|progression|a (rise|drop|fall|increase|decrease))\b",
+            r"\b(show(s|ing)?|showed) (signs of )?(improvement|deterioration|worsening|decline|progression|تحسن|تدهور|a (rise|drop|fall|increase|decrease))\b"
+            r"|\bsigns of (improvement|deterioration|تحسن|تدهور)",
             re.IGNORECASE,
         ),
     ),
@@ -140,6 +143,30 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "DIAGNOSTIC_SUGGESTION:is_this_dx",
         re.compile(r"\bis this (a |an )?[a-z]+\?", re.IGNORECASE),
     ),
+    (
+        # Arabic: "what causes…", "…indicates/suggests…", "most likely"
+        "DIAGNOSTIC_SUGGESTION",
+        "DIAGNOSTIC_SUGGESTION:ar_cause_indicate",
+        re.compile(r"(يسبب|تسبب|ما الذي يسبب|تشير إلى|يشير إلى|تدل على|يدل على|على الأرجح)"),
+    ),
+    (
+        # Arabic "is this <acute diagnosis>?" — naming a diagnosis. Enumerated
+        # disease nouns keep false-positive risk near zero (vs. bare "هل هذا").
+        "DIAGNOSTIC_SUGGESTION",
+        "DIAGNOSTIC_SUGGESTION:ar_is_this_dx",
+        re.compile(r"هل هذا (الـ)?(إنتان|احتشاء|جلطة|سكتة|نزيف|انصمام|التهاب|عدوى|ورم|خثار|تسمم)"),
+    ),
+    (
+        # Code-switching: "what is going on", "is it (an) infection?",
+        # "هل هذا sepsis؟" (Arabic frame + Latin diagnosis name)
+        "DIAGNOSTIC_SUGGESTION",
+        "DIAGNOSTIC_SUGGESTION:code_switch_dx",
+        re.compile(
+            r"\bwhat is going on\b|\bis it (a |an )?(infection|sepsis|pneumonia|cancer|clot|stroke)\b"
+            r"|هل هذا\s+[a-zA-Z]",
+            re.IGNORECASE,
+        ),
+    ),
     # RISK_ASSESSMENT
     (
         "RISK_ASSESSMENT",
@@ -160,6 +187,12 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "RISK_ASSESSMENT",
         "RISK_ASSESSMENT:how_likely",
         re.compile(r"\bhow likely\b", re.IGNORECASE),
+    ),
+    (
+        # Arabic: "severity/risk of the patient's condition", "prognosis/recovery outlook"
+        "RISK_ASSESSMENT",
+        "RISK_ASSESSMENT:ar_severity_prognosis",
+        re.compile(r"(ما خطورة|مدى خطورة|خطورة وضع|توقعات الشفاء|توقعات التعافي|المآل|الإنذار)"),
     ),
     # TREATMENT_RECOMMENDATION
     (
@@ -204,6 +237,15 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "TREATMENT_RECOMMENDATION:ar_madha_a3ti",
         re.compile(r"\b(ماذا أعطي|ماذا أصف|ماذا أفعل|الخطوة التالية|توصية)\b"),
     ),
+    (
+        # Arabic: "appropriate/best medication", "increase/adjust the dose"
+        # (note: bare جرعة "dose" is NOT matched — that is a factual lookup)
+        "TREATMENT_RECOMMENDATION",
+        "TREATMENT_RECOMMENDATION:ar_appropriate_dose",
+        re.compile(
+            r"(الدواء المناسب|العلاج المناسب|الجرعة المناسبة|أفضل دواء|أفضل علاج|زيادة (ال)?جرعة|تعديل (ال)?جرعة|تخفيض (ال)?جرعة|يجب وصف|وصفه|المناسبة؟)"
+        ),
+    ),
     # MEDICATION_SAFETY_JUDGMENT
     (
         "MEDICATION_SAFETY_JUDGMENT",
@@ -235,6 +277,12 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "MEDICATION_SAFETY_JUDGMENT",
         "MEDICATION_SAFETY_JUDGMENT:can_i_administer",
         re.compile(r"\bcan (i|we)\s+(use|give|start|continue|prescribe|administer)\b", re.IGNORECASE),
+    ),
+    (
+        # Arabic: "is X safe…", "interaction between drugs"
+        "MEDICATION_SAFETY_JUDGMENT",
+        "MEDICATION_SAFETY_JUDGMENT:ar_safe_interact",
+        re.compile(r"(آمن|آمنة|تفاعل|تفاعلات|موانع الاستعمال|مضاد استطباب)"),
     ),
     # DIFFERENTIAL_DIAGNOSIS
     (
@@ -296,7 +344,9 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         "LAB_INTERPRETATION",
         "LAB_INTERPRETATION:abnormal_elevated",
         re.compile(
-            r"\b(abnormal|elevated|significant|too high|too low|dangerously|adequate|inadequate)\b",
+            r"\b(abnormal|elevated|significant|too high|too low|dangerously|adequate|inadequate)\b"
+            r"|\b(is|are|does)\b[^?]{0,40}\b(high|low|normal)\b"  # "is the creatinine high/normal?"
+            r"|(مرتفع|منخفض|طبيعية النتيجة)",  # Arabic high/low (code-switching)
             re.IGNORECASE,
         ),
     ),
@@ -307,6 +357,14 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
         re.compile(
             r"\b(referral|refer (him|her|the patient|to)|consult(ed|ation)?|be consulted|transfer)\b",
             re.IGNORECASE,
+        ),
+    ),
+    (
+        # Arabic: referral/transfer to a service, request a consult, repeat a test
+        "REFERRAL_RECOMMENDATION",
+        "REFERRAL_RECOMMENDATION:ar_refer",
+        re.compile(
+            r"(تحويل (المريض )?(إلى|لطب|لقسم|للعناية|ل)|إحالة|طلب استشارة|استشارة \S+ية|تكرار (تحليل|الفحص|الاختبار)|إعادة (تحليل|الفحص|الاختبار))"
         ),
     ),
     # COMPARATIVE_JUDGMENT
