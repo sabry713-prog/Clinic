@@ -124,7 +124,23 @@ async def assemble_patient_data(
             """,
             patient_id,
         )
-        medications = [dict(r) for r in med_rows]
+        # De-duplicate identical medications documented by more than one source
+        # feed (e.g. EHR + pharmacy). A genuine difference (e.g. different dose)
+        # still produces distinct entries — only exact duplicates collapse.
+        medications = []
+        _seen_meds: set[tuple[str, str, str, str]] = set()
+        for r in med_rows:
+            d = dict(r)
+            key = (
+                str(d.get("medication_display") or d.get("code") or "").strip().lower(),
+                str(d.get("dose") or "").strip().lower(),
+                str(d.get("route") or "").strip().lower(),
+                str(d.get("frequency") or "").strip().lower(),
+            )
+            if key in _seen_meds:
+                continue
+            _seen_meds.add(key)
+            medications.append(d)
 
         # Current encounter
         enc_row = await conn.fetchrow(
