@@ -345,6 +345,19 @@ export interface AuditEventItem {
   readonly request_id: string | null;
 }
 
+export interface AuditSummary {
+  readonly range: { since: string | null; until: string | null };
+  readonly total_events: number;
+  readonly distinct_actors: number;
+  readonly distinct_patients_accessed: number;
+  readonly first_event_at: string | null;
+  readonly last_event_at: string | null;
+  readonly by_action: readonly { action: string; count: number }[];
+  readonly by_outcome: readonly { outcome: string; count: number }[];
+  readonly integrity: { verified: boolean; violations: number };
+  readonly generated_at: string;
+}
+
 export interface AuditVerifyResult {
   readonly passed: boolean;
   readonly events_verified: number;
@@ -637,6 +650,14 @@ export const api = {
 
     verifyAudit: () =>
       request<AuditVerifyResult>("/api/v1/admin/audit/verify", { method: "POST" }),
+
+    auditSummary: (params?: { since?: string; until?: string }) => {
+      const qs = new URLSearchParams();
+      if (params?.since) qs.set("since", params.since);
+      if (params?.until) qs.set("until", params.until);
+      const query = qs.toString();
+      return request<AuditSummary>(`/api/v1/admin/audit/summary${query ? `?${query}` : ""}`);
+    },
   },
 
   dsr: {

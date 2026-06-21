@@ -39,6 +39,8 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
   const [error, setError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [rawTranscript, setRawTranscript] = useState<string | null>(null);
+  const [showRaw, setShowRaw] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -71,9 +73,14 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
           }
           const blob = new Blob(chunksRef.current, { type: mime ?? "audio/webm" });
           const b64 = await blobToBase64(blob);
-          const { text } = await api.patients.transcribe(patientId, b64, language);
-          if (text) setEditText((prev) => (prev ? `${prev}\n${text}` : text));
-          else setError("Transcription returned no text.");
+          const { text, raw_text, reformat } = await api.patients.transcribe(patientId, b64, language);
+          if (text) {
+            setEditText((prev) => (prev ? `${prev}\n${text}` : text));
+            // If the on-prem LLM polished the dictation, keep the raw transcript
+            // so the clinician can confirm fidelity before signing.
+            setRawTranscript(reformat === "llm" && raw_text !== text ? raw_text : null);
+            setShowRaw(false);
+          } else setError("Transcription returned no text.");
         } catch (e) {
           setError(e instanceof ApiError ? e.message : "Transcription failed");
         } finally { setTranscribing(false); }
@@ -159,6 +166,23 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
             dir="auto"
             className="relative w-full h-80 bg-slate-950 border border-slate-700 rounded p-3 text-sm text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-slate-500"
           />
+
+          {/* Fidelity check: compare the polished text to the raw dictation */}
+          {rawTranscript && (
+            <div className="mt-2">
+              <button
+                onClick={() => setShowRaw((v) => !v)}
+                className="text-xs text-blue-400 hover:underline"
+              >
+                {showRaw ? "Hide original dictation" : "Polished from your dictation — show original"}
+              </button>
+              {showRaw && (
+                <pre className="mt-1 whitespace-pre-wrap bg-slate-950 border border-slate-700 rounded p-2 text-xs text-slate-400" dir="auto">
+                  {rawTranscript}
+                </pre>
+              )}
+            </div>
+          )}
 
           <p className="text-xs text-slate-500 mt-2">{draft.disclaimer}</p>
 
