@@ -190,8 +190,8 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
                   Sign
                 </button>
                 <span className="text-xs text-slate-500 ml-auto">
-                  Dictation runs on-prem. In stub mode it inserts placeholder text; enable
-                  faster-whisper for real speech (Arabic supported). Export after signing.
+                  Dictation runs on-prem (faster-whisper for speech, faithful LLM reformat
+                  for polish). In stub mode it inserts placeholder text. You edit + sign.
                 </span>
               </>
             ) : (
