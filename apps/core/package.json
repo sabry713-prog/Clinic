@@ -16,7 +16,8 @@
     "seed:enrich": "ts-node src/seed/enrich.ts",
     "seed:symptoms": "ts-node src/seed/symptoms.ts",
     "seed:reconciliation": "ts-node src/seed/reconciliation.ts",
-    "seed:index": "ts-node src/seed/index-chunks.ts"
+    "seed:index": "ts-node src/seed/index-chunks.ts",
+    "seed:all": "ts-node src/seed/dev.ts && ts-node src/seed/enrich.ts && ts-node src/seed/symptoms.ts && ts-node src/seed/reconciliation.ts && ts-node src/seed/index-chunks.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1066.0",
