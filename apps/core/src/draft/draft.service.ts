@@ -129,6 +129,19 @@ export class DraftService {
     return (await res.json()) as { text: string; raw_text: string; engine: string; reformat: string };
   }
 
+  /** Faithfully polish text the clinician TYPED (same rules as dictation). */
+  async reformat(userId: string, patientId: string, text: string, language: string): Promise<{ text: string; raw_text: string; reformat: string }> {
+    await this.scope.assertPatientInScope(userId, patientId);
+    const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
+    const res = await fetch(`${url}/reformat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, language }),
+    });
+    if (!res.ok) throw new BadRequestException("Reformat failed");
+    return (await res.json()) as { text: string; raw_text: string; reformat: string };
+  }
+
   async generate(userId: string, patientId: string, documentType: DocumentType, language: string): Promise<DraftRow> {
     await this.scope.assertPatientInScope(userId, patientId);
     const template = TEMPLATES[documentType];

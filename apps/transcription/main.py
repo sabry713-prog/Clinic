@@ -31,6 +31,11 @@ class TranscribeRequest(BaseModel):
     language: str = "en"
 
 
+class ReformatRequest(BaseModel):
+    text: str
+    language: str = "en"
+
+
 @app.get("/health", response_class=JSONResponse)
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": settings.otel_service_name, "engine": _engine.name()}
@@ -58,6 +63,19 @@ async def transcribe(body: TranscribeRequest) -> dict[str, str]:
     logger.info("transcribed", engine=_engine.name(), language=lang, chars=len(text), reformat=reformat)
     # raw_text is returned so the clinician can confirm fidelity before accepting.
     return {"text": text, "raw_text": light_reformat(raw), "engine": _engine.name(), "reformat": reformat}
+
+
+@app.post("/reformat", response_class=JSONResponse)
+async def reformat(body: ReformatRequest) -> dict[str, str]:
+    """Faithfully polish text the clinician TYPED (no audio) — same rules as
+    dictation reformat (docs/prompts/reformat-prompt.md). Returns the original
+    alongside the polished text so the clinician can confirm fidelity."""
+    lang = body.language if body.language in ("en", "ar") else "en"
+    polished = await faithful_reformat(body.text, lang)
+    mode = "llm" if polished is not None else "light"
+    text = polished if polished is not None else light_reformat(body.text)
+    logger.info("reformatted", language=lang, chars=len(text), reformat=mode)
+    return {"text": text, "raw_text": body.text, "reformat": mode}
 
 
 if __name__ == "__main__":
