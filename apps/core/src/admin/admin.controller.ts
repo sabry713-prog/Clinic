@@ -475,6 +475,50 @@ export class AdminController {
     return this.auditVerify.verifyChain();
   }
 
+  @Get("audit/summary")
+  @ApiOperation({ summary: "DPO compliance summary — audit aggregates for a date range" })
+  async auditSummary(@Req() req: Request, @Query() query: AuditQueryDto) {
+    this.assertAdmin(req);
+
+    const conds: string[] = [];
+    const params: unknown[] = [];
+    let i = 1;
+    if (query.since) { conds.push(`ts >= $${i++}`); params.push(query.since); }
+    if (query.until) { conds.push(`ts <= $${i++}`); params.push(query.until); }
+    const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
+
+    const [totals, byAction, byOutcome, patients, chain] = await Promise.all([
+      this.pool.query<{ total: string; first_ts: string | null; last_ts: string | null; actors: string }>(
+        `SELECT count(*)::text AS total, min(ts)::text AS first_ts, max(ts)::text AS last_ts,
+                count(DISTINCT actor_id)::text AS actors
+           FROM audit.event ${where}`, params),
+      this.pool.query<{ action: string; n: string }>(
+        `SELECT action, count(*)::text AS n FROM audit.event ${where}
+          GROUP BY action ORDER BY count(*) DESC`, params),
+      this.pool.query<{ outcome: string; n: string }>(
+        `SELECT outcome, count(*)::text AS n FROM audit.event ${where}
+          GROUP BY outcome ORDER BY outcome`, params),
+      this.pool.query<{ n: string }>(
+        `SELECT count(DISTINCT target_id)::text AS n FROM audit.event ${where}
+          ${where ? "AND" : "WHERE"} target_type = 'patient'`, params),
+      this.auditVerify.verifyChain(),
+    ]);
+
+    const t = totals.rows[0];
+    return {
+      range: { since: query.since ?? null, until: query.until ?? null },
+      total_events: Number(t?.total ?? 0),
+      distinct_actors: Number(t?.actors ?? 0),
+      distinct_patients_accessed: Number(patients.rows[0]?.n ?? 0),
+      first_event_at: t?.first_ts ?? null,
+      last_event_at: t?.last_ts ?? null,
+      by_action: byAction.rows.map((r) => ({ action: r.action, count: Number(r.n) })),
+      by_outcome: byOutcome.rows.map((r) => ({ outcome: r.outcome, count: Number(r.n) })),
+      integrity: { verified: chain.passed, violations: chain.violations.length },
+      generated_at: new Date().toISOString(),
+    };
+  }
+
   @Post("audit/export-worm")
   @HttpCode(200)
   @ApiOperation({ summary: "Manually trigger yesterday's WORM audit export" })

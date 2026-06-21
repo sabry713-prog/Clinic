@@ -20,6 +20,23 @@ migrate:
 seed:
     pnpm --filter @app/core run seed:dev
 
+# Seed the FULL demo dataset (dev + enrich + symptoms + reconciliation + search index)
+seed-demo:
+    pnpm --filter @app/core run seed:all
+
+# One-command clean bring-up for a demo: infra + migrate + full seed.
+# After this completes, run `just dev` and open http://localhost:3000.
+demo-setup:
+    #!/usr/bin/env bash
+    set -e
+    just infra-up
+    echo "Waiting for Postgres + Keycloak…"
+    until docker exec cc-postgres pg_isready -U app -d clinical_copilot >/dev/null 2>&1; do sleep 2; done
+    until curl -sf http://localhost:8080/realms/dev/.well-known/openid-configuration >/dev/null 2>&1; do sleep 2; done
+    just migrate
+    just seed-demo
+    echo "Demo data ready. Start services with: just dev"
+
 # Start all services in dev mode
 dev:
     #!/usr/bin/env bash
