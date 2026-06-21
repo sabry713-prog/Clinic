@@ -15,7 +15,10 @@ import { PatientScopeService } from "../patient/patient-scope.service";
 export type DocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary";
 type Policy = "assembled_facts" | "clinician_authored_only";
 
-interface SectionDef { key: string; title: string; policy: Policy; }
+// prefill (clinician-authored-only sections only):
+//  true  → reproduce the clinician's existing authored note verbatim
+//  false → start empty for the clinician to DICTATE this encounter's content
+interface SectionDef { key: string; title: string; policy: Policy; prefill?: boolean; }
 export interface DraftSection extends SectionDef { text: string; }
 
 // Section templates per document type (mirrors docs/prompts/draft-prompt.md).
@@ -30,23 +33,23 @@ const TEMPLATES: Record<DocumentType, SectionDef[]> = {
   ],
   referral_letter: [
     { key: "identity", title: "Identity", policy: "assembled_facts" },
-    { key: "reason", title: "Reason for Referral", policy: "clinician_authored_only" },
+    { key: "reason", title: "Reason for Referral", policy: "clinician_authored_only", prefill: false },
     { key: "history", title: "Relevant History", policy: "assembled_facts" },
     { key: "medications", title: "Current Medications", policy: "assembled_facts" },
-    { key: "question", title: "Clinical Question", policy: "clinician_authored_only" },
+    { key: "question", title: "Clinical Question", policy: "clinician_authored_only", prefill: false },
   ],
   transfer_note: [
     { key: "identity", title: "Identity and Admission", policy: "assembled_facts" },
     { key: "problems", title: "Active Problems", policy: "assembled_facts" },
     { key: "medications", title: "Medications", policy: "assembled_facts" },
-    { key: "reason", title: "Reason for Transfer", policy: "clinician_authored_only" },
+    { key: "reason", title: "Reason for Transfer", policy: "clinician_authored_only", prefill: false },
   ],
   visit_summary: [
     { key: "identity", title: "Identity", policy: "assembled_facts" },
     { key: "results", title: "Results", policy: "assembled_facts" },
     { key: "medications", title: "Medications", policy: "assembled_facts" },
-    { key: "assessment", title: "Assessment", policy: "clinician_authored_only" },
-    { key: "plan", title: "Plan", policy: "clinician_authored_only" },
+    { key: "assessment", title: "Assessment", policy: "clinician_authored_only", prefill: false },
+    { key: "plan", title: "Plan", policy: "clinician_authored_only", prefill: false },
   ],
 };
 
@@ -57,8 +60,10 @@ const BLOCKLIST = [
   /\bsignificant(ly)?\b/i, /\bcritical\b/i, /\brisk\b/i, /\bdiagnos/i, /\brecommend/i,
 ];
 
-// Empty-section sentinels (EN/AR) — accepted in clinician-authored-only sections.
-const SENTINEL_RE = /^\((No documented .* to reproduce\.|لا يوجد .* موثق لإعادة إنتاجه\.)\)$/;
+// Empty/placeholder sentinels (EN/AR) accepted in clinician-authored-only
+// sections: "no documented … to reproduce" (reproduce) and "dictate/type …"
+// (dictate-fresh). The clinician fills the latter live.
+const SENTINEL_RE = /^\((No documented .* to reproduce\.|Dictate or type .* here\.|لا يوجد .* موثق لإعادة إنتاجه\.|أملِ أو اكتب .* هنا\.)\)$/;
 
 function normalizeWs(s: string): string {
   return s.replace(/\s+/g, " ").trim().toLowerCase();
@@ -119,9 +124,15 @@ export class DraftService {
       let text: string;
       if (def.policy === "assembled_facts") {
         text = await this.assembleFacts(patientId, def.key);
+      } else if (def.prefill === false) {
+        // Dictate-fresh: start empty so the clinician dictates THIS encounter's
+        // content (e.g. a new visit's Assessment/Plan). No old notes bleed in.
+        text = language === "ar"
+          ? `(أملِ أو اكتب ${def.title} هنا.)`
+          : `(Dictate or type the ${def.title} here.)`;
       } else {
+        // Reproduce the clinician's existing authored note verbatim.
         text = this.authoredText(authoredSource, def.key, language);
-        // Enforce the section policy: reject any non-verbatim content.
         if (!isClinicianAuthoredOnly(text, authoredSource)) {
           throw new BadRequestException(
             `Section '${def.key}' violates clinician-authored-only policy`,

@@ -30,6 +30,11 @@ describe("isClinicianAuthoredOnly", () => {
     expect(isClinicianAuthoredOnly("(لا يوجد assessment موثق لإعادة إنتاجه.)", "")).toBe(true);
   });
 
+  it("accepts the dictate-fresh placeholder (EN + AR)", () => {
+    expect(isClinicianAuthoredOnly("(Dictate or type the Assessment here.)", "")).toBe(true);
+    expect(isClinicianAuthoredOnly("(أملِ أو اكتب Assessment هنا.)", "")).toBe(true);
+  });
+
   it("REJECTS model-introduced clinical content not in the source", () => {
     expect(
       isClinicianAuthoredOnly("Assessment: likely sepsis, recommend antibiotics.", SOURCE),
