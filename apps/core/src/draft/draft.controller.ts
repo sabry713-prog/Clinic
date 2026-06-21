@@ -33,6 +33,15 @@ class TranscribeDto {
   language?: string;
 }
 
+class ReformatDto {
+  @IsString()
+  text!: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
+}
+
 class UpdateDraftDto {
   @IsString()
   edited_text!: string;
@@ -84,6 +93,15 @@ export class DraftController {
     const out = await this.drafts.transcribe(uid(req), id, body.audio_base64, body.language ?? "en");
     // PHI: audit metadata only — never the audio or transcript content.
     await this.audit(req, "DICTATION_TRANSCRIBED", id, { engine: out.engine, chars: out.text.length });
+    return out;
+  }
+
+  @Post("patients/:id/reformat")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Faithfully polish clinician-typed text (on-prem; no new content)" })
+  async reformat(@Req() req: Request, @Param("id") id: string, @Body() body: ReformatDto) {
+    const out = await this.drafts.reformat(uid(req), id, body.text, body.language ?? "en");
+    await this.audit(req, "DOCUMENT_REFORMATTED", id, { reformat: out.reformat, chars: out.text.length });
     return out;
   }
 

@@ -98,6 +98,22 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
     setRecording(false);
   }, []);
 
+  // Typed-text path: faithfully polish what the clinician WROTE (same on-prem
+  // reformat as dictation — no new content). Keeps the original for fidelity.
+  const makeProfessional = useCallback(async () => {
+    if (!editText.trim()) return;
+    setError(null); setTranscribing(true);
+    try {
+      const original = editText;
+      const { text, reformat } = await api.patients.reformat(patientId, original, language);
+      setEditText(text);
+      setRawTranscript(reformat === "llm" && original !== text ? original : null);
+      setShowRaw(false);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Reformat failed");
+    } finally { setTranscribing(false); }
+  }, [patientId, language, editText]);
+
   const run = useCallback(async (fn: () => Promise<DocumentDraft>) => {
     setBusy(true); setError(null);
     try {
@@ -197,7 +213,15 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
                   }`}
                   title="Dictate — speech is transcribed on-prem and inserted as your text to edit"
                 >
-                  {transcribing ? "Transcribing…" : recording ? "■ Stop dictation" : "🎙 Dictate"}
+                  {transcribing ? "Working…" : recording ? "■ Stop dictation" : "🎙 Dictate"}
+                </button>
+                <button
+                  onClick={() => void makeProfessional()}
+                  disabled={busy || transcribing || recording || !editText.trim()}
+                  className="text-sm px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+                  title="Polish what you typed into professional prose (your words only, on-prem)"
+                >
+                  ✨ Make professional
                 </button>
                 <button
                   onClick={() => void run(() => api.drafts.update(draft.id, editText))}

@@ -481,6 +481,12 @@ export const api = {
         { method: "POST", body: JSON.stringify({ audio_base64: audioBase64, language }) },
       ),
 
+    reformat: (id: string, text: string, language: string) =>
+      request<{ text: string; raw_text: string; reformat: string }>(
+        `/api/v1/patients/${id}/reformat`,
+        { method: "POST", body: JSON.stringify({ text, language }) },
+      ),
+
     encounters: (id: string) =>
       request<{ data: EncounterItem[]; next_cursor: string | null; total: number | null }>(
         `/api/v1/patients/${id}/encounters`,
