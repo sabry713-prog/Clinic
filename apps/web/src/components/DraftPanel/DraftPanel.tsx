@@ -7,8 +7,8 @@
  * the clinician's own authored text — the system never writes them.
  */
 
-import { useState, useCallback, useRef } from "react";
-import { api, type DocumentDraft, type DraftDocumentType, ApiError } from "../../lib/api";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { api, type DocumentDraft, type DraftDocumentType, type DraftSummary, ApiError } from "../../lib/api";
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -36,6 +36,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
   const [language, setLanguage] = useState<"en" | "ar">("en");
   const [docType, setDocType] = useState<DraftDocumentType>("discharge_summary");
   const [draft, setDraft] = useState<DocumentDraft | null>(null);
+  const [list, setList] = useState<DraftSummary[]>([]);
   const [editText, setEditText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,18 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
   const chunksRef = useRef<Blob[]>([]);
 
   const isSigned = draft?.status === "signed";
+
+  const refreshList = useCallback(() => {
+    api.patients.listDrafts(patientId).then((r) => setList(r.data)).catch(() => { /* silent */ });
+  }, [patientId]);
+
+  useEffect(() => { refreshList(); }, [refreshList]);
+
+  const openDraft = useCallback((id: string) => {
+    setError(null);
+    api.drafts.get(id).then((d) => { setDraft(d); setEditText(d.edited_text ?? d.generated_text); setRawTranscript(null); })
+      .catch((e) => setError(e instanceof ApiError ? e.message : "Failed to open draft"));
+  }, []);
 
   // Dictation: record → on-prem transcribe (+ light reformat) → insert the
   // clinician's words into the editable draft. The model authors nothing here.
@@ -122,10 +135,11 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
       const d = await fn();
       setDraft(d);
       setEditText(d.edited_text ?? d.generated_text);
+      refreshList();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Action failed");
     } finally { setBusy(false); }
-  }, []);
+  }, [refreshList]);
 
   const onExport = useCallback(async () => {
     if (!draft) return;
@@ -175,6 +189,35 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
       </div>
 
       {error && <p className="text-sm text-slate-400">{error}</p>}
+
+      {/* This patient's drafts & signed documents */}
+      {list.length > 0 && (
+        <div className="border border-slate-800 rounded">
+          <p className="text-xs text-slate-400 px-3 py-2 border-b border-slate-800">
+            Documents for this patient ({list.length})
+          </p>
+          <ul className="divide-y divide-slate-800 max-h-40 overflow-y-auto">
+            {list.map((d) => (
+              <li key={d.id}>
+                <button
+                  onClick={() => openDraft(d.id)}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-800 flex items-center gap-2 ${
+                    draft?.id === d.id ? "bg-slate-800" : ""
+                  }`}
+                >
+                  <span className="capitalize text-slate-200">{d.document_type.replace(/_/g, " ")}</span>
+                  <span className={`text-xs ${d.status === "signed" ? "text-green-400" : "text-slate-400"}`}>
+                    {d.status === "signed" ? "✓ signed" : "draft"}
+                  </span>
+                  <span className="text-xs text-slate-500 ml-auto" dir="ltr">
+                    {new Date(d.created_at).toLocaleDateString("en-GB")}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {draft && (
         <div className="relative">

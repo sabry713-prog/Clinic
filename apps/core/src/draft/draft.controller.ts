@@ -105,6 +105,12 @@ export class DraftController {
     return out;
   }
 
+  @Get("patients/:id/drafts")
+  @ApiOperation({ summary: "List this patient's drafts and signed documents" })
+  async listDrafts(@Req() req: Request, @Param("id") id: string) {
+    return { data: await this.drafts.listForPatient(uid(req), id) };
+  }
+
   @Get("drafts/:draftId")
   @ApiOperation({ summary: "Get a draft" })
   async get(@Req() req: Request, @Param("draftId") draftId: string) {
