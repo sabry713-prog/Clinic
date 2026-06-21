@@ -256,7 +256,7 @@ export default function PatientDetailPage(): JSX.Element {
         )}
 
         {activeTab === "drafts" && (
-          <DraftPanel patientId={patient.id} language={patient.preferred_language ?? "en"} />
+          <DraftPanel patientId={patient.id} />
         )}
       </div>
     </div>

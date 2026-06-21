@@ -28,10 +28,12 @@ const DOC_TYPES: { value: DraftDocumentType; label: string }[] = [
 
 interface DraftPanelProps {
   readonly patientId: string;
-  readonly language: string;
 }
 
-export default function DraftPanel({ patientId, language }: DraftPanelProps): JSX.Element {
+export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element {
+  // Draft + dictation language. Defaults to English; the doctor can switch to
+  // Arabic. (Not tied to the patient's preferred language.)
+  const [language, setLanguage] = useState<"en" | "ar">("en");
   const [docType, setDocType] = useState<DraftDocumentType>("discharge_summary");
   const [draft, setDraft] = useState<DocumentDraft | null>(null);
   const [editText, setEditText] = useState("");
@@ -144,6 +146,16 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="text-base font-semibold text-white">Document Draft</h2>
         <div className="flex gap-2 ml-auto">
+          <select
+            value={language}
+            disabled={busy || recording || transcribing}
+            onChange={(e) => setLanguage(e.target.value as "en" | "ar")}
+            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            aria-label="Language"
+          >
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+          </select>
           <select
             value={docType}
             disabled={busy}
