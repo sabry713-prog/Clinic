@@ -48,25 +48,38 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
   // clinician's words into the editable draft. The model authors nothing here.
   const startDictation = useCallback(async () => {
     setError(null);
+    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setError("This browser does not support audio recording. Use Chrome on desktop.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
+      // Pick a mime type the browser actually supports (Safari lacks webm).
+      const mime = ["audio/webm", "audio/mp4", "audio/ogg"].find(
+        (m) => MediaRecorder.isTypeSupported(m),
+      );
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       chunksRef.current = [];
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       rec.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         setTranscribing(true);
         try {
-          const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+          if (chunksRef.current.length === 0) {
+            setError("No audio was captured. Check the microphone and try again.");
+            return;
+          }
+          const blob = new Blob(chunksRef.current, { type: mime ?? "audio/webm" });
           const b64 = await blobToBase64(blob);
           const { text } = await api.patients.transcribe(patientId, b64, language);
-          setEditText((prev) => (prev ? `${prev}\n${text}` : text));
+          if (text) setEditText((prev) => (prev ? `${prev}\n${text}` : text));
+          else setError("Transcription returned no text.");
         } catch (e) {
           setError(e instanceof ApiError ? e.message : "Transcription failed");
         } finally { setTranscribing(false); }
       };
       recorderRef.current = rec;
-      rec.start();
+      rec.start(1000); // emit data every 1s so short clips still capture audio
       setRecording(true);
     } catch {
       setError("Microphone access denied or unavailable.");
@@ -177,7 +190,8 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
                   Sign
                 </button>
                 <span className="text-xs text-slate-500 ml-auto">
-                  Export is available after signing.
+                  Dictation runs on-prem. In stub mode it inserts placeholder text; enable
+                  faster-whisper for real speech (Arabic supported). Export after signing.
                 </span>
               </>
             ) : (
