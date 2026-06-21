@@ -16,5 +16,14 @@ class Settings(BaseSettings):
     whisper_device: str = "cpu"        # "cuda" on the GPU host
     whisper_compute_type: str = "int8"  # e.g. "float16" on GPU
 
+    # Reformat mode: "light" (deterministic cleanup) or "llm" (faithful on-prem
+    # reformat — see docs/prompts/reformat-prompt.md). Falls back to light if the
+    # on-prem model is unavailable. The model endpoint MUST be in-Kingdom (§7).
+    transcription_reformat: str = "light"
+    model_endpoint_url: str = "http://localhost:8000/v1"
+    model_name: str = ""
+    model_api_key: str = "EMPTY"
+    model_timeout_s: float = 30.0
+
 
 settings = Settings()

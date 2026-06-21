@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from src.transcription.config import settings
 from src.transcription.engine import get_engine
 from src.transcription.reformat import light_reformat
+from src.transcription.reformat_llm import faithful_reformat
 
 logger = structlog.get_logger()
 app = FastAPI(title="Clinical Copilot Transcription Service", version="0.1.0")
@@ -45,14 +46,18 @@ async def transcribe(body: TranscribeRequest) -> dict[str, str]:
     lang = body.language if body.language in ("en", "ar") else "en"
     try:
         raw = _engine.transcribe(audio, lang)          # PHI — never logged
-        text = light_reformat(raw)                     # deterministic cleanup only
+        # Faithful on-prem LLM reformat if enabled+available; else deterministic.
+        polished = await faithful_reformat(raw, lang)
+        reformat = "llm" if polished is not None else "light"
+        text = polished if polished is not None else light_reformat(raw)
     except Exception as exc:  # noqa: BLE001
         logger.error("transcription_failed", error=str(exc), engine=_engine.name())
         raise HTTPException(status_code=500, detail="Transcription failed") from exc
 
     # Log metadata only — never audio or transcript content (PHI).
-    logger.info("transcribed", engine=_engine.name(), language=lang, chars=len(text))
-    return {"text": text, "engine": _engine.name()}
+    logger.info("transcribed", engine=_engine.name(), language=lang, chars=len(text), reformat=reformat)
+    # raw_text is returned so the clinician can confirm fidelity before accepting.
+    return {"text": text, "raw_text": light_reformat(raw), "engine": _engine.name(), "reformat": reformat}
 
 
 if __name__ == "__main__":
