@@ -93,6 +93,34 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
 
   const sentences = narrative?.text ? splitIntoSentences(narrative.text) : [];
 
+  // Provenance coverage — % of sentences with at least one verified source link.
+  const coveredCount = narrative
+    ? sentences.filter((s) => {
+        const p = findProvenanceForSentence(s.start, s.end, narrative.provenance);
+        return p !== null && p.sources.length > 0;
+      }).length
+    : 0;
+  const coveragePct = sentences.length ? Math.round((100 * coveredCount) / sentences.length) : 0;
+
+  // Copy-with-citation: the narrative followed by a deduped source reference list.
+  const handleCopyWithSources = useCallback(() => {
+    if (!narrative?.text) return;
+    const seen = new Set<string>();
+    const refs: string[] = [];
+    for (const p of narrative.provenance) {
+      for (const s of p.sources) {
+        const key = `${s.type}:${s.id}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          refs.push(`${s.type} ${s.id}`);
+        }
+      }
+    }
+    const label = language === "ar" ? "المصادر" : "Sources";
+    const body = `${narrative.text}\n\n${label}:\n${refs.map((r, i) => `[${i + 1}] ${r}`).join("\n")}`;
+    void navigator.clipboard?.writeText(body);
+  }, [narrative, language]);
+
   return (
     <div
       className="bg-slate-900 border border-slate-700 rounded-lg p-4 space-y-4"
@@ -221,6 +249,26 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Provenance coverage + copy-with-citation */}
+      {narrative?.text && (
+        <div className="flex items-center gap-3 border-t border-slate-700 pt-2">
+          <span
+            className="text-xs text-slate-400"
+            data-testid="provenance-coverage"
+            title={t("narrative.coverageHint", "Sentences linked to a documented source")}
+          >
+            {t("narrative.coverage", "Provenance")}: {coveredCount}/{sentences.length} ({coveragePct}%)
+          </span>
+          <button
+            onClick={handleCopyWithSources}
+            className="text-xs text-blue-400 hover:underline ml-auto"
+            data-testid="copy-with-sources"
+          >
+            {t("narrative.copyWithSources", "Copy with sources")}
+          </button>
         </div>
       )}
 
