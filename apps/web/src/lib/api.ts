@@ -178,6 +178,31 @@ export interface RecordSearchResponse {
   readonly groups: readonly SearchResultGroup[];
 }
 
+export type DraftDocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary";
+
+export interface DraftSection {
+  readonly key: string;
+  readonly title: string;
+  readonly policy: "assembled_facts" | "clinician_authored_only";
+  readonly text: string;
+}
+
+export interface DocumentDraft {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly document_type: string;
+  readonly language: string;
+  readonly status: "draft" | "signed";
+  readonly sections_json: readonly DraftSection[];
+  readonly generated_text: string;
+  readonly edited_text: string | null;
+  readonly blocklist_triggered: boolean;
+  readonly disclaimer: string | null;
+  readonly signed_at: string | null;
+  readonly signed_text: string | null;
+  readonly created_at: string;
+}
+
 export interface EncounterItem {
   readonly id: string;
   readonly encounter_type: string | null;
@@ -431,6 +456,12 @@ export const api = {
         `/api/v1/patients/${id}/search?q=${encodeURIComponent(q)}`,
       ),
 
+    createDraft: (id: string, documentType: DraftDocumentType, language: string) =>
+      request<DocumentDraft>(`/api/v1/patients/${id}/drafts`, {
+        method: "POST",
+        body: JSON.stringify({ document_type: documentType, language }),
+      }),
+
     encounters: (id: string) =>
       request<{ data: EncounterItem[]; next_cursor: string | null; total: number | null }>(
         `/api/v1/patients/${id}/encounters`,
@@ -443,6 +474,19 @@ export const api = {
       request<ConditionHistory>(
         `/api/v1/patients/${patientId}/conditions/${conditionId}/history`,
       ),
+  },
+
+  drafts: {
+    get: (draftId: string) => request<DocumentDraft>(`/api/v1/drafts/${draftId}`),
+    update: (draftId: string, editedText: string) =>
+      request<DocumentDraft>(`/api/v1/drafts/${draftId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ edited_text: editedText }),
+      }),
+    sign: (draftId: string) =>
+      request<DocumentDraft>(`/api/v1/drafts/${draftId}/sign`, { method: "POST" }),
+    export: (draftId: string) =>
+      request<{ text: string; signed_at: string | null }>(`/api/v1/drafts/${draftId}/export`),
   },
 
   narrative: {

@@ -57,6 +57,26 @@ const BLOCKLIST = [
   /\bsignificant(ly)?\b/i, /\bcritical\b/i, /\brisk\b/i, /\bdiagnos/i, /\brecommend/i,
 ];
 
+// Empty-section sentinels (EN/AR) — accepted in clinician-authored-only sections.
+const SENTINEL_RE = /^\((No documented .* to reproduce\.|لا يوجد .* موثق لإعادة إنتاجه\.)\)$/;
+
+function normalizeWs(s: string): string {
+  return s.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+/**
+ * Section-policy validator (E6 exit-gate). For clinician-authored-only sections,
+ * the text must be EITHER the empty sentinel OR a verbatim substring of the
+ * clinician's authored source (whitespace/case-insensitive). The model may never
+ * introduce new content into these sections. Pure + unit-tested.
+ */
+export function isClinicianAuthoredOnly(text: string, authoredSource: string): boolean {
+  const t = text.trim();
+  if (SENTINEL_RE.test(t)) return true;
+  if (t === "") return true;
+  return normalizeWs(authoredSource).includes(normalizeWs(t));
+}
+
 @Injectable()
 export class DraftService {
   constructor(
@@ -73,11 +93,24 @@ export class DraftService {
     const template = TEMPLATES[documentType];
     if (!template) throw new BadRequestException("Unknown document_type");
 
+    // Clinician-authored source (verbatim notes) — the only permitted content
+    // for clinician-authored-only sections.
+    const authoredSource = await this.authoredSource(patientId);
+
     const sections: DraftSection[] = [];
     for (const def of template) {
-      const text = def.policy === "assembled_facts"
-        ? await this.assembleFacts(patientId, def.key)
-        : await this.authoredText(patientId, def.key, language);
+      let text: string;
+      if (def.policy === "assembled_facts") {
+        text = await this.assembleFacts(patientId, def.key);
+      } else {
+        text = this.authoredText(authoredSource, def.key, language);
+        // Enforce the section policy: reject any non-verbatim content.
+        if (!isClinicianAuthoredOnly(text, authoredSource)) {
+          throw new BadRequestException(
+            `Section '${def.key}' violates clinician-authored-only policy`,
+          );
+        }
+      }
       sections.push({ ...def, text });
     }
 
@@ -170,15 +203,20 @@ export class DraftService {
     return "(Not documented.)";
   }
 
-  // ── clinician-authored-only sections: verbatim from authored notes ────────
-  private async authoredText(patientId: string, key: string, language: string): Promise<string> {
-    // Reproduce the most recent clinician-authored note content verbatim. The
-    // model writes nothing here. If none, emit the sentinel.
+  // Clinician-authored source corpus (verbatim notes) for the patient.
+  private async authoredSource(patientId: string): Promise<string> {
     const r = await this.pool.query<{ content_text: string }>(
       `SELECT content_text FROM hospital.document_reference
         WHERE patient_id=$1 AND content_text IS NOT NULL AND type ILIKE '%note%'
-        ORDER BY authored_at DESC NULLS LAST LIMIT 1`, [patientId]);
-    const note = r.rows[0]?.content_text?.trim();
+        ORDER BY authored_at DESC NULLS LAST LIMIT 5`, [patientId]);
+    return r.rows.map((x) => x.content_text).join("\n\n");
+  }
+
+  // ── clinician-authored-only sections: verbatim from authored notes ────────
+  private authoredText(authoredSource: string, key: string, language: string): string {
+    // Reproduce the most recent clinician-authored note content verbatim. The
+    // model writes nothing here. If none, emit the sentinel.
+    const note = authoredSource.split("\n\n")[0]?.trim();
     if (note) return note;          // verbatim clinician text
     return language === "ar" ? `(لا يوجد ${key} موثق لإعادة إنتاجه.)` : `(No documented ${key} to reproduce.)`;
   }

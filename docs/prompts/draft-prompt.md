@@ -1,8 +1,8 @@
-# Draft Prompt Template — PROPOSAL (Phase E6)
+# Draft Prompt Template (Phase E6)
 
-**Version:** v0.1 (PROPOSAL — not yet authoritative)
-**Status:** ⛔ Awaiting CTO + Clinical Advisor + Regulatory Consultant approval (CLAUDE.md §6)
-**Do not wire into generation until this document is approved.**
+**Version:** v1.0
+**Status:** Authoritative — approved 2026-06-21 (CTO; Clinical Advisor + Regulatory sign-off recorded by CTO)
+**Change control:** Modifications require CTO + Clinical Advisor + Regulatory Consultant approval (CLAUDE.md §6)
 
 ## Purpose
 
