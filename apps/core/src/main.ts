@@ -3,13 +3,19 @@ import "./tracing";
 
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
 import { Logger } from "nestjs-pino";
 import { AppModule } from "./app.module";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
+
+  // Raise the JSON body limit: dictation sends base64 audio, which exceeds the
+  // 100 KB default for anything but a tiny clip (was causing HTTP 413).
+  app.useBodyParser("json", { limit: "25mb" });
+  app.useBodyParser("urlencoded", { limit: "25mb", extended: true });
 
   // Pino structured logger
   app.useLogger(app.get(Logger));
