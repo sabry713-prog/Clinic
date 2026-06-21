@@ -208,13 +208,16 @@ export class PatientService {
     let filterClause = `WHERE p.id = ANY($1)`;
 
     if (query.q) {
+      // Case-insensitive on BOTH name and MRN (MRN is stored upper-case, so the
+      // column must also be lowered or "MRN-007" never matches).
       params.push(`%${query.q.toLowerCase()}%`);
-      filterClause += ` AND (lower(p.display_name) LIKE $${params.length} OR p.mrn LIKE $${params.length})`;
+      filterClause += ` AND (lower(p.display_name) LIKE $${params.length} OR lower(p.mrn) LIKE $${params.length})`;
     }
 
     if (query.ward) {
-      params.push(query.ward);
-      filterClause += ` AND e.ward = $${params.length}`;
+      // Case-insensitive partial match so "4A" / "ward-4a" filter as expected.
+      params.push(`%${query.ward.toLowerCase()}%`);
+      filterClause += ` AND lower(e.ward) LIKE $${params.length}`;
     }
 
     if (query.cursor) {
