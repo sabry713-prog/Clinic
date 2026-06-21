@@ -7,6 +7,7 @@
  */
 
 import { useState, useCallback } from "react";
+import ComplianceReport from "../../../components/ComplianceReport/ComplianceReport";
 import { api, type AuditEventItem, type AuditVerifyResult, ApiError } from "../../../lib/api";
 
 interface AuditFilters {
@@ -110,6 +111,8 @@ export default function AuditPage(): JSX.Element {
     <div className="min-h-screen bg-slate-950 text-white p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <h1 className="text-lg font-semibold">Audit Log</h1>
+
+        <ComplianceReport />
 
         {/* Filters */}
         <div className="bg-slate-900 rounded-xl p-4 space-y-4">

@@ -53,6 +53,25 @@ const TEMPLATES: Record<DocumentType, SectionDef[]> = {
   ],
 };
 
+// Arabic section titles (values stay verbatim; only structure is localized).
+const TITLE_AR: Record<string, string> = {
+  "Identity and Admission": "الهوية وبيانات الدخول",
+  "Identity": "الهوية",
+  "Documented Problems": "المشاكل الموثقة",
+  "Active Problems": "المشاكل النشطة",
+  "Medications on Discharge": "الأدوية عند الخروج",
+  "Current Medications": "الأدوية الحالية",
+  "Medications": "الأدوية",
+  "Results": "النتائج",
+  "Relevant History": "التاريخ ذو الصلة",
+  "Assessment": "التقييم",
+  "Plan / Follow-up": "الخطة / المتابعة",
+  "Plan": "الخطة",
+  "Reason for Referral": "سبب الإحالة",
+  "Reason for Transfer": "سبب التحويل",
+  "Clinical Question": "السؤال السريري",
+};
+
 // Defense-in-depth blocklist (mirrors handoff.service).
 const BLOCKLIST = [
   /\bworsening\b/i, /\bimproving\b/i, /\bconcerning\b/i, /\belevated\b/i, /\bnormal\b/i,
@@ -122,14 +141,15 @@ export class DraftService {
     const sections: DraftSection[] = [];
     for (const def of template) {
       let text: string;
+      const title = language === "ar" ? (TITLE_AR[def.title] ?? def.title) : def.title;
       if (def.policy === "assembled_facts") {
-        text = await this.assembleFacts(patientId, def.key);
+        text = await this.assembleFacts(patientId, def.key, language);
       } else if (def.prefill === false) {
         // Dictate-fresh: start empty so the clinician dictates THIS encounter's
         // content (e.g. a new visit's Assessment/Plan). No old notes bleed in.
         text = language === "ar"
-          ? `(أملِ أو اكتب ${def.title} هنا.)`
-          : `(Dictate or type the ${def.title} here.)`;
+          ? `(أملِ أو اكتب ${title} هنا.)`
+          : `(Dictate or type the ${title} here.)`;
       } else {
         // Reproduce the clinician's existing authored note verbatim.
         text = this.authoredText(authoredSource, def.key, language);
@@ -139,7 +159,7 @@ export class DraftService {
           );
         }
       }
-      sections.push({ ...def, text });
+      sections.push({ ...def, title, text });
     }
 
     const generated = sections.map((s) => `## ${s.title}\n${s.text}`).join("\n\n");
@@ -201,34 +221,50 @@ export class DraftService {
   }
 
   // ── assembly helpers (assembled-facts sections) ──────────────────────────
-  private async assembleFacts(patientId: string, key: string): Promise<string> {
+  // Structural labels localize; clinical values stay verbatim (CLAUDE.md §8).
+  private async assembleFacts(patientId: string, key: string, language: string): Promise<string> {
+    const ar = language === "ar";
+    const none = ar ? "(لا يوجد توثيق.)" : "(None documented.)";
+    const sep = ar ? "، " : ", ";
     if (key === "identity") {
       const r = await this.pool.query(
         `SELECT display_name, mrn, date_of_birth::text, sex FROM hospital.patient WHERE id=$1`, [patientId]);
-      const p = r.rows[0]; if (!p) return "(Not documented.)";
-      return `${p.display_name ?? "Unknown"} (MRN: ${p.mrn ?? "—"}, DOB: ${p.date_of_birth ?? "—"}, sex: ${p.sex ?? "—"}).`;
+      const p = r.rows[0]; if (!p) return none;
+      const sex = ar ? ({ male: "ذكر", female: "أنثى" } as Record<string, string>)[String(p.sex).toLowerCase()] ?? p.sex : p.sex;
+      return ar
+        ? `${p.display_name ?? "غير معروف"} (رقم الملف: ${p.mrn ?? "—"}، تاريخ الميلاد: ${p.date_of_birth ?? "—"}، الجنس: ${sex ?? "—"}).`
+        : `${p.display_name ?? "Unknown"} (MRN: ${p.mrn ?? "—"}, DOB: ${p.date_of_birth ?? "—"}, sex: ${sex ?? "—"}).`;
     }
     if (key === "problems" || key === "history") {
       const r = await this.pool.query(
         `SELECT code_display, status, onset_date::text FROM hospital.condition WHERE patient_id=$1 ORDER BY onset_date DESC NULLS LAST LIMIT 30`, [patientId]);
-      return r.rows.length ? r.rows.map((c) => `- ${c.code_display} (status: ${c.status}${c.onset_date ? `, onset: ${c.onset_date}` : ""}).`).join("\n") : "(None documented.)";
+      if (!r.rows.length) return none;
+      return r.rows.map((c) => {
+        const parts = [String(c.code_display)];
+        parts.push(ar ? `الحالة: ${c.status}` : `status: ${c.status}`);
+        if (c.onset_date) parts.push(ar ? `تاريخ البدء: ${c.onset_date}` : `onset: ${c.onset_date}`);
+        return `- ${parts.join(sep)}.`;
+      }).join("\n");
     }
     if (key === "medications") {
       const r = await this.pool.query(
         `SELECT DISTINCT medication_display, dose, route, frequency FROM hospital.medication_request WHERE patient_id=$1 AND status='active'`, [patientId]);
-      return r.rows.length ? r.rows.map((m) => `- ${[m.medication_display, m.dose, m.route, m.frequency].filter(Boolean).join(" ")}.`).join("\n") : "(None documented.)";
+      return r.rows.length ? r.rows.map((m) => `- ${[m.medication_display, m.dose, m.route, m.frequency].filter(Boolean).join(" ")}.`).join("\n") : none;
     }
     if (key === "results") {
       const r = await this.pool.query(
         `SELECT DISTINCT ON (code) code_display, value_numeric, value_text, unit, ref_range_low, ref_range_high, effective_at::text
            FROM hospital.observation WHERE patient_id=$1 AND category='laboratory' ORDER BY code, effective_at DESC LIMIT 20`, [patientId]);
-      return r.rows.length ? r.rows.map((o) => {
+      if (!r.rows.length) return none;
+      return r.rows.map((o) => {
         const v = o.value_numeric !== null ? `${o.value_numeric}${o.unit ? " " + o.unit : ""}` : (o.value_text ?? "—");
-        const ref = o.ref_range_low !== null && o.ref_range_high !== null ? ` (ref: ${o.ref_range_low}-${o.ref_range_high})` : "";
+        const ref = o.ref_range_low !== null && o.ref_range_high !== null
+          ? (ar ? ` (المرجع: ${o.ref_range_low}-${o.ref_range_high})` : ` (ref: ${o.ref_range_low}-${o.ref_range_high})`)
+          : "";
         return `- ${o.code_display}: ${v}${ref} (${o.effective_at ?? "—"}).`;
-      }).join("\n") : "(None documented.)";
+      }).join("\n");
     }
-    return "(Not documented.)";
+    return none;
   }
 
   // Clinician-authored source corpus (verbatim notes) for the patient.
