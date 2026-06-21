@@ -46,6 +46,7 @@ dev:
     pnpm --filter @app/web run dev &
     cd apps/narrative && uv run uvicorn main:app --port 5001 --reload &
     cd apps/qa && uv run uvicorn main:app --port 5002 --reload &
+    cd apps/transcription && uv run uvicorn main:app --port 5003 --reload &
     wait
 
 # Run all tests
