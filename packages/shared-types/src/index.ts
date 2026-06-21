@@ -39,12 +39,15 @@ export type Permission =
   | "narrative:generate"
   | "qa:ask"
   | "handoff:generate"
+  | "condition:write"
   | "audit:read"
   | "user:manage";
 
 export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>> =
   {
-    physician: ["patient:read", "narrative:generate", "qa:ask", "handoff:generate"],
+    // condition:write — physician documents a diagnosis to the problem list
+    // (doctor authors + confirms the coded term; AI never decides).
+    physician: ["patient:read", "narrative:generate", "qa:ask", "handoff:generate", "condition:write"],
     pharmacist: ["patient:read", "qa:ask"],
     nurse: ["patient:read", "handoff:generate", "qa:ask"],
     hospital_admin: ["audit:read", "user:manage"],

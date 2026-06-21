@@ -187,6 +187,11 @@ export interface DraftSection {
   readonly text: string;
 }
 
+export interface CodedTerm {
+  readonly code: string;
+  readonly code_display: string;
+}
+
 export interface DraftSummary {
   readonly id: string;
   readonly document_type: string;
@@ -498,6 +503,15 @@ export const api = {
 
     listDrafts: (id: string) =>
       request<{ data: DraftSummary[] }>(`/api/v1/patients/${id}/drafts`),
+
+    suggestCodes: (q: string) =>
+      request<{ suggestions: CodedTerm[] }>(`/api/v1/conditions/suggest?q=${encodeURIComponent(q)}`),
+
+    addCondition: (id: string, body: { code: string; code_display: string; status: string; onset_date?: string }) =>
+      request<{ id: string; code: string; code_display: string; status: string }>(
+        `/api/v1/patients/${id}/conditions`,
+        { method: "POST", body: JSON.stringify(body) },
+      ),
 
     encounters: (id: string) =>
       request<{ data: EncounterItem[]; next_cursor: string | null; total: number | null }>(
