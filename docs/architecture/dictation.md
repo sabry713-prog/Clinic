@@ -4,6 +4,13 @@
 author; the system introduces **no clinical content**. AI rewriting/expansion of
 a diagnosis is SaMD (CLAUDE.md §2) and is explicitly out of scope (Project 2).
 
+**Clinician dictation only — never patient recording.** The doctor manually
+dictates their own notes/assessment at their workstation (🎙 → speak → Stop).
+The tool does not record the patient and has no ambient/always-on capture. Audio
+is held in-memory only for the request and **discarded immediately after
+transcription** — never stored or logged. Only the resulting text (which the
+clinician reviews, edits, and signs) is retained.
+
 ## Flow
 
 ```

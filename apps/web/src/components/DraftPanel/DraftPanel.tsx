@@ -214,8 +214,8 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
                   Sign
                 </button>
                 <span className="text-xs text-slate-500 ml-auto">
-                  Dictation runs on-prem (faster-whisper for speech, faithful LLM reformat
-                  for polish). In stub mode it inserts placeholder text. You edit + sign.
+                  Clinician dictation only (your own notes — not the patient). Runs on-prem;
+                  audio is transcribed then discarded. In stub mode it inserts placeholder text.
                 </span>
               </>
             ) : (
