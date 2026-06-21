@@ -22,12 +22,21 @@ class StubEngine:
         return "stub-stt-v1"
 
     def transcribe(self, audio: bytes, language: str) -> str:
-        # Stub does NOT do real speech recognition — it returns a clearly-labelled
-        # placeholder so it is never mistaken for an (inaccurate) transcription.
-        # Real speech-to-text requires the on-prem faster-whisper engine.
+        # Stub does NOT do real speech recognition (real STT = on-prem
+        # faster-whisper). It returns a SAMPLE clinical note that includes a
+        # symptom, an instruction, and a requested investigation, to demonstrate
+        # the intended output shape (nothing skipped). The UI labels dictation as
+        # running in stub/placeholder mode.
         if language == "ar":
-            return "[نص توضيحي — التحويل الفعلي للكلام يتطلب تشغيل محرك faster-whisper المحلي.]"
-        return "[Placeholder text — real speech-to-text requires the on-prem faster-whisper engine.]"
+            return (
+                "حضر المريض اليوم يشكو من صداع منذ يومين. تم الفحص السريري. "
+                "الخطة: راحة في الفراش لمدة يومين، وطلب أشعة سينية، ومراجعة مع النتائج."
+            )
+        return (
+            "Patient presented today complaining of a headache for two days. "
+            "Clinical examination performed. Plan: two days bed rest, chest X-ray "
+            "requested, and review with the results."
+        )
 
 
 class FasterWhisperEngine:
