@@ -20,6 +20,7 @@ import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
 import ReconciliationPanel from "../../components/ReconciliationPanel/ReconciliationPanel";
 import RecordSearch from "../../components/RecordSearch/RecordSearch";
 import DraftPanel from "../../components/DraftPanel/DraftPanel";
+import AddDiagnosis from "../../components/AddDiagnosis/AddDiagnosis";
 import NarrativePanel from "../../components/NarrativePanel/NarrativePanel";
 import QAConversation from "../../components/QAConversation/QAConversation";
 import HandoffView from "../../components/HandoffView/HandoffView";
@@ -256,7 +257,16 @@ export default function PatientDetailPage(): JSX.Element {
         )}
 
         {activeTab === "drafts" && (
-          <DraftPanel patientId={patient.id} />
+          <div className="space-y-6">
+            <AddDiagnosis
+              patientId={patient.id}
+              onAdded={() => {
+                // Refresh the problem list so the new diagnosis shows in the header.
+                api.patients.get(patient.id).then(setPatientData).catch(() => { /* silent */ });
+              }}
+            />
+            <DraftPanel patientId={patient.id} />
+          </div>
         )}
       </div>
     </div>
