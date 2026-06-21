@@ -462,6 +462,12 @@ export const api = {
         body: JSON.stringify({ document_type: documentType, language }),
       }),
 
+    transcribe: (id: string, audioBase64: string, language: string) =>
+      request<{ text: string; engine: string }>(`/api/v1/patients/${id}/transcribe`, {
+        method: "POST",
+        body: JSON.stringify({ audio_base64: audioBase64, language }),
+      }),
+
     encounters: (id: string) =>
       request<{ data: EncounterItem[]; next_cursor: string | null; total: number | null }>(
         `/api/v1/patients/${id}/encounters`,

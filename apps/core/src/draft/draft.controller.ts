@@ -24,6 +24,15 @@ class CreateDraftDto {
   language?: string;
 }
 
+class TranscribeDto {
+  @IsString()
+  audio_base64!: string;
+
+  @IsOptional()
+  @IsString()
+  language?: string;
+}
+
 class UpdateDraftDto {
   @IsString()
   edited_text!: string;
@@ -66,6 +75,16 @@ export class DraftController {
     const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en");
     await this.audit(req, "DRAFT_GENERATED", draft.id, { document_type: draft.document_type, patient_id: id });
     return draft;
+  }
+
+  @Post("patients/:id/transcribe")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Transcribe dictation (on-prem STT; transcribe + light reformat only)" })
+  async transcribe(@Req() req: Request, @Param("id") id: string, @Body() body: TranscribeDto) {
+    const out = await this.drafts.transcribe(uid(req), id, body.audio_base64, body.language ?? "en");
+    // PHI: audit metadata only — never the audio or transcript content.
+    await this.audit(req, "DICTATION_TRANSCRIBED", id, { engine: out.engine, chars: out.text.length });
+    return out;
   }
 
   @Get("drafts/:draftId")

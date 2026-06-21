@@ -7,8 +7,17 @@
  * the clinician's own authored text — the system never writes them.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { api, type DocumentDraft, type DraftDocumentType, ApiError } from "../../lib/api";
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve((reader.result as string).split(",")[1] ?? "");
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 const DOC_TYPES: { value: DraftDocumentType; label: string }[] = [
   { value: "discharge_summary", label: "Discharge summary" },
@@ -28,8 +37,46 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
   const [editText, setEditText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   const isSigned = draft?.status === "signed";
+
+  // Dictation: record → on-prem transcribe (+ light reformat) → insert the
+  // clinician's words into the editable draft. The model authors nothing here.
+  const startDictation = useCallback(async () => {
+    setError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const rec = new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setTranscribing(true);
+        try {
+          const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+          const b64 = await blobToBase64(blob);
+          const { text } = await api.patients.transcribe(patientId, b64, language);
+          setEditText((prev) => (prev ? `${prev}\n${text}` : text));
+        } catch (e) {
+          setError(e instanceof ApiError ? e.message : "Transcription failed");
+        } finally { setTranscribing(false); }
+      };
+      recorderRef.current = rec;
+      rec.start();
+      setRecording(true);
+    } catch {
+      setError("Microphone access denied or unavailable.");
+    }
+  }, [patientId, language]);
+
+  const stopDictation = useCallback(() => {
+    recorderRef.current?.stop();
+    setRecording(false);
+  }, []);
 
   const run = useCallback(async (fn: () => Promise<DocumentDraft>) => {
     setBusy(true); setError(null);
@@ -105,6 +152,16 @@ export default function DraftPanel({ patientId, language }: DraftPanelProps): JS
           <div className="flex items-center gap-2 mt-3">
             {!isSigned ? (
               <>
+                <button
+                  onClick={() => (recording ? stopDictation() : void startDictation())}
+                  disabled={busy || transcribing}
+                  className={`text-sm px-3 py-1 rounded text-white disabled:opacity-50 ${
+                    recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-slate-700 hover:bg-slate-600"
+                  }`}
+                  title="Dictate — speech is transcribed on-prem and inserted as your text to edit"
+                >
+                  {transcribing ? "Transcribing…" : recording ? "■ Stop dictation" : "🎙 Dictate"}
+                </button>
                 <button
                   onClick={() => void run(() => api.drafts.update(draft.id, editText))}
                   disabled={busy}

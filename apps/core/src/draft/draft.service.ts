@@ -88,6 +88,23 @@ export class DraftService {
     return BLOCKLIST.some((re) => re.test(text));
   }
 
+  /**
+   * Dictation: forward audio to the on-prem transcription service and return
+   * the transcribed + light-reformatted text. The clinician is the author; no
+   * clinical content is generated here. Audio is PHI — never logged/persisted.
+   */
+  async transcribe(userId: string, patientId: string, audioBase64: string, language: string): Promise<{ text: string; engine: string }> {
+    await this.scope.assertPatientInScope(userId, patientId);
+    const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
+    const res = await fetch(`${url}/transcribe`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audio_base64: audioBase64, language }),
+    });
+    if (!res.ok) throw new BadRequestException("Transcription failed");
+    return (await res.json()) as { text: string; engine: string };
+  }
+
   async generate(userId: string, patientId: string, documentType: DocumentType, language: string): Promise<DraftRow> {
     await this.scope.assertPatientInScope(userId, patientId);
     const template = TEMPLATES[documentType];
