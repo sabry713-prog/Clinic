@@ -16,6 +16,7 @@ import { HandoffModule } from "./handoff/handoff.module";
 import { DsrModule } from "./dsr/dsr.module";
 import { MetricsModule } from "./metrics/metrics.module";
 import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
+import { DraftModule } from "./draft/draft.module";
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
     NarrativeProxyModule,
     QAProxyModule,
     HandoffModule,
+    DraftModule,
     DsrModule,
     MetricsModule,
     FeatureFlagsModule,
