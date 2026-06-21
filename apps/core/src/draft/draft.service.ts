@@ -195,6 +195,16 @@ export class DraftService {
     return res.rows[0]!;
   }
 
+  // List this patient's drafts + signed documents (newest first).
+  async listForPatient(userId: string, patientId: string): Promise<Array<{ id: string; document_type: string; language: string; status: string; created_at: string; signed_at: string | null }>> {
+    await this.scope.assertPatientInScope(userId, patientId);
+    const res = await this.pool.query(
+      `SELECT id, document_type, language, status, created_at::text, signed_at::text
+         FROM app.document_draft WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      [patientId]);
+    return res.rows;
+  }
+
   async get(userId: string, draftId: string): Promise<DraftRow> {
     const res = await this.pool.query<DraftRow>(
       `SELECT ${DRAFT_COLS} FROM app.document_draft WHERE id = $1`, [draftId]);

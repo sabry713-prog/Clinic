@@ -187,6 +187,15 @@ export interface DraftSection {
   readonly text: string;
 }
 
+export interface DraftSummary {
+  readonly id: string;
+  readonly document_type: string;
+  readonly language: string;
+  readonly status: "draft" | "signed";
+  readonly created_at: string;
+  readonly signed_at: string | null;
+}
+
 export interface DocumentDraft {
   readonly id: string;
   readonly patient_id: string;
@@ -486,6 +495,9 @@ export const api = {
         `/api/v1/patients/${id}/reformat`,
         { method: "POST", body: JSON.stringify({ text, language }) },
       ),
+
+    listDrafts: (id: string) =>
+      request<{ data: DraftSummary[] }>(`/api/v1/patients/${id}/drafts`),
 
     encounters: (id: string) =>
       request<{ data: EncounterItem[]; next_cursor: string | null; total: number | null }>(
