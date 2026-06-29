@@ -40,14 +40,17 @@ export type Permission =
   | "qa:ask"
   | "handoff:generate"
   | "condition:write"
+  | "service_request:write"
   | "audit:read"
   | "user:manage";
 
 export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>> =
   {
-    // condition:write — physician documents a diagnosis to the problem list
-    // (doctor authors + confirms the coded term; AI never decides).
-    physician: ["patient:read", "narrative:generate", "qa:ask", "handoff:generate", "condition:write"],
+    // condition:write — physician documents a diagnosis to the problem list.
+    // service_request:write — physician confirms a service request that was
+    // extracted from their own documented order (AI extracts, doctor confirms;
+    // AI never decides which service to order).
+    physician: ["patient:read", "narrative:generate", "qa:ask", "handoff:generate", "condition:write", "service_request:write"],
     pharmacist: ["patient:read", "qa:ask"],
     nurse: ["patient:read", "handoff:generate", "qa:ask"],
     hospital_admin: ["audit:read", "user:manage"],

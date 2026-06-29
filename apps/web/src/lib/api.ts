@@ -108,6 +108,26 @@ export interface BriefMedication {
   readonly status: string | null;
 }
 
+export interface ServiceCandidate {
+  readonly category: string;
+  readonly code_system: string | null;
+  readonly code: string | null;
+  readonly code_display: string;
+  readonly source_type: string;
+  readonly source_document_id: string | null;
+  readonly source_excerpt: string;
+}
+
+export interface ServiceRequestItem {
+  readonly id: string;
+  readonly category: string;
+  readonly code: string | null;
+  readonly code_display: string;
+  readonly status: string;
+  readonly source_excerpt: string | null;
+  readonly requested_at: string;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
@@ -575,6 +595,22 @@ export const api = {
 
     brief: (patientId: string) =>
       request<PatientBrief>(`/api/v1/patients/${patientId}/brief`),
+
+    serviceRequestCandidates: (patientId: string) =>
+      request<{ data: ServiceCandidate[] }>(
+        `/api/v1/patients/${patientId}/service-requests/candidates`,
+      ),
+
+    createServiceRequests: (patientId: string, items: ServiceCandidate[]) =>
+      request<{ data: ServiceRequestItem[] }>(
+        `/api/v1/patients/${patientId}/service-requests`,
+        { method: "POST", body: JSON.stringify({ items }) },
+      ),
+
+    serviceRequests: (patientId: string) =>
+      request<{ data: ServiceRequestItem[] }>(
+        `/api/v1/patients/${patientId}/service-requests`,
+      ),
   },
 
   drafts: {
