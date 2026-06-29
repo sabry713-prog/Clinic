@@ -15,6 +15,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api, type PatientDetail, type ObservationItem, type MedicationItem, type MedicationReconciliation, type HandoffOutput, ApiError } from "../../lib/api";
 import { useCopilot } from "../../context/CopilotContext";
 import PatientHeader from "../../components/PatientHeader/PatientHeader";
+import PatientBrief from "../../components/PatientBrief/PatientBrief";
 import LabPanel from "../../components/LabPanel/LabPanel";
 import MedicationPanel from "../../components/MedicationPanel/MedicationPanel";
 import ReconciliationPanel from "../../components/ReconciliationPanel/ReconciliationPanel";
@@ -159,6 +160,9 @@ export default function PatientDetailPage(): JSX.Element {
           allergies={patient.allergies}
           conditions={patient.conditions}
         />
+
+        {/* Factual patient brief — documented conditions, clinics, labs, imaging */}
+        <PatientBrief patientId={patient.id} />
 
         {/* Tab navigation */}
         <div className="border-b border-slate-700 flex gap-4">
