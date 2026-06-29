@@ -19,6 +19,29 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
+// Blank clinician-authored placeholders the draft inserts (EN + AR).
+const PLACEHOLDER_RE = /\((?:Dictate or type [^)]*?here\.|أمل[ِi]? أو اكتب [^)]*?هنا\.)\)/g;
+
+// Place dictated/typed text into the draft. If the cursor sits inside a blank
+// "(Dictate or type … here.)" placeholder, that placeholder is replaced; else
+// the first remaining placeholder is filled (so dictation lands in the section
+// the clinician is authoring, not at the end). With no placeholders left, the
+// text is inserted at the cursor.
+function placeDictation(prev: string, insert: string, caret: number): { text: string; caret: number } {
+  const placeholders = [...prev.matchAll(PLACEHOLDER_RE)];
+  const here = placeholders.find((m) => caret >= m.index! && caret <= m.index! + m[0].length);
+  const target = here ?? placeholders[0];
+  if (target) {
+    const start = target.index!;
+    const text = prev.slice(0, start) + insert + prev.slice(start + target[0].length);
+    return { text, caret: start + insert.length };
+  }
+  const at = Math.min(Math.max(caret, 0), prev.length);
+  const needsNl = at > 0 && prev[at - 1] !== "\n";
+  const text = prev.slice(0, at) + (needsNl ? "\n" : "") + insert + prev.slice(at);
+  return { text, caret: at + insert.length + (needsNl ? 1 : 0) };
+}
+
 const DOC_TYPES: { value: DraftDocumentType; label: string }[] = [
   { value: "discharge_summary", label: "Discharge summary" },
   { value: "referral_letter", label: "Referral letter" },
@@ -46,6 +69,10 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
   const [showRaw, setShowRaw] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // Last known caret position in the editor, so dictation fills the section the
+  // clinician is in (the Dictate button blurs the textarea, losing live focus).
+  const caretRef = useRef<number>(0);
 
   const isSigned = draft?.status === "signed";
 
@@ -90,7 +117,17 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
           const b64 = await blobToBase64(blob);
           const { text, raw_text, reformat } = await api.patients.transcribe(patientId, b64, language);
           if (text) {
-            setEditText((prev) => (prev ? `${prev}\n${text}` : text));
+            // Fill the section the clinician is in (replace its blank
+            // placeholder) instead of appending at the end of the document.
+            setEditText((prev) => {
+              const { text: next, caret } = placeDictation(prev, text, caretRef.current);
+              caretRef.current = caret;
+              requestAnimationFrame(() => {
+                const el = textareaRef.current;
+                if (el) { el.focus(); el.setSelectionRange(caret, caret); }
+              });
+              return next;
+            });
             // If the on-prem LLM polished the dictation, keep the raw transcript
             // so the clinician can confirm fidelity before signing.
             setRawTranscript(reformat === "llm" && raw_text !== text ? raw_text : null);
@@ -231,9 +268,13 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
           )}
 
           <textarea
+            ref={textareaRef}
             value={editText}
             readOnly={isSigned}
-            onChange={(e) => setEditText(e.target.value)}
+            onChange={(e) => { setEditText(e.target.value); caretRef.current = e.target.selectionStart; }}
+            onSelect={(e) => { caretRef.current = (e.target as HTMLTextAreaElement).selectionStart; }}
+            onClick={(e) => { caretRef.current = (e.target as HTMLTextAreaElement).selectionStart; }}
+            onKeyUp={(e) => { caretRef.current = (e.target as HTMLTextAreaElement).selectionStart; }}
             dir="auto"
             className="relative w-full h-80 bg-slate-950 border border-slate-700 rounded p-3 text-sm text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-slate-500"
           />
