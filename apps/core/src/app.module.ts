@@ -18,6 +18,7 @@ import { MetricsModule } from "./metrics/metrics.module";
 import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { DraftModule } from "./draft/draft.module";
 import { ConditionModule } from "./condition/condition.module";
+import { ServiceRequestModule } from "./service-request/service-request.module";
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { ConditionModule } from "./condition/condition.module";
     HandoffModule,
     DraftModule,
     ConditionModule,
+    ServiceRequestModule,
     DsrModule,
     MetricsModule,
     FeatureFlagsModule,
