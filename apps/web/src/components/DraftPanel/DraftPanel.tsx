@@ -327,7 +327,12 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
                   Save edits
                 </button>
                 <button
-                  onClick={() => void run(() => api.drafts.sign(draft.id))}
+                  onClick={() => void run(async () => {
+                    // Persist the current editor text before freezing it, so a
+                    // request typed/dictated but not yet "Saved" is not lost.
+                    await api.drafts.update(draft.id, editText);
+                    return api.drafts.sign(draft.id);
+                  })}
                   disabled={busy}
                   className="text-sm px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
                 >
