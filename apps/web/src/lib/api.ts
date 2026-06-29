@@ -100,6 +100,53 @@ export interface ConditionHistory {
   readonly episodes: readonly ConditionEpisode[];
 }
 
+export interface BriefMedication {
+  readonly display: string | null;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly status: string | null;
+}
+
+export interface PatientBrief {
+  readonly documented_conditions: readonly {
+    readonly code: string | null;
+    readonly code_display: string | null;
+    readonly status: string | null;
+    readonly onset_date: string | null;
+    readonly active_medications: readonly BriefMedication[];
+  }[];
+  readonly clinics: readonly {
+    readonly clinic: string;
+    readonly symptoms: readonly { display: string; status: string | null; onset_date: string | null }[];
+    readonly treatments: readonly { display: string; dose: string | null; route: string | null; frequency: string | null; status: string | null }[];
+  }[];
+  readonly labs: readonly {
+    readonly code: string | null;
+    readonly code_display: string | null;
+    readonly value_numeric: number | null;
+    readonly value_text: string | null;
+    readonly unit: string | null;
+    readonly ref_range_low: number | null;
+    readonly ref_range_high: number | null;
+    readonly ref_range_text: string | null;
+    readonly effective_at: string | null;
+  }[];
+  readonly imaging: readonly {
+    readonly code_display: string | null;
+    readonly value_text: string | null;
+    readonly effective_at: string | null;
+  }[];
+  readonly procedures: readonly {
+    readonly code_display: string | null;
+    readonly status: string | null;
+    readonly performed_at: string | null;
+    readonly performer_display: string | null;
+    readonly note: string | null;
+  }[];
+  readonly other_active_medications: readonly BriefMedication[];
+}
+
 export interface ObservationItem {
   readonly id: string;
   readonly category: string | null;
@@ -525,6 +572,9 @@ export const api = {
       request<ConditionHistory>(
         `/api/v1/patients/${patientId}/conditions/${conditionId}/history`,
       ),
+
+    brief: (patientId: string) =>
+      request<PatientBrief>(`/api/v1/patients/${patientId}/brief`),
   },
 
   drafts: {

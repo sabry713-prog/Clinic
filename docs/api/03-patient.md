@@ -162,6 +162,60 @@ Medications.
 
 Response shape similar to `medications` array above.
 
+## GET /api/v1/patients/:id/brief
+
+A factual, at-a-glance reproduction of the patient's documented record for the
+patient-file landing view. Contains **no** risk classification, severity flags,
+or interpretation — it restates documented facts only (preserves non-SaMD
+posture; see `CLAUDE.md` sections 2-3).
+
+**Response:**
+```json
+{
+  "documented_conditions": [
+    {
+      "code": "38341003", "code_display": "Hypertension", "status": "active", "onset_date": "2022-05-03",
+      "active_medications": [
+        { "display": "Lisinopril 10mg", "dose": "10 mg", "route": "Oral", "frequency": "Once daily", "status": "active" }
+      ]
+    }
+  ],
+  "other_active_medications": [
+    { "display": "Carmellose eye drops 0.5%", "dose": "1 drop", "route": "Ophthalmic", "frequency": "As needed", "status": "active" }
+  ],
+  "clinics": [
+    {
+      "clinic": "Cardiology Clinic",
+      "symptoms": [ { "display": "Chest pain", "status": "resolved", "onset_date": "2026-02-11" } ],
+      "treatments": [ { "display": "Bisoprolol 2.5mg", "dose": "2.5 mg", "route": "Oral", "frequency": "Once daily", "status": "active" } ]
+    }
+  ],
+  "labs": [
+    { "code": "2160-0", "code_display": "Creatinine", "value_numeric": 138, "value_text": null, "unit": "μmol/L", "ref_range_low": 59, "ref_range_high": 104, "ref_range_text": null, "effective_at": "..." }
+  ],
+  "imaging": [
+    { "code_display": "Chest X-ray", "value_text": "Chest X-ray performed. Report documented by radiology...", "effective_at": "..." }
+  ],
+  "procedures": [
+    { "code_display": "Placement of stent in coronary artery", "status": "completed", "performed_at": "...", "performer_display": "Dr. ...", "note": "Percutaneous coronary intervention with coronary stent placement performed in the catheterization laboratory (cath lab). Procedure report documented." }
+  ]
+}
+```
+
+- `documented_conditions` is the problem list (per-visit symptom records are
+  excluded and instead grouped under `clinics`). No item is labelled by risk.
+- Each condition's `active_medications` are the active prescriptions whose
+  **documented** indication is that condition (`medication_request.indication_code`).
+  The link is reproduced only where the prescription records it — never inferred
+  from drug/disease names. Active medications without a documented indication
+  appear in `other_active_medications`, not guessed onto a condition.
+- `labs` is the latest value per laboratory code, with the reference range as
+  the source lab provided it — no high/low/abnormal flag.
+- `procedures` reproduces documented operations and interventions (e.g. cardiac
+  catheterization, coronary stent placement, cardioversion, endoscopy) with the
+  recorded procedure note — factual report text only, no outcome interpretation.
+- Audit action: `PATIENT_BRIEF_VIEW`. Errors: 403 PATIENT_OUT_OF_SCOPE, 404.
+
 ## GET /api/v1/patients/:id/conditions/:condition_id/history
 
 All documented episodes of the same coded condition (same `code_system` + `code`)

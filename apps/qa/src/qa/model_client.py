@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from typing import Optional, Protocol, runtime_checkable
 
 import httpx
 
@@ -41,6 +41,13 @@ _STOPWORDS = frozenset({
     "list", "give", "need", "know", "please", "patient", "patients",
     "record", "documented", "value", "values", "result", "results",
     "level", "levels", "latest", "last", "recent", "current", "now",
+    # Filler verbs/prepositions that appear in chunk boilerplate (e.g. an
+    # encounter reads "... from <date> to <date>"), so they must not count
+    # as retrieval signal or they match unrelated rows.
+    "from", "into", "out", "off", "did", "made", "make", "makes", "making",
+    "suffer", "suffers", "suffering", "suffered", "related", "relate",
+    "relating", "relation", "been", "being", "had", "him", "she", "they",
+    "them", "may", "can", "could", "would", "should", "get", "got", "there",
 })
 
 # Map common question terms to the chunk vocabulary used by retrieval
@@ -66,6 +73,8 @@ _TERM_ALIASES = {
     "وصفات": "medication", "وصفه": "medication",
     "حساسيه": "allergy", "حساسية": "allergy", "حساسيات": "allergy",
     "امراض": "condition", "مرض": "condition", "مشاكل": "condition",
+    "حالة": "condition", "حالات": "condition", "الحالات": "condition",
+    "تشخيصات": "condition", "التشخيصات": "condition",
     "سكر": "glucose", "السكري": "glucose", "جلوكوز": "glucose",
     "ضغط": "blood pressure", "حراره": "temperature", "حرارة": "temperature",
     "نبض": "heart rate", "اكسجين": "spo2", "أكسجين": "spo2",
@@ -73,6 +82,14 @@ _TERM_ALIASES = {
     "صوديوم": "sodium", "بوتاسيوم": "potassium",
     "ملاحظات": "note", "تقارير": "note", "تقرير": "note",
     "تنويم": "encounter", "دخول": "encounter", "زيارات": "encounter",
+    # Procedures / interventions
+    "operation": "procedure", "operations": "procedure", "procedures": "procedure",
+    "intervention": "procedure", "interventions": "procedure",
+    "عملية": "procedure", "عمليه": "procedure", "عمليات": "procedure",
+    "اجراء": "procedure", "إجراء": "procedure", "اجراءات": "procedure",
+    "دعامة": "stent", "دعامه": "stent", "دعامات": "stent",
+    "قسطرة": "catheterization", "قسطره": "catheterization",
+    "تمييل": "catheterization",
     "علامات": "vital", "حيويه": "vital", "حيوية": "vital",
     "اعراض": "symptom", "أعراض": "symptom", "عرض": "symptom",
     "شكوى": "symptom", "شكاوى": "symptom",
@@ -110,6 +127,20 @@ _SUMMARY_TERMS = frozenset({
     "ملخص", "موجز", "نبذة", "نبذه", "خلاصة", "خلاصه", "تلخيص", "تاريخ",
 })
 
+# Detail-style questions ask for the documented clinical picture of a case:
+# the recorded symptoms, diagnostics, medications and the doctor's notes.
+# Answered with a factual reproduction grouped into clinical sections. This
+# restates what the record contains; it does NOT assert how anything was
+# caused or resolved (that would be interpretation -- see CLAUDE.md 2-3).
+#
+# Deliberately excludes "diagnosis"/"treatment" and their Arabic equivalents:
+# those phrasings read as asking the system to diagnose or recommend, which
+# the classifier refuses upstream (correctly). The factual triggers below are
+# the ones the classifier allows.
+_DETAIL_TERMS = frozenset({
+    "detail", "details", "تفاصيل",
+})
+
 # Arabic stopwords (question filler that carries no retrieval signal)
 _STOPWORDS_AR = frozenset({
     "ما", "ماذا", "هل", "كيف", "متى", "اين", "أين", "من", "عن", "في", "على",
@@ -136,6 +167,47 @@ def _is_summary_question(question: str) -> bool:
         t in _SUMMARY_TERMS or _normalize_token(t) in _SUMMARY_TERMS
         for t in tokens
     )
+
+
+def _is_detail_question(question: str) -> bool:
+    tokens = re.findall(r"[\w^/%]+", question.lower())
+    return any(
+        t in _DETAIL_TERMS or _normalize_token(t) in _DETAIL_TERMS
+        for t in tokens
+    )
+
+
+# Per-clinic breakdown: group the documented record by the clinic each fact
+# was reported at. Triggered when the question names clinics AND asks for a
+# per/each/by breakdown or the visit history.
+_CLINIC_WORDS = ("clinic", "clinics", "عيادة", "عياده", "عيادات")
+_GROUP_WORDS = (
+    "each", "per", "every", "by clinic", "across", "visited", "visit", "visits",
+    "كل", "لكل", "زار", "زيارة", "زياره", "زيارات",
+)
+# Pull the clinic name out of a chunk: "... reported at <X> Clinic ...",
+# "... prescribed at <X> Clinic ...", "<X> Clinic visit ...", or
+# "... ward: <X> Clinic ...".
+_CLINIC_RE = re.compile(
+    r"(?:reported at|prescribed at|ward:)\s*([\w/]+(?: [\w/]+)*? Clinic)"
+    r"|\b([\w/]+(?: [\w/]+)*? Clinic) visit",
+    re.IGNORECASE,
+)
+_REPORTED_AT_RE = re.compile(r"\s*\(reported at [^)]+\)")
+_PRESCRIBED_AT_RE = re.compile(r"\s*\(prescribed at [^)]+\)")
+_CODE_PAREN_RE = re.compile(r"\s*\(code: [^)]+\)")
+
+
+def _is_per_clinic_question(question: str) -> bool:
+    ql = question.lower()
+    return any(c in ql for c in _CLINIC_WORDS) and any(g in ql for g in _GROUP_WORDS)
+
+
+def _clinic_of(chunk: str) -> Optional[str]:
+    m = _CLINIC_RE.search(chunk)
+    if not m:
+        return None
+    return (m.group(1) or m.group(2)).strip()
 
 
 def _question_terms(question: str) -> list[str]:
@@ -188,6 +260,38 @@ class StubModelProvider:
         if not chunk_matches:
             return no_data
 
+        # Per-clinic breakdown: group the documented symptoms / diagnoses
+        # (conditions) under the clinic each was reported at. Medications are
+        # listed separately because the record does not tie them to a specific
+        # clinic. Pure factual regrouping — no synthesis or interpretation.
+        if _is_per_clinic_question(question):
+            by_clinic: dict[str, list[str]] = {}
+            unattributed_meds: list[str] = []
+            for chunk in chunk_matches:
+                prefix = chunk.split(":", 1)[0].strip().lower()
+                body = chunk.split(":", 1)[1].strip() if ":" in chunk else chunk
+                if prefix == "condition":
+                    clinic = _clinic_of(chunk) or "Other"
+                    body = _REPORTED_AT_RE.sub("", body)
+                    body = _CODE_PAREN_RE.sub("", body).strip()
+                    by_clinic.setdefault(clinic, []).append(f"symptom — {body}")
+                elif prefix == "medication":
+                    clinic = _clinic_of(chunk)
+                    body = _PRESCRIBED_AT_RE.sub("", body).strip()
+                    if clinic:
+                        by_clinic.setdefault(clinic, []).append(f"treatment — {body}")
+                    else:
+                        unattributed_meds.append(body)
+            lines: list[str] = []
+            for clinic in sorted(by_clinic):
+                for body in by_clinic[clinic][:12]:
+                    lines.append(f"• {clinic}: {body}")
+            for med in unattributed_meds[:8]:
+                lines.append(f"• Medication (not clinic-linked): {med}")
+            if not lines:
+                return no_data
+            return f"{preamble}\n" + "\n".join(lines)
+
         # Summary-style question: reproduce a cross-section of the record,
         # round-robin across record types so no single type dominates.
         # Factual reproduction only — no synthesis or prioritization.
@@ -204,6 +308,42 @@ class StubModelProvider:
                 if queue:
                     selected.append(queue.pop(0))
                 i += 1
+            bullets = "\n".join(f"• {c}" for c in selected)
+            return f"{preamble}\n{bullets}"
+
+        # Detail-style question: reproduce the documented clinical picture
+        # grouped into sections in clinical order — symptoms/conditions,
+        # diagnostics (labs & imaging), medications (treatment), allergies,
+        # and the doctor's notes. Encounters are omitted as administrative.
+        # Pure factual reproduction; the blocklist remains the final gate.
+        if _is_detail_question(question):
+            buckets: dict[str, list[str]] = {
+                "condition": [], "diagnostic": [], "medication": [],
+                "procedure": [], "allergy": [], "note": [],
+            }
+            for chunk in chunk_matches:
+                prefix = chunk.split(":", 1)[0].strip().lower()
+                if prefix.startswith("note"):
+                    buckets["note"].append(chunk)
+                elif prefix == "condition":
+                    buckets["condition"].append(chunk)
+                elif prefix in ("laboratory", "imaging", "vital-signs"):
+                    buckets["diagnostic"].append(chunk)
+                elif prefix == "medication":
+                    buckets["medication"].append(chunk)
+                elif prefix == "procedure":
+                    buckets["procedure"].append(chunk)
+                elif prefix == "allergy":
+                    buckets["allergy"].append(chunk)
+            caps = {
+                "condition": 10, "diagnostic": 8, "medication": 8,
+                "procedure": 6, "allergy": 4, "note": 4,
+            }
+            selected = []
+            for key in ("condition", "diagnostic", "medication", "procedure", "allergy", "note"):
+                selected.extend(buckets[key][: caps[key]])
+            if not selected:
+                return no_data
             bullets = "\n".join(f"• {c}" for c in selected)
             return f"{preamble}\n{bullets}"
 

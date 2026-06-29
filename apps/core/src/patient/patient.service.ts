@@ -173,6 +173,73 @@ export interface ConditionHistory {
   readonly episodes: readonly ConditionEpisode[];
 }
 
+export interface BriefMedication {
+  readonly display: string | null;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly status: string | null;
+}
+
+export interface BriefCondition {
+  readonly code: string | null;
+  readonly code_display: string | null;
+  readonly status: string | null;
+  readonly onset_date: string | null;
+  // Active medications whose *documented* indication is this condition.
+  // Never inferred — only present when the prescription records the link.
+  readonly active_medications: readonly BriefMedication[];
+}
+
+export interface BriefClinic {
+  readonly clinic: string;
+  readonly symptoms: readonly { display: string; status: string | null; onset_date: string | null }[];
+  readonly treatments: readonly { display: string; dose: string | null; route: string | null; frequency: string | null; status: string | null }[];
+}
+
+export interface BriefLab {
+  readonly code: string | null;
+  readonly code_display: string | null;
+  readonly value_numeric: number | null;
+  readonly value_text: string | null;
+  readonly unit: string | null;
+  readonly ref_range_low: number | null;
+  readonly ref_range_high: number | null;
+  readonly ref_range_text: string | null;
+  readonly effective_at: string | null;
+}
+
+export interface BriefImaging {
+  readonly code_display: string | null;
+  readonly value_text: string | null;
+  readonly effective_at: string | null;
+}
+
+export interface BriefProcedure {
+  readonly code_display: string | null;
+  readonly status: string | null;
+  readonly performed_at: string | null;
+  readonly performer_display: string | null;
+  readonly note: string | null;
+}
+
+/**
+ * PatientBrief — a factual reproduction of the patient's documented record,
+ * organized for a quick read. It contains NO risk classification, NO severity
+ * flags, and NO interpretation. "documented_conditions" lists the problem-list
+ * conditions exactly as recorded; the caller forms their own judgement.
+ */
+export interface PatientBrief {
+  readonly documented_conditions: readonly BriefCondition[];
+  readonly clinics: readonly BriefClinic[];
+  readonly labs: readonly BriefLab[];
+  readonly imaging: readonly BriefImaging[];
+  readonly procedures: readonly BriefProcedure[];
+  // Active medications with no documented condition indication — listed
+  // separately rather than guessed onto a disease.
+  readonly other_active_medications: readonly BriefMedication[];
+}
+
 export interface CursorPage<T> {
   readonly data: readonly T[];
   readonly next_cursor: string | null;
@@ -594,6 +661,187 @@ export class PatientService {
     return Number.isNaN(d.getTime())
       ? "date unknown"
       : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  // ─── Patient brief ──────────────────────────────────────────────────────────
+
+  async getPatientBrief(userId: string, patientId: string): Promise<PatientBrief> {
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    // Problem-list conditions = documented conditions that are not per-visit
+    // symptom records (those carry a "(reported at <clinic>)" suffix).
+    const conditionsResult = await this.pool.query<{
+      code: string | null;
+      code_display: string | null;
+      status: string | null;
+      onset_date: string | null;
+      is_symptom: boolean;
+    }>(
+      `SELECT code, code_display, status, onset_date::text AS onset_date,
+              (code_display LIKE '%(reported at%') AS is_symptom
+       FROM hospital.condition
+       WHERE patient_id = $1
+       ORDER BY onset_date DESC NULLS LAST`,
+      [patientId],
+    );
+
+    // Active medications with their documented indication (if any). The link
+    // condition <- medication is reproduced only where the prescription
+    // records indication_code; it is never inferred from drug/disease names.
+    const activeMedsResult = await this.pool.query<{
+      medication_display: string | null;
+      dose: string | null;
+      route: string | null;
+      frequency: string | null;
+      status: string | null;
+      indication_code: string | null;
+    }>(
+      `SELECT medication_display, dose, route, frequency, status, indication_code
+       FROM hospital.medication_request
+       WHERE patient_id = $1 AND status = 'active'
+       ORDER BY started_at DESC NULLS LAST`,
+      [patientId],
+    );
+    // De-duplicate the same drug appearing from more than one source (e.g. a
+    // chronic order and a clinic order for the same medication). Indication-
+    // bearing rows are processed first so the documented link is the one kept.
+    const medsByIndication = new Map<string, BriefMedication[]>();
+    const otherActiveMeds: BriefMedication[] = [];
+    const seenMeds = new Set<string>();
+    const orderedMeds = [...activeMedsResult.rows].sort(
+      (a, b) => (a.indication_code ? 0 : 1) - (b.indication_code ? 0 : 1),
+    );
+    for (const m of orderedMeds) {
+      const key = `${(m.medication_display ?? "").toLowerCase()}|${(m.dose ?? "").toLowerCase()}`;
+      if (seenMeds.has(key)) continue;
+      seenMeds.add(key);
+      const med: BriefMedication = {
+        display: m.medication_display,
+        dose: m.dose,
+        route: m.route,
+        frequency: m.frequency,
+        status: m.status,
+      };
+      if (m.indication_code) {
+        const list = medsByIndication.get(m.indication_code) ?? [];
+        list.push(med);
+        medsByIndication.set(m.indication_code, list);
+      } else {
+        otherActiveMeds.push(med);
+      }
+    }
+
+    // One row per distinct condition code (the same problem can be documented
+    // by more than one source); keep the most recent, which sorts first.
+    const seenConditionCodes = new Set<string>();
+    const documented_conditions: BriefCondition[] = conditionsResult.rows
+      .filter((r) => !r.is_symptom)
+      .filter((r) => {
+        const key = r.code ?? r.code_display ?? "";
+        if (seenConditionCodes.has(key)) return false;
+        seenConditionCodes.add(key);
+        return true;
+      })
+      .map((r) => ({
+        code: r.code,
+        code_display: r.code_display,
+        status: r.status,
+        onset_date: r.onset_date,
+        active_medications: (r.code && medsByIndication.get(r.code)) || [],
+      }));
+
+    // Per-clinic symptom records (parse the clinic from the display suffix).
+    const clinicMap = new Map<string, BriefClinic>();
+    const clinicRe = /\(reported at ([^)]+)\)/;
+    const ensureClinic = (name: string): BriefClinic => {
+      let c = clinicMap.get(name);
+      if (!c) {
+        c = { clinic: name, symptoms: [], treatments: [] };
+        clinicMap.set(name, c);
+      }
+      return c;
+    };
+    for (const r of conditionsResult.rows) {
+      if (!r.is_symptom || !r.code_display) continue;
+      const m = clinicRe.exec(r.code_display);
+      const clinic = m ? m[1]!.trim() : "Other";
+      const display = r.code_display.replace(/\s*\(reported at [^)]+\)/, "").trim();
+      (ensureClinic(clinic).symptoms as { display: string; status: string | null; onset_date: string | null }[]).push({
+        display,
+        status: r.status,
+        onset_date: r.onset_date,
+      });
+    }
+
+    // Clinic-prescribed treatment (medications linked to a clinic encounter).
+    const medsResult = await this.pool.query<{
+      medication_display: string | null;
+      dose: string | null;
+      route: string | null;
+      frequency: string | null;
+      status: string | null;
+      clinic: string | null;
+    }>(
+      `SELECT m.medication_display, m.dose, m.route, m.frequency, m.status,
+              e.ward AS clinic
+       FROM hospital.medication_request m
+       JOIN hospital.encounter e ON e.id = m.encounter_id
+       WHERE m.patient_id = $1 AND e.ward LIKE '%Clinic'
+       ORDER BY m.started_at DESC NULLS LAST`,
+      [patientId],
+    );
+    for (const r of medsResult.rows) {
+      if (!r.clinic) continue;
+      (ensureClinic(r.clinic).treatments as { display: string; dose: string | null; route: string | null; frequency: string | null; status: string | null }[]).push({
+        display: r.medication_display ?? "Unknown",
+        dose: r.dose,
+        route: r.route,
+        frequency: r.frequency,
+        status: r.status,
+      });
+    }
+
+    const clinics = Array.from(clinicMap.values()).sort((a, b) =>
+      a.clinic.localeCompare(b.clinic),
+    );
+
+    // Latest value per laboratory code — factual, with the source ref range.
+    const labsResult = await this.pool.query<BriefLab>(
+      `SELECT DISTINCT ON (code) code, code_display, value_numeric, value_text,
+              unit, ref_range_low, ref_range_high, ref_range_text,
+              effective_at::text AS effective_at
+       FROM hospital.observation
+       WHERE patient_id = $1 AND category = 'laboratory'
+       ORDER BY code, effective_at DESC`,
+      [patientId],
+    );
+
+    const imagingResult = await this.pool.query<BriefImaging>(
+      `SELECT code_display, value_text, effective_at::text AS effective_at
+       FROM hospital.observation
+       WHERE patient_id = $1 AND category = 'imaging'
+       ORDER BY effective_at DESC`,
+      [patientId],
+    );
+
+    const proceduresResult = await this.pool.query<BriefProcedure>(
+      `SELECT code_display, status,
+              performed_at::text AS performed_at,
+              performer_display, note
+       FROM hospital.procedure
+       WHERE patient_id = $1
+       ORDER BY performed_at DESC NULLS LAST`,
+      [patientId],
+    );
+
+    return {
+      documented_conditions,
+      clinics,
+      labs: labsResult.rows,
+      imaging: imagingResult.rows,
+      procedures: proceduresResult.rows,
+      other_active_medications: otherActiveMeds,
+    };
   }
 
   // ─── Condition history ────────────────────────────────────────────────────
