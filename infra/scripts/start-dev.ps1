@@ -57,7 +57,8 @@ $services = @(
     @{ Name = "core-4000";      Port = 4000; Dir = $repo;                              Cmd = "pnpm --filter '@app/core' run dev" },
     @{ Name = "web-3000";       Port = 3000; Dir = $repo;                              Cmd = "pnpm --filter '@app/web' run dev" },
     @{ Name = "narrative-5001"; Port = 5001; Dir = (Join-Path $repo "apps\narrative"); Cmd = "uv run uvicorn main:app --port 5001" },
-    @{ Name = "qa-5002";        Port = 5002; Dir = (Join-Path $repo "apps\qa");        Cmd = "uv run uvicorn main:app --port 5002" }
+    @{ Name = "qa-5002";        Port = 5002; Dir = (Join-Path $repo "apps\qa");        Cmd = "uv run uvicorn main:app --port 5002" },
+    @{ Name = "transcription-5003"; Port = 5003; Dir = (Join-Path $repo "apps\transcription"); Cmd = "uv run uvicorn main:app --port 5003" }
 )
 
 foreach ($svc in $services) {
@@ -77,6 +78,7 @@ $checks = [ordered]@{
     "core API :4000"  = "http://127.0.0.1:4000/api/v1/health"
     "narrative :5001" = "http://127.0.0.1:5001/health"
     "qa :5002"        = "http://127.0.0.1:5002/health"
+    "transcription :5003" = "http://127.0.0.1:5003/health"
 }
 $results = @{}
 foreach ($i in 1..30) {

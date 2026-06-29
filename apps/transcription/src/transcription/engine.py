@@ -5,8 +5,8 @@ faster-whisper engine runs fully on-prem (CLAUDE.md §7) — no cloud calls.
 """
 from __future__ import annotations
 
+import os
 import tempfile
-from pathlib import Path
 from typing import Protocol
 
 
@@ -62,15 +62,22 @@ class FasterWhisperEngine:
     def transcribe(self, audio: bytes, language: str) -> str:
         self._ensure_model()
         # Write to a temp file (audio bytes never logged); transcribe; clean up.
-        with tempfile.NamedTemporaryFile(suffix=".webm", delete=True) as f:
-            f.write(audio)
-            f.flush()
+        # The file is closed before transcription because Windows forbids a
+        # second open of a still-open NamedTemporaryFile by name.
+        fd, path = tempfile.mkstemp(suffix=".webm")
+        try:
+            with os.fdopen(fd, "wb") as f:
+                f.write(audio)
             assert self._model is not None
             segments, _info = self._model.transcribe(
-                f.name, language=(language if language in ("en", "ar") else None)
+                path, language=(language if language in ("en", "ar") else None)
             )
             return " ".join(seg.text.strip() for seg in segments).strip()
-        _ = Path  # keep import used if trimmed
+        finally:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
 
 
 def get_engine() -> TranscriptionEngine:
