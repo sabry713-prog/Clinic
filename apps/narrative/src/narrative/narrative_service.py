@@ -79,6 +79,14 @@ async def generate_narrative(
 
         raw = await model.complete(system_prompt, user_prompt, ModelParams())
 
+        # Empty-output guard: a reasoning model can spend the whole token budget
+        # on its hidden reasoning trace and return empty text. An empty string
+        # trivially "passes" the blocklist, so without this it would surface a
+        # blank narrative. Treat empty as a failed attempt and retry.
+        if not raw.strip():
+            logger.warning("narrative_empty_output", narrative_id=narrative_id, attempt=attempt)
+            continue
+
         scan_result = scan(raw, language=language)
 
         if scan_result.passed:
