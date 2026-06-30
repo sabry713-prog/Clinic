@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { HandoffOutput } from "../../lib/api";
+import GeneratingIndicator from "../common/GeneratingIndicator";
 
 interface SectionPanelProps {
   title: string;
@@ -61,7 +62,7 @@ export default function HandoffView({ handoff, isLoading }: HandoffViewProps): J
   if (isLoading) {
     return (
       <div className="bg-slate-900 rounded-xl p-6">
-        <p className="text-slate-400 text-sm">{t("common.loading")}</p>
+        <GeneratingIndicator label={t("handoff.generating", "Assembling shift handoff…")} lines={5} />
       </div>
     );
   }

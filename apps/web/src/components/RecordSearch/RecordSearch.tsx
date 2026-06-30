@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { api, type RecordSearchResponse, ApiError } from "../../lib/api";
+import EmptyState from "../common/EmptyState";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "";
@@ -70,7 +71,10 @@ export default function RecordSearch({ patientId }: RecordSearchProps): JSX.Elem
 
       {results && !error && (
         results.total === 0 ? (
-          <p className="text-sm text-slate-500">No matching entries in this patient&apos;s record.</p>
+          <EmptyState
+            message="No matching entries in this patient's record."
+            iconPath="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+          />
         ) : (
           <div className="space-y-5">
             <p className="text-xs text-slate-500">{results.total} entr{results.total === 1 ? "y" : "ies"} found</p>
