@@ -149,8 +149,21 @@ async def answer(
             logger.warning("qa_retrieval_failed", error=str(exc), patient_id=patient_id)
 
     # Step 3: Synthesize
-    from .model_client import StubModelProvider
+    from .model_client import StubModelProvider, _question_terms
     _model = model if model is not None else StubModelProvider()
+
+    # Bound the prompt: send only the question-relevant facts (so a rich record
+    # doesn't overflow a local model's context window). Rank by keyword overlap;
+    # keep the top N, falling back to the first N when nothing scores.
+    MAX_SYNTH_CHUNKS = 40
+    if len(chunks) > MAX_SYNTH_CHUNKS:
+        terms = _question_terms(question)
+        scored = sorted(
+            chunks,
+            key=lambda c: sum(1 for t in terms if t in str(c.get("content_text", "")).lower()),
+            reverse=True,
+        )
+        chunks = scored[:MAX_SYNTH_CHUNKS]
 
     answer_text, sources, blocklist_triggered = await synthesize(
         question=question,
