@@ -13,7 +13,11 @@ import httpx
 class ModelParams:
     temperature: float = 0.1
     top_p: float = 0.9
-    max_tokens: int = 1200
+    # deepseek-v4-flash is a reasoning model: it spends a hidden reasoning trace
+    # BEFORE emitting output. A full 7-section narrative needs room for that
+    # trace PLUS ~800-1000 tokens of narrative; a ~1K cap returns empty text
+    # (reasoning consumes the whole budget). Give generous headroom.
+    max_tokens: int = 4096
     frequency_penalty: float = 0.0
     presence_penalty: float = 0.0
 
@@ -225,9 +229,10 @@ class StubModelProvider:
 
 class LocalModelProvider:
     """
-    On-prem model provider calling an OpenAI-compatible /chat/completions endpoint
-    (vLLM/Ollama, in-Kingdom). No data leaves the premises — see
-    docs/architecture/on-prem-model.md and CLAUDE.md §7. Never a public cloud API.
+    Model provider calling an OpenAI-compatible /chat/completions endpoint.
+    Also used against the DeepSeek public-cloud API per the CTO-approved swap;
+    that routes PHI out-of-Kingdom — a deliberate deviation from CLAUDE.md §7.
+    See docs/architecture/on-prem-model.md.
     """
 
     def __init__(self, endpoint_url: str, model_name: str, api_key: str = "EMPTY",
@@ -267,7 +272,7 @@ def get_model() -> ModelProvider:
     """Select the narrative model provider from settings (stub | local)."""
     from .config import settings
 
-    if settings.narrative_model_provider.lower() == "local" and settings.model_name:
+    if settings.narrative_model_provider.lower() in ("local", "deepseek") and settings.model_name:
         return LocalModelProvider(
             endpoint_url=settings.model_endpoint_url,
             model_name=settings.model_name,

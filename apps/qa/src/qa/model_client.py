@@ -12,7 +12,7 @@ import httpx
 class ModelParams:
     temperature: float = 0.0
     top_p: float = 1.0
-    max_tokens: int = 600
+    max_tokens: int = 1024
     frequency_penalty: float = 0.0
     presence_penalty: float = 0.0
 
@@ -369,12 +369,12 @@ class StubModelProvider:
 
 class LocalModelProvider:
     """
-    On-prem model provider calling an OpenAI-compatible /chat/completions endpoint
-    (e.g. vLLM or Ollama running in-Kingdom). No data leaves the premises.
+    Model provider calling an OpenAI-compatible /chat/completions endpoint.
 
-    PHI safety: the endpoint MUST be a local/in-Kingdom server (see
-    docs/architecture/on-prem-model.md and CLAUDE.md §7). This client never
-    targets a public cloud API.
+    Originally on-prem only. As of the CTO-approved DeepSeek swap this same
+    client is also used against the DeepSeek public-cloud API
+    (https://api.deepseek.com). NOTE: that routes PHI out-of-Kingdom and is a
+    deliberate deviation from CLAUDE.md §7 — see docs/architecture/on-prem-model.md.
     """
 
     def __init__(
@@ -423,7 +423,7 @@ def get_model() -> ModelProvider:
     """Select the synthesis model provider from settings (stub | local)."""
     from .config import settings
 
-    if settings.qa_model_provider.lower() == "local" and settings.model_name:
+    if settings.qa_model_provider.lower() in ("local", "deepseek") and settings.model_name:
         return LocalModelProvider(
             endpoint_url=settings.model_endpoint_url,
             model_name=settings.model_name,

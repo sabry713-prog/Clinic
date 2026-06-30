@@ -55,7 +55,11 @@ class LocalModelClassifier:
                 {"role": "user", "content": f"LANGUAGE: {language}\nQUESTION: {question}"},
             ],
             "temperature": 0.0,
-            "max_tokens": 60,
+            # DeepSeek v4-flash is a reasoning model: it spends tokens on
+            # reasoning_content before emitting the JSON verdict. A small budget
+            # (e.g. 60) gets fully consumed by reasoning, returning empty content
+            # and forcing a fail-safe REFUSE. Give headroom for reasoning + JSON.
+            "max_tokens": 1024,
             "stream": False,
         }
         headers = {"Authorization": f"Bearer {self._api_key}"}
@@ -88,7 +92,7 @@ class LocalModelClassifier:
 
 def get_classifier_model() -> object:
     """Select the classifier model-layer provider (stub | local)."""
-    if settings.qa_model_provider.lower() == "local" and settings.model_name:
+    if settings.qa_model_provider.lower() in ("local", "deepseek") and settings.model_name:
         return LocalModelClassifier(
             endpoint_url=settings.model_endpoint_url,
             model_name=settings.model_name,

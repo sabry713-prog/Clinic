@@ -92,7 +92,7 @@ def test_fill_prompt_no_unfilled_placeholders() -> None:
 
 
 def test_prompt_template_version() -> None:
-    assert PROMPT_TEMPLATE_VERSION == "v1.0"
+    assert PROMPT_TEMPLATE_VERSION == "v1.1"
 
 
 def test_fill_prompt_sections_present() -> None:
