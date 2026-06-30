@@ -14,6 +14,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCopilot } from "../../context/CopilotContext";
 import QAConversation from "../QAConversation/QAConversation";
+import CopilotBrief from "./CopilotBrief";
 
 export default function CopilotPanel(): React.ReactElement {
   const { isOpen, activePatientId, activePatientName, close, toggle } = useCopilot();
@@ -106,13 +107,27 @@ export default function CopilotPanel(): React.ReactElement {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden flex flex-col">
           {activePatientId ? (
-            <QAConversation
-              patientId={activePatientId}
-              language={language}
-              onLanguageToggle={() => setLanguage((l) => (l === "en" ? "ar" : "en"))}
-            />
+            <>
+              {/* Auto-shown factual summary of the recent documented record.
+                  Only mounted while the panel is open so it never generates in
+                  the background. */}
+              {isOpen && (
+                <CopilotBrief
+                  key={activePatientId}
+                  patientId={activePatientId}
+                  language={language}
+                />
+              )}
+              <div className="flex-1 min-h-0">
+                <QAConversation
+                  patientId={activePatientId}
+                  language={language}
+                  onLanguageToggle={() => setLanguage((l) => (l === "en" ? "ar" : "en"))}
+                />
+              </div>
+            </>
           ) : (
             <NoPatientState />
           )}
