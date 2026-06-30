@@ -191,6 +191,17 @@ async def synthesize(
 
         raw = await model.complete(QA_SYSTEM_PROMPT, user_prompt, params)
 
+        # Empty-output guard: a reasoning model can consume the whole token
+        # budget on its hidden reasoning trace and return empty content. Don't
+        # surface a blank answer — retry once with a larger budget, then fall
+        # through to the deterministic chunk fallback below.
+        if not raw.strip():
+            logger.warning("qa_synthesis_empty_output", attempt=attempt)
+            params = ModelParams(temperature=0.0, max_tokens=2048)
+            raw = await model.complete(QA_SYSTEM_PROMPT, user_prompt, params)
+            if not raw.strip():
+                continue
+
         if has_blocklist and scan is not None:
             scan_result = scan(raw, language=language)
             if not scan_result.passed:
