@@ -8,6 +8,7 @@
  */
 
 import { useShowMore, ShowMoreButton } from "../ShowMore/ShowMore";
+import EmptyState from "../common/EmptyState";
 
 const INITIAL_ROWS = 5;
 
@@ -48,7 +49,7 @@ export default function MedicationPanel({
       {isLoading ? (
         <p className="text-sm text-slate-500">Loading medications...</p>
       ) : medications.length === 0 ? (
-        <p className="text-sm text-slate-500">No medications documented</p>
+        <EmptyState message="No medications documented" />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
