@@ -110,8 +110,15 @@ export function scoreReconciliation(
     score += W_SEX_MATCH;
   }
 
-  // Special rule: national ID mismatch → force quarantine regardless of score
-  if (features.national_id_hash_mismatch && score >= 95) {
+  // Special rule: two records that match strongly enough on everything else to
+  // auto-merge, but whose national IDs conflict, must never auto-merge or be
+  // silently separated — quarantine them for human review. Because a national_id
+  // mismatch contributes 0 to `score`, we compare against the score these records
+  // *would* have reached had the national IDs matched (score + W_NATIONAL_ID_MATCH).
+  if (
+    features.national_id_hash_mismatch &&
+    score + W_NATIONAL_ID_MATCH >= 95
+  ) {
     return { decision: "quarantine", score, features };
   }
 

@@ -12,9 +12,11 @@ function makeReq(path: string): Partial<Request> {
 
 function makeRes(): {
   res: Partial<Response>;
-  statusCode: number | undefined;
-  body: unknown;
+  ctx: { statusCode: number | undefined; body: unknown };
 } {
+  // ctx is returned by reference (not spread) so the middleware's mutations to
+  // statusCode/body after res.status().json() are visible to the test. Spreading
+  // it here would snapshot the initial `undefined` values.
   const ctx: { statusCode: number | undefined; body: unknown } = {
     statusCode: undefined,
     body: undefined,
@@ -28,7 +30,7 @@ function makeRes(): {
       ctx.body = b;
     }),
   } as unknown as Partial<Response>;
-  return { res, ...ctx };
+  return { res, ctx };
 }
 
 function makeFlags(overrides: Partial<Record<string, boolean>> = {}): FeatureFlagsService {
@@ -58,12 +60,12 @@ describe("FeatureFlagsMiddleware", () => {
     const mw = new FeatureFlagsMiddleware(flags);
 
     const req = makeReq("/api/v1/patients/patient-001/qa");
-    const { res, statusCode, body } = makeRes();
+    const { res, ctx } = makeRes();
 
     mw.use(req as Request, res as Response, next);
 
-    expect(statusCode).toBe(503);
-    expect((body as Record<string, unknown>)["flag"]).toBe("qa.allow_responses");
+    expect(ctx.statusCode).toBe(503);
+    expect((ctx.body as Record<string, unknown>)["flag"]).toBe("qa.allow_responses");
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -86,12 +88,12 @@ describe("FeatureFlagsMiddleware", () => {
     const mw = new FeatureFlagsMiddleware(flags);
 
     const req = makeReq("/api/v1/patients/patient-001/narrative");
-    const { res, statusCode, body } = makeRes();
+    const { res, ctx } = makeRes();
 
     mw.use(req as Request, res as Response, next);
 
-    expect(statusCode).toBe(503);
-    expect((body as Record<string, unknown>)["flag"]).toBe("narrative.enabled");
+    expect(ctx.statusCode).toBe(503);
+    expect((ctx.body as Record<string, unknown>)["flag"]).toBe("narrative.enabled");
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -102,12 +104,12 @@ describe("FeatureFlagsMiddleware", () => {
     const mw = new FeatureFlagsMiddleware(flags);
 
     const req = makeReq("/api/v1/handoff");
-    const { res, statusCode, body } = makeRes();
+    const { res, ctx } = makeRes();
 
     mw.use(req as Request, res as Response, next);
 
-    expect(statusCode).toBe(503);
-    expect((body as Record<string, unknown>)["flag"]).toBe("handoff.enabled");
+    expect(ctx.statusCode).toBe(503);
+    expect((ctx.body as Record<string, unknown>)["flag"]).toBe("handoff.enabled");
     expect(next).not.toHaveBeenCalled();
   });
 

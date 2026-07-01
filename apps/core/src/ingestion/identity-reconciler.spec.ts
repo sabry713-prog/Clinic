@@ -43,6 +43,9 @@ describe("identity-reconciler", () => {
       id: "bbb",
       given_name: "Completely",
       family_name: "Different",
+      // Different MRN so the same-source MRN signal does not also fire; this
+      // isolates the "NID matches, name differs" case the test name describes.
+      mrn: "MRN-002",
     });
     const result = scoreReconciliation(a, b);
     // NID=60 + DOB=8 + sex=2 = 70 (name similarity < 0.9 so no +5)

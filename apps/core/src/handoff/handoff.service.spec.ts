@@ -97,8 +97,9 @@ describe("handoff-formatter", () => {
       };
       const text = formatHandoffText(sections);
       expect(text).toContain("[59–104 μmol/L]");
-      // No H/L flag
-      expect(text).not.toMatch(/\bH\b|\bL\b/);
+      // No standalone H/L flag. Match a lone H or L token only — NOT the "L" in
+      // a unit like "μmol/L" (where the slash would otherwise create a \b before L).
+      expect(text).not.toMatch(/(?<![\w/])[HL](?![\w])/);
     });
   });
 });
@@ -209,26 +210,31 @@ describe("HandoffService", () => {
   });
 
   it("ward handoff returns correct patient_count", async () => {
-    let callCount = 0;
+    // generateForWard runs generateForPatient concurrently (Promise.all), so the
+    // two patients' queries interleave. Dispatch responses by SQL/params rather
+    // than a global call counter so the mock is order-independent.
     const pool = {
-      query: jest.fn().mockImplementation((sql: string) => {
+      query: jest.fn().mockImplementation((sql: string, params?: unknown[]) => {
         if (typeof sql === "string" && sql.includes("DISTINCT p.id")) {
           return Promise.resolve({ rows: [{ id: "p1" }, { id: "p2" }] });
         }
-        callCount++;
-        // For each patient generation, return minimal valid data
-        const cyclePos = (callCount - 1) % 8;
-        const cycleResponses = [
-          { rows: [{ id: "p1", mrn: null, display_name: "Patient", date_of_birth: null, sex: null, preferred_language: "en", ward: "W1" }] },
-          { rows: [{ id: "enc-1", encounter_type: "inpatient", status: "in-progress", started_at: "2026-06-01", ward: "W1" }] },
-          { rows: [] },
-          { rows: [] },
-          { rows: [] },
-          { rows: [] },
-          { rows: [] },
-          { rows: [{ id: "ho-" + callCount, created_at: new Date() }] },
-        ];
-        return Promise.resolve(cycleResponses[cyclePos] ?? { rows: [] });
+        if (typeof sql === "string" && sql.includes("FROM hospital.patient")) {
+          const pid = (params?.[0] as string) ?? "p1";
+          return Promise.resolve({
+            rows: [{ id: pid, mrn: null, display_name: "Patient", date_of_birth: null, sex: null, preferred_language: "en" }],
+          });
+        }
+        if (typeof sql === "string" && sql.includes("FROM hospital.encounter")) {
+          return Promise.resolve({
+            rows: [{ id: "enc-1", encounter_type: "inpatient", status: "in-progress", started_at: "2026-06-01", ward: "W1" }],
+          });
+        }
+        if (typeof sql === "string" && sql.includes("INSERT INTO app.handoff_output")) {
+          const pid = (params?.[0] as string) ?? "p";
+          return Promise.resolve({ rows: [{ id: "ho-" + pid, created_at: new Date() }] });
+        }
+        // documents, medications, vitals, labs, pending orders → empty
+        return Promise.resolve({ rows: [] });
       }),
     };
 
