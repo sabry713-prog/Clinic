@@ -11,12 +11,14 @@ const config: Config = {
   coverageDirectory: "../coverage",
   testEnvironment: "node",
   moduleNameMapper: {
+    // rootDir is "src", so <rootDir> = apps/core/src. The shared packages live
+    // at the repo root (clinic/packages), three levels up — not apps/packages.
     "^@clinical-copilot/shared-types$":
-      "<rootDir>/../../packages/shared-types/src/index.ts",
+      "<rootDir>/../../../packages/shared-types/src/index.ts",
     "^@clinical-copilot/audit$":
-      "<rootDir>/../../packages/audit/src/index.ts",
+      "<rootDir>/../../../packages/audit/src/index.ts",
     "^@clinical-copilot/fhir-client$":
-      "<rootDir>/../../packages/fhir-client/src/index.ts",
+      "<rootDir>/../../../packages/fhir-client/src/index.ts",
   },
 };
 
