@@ -106,11 +106,51 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
     );
   }
 
+  // Factual at-a-glance strip: names reproduced from the record, no
+  // interpretation, no severity, no counts framed as risk.
+  const activeConditionNames = brief.documented_conditions
+    .filter((c) => (c.status ?? "").toLowerCase() === "active")
+    .map((c) => c.code_display)
+    .filter((n): n is string => n !== null);
+  const activeMedNames = [
+    ...brief.documented_conditions.flatMap((c) => c.active_medications.map((m) => m.display)),
+    ...brief.other_active_medications.map((m) => m.display),
+  ];
+  const latestLab = brief.labs.reduce<Brief["labs"][number] | null>(
+    (latest, l) =>
+      l.effective_at !== null && (latest?.effective_at == null || l.effective_at > latest.effective_at) ? l : latest,
+    null,
+  );
+
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-5">
       <div className="flex items-baseline justify-between">
         <h2 className="text-base font-semibold text-white">Patient Brief</h2>
         <span className="text-xs text-slate-500">Factual reproduction — not a clinical risk assessment</span>
+      </div>
+
+      {/* At-a-glance strip — documented facts only */}
+      <div className="grid gap-4 sm:grid-cols-3 border border-slate-800 rounded-lg px-4 py-3">
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500 mb-0.5">Documented active conditions</p>
+          <p className="text-sm text-white truncate" dir="ltr" title={activeConditionNames.join(", ")}>
+            {activeConditionNames.length > 0 ? activeConditionNames.join(", ") : "None documented"}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500 mb-0.5">Active medications</p>
+          <p className="text-sm text-white truncate" dir="ltr" title={activeMedNames.join(", ")}>
+            {activeMedNames.length > 0 ? activeMedNames.join(", ") : "None documented"}
+          </p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500 mb-0.5">Most recent lab result</p>
+          <p className="text-sm text-white truncate" dir="ltr">
+            {latestLab
+              ? `${latestLab.code_display ?? latestLab.code}: ${labValue(latestLab)} (${formatDate(latestLab.effective_at)})`
+              : "None documented"}
+          </p>
+        </div>
       </div>
 
       {/* Documented conditions (problem list) with their active medications */}
