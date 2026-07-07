@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { api, type PatientDetail, type ObservationItem, type MedicationItem, type MedicationReconciliation, type HandoffOutput, ApiError } from "../../lib/api";
 import { useCopilot } from "../../context/CopilotContext";
 import PatientHeader from "../../components/PatientHeader/PatientHeader";
@@ -58,7 +58,22 @@ export default function PatientDetailPage(): JSX.Element {
   const [reconciliation, setReconciliation] = useState<MedicationReconciliation | null>(null);
   const [isLoadingReconciliation, setIsLoadingReconciliation] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "search" | "narrative" | "qa" | "handoff" | "drafts">("overview");
+  type TabId = "overview" | "search" | "narrative" | "qa" | "handoff" | "drafts";
+  const TAB_IDS: readonly TabId[] = ["overview", "search", "narrative", "qa", "handoff", "drafts"];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const fromUrl = searchParams.get("tab");
+    return fromUrl !== null && (TAB_IDS as readonly string[]).includes(fromUrl) ? (fromUrl as TabId) : "overview";
+  });
+
+  // Keep the tab in sync when the sidebar / command bar deep-links via ?tab=.
+  useEffect(() => {
+    const fromUrl = searchParams.get("tab");
+    if (fromUrl !== null && (TAB_IDS as readonly string[]).includes(fromUrl) && fromUrl !== activeTab) {
+      setActiveTab(fromUrl as TabId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [qaLanguage, setQaLanguage] = useState<"en" | "ar">("en");
   const [handoff, setHandoff] = useState<HandoffOutput | null>(null);
   const [isLoadingHandoff, setIsLoadingHandoff] = useState(false);
@@ -194,6 +209,7 @@ export default function PatientDetailPage(): JSX.Element {
               key={tab}
               onClick={() => {
                 setActiveTab(tab);
+                setSearchParams({ tab }, { replace: true });
                 if (tab === "handoff" && !handoff && !isLoadingHandoff) {
                   setIsLoadingHandoff(true);
                   api.handoff

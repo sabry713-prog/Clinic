@@ -6,6 +6,7 @@ import { HomePage } from "./pages/HomePage";
 import { useTranslation } from "react-i18next";
 import { CopilotProvider } from "./context/CopilotContext";
 import CopilotPanel from "./components/CopilotPanel/CopilotPanel";
+import AppShell from "./components/AppShell/AppShell";
 
 const PatientListPage = lazy(() => import("./pages/PatientListPage/PatientListPage"));
 const PatientDetailPage = lazy(() => import("./pages/PatientDetailPage/PatientDetailPage"));
@@ -31,30 +32,14 @@ function AppRoutes(): JSX.Element {
         path="/login"
         element={user != null ? <Navigate to="/" replace /> : <LoginPage />}
       />
-      <Route
-        path="/"
-        element={user != null ? <Navigate to="/patients" replace /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/patients"
-        element={user != null ? <PatientListPage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/patients/:id"
-        element={user != null ? <PatientDetailPage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/admin/quarantine"
-        element={user != null ? <QuarantinePage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/admin/audit"
-        element={user != null ? <AuditPage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/admin/users"
-        element={user != null ? <UserManagementPage /> : <Navigate to="/login" replace />}
-      />
+      <Route element={user != null ? <AppShell /> : <Navigate to="/login" replace />}>
+        <Route path="/" element={<Navigate to="/patients" replace />} />
+        <Route path="/patients" element={<PatientListPage />} />
+        <Route path="/patients/:id" element={<PatientDetailPage />} />
+        <Route path="/admin/quarantine" element={<QuarantinePage />} />
+        <Route path="/admin/audit" element={<AuditPage />} />
+        <Route path="/admin/users" element={<UserManagementPage />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
