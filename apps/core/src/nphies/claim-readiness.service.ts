@@ -121,15 +121,26 @@ export class ClaimReadinessService {
             ? "All active conditions have a code."
             : `${condTotal - condCoded} of ${condTotal} active condition(s) have no code.`,
       });
-      // R5 — coding-system readiness. Conditions here are SNOMED-coded;
-      // NPHIES claims require ICD-10-AM. This is an infrastructure fact,
-      // not a judgment about the patient.
+      // R5 — ICD-10-AM coverage. NPHIES claims require ICD-10-AM codes;
+      // conditions are documented in SNOMED CT and mapped via the
+      // clinician-confirmed coding flow. This counts confirmations — an
+      // administrative fact, not a judgment about the patient.
+      const icd = await this.pool.query<{ n: string }>(
+        `SELECT count(*)::text AS n
+         FROM app.condition_icd_coding cc
+         JOIN hospital.condition c ON c.id = cc.condition_id
+         WHERE cc.patient_id = $1 AND c.status = 'active'`,
+        [patientId],
+      );
+      const icdConfirmed = Number(icd.rows[0]?.n ?? "0");
       checks.push({
         id: "icd10am_mapping",
-        label: "ICD-10-AM mapping",
-        status: "warning",
+        label: "ICD-10-AM coding confirmed",
+        status: icdConfirmed >= condTotal ? "pass" : "warning",
         detail:
-          "Conditions are coded in SNOMED CT; NPHIES claims require ICD-10-AM. Mapping step not yet configured — codes must be mapped before submission.",
+          icdConfirmed >= condTotal
+            ? `All ${condTotal} active condition(s) have a clinician-confirmed ICD-10-AM code.`
+            : `${icdConfirmed} of ${condTotal} active condition(s) have a clinician-confirmed ICD-10-AM code. Confirm the remaining codes in the coding panel before submission.`,
       });
     }
 
