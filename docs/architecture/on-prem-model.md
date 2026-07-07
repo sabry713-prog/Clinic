@@ -1,8 +1,37 @@
 # On-Prem Foundation Model — Decision Doc
 
-**Status:** Decision pending (CTO).
-**Context:** Stage 1 deploys **on-premise, no cloud**, inside the Kingdom, per SFDA/PDPL.
-This makes the model a self-hosted open-weight model — see [[dictation-feature-scope]] and CLAUDE.md §7.
+**Status:** SUPERSEDED for current deployment by a CTO-approved cloud swap (2026-06-30).
+**Context:** Stage 1 was specced to deploy **on-premise, no cloud**, inside the Kingdom, per SFDA/PDPL.
+This made the model a self-hosted open-weight model — see [[dictation-feature-scope]] and CLAUDE.md §7.
+
+---
+
+> ## ⚠️ DEVIATION NOTICE — DeepSeek cloud API (CTO-approved, 2026-06-30)
+>
+> The running configuration no longer uses an on-prem/in-Kingdom model. The QA
+> classifier fallback, QA synthesis, and narrative synthesis now call the
+> **DeepSeek public-cloud API** (`https://api.deepseek.com`, model
+> `deepseek-v4-flash`) via the same OpenAI-compatible `LocalModelProvider`.
+>
+> **This is a deliberate deviation from CLAUDE.md §7 and the on-prem premise
+> below.** Consequences accepted by the CTO:
+> - PHI in QA/narrative prompts now leaves the premises and the Kingdom.
+> - DeepSeek's default API terms permit training on submitted data unless a
+>   zero-retention / in-Kingdom contract is in place.
+>
+> **Open compliance actions before any production PHI:**
+> 1. Execute a DeepSeek zero-retention + data-residency agreement, or move back
+>    on-prem per this doc.
+> 2. Reconcile the SFDA/PDPL posture and the SaMD/Health-IT classification basis.
+> 3. Rotate the API key shared during setup; load it only from the secret store
+>    (`MODEL_API_KEY`), never plaintext `.env`, in non-dev environments.
+>
+> `deepseek-v4-flash` is a **reasoning model** — token budgets must leave room
+> for its hidden reasoning trace (classifier/QA `max_tokens=1024`, narrative
+> `4096`); tight caps return empty output. Narrative prompt is at **v1.1**
+> (allergy severity adjectives omitted so faithful output passes the blocklist).
+>
+> The on-prem design below remains the intended long-term/in-Kingdom posture.
 
 ---
 

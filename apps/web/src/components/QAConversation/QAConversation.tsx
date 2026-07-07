@@ -62,6 +62,9 @@ export default function QAConversation({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // Question echoed immediately while the answer is generated, so the doctor
+  // sees their question during the (reasoning-model) wait instead of a blank.
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -98,6 +101,7 @@ export default function QAConversation({
 
     setInput("");
     setLoading(true);
+    setPendingQuestion(question);
     setError(null);
 
     try {
@@ -122,6 +126,7 @@ export default function QAConversation({
       setError(msg);
     } finally {
       setLoading(false);
+      setPendingQuestion(null);
       inputRef.current?.focus();
     }
   }, [input, loading, conversationId, patientId, language, t]);
@@ -180,13 +185,26 @@ export default function QAConversation({
         ))}
 
         {loading && (
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span
-              className="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
-              role="status"
-              aria-label={t("common.loading")}
-            />
-            <span>{t("qa.thinking")}</span>
+          <div className="space-y-2">
+            {/* Echo the doctor's question immediately during the wait */}
+            {pendingQuestion && (
+              <div className={`flex ${language === "ar" ? "justify-start" : "justify-end"}`}>
+                <div className="max-w-[80%] rounded-2xl px-4 py-2 bg-blue-600 text-white text-sm opacity-90">
+                  {pendingQuestion}
+                </div>
+              </div>
+            )}
+            {/* Assistant typing bubble */}
+            <div className={`flex ${language === "ar" ? "justify-end" : "justify-start"}`}>
+              <div
+                className="rounded-2xl px-4 py-3 bg-gray-100 flex items-center gap-2"
+                role="status"
+                aria-label={t("qa.thinking")}
+              >
+                <TypingDots />
+                <span className="text-xs text-gray-400">{t("qa.thinking")}</span>
+              </div>
+            </div>
           </div>
         )}
 
@@ -228,6 +246,25 @@ export default function QAConversation({
         </p>
       </div>
     </div>
+  );
+}
+
+// ── TypingDots ────────────────────────────────────────────────────────────────
+//
+// Three bouncing dots — a neutral "generating" affordance. Purely cosmetic;
+// conveys activity, never clinical meaning.
+
+function TypingDots(): React.ReactElement {
+  return (
+    <span className="flex items-center gap-1" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+          style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.9s" }}
+        />
+      ))}
+    </span>
   );
 }
 
@@ -330,10 +367,14 @@ function TurnItem({
             <AnswerBody text={turn.response.answer_text} />
           </div>
 
-          {/* Refusal category in plain language — small, neutral (no alarm) */}
+          {/* Refusal category in plain language — small, neutral (no alarm).
+              Neutral info glyph (an "i", never a warning icon). */}
           {!isAllowed && (
-            <p className="text-xs text-gray-400 px-1">
-              {refusalCategoryLabel(turn.response.refusal_category, isRtl)}
+            <p className="flex items-center gap-1 text-xs text-gray-400 px-1">
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+              </svg>
+              <span>{refusalCategoryLabel(turn.response.refusal_category, isRtl)}</span>
             </p>
           )}
 

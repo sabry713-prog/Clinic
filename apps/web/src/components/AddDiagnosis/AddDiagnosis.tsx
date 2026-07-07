@@ -44,7 +44,7 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
       code: selected.code,
       code_display: selected.code_display,
       status,
-      onset_date: onset || undefined,
+      ...(onset ? { onset_date: onset } : {}),
     })
       .then(() => {
         setMsg(`Added "${selected.code_display}" to the problem list.`);

@@ -15,10 +15,18 @@
   },
   "common": {
     "logout": "Sign Out",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "retry": "Retry"
+  },
+  "brief": {
+    "title": "Patient summary",
+    "generating": "Summarising the documented record…",
+    "error": "Summary unavailable. Open the Narrative tab or review the record directly.",
+    "refresh": "Refresh"
   },
   "handoff": {
     "title": "Shift Handoff",
+    "generating": "Assembling shift handoff…",
     "generated_at": "Generated at",
     "scope": "Scope",
     "language": "Language",
