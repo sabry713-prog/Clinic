@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from .assembly import AssembledPatientData
 
-PROMPT_TEMPLATE_VERSION = "v1.0"
+PROMPT_TEMPLATE_VERSION = "v1.1"
 
 SYSTEM_PROMPT_TEMPLATE = """\
 You are a factual summarization assistant integrated into a hospital information system. Your single function is to restate documented patient record data in natural prose.
@@ -70,7 +70,7 @@ PRIOR ADMISSIONS:
 PRODUCE NARRATIVE WITH THESE SECTIONS:
 1. Identity and admission context (one sentence)
 2. Documented active problems
-3. Documented allergies
+3. Documented allergies (allergen and documented reaction term verbatim; state the recorded date if present. Do NOT include any free-text severity adjective such as "severe"/"mild"/"moderate" — those words are reserved interpretive terms and must be omitted even when they appear as a documented severity field. Reproduce the reaction term only.)
 4. Current medications (list, with values verbatim)
 5. Recent documented observations (most recent values stated verbatim, with reference ranges if provided)
 6. Recent documentation references (titles and authors only)

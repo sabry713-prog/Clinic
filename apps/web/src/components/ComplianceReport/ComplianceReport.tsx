@@ -17,7 +17,7 @@ export default function ComplianceReport(): JSX.Element {
   const generate = useCallback(() => {
     setLoading(true); setError(null);
     api.admin
-      .auditSummary({ since: since || undefined, until: until || undefined })
+      .auditSummary({ ...(since ? { since } : {}), ...(until ? { until } : {}) })
       .then(setData)
       .catch((e) => setError(e instanceof ApiError ? e.message : "Failed to load summary"))
       .finally(() => setLoading(false));
