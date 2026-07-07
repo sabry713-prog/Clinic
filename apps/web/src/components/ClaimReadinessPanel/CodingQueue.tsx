@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useState } from "react";
-import { api, type CodingStatus, ApiError } from "../../lib/api";
+import { api, type CodingStatus, type OrderCodingStatus, ApiError } from "../../lib/api";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -19,6 +19,7 @@ function formatDate(iso: string | null): string {
 
 export default function CodingQueue({ patientId }: { readonly patientId: string }): JSX.Element {
   const [status, setStatus] = useState<CodingStatus | null>(null);
+  const [orderStatus, setOrderStatus] = useState<OrderCodingStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [rowBusy, setRowBusy] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,12 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
     setBusy(true);
     setError(null);
     try {
-      setStatus(await api.patients.codingStatus(patientId));
+      const [cond, ord] = await Promise.all([
+        api.patients.codingStatus(patientId),
+        api.patients.orderCodingStatus(patientId),
+      ]);
+      setStatus(cond);
+      setOrderStatus(ord);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load coding status");
     } finally {
@@ -36,18 +42,23 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
   }, [patientId]);
 
   const withRow = useCallback(
-    async (conditionId: string, fn: () => Promise<unknown>) => {
-      setRowBusy((prev) => new Set(prev).add(conditionId));
+    async (rowId: string, fn: () => Promise<unknown>) => {
+      setRowBusy((prev) => new Set(prev).add(rowId));
       setError(null);
       try {
         await fn();
-        setStatus(await api.patients.codingStatus(patientId));
+        const [cond, ord] = await Promise.all([
+          api.patients.codingStatus(patientId),
+          api.patients.orderCodingStatus(patientId),
+        ]);
+        setStatus(cond);
+        setOrderStatus(ord);
       } catch (e) {
         setError(e instanceof ApiError ? e.message : "Coding update failed");
       } finally {
         setRowBusy((prev) => {
           const n = new Set(prev);
-          n.delete(conditionId);
+          n.delete(rowId);
           return n;
         });
       }
@@ -57,6 +68,8 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
 
   const unconfirmed = status?.conditions.filter((c) => c.confirmed === null) ?? [];
   const confirmed = status?.conditions.filter((c) => c.confirmed !== null) ?? [];
+  const unconfirmedOrders = orderStatus?.orders.filter((o) => o.confirmed === null) ?? [];
+  const confirmedOrders = orderStatus?.orders.filter((o) => o.confirmed !== null) ?? [];
 
   return (
     <div className="space-y-3">
@@ -149,6 +162,87 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
                   );
                 })}
               </ul>
+            </div>
+          )}
+
+          {orderStatus !== null && (
+            <div className="pt-2 space-y-2">
+              <h3 className="text-sm font-medium text-slate-300">SBS coding (orders)</h3>
+              {orderStatus.orders.length === 0 && (
+                <p className="text-sm text-slate-500">No active orders to code.</p>
+              )}
+
+              {unconfirmedOrders.length > 0 && (
+                <ul className="space-y-2">
+                  {unconfirmedOrders.map((o) => {
+                    const isBusy = rowBusy.has(o.service_request_id);
+                    return (
+                      <li key={o.service_request_id} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3 flex items-center gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-white" dir="ltr">
+                            {o.order_display}
+                            <span className="text-xs text-slate-500 ml-2">
+                              {o.category} · {formatDate(o.requested_at)}
+                            </span>
+                          </p>
+                          {o.suggestion ? (
+                            <p className="text-xs text-slate-400 mt-0.5" dir="ltr">
+                              Suggested code:{" "}
+                              <span className="font-mono bg-slate-800 rounded px-1.5 py-0.5 text-slate-200">
+                                {o.suggestion.sbs_code}
+                              </span>{" "}
+                              {o.suggestion.sbs_display}
+                              <span className="text-slate-600"> — from reference map</span>
+                            </p>
+                          ) : (
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              No reference mapping for this order code — manual coding required at claim assembly.
+                            </p>
+                          )}
+                        </div>
+                        {o.suggestion && (
+                          <button
+                            type="button"
+                            onClick={() => void withRow(o.service_request_id, () => api.patients.confirmOrderCoding(patientId, o.service_request_id))}
+                            disabled={isBusy}
+                            className="shrink-0 text-xs px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+                          >
+                            {isBusy ? "Confirming…" : "Confirm code"}
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {confirmedOrders.length > 0 && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Confirmed</p>
+                  <ul className="space-y-1">
+                    {confirmedOrders.map((o) => {
+                      const isBusy = rowBusy.has(o.service_request_id);
+                      return (
+                        <li key={o.service_request_id} className="flex items-center gap-2 text-sm" dir="ltr">
+                          <span className="text-white">{o.order_display}</span>
+                          <span className="font-mono text-xs bg-slate-800 rounded px-1.5 py-0.5 text-slate-200">
+                            {o.confirmed?.sbs_code}
+                          </span>
+                          <span className="text-xs text-slate-500 truncate">{o.confirmed?.sbs_display}</span>
+                          <button
+                            type="button"
+                            onClick={() => void withRow(o.service_request_id, () => api.patients.unconfirmOrderCoding(patientId, o.service_request_id))}
+                            disabled={isBusy}
+                            className="text-xs text-slate-500 hover:text-slate-300 underline disabled:opacity-50"
+                          >
+                            {isBusy ? "…" : "Remove"}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
