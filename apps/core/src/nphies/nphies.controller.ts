@@ -5,7 +5,7 @@
  * Deterministic administrative validation only (see ClaimReadinessService).
  */
 
-import { Controller, Get, Inject, Param, Req, UseGuards } from "@nestjs/common";
+import { Controller, Delete, Get, Inject, Param, Post, Req, UseGuards } from "@nestjs/common";
 import type { Request } from "express";
 import { ApiCookieAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { v4 as uuidv4 } from "uuid";
@@ -15,6 +15,7 @@ import { PG_POOL } from "../database/database.module";
 import type { Pool } from "pg";
 import type { RequestId, UserId, UserRole } from "@clinical-copilot/shared-types";
 import { ClaimReadinessService } from "./claim-readiness.service";
+import { IcdCodingService } from "./icd-coding.service";
 
 function uid(req: Request): string {
   const u = req.authenticatedUserId;
@@ -29,8 +30,68 @@ function uid(req: Request): string {
 export class NphiesController {
   constructor(
     private readonly readiness: ClaimReadinessService,
+    private readonly coding: IcdCodingService,
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
+
+  private async audit(req: Request, action: string, targetId: string | null, meta: Record<string, unknown>): Promise<void> {
+    await writeAuditEvent(this.pool, {
+      actor_id: uid(req) as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action,
+      target_type: "nphies_coding",
+      target_id: targetId,
+      outcome: "SUCCESS",
+      metadata_json: meta,
+      request_id: (req.requestId ?? uuidv4()) as RequestId,
+    });
+  }
+
+  @Get("patients/:id/nphies/coding")
+  @RequirePermission("patient:read")
+  @ApiOperation({
+    summary:
+      "ICD-10-AM coding status for active conditions, with deterministic reference-map suggestions",
+  })
+  async codingStatus(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.coding.status(uid(req), patientId);
+    await this.audit(req, "NPHIES_CODING_VIEW", patientId, {
+      conditions: result.conditions.length,
+    });
+    return result;
+  }
+
+  @Post("patients/:id/nphies/coding/:conditionId/confirm")
+  @RequirePermission("condition:write")
+  @ApiOperation({
+    summary:
+      "Clinician confirms the reference-map ICD-10-AM code for a documented condition",
+  })
+  async confirmCoding(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+    @Param("conditionId") conditionId: string,
+  ) {
+    const result = await this.coding.confirm(uid(req), patientId, conditionId);
+    await this.audit(req, "NPHIES_CODING_CONFIRM", conditionId, {
+      patient_id: patientId,
+      icd10am_code: result.confirmed?.icd10am_code ?? null,
+    });
+    return result;
+  }
+
+  @Delete("patients/:id/nphies/coding/:conditionId")
+  @RequirePermission("condition:write")
+  @ApiOperation({ summary: "Remove a previously confirmed ICD-10-AM code (clinician correction)" })
+  async unconfirmCoding(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+    @Param("conditionId") conditionId: string,
+  ) {
+    await this.coding.unconfirm(uid(req), patientId, conditionId);
+    await this.audit(req, "NPHIES_CODING_UNCONFIRM", conditionId, { patient_id: patientId });
+    return { ok: true };
+  }
 
   @Get("patients/:id/nphies/claim-readiness")
   @RequirePermission("patient:read")

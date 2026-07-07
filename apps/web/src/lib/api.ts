@@ -143,6 +143,28 @@ export interface ClaimReadiness {
   readonly disclaimer: string;
 }
 
+export interface ConditionCoding {
+  readonly condition_id: string;
+  readonly condition_display: string | null;
+  readonly snomed_code: string | null;
+  readonly onset_date: string | null;
+  readonly confirmed: {
+    readonly icd10am_code: string;
+    readonly icd10am_display: string;
+    readonly confirmed_at: string;
+  } | null;
+  readonly suggestion: {
+    readonly icd10am_code: string;
+    readonly icd10am_display: string;
+  } | null;
+}
+
+export interface CodingStatus {
+  readonly patient_id: string;
+  readonly conditions: readonly ConditionCoding[];
+  readonly disclaimer: string;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
@@ -630,6 +652,21 @@ export const api = {
     claimReadiness: (patientId: string) =>
       request<ClaimReadiness>(
         `/api/v1/patients/${patientId}/nphies/claim-readiness`,
+      ),
+
+    codingStatus: (patientId: string) =>
+      request<CodingStatus>(`/api/v1/patients/${patientId}/nphies/coding`),
+
+    confirmCoding: (patientId: string, conditionId: string) =>
+      request<ConditionCoding>(
+        `/api/v1/patients/${patientId}/nphies/coding/${conditionId}/confirm`,
+        { method: "POST" },
+      ),
+
+    unconfirmCoding: (patientId: string, conditionId: string) =>
+      request<{ ok: boolean }>(
+        `/api/v1/patients/${patientId}/nphies/coding/${conditionId}`,
+        { method: "DELETE" },
       ),
   },
 
