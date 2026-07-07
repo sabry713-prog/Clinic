@@ -168,8 +168,27 @@ export class ClaimReadinessService {
         status: ordCoded === ordTotal ? "pass" : "warning",
         detail:
           ordCoded === ordTotal
-            ? `All ${ordTotal} active order(s) carry a code. SBS code mapping should be verified before submission.`
+            ? `All ${ordTotal} active order(s) carry a code.`
             : `${ordTotal - ordCoded} of ${ordTotal} active order(s) have no code — NPHIES claim items require SBS codes.`,
+      });
+      // SBS coverage — counts clinician confirmations, mirroring the
+      // ICD-10-AM check. Administrative fact only.
+      const sbs = await this.pool.query<{ n: string }>(
+        `SELECT count(*)::text AS n
+         FROM app.service_request_sbs_coding sc
+         JOIN app.service_request sr ON sr.id = sc.service_request_id
+         WHERE sc.patient_id = $1 AND sr.status = 'active'`,
+        [patientId],
+      );
+      const sbsConfirmed = Number(sbs.rows[0]?.n ?? "0");
+      checks.push({
+        id: "sbs_coding_confirmed",
+        label: "SBS coding confirmed",
+        status: sbsConfirmed >= ordTotal ? "pass" : "warning",
+        detail:
+          sbsConfirmed >= ordTotal
+            ? `All ${ordTotal} active order(s) have a clinician-confirmed SBS code.`
+            : `${sbsConfirmed} of ${ordTotal} active order(s) have a clinician-confirmed SBS code. Confirm the remaining codes in the coding panel before submission.`,
       });
       checks.push({
         id: "order_diagnosis_linkage",

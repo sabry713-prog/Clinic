@@ -165,6 +165,29 @@ export interface CodingStatus {
   readonly disclaimer: string;
 }
 
+export interface OrderCoding {
+  readonly service_request_id: string;
+  readonly order_display: string;
+  readonly order_code: string | null;
+  readonly category: string;
+  readonly requested_at: string;
+  readonly confirmed: {
+    readonly sbs_code: string;
+    readonly sbs_display: string;
+    readonly confirmed_at: string;
+  } | null;
+  readonly suggestion: {
+    readonly sbs_code: string;
+    readonly sbs_display: string;
+  } | null;
+}
+
+export interface OrderCodingStatus {
+  readonly patient_id: string;
+  readonly orders: readonly OrderCoding[];
+  readonly disclaimer: string;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
@@ -666,6 +689,21 @@ export const api = {
     unconfirmCoding: (patientId: string, conditionId: string) =>
       request<{ ok: boolean }>(
         `/api/v1/patients/${patientId}/nphies/coding/${conditionId}`,
+        { method: "DELETE" },
+      ),
+
+    orderCodingStatus: (patientId: string) =>
+      request<OrderCodingStatus>(`/api/v1/patients/${patientId}/nphies/order-coding`),
+
+    confirmOrderCoding: (patientId: string, orderId: string) =>
+      request<OrderCoding>(
+        `/api/v1/patients/${patientId}/nphies/order-coding/${orderId}/confirm`,
+        { method: "POST" },
+      ),
+
+    unconfirmOrderCoding: (patientId: string, orderId: string) =>
+      request<{ ok: boolean }>(
+        `/api/v1/patients/${patientId}/nphies/order-coding/${orderId}`,
         { method: "DELETE" },
       ),
   },

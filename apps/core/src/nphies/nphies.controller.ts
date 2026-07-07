@@ -16,6 +16,7 @@ import type { Pool } from "pg";
 import type { RequestId, UserId, UserRole } from "@clinical-copilot/shared-types";
 import { ClaimReadinessService } from "./claim-readiness.service";
 import { IcdCodingService } from "./icd-coding.service";
+import { SbsCodingService } from "./sbs-coding.service";
 
 function uid(req: Request): string {
   const u = req.authenticatedUserId;
@@ -31,6 +32,7 @@ export class NphiesController {
   constructor(
     private readonly readiness: ClaimReadinessService,
     private readonly coding: IcdCodingService,
+    private readonly sbsCoding: SbsCodingService,
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
@@ -90,6 +92,50 @@ export class NphiesController {
   ) {
     await this.coding.unconfirm(uid(req), patientId, conditionId);
     await this.audit(req, "NPHIES_CODING_UNCONFIRM", conditionId, { patient_id: patientId });
+    return { ok: true };
+  }
+
+  @Get("patients/:id/nphies/order-coding")
+  @RequirePermission("patient:read")
+  @ApiOperation({
+    summary: "SBS coding status for active orders, with deterministic reference-map suggestions",
+  })
+  async orderCodingStatus(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.sbsCoding.status(uid(req), patientId);
+    await this.audit(req, "NPHIES_ORDER_CODING_VIEW", patientId, {
+      orders: result.orders.length,
+    });
+    return result;
+  }
+
+  @Post("patients/:id/nphies/order-coding/:orderId/confirm")
+  @RequirePermission("service_request:write")
+  @ApiOperation({
+    summary: "Clinician confirms the reference-map SBS code for a confirmed order",
+  })
+  async confirmOrderCoding(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+    @Param("orderId") orderId: string,
+  ) {
+    const result = await this.sbsCoding.confirm(uid(req), patientId, orderId);
+    await this.audit(req, "NPHIES_ORDER_CODING_CONFIRM", orderId, {
+      patient_id: patientId,
+      sbs_code: result.confirmed?.sbs_code ?? null,
+    });
+    return result;
+  }
+
+  @Delete("patients/:id/nphies/order-coding/:orderId")
+  @RequirePermission("service_request:write")
+  @ApiOperation({ summary: "Remove a previously confirmed SBS code (clinician correction)" })
+  async unconfirmOrderCoding(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+    @Param("orderId") orderId: string,
+  ) {
+    await this.sbsCoding.unconfirm(uid(req), patientId, orderId);
+    await this.audit(req, "NPHIES_ORDER_CODING_UNCONFIRM", orderId, { patient_id: patientId });
     return { ok: true };
   }
 

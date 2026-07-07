@@ -70,9 +70,25 @@ are rejected). All three endpoints are audit-logged.
 The `icd10am_mapping` readiness check passes once every active condition
 has a clinician-confirmed ICD-10-AM code.
 
+## SBS order coding (suggest → confirm)
+
+Same pattern as ICD-10-AM, applied to active service requests. Suggestions
+come from `app.order_sbs_map` (dev rows in SBS format seeded by migration
+`1718900000000` — production loads the licensed SBS catalog); confirmations
+persist to `app.service_request_sbs_coding`.
+
+- `GET /api/v1/patients/:id/nphies/order-coding` (`patient:read`) —
+  audit: `NPHIES_ORDER_CODING_VIEW`.
+- `POST /api/v1/patients/:id/nphies/order-coding/:orderId/confirm`
+  (`service_request:write`) — audit: `NPHIES_ORDER_CODING_CONFIRM`.
+- `DELETE /api/v1/patients/:id/nphies/order-coding/:orderId`
+  (`service_request:write`) — audit: `NPHIES_ORDER_CODING_UNCONFIRM`.
+
+The `sbs_coding_confirmed` readiness check passes once every active order
+has a clinician-confirmed SBS code.
+
 ## Roadmap (not yet implemented)
 
-1. **SBS code mapping** for service requests (same confirm pattern).
-2. **Diagnosis-linkage capture** at claim assembly.
-3. **NPHIES FHIR connector**: eligibility check, claim submission, rejection-reason ingestion.
-4. **Rejection analytics**: factual dashboard of rejection codes over time.
+1. **Diagnosis-linkage capture** at claim assembly.
+2. **NPHIES FHIR connector**: eligibility check, claim submission, rejection-reason ingestion.
+3. **Rejection analytics**: factual dashboard of rejection codes over time.
