@@ -128,6 +128,21 @@ export interface ServiceRequestItem {
   readonly requested_at: string;
 }
 
+export interface ReadinessCheck {
+  readonly id: string;
+  readonly label: string;
+  readonly status: "pass" | "warning" | "fail";
+  readonly detail: string;
+}
+
+export interface ClaimReadiness {
+  readonly patient_id: string;
+  readonly generated_at: string;
+  readonly overall: "ready" | "issues" | "blocked";
+  readonly checks: readonly ReadinessCheck[];
+  readonly disclaimer: string;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
@@ -610,6 +625,11 @@ export const api = {
     serviceRequests: (patientId: string) =>
       request<{ data: ServiceRequestItem[] }>(
         `/api/v1/patients/${patientId}/service-requests`,
+      ),
+
+    claimReadiness: (patientId: string) =>
+      request<ClaimReadiness>(
+        `/api/v1/patients/${patientId}/nphies/claim-readiness`,
       ),
   },
 
