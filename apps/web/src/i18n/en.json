@@ -74,5 +74,28 @@
     "sources_header": "Record sources",
     "toggle_language": "Toggle language",
     "error_generic": "Request failed. Please try again."
+  },
+  "shell": {
+    "brand": "Clinical Copilot",
+    "patients": "Patients",
+    "commandBar": "Quick actions",
+    "commandPlaceholder": "Search patients by name or MRN…",
+    "commandHint": "Type at least 2 characters to search patients",
+    "noResults": "No matching patients",
+    "copilot": "Copilot",
+    "patientFile": "Patient file",
+    "admin": "Administration",
+    "quarantine": "Identity quarantine",
+    "audit": "Audit log",
+    "users": "User management",
+    "collapse": "Collapse sidebar",
+    "tabs": {
+      "overview": "Overview",
+      "search": "Record search",
+      "narrative": "Narrative",
+      "qa": "Q&A",
+      "handoff": "Handoff",
+      "drafts": "Drafts"
+    }
   }
 }

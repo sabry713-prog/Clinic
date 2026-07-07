@@ -28,7 +28,7 @@ export default function CopilotPanel(): React.ReactElement {
         onClick={toggle}
         aria-label={isOpen ? "Close AI Copilot" : "Open AI Copilot"}
         className={`
-          fixed bottom-6 right-6 z-50
+          fixed bottom-6 end-6 z-50
           w-14 h-14 rounded-full shadow-2xl
           flex items-center justify-center
           transition-all duration-200

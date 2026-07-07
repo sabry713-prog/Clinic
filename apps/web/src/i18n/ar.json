@@ -74,5 +74,28 @@
     "sources_header": "مصادر السجل",
     "toggle_language": "تغيير اللغة",
     "error_generic": "فشل الطلب. يرجى المحاولة مجدداً."
+  },
+  "shell": {
+    "brand": "المساعد السريري",
+    "patients": "المرضى",
+    "commandBar": "إجراءات سريعة",
+    "commandPlaceholder": "ابحث عن مريض بالاسم أو رقم الملف…",
+    "commandHint": "اكتب حرفين على الأقل للبحث عن المرضى",
+    "noResults": "لا توجد نتائج مطابقة",
+    "copilot": "المساعد",
+    "patientFile": "ملف المريض",
+    "admin": "الإدارة",
+    "quarantine": "عزل الهويات",
+    "audit": "سجل التدقيق",
+    "users": "إدارة المستخدمين",
+    "collapse": "طي القائمة",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "search": "بحث السجل",
+      "narrative": "السرد",
+      "qa": "سؤال وجواب",
+      "handoff": "تسليم المناوبة",
+      "drafts": "المسودات"
+    }
   }
 }
