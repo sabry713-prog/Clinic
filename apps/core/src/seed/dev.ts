@@ -23,6 +23,23 @@ const pool = new Pool({
   connectionString: process.env["DATABASE_URL"],
 });
 
+// Deterministic PRNG (mulberry32) so the "random" bits of the seed --
+// lab values, which condition/medication a patient gets, onset dates --
+// come out identical on every machine and every run.
+function mulberry32(seed: number): () => number {
+  let a = seed;
+  return function (): number {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const SEED_VALUE = 424242;
+const rng = mulberry32(SEED_VALUE);
+
 const TENANT_ID = "00000000-0000-0000-0000-000000000001";
 
 // Dev physician user -- linked to Keycloak dev realm user
@@ -214,8 +231,9 @@ async function seed(): Promise<void> {
 
     for (const pid of patientIds) {
       for (const lab of labCodes) {
-        const rawValue = lab.low + Math.random() * (lab.high * 1.3 - lab.low);
+        const rawValue = lab.low + rng() * (lab.high * 1.3 - lab.low);
         const value = Math.round(rawValue * 10) / 10;
+        const daysAgo = Math.floor(rng() * 30);
 
         await client.query(
           `INSERT INTO hospital.observation
@@ -224,8 +242,8 @@ async function seed(): Promise<void> {
               ref_range_text, status, effective_at, fhir_resource_json, last_synced_at)
            VALUES ($1,'dev-seed',$2,'laboratory','http://loinc.org',$3,$4,
                    $5,$6,$7,$8,$9,'final',
-                   now() - (random()*30)::integer * interval '1 day',
-                   $10::jsonb, now())
+                   now() - $10::integer * interval '1 day',
+                   $11::jsonb, now())
            ON CONFLICT (source_system, source_id) DO NOTHING`,
           [
             pid,
@@ -237,6 +255,7 @@ async function seed(): Promise<void> {
             lab.low,
             lab.high,
             `${lab.low}-${lab.high} ${lab.unit}`,
+            daysAgo,
             JSON.stringify({ resourceType: "Observation", _synthetic: true }),
           ],
         );
@@ -251,14 +270,15 @@ async function seed(): Promise<void> {
     ];
 
     for (const pid of patientIds.filter((_, i) => i % 3 === 0)) {
-      const cond = conditions[Math.floor(Math.random() * conditions.length)]!;
+      const cond = conditions[Math.floor(rng() * conditions.length)]!;
+      const onsetDaysAgo = Math.floor(rng() * 1000);
       await client.query(
         `INSERT INTO hospital.condition
            (patient_id, source_system, source_id, code_system, code,
             code_display, status, onset_date, fhir_resource_json, last_synced_at)
          VALUES ($1,'dev-seed',$2,'http://snomed.info/sct',$3,$4,$5,
-                 (now() - (random()*1000)::integer * interval '1 day')::date,
-                 $6::jsonb, now())
+                 (now() - $6::integer * interval '1 day')::date,
+                 $7::jsonb, now())
          ON CONFLICT (source_system, source_id) DO NOTHING`,
         [
           pid,
@@ -266,6 +286,7 @@ async function seed(): Promise<void> {
           cond.code,
           cond.display,
           cond.status,
+          onsetDaysAgo,
           JSON.stringify({ resourceType: "Condition", _synthetic: true }),
         ],
       );
@@ -280,7 +301,7 @@ async function seed(): Promise<void> {
     ];
 
     for (const pid of patientIds.filter((_, i) => i % 2 === 0)) {
-      const med = medications[Math.floor(Math.random() * medications.length)]!;
+      const med = medications[Math.floor(rng() * medications.length)]!;
       await client.query(
         `INSERT INTO hospital.medication_request
            (patient_id, source_system, source_id, medication_display, code_system,

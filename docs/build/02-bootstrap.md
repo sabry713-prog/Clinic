@@ -153,14 +153,17 @@ This lets you run UI work, integration tests, and most of the API surface withou
 ## Seed data
 
 ```bash
-pnpm --filter @app/core run seed:dev
+pnpm --filter @app/core run seed:all
 ```
 
-Seeds:
-- 1 tenant
-- 5 dev users with assorted roles
-- 50 synthetic patients with encounters, observations, conditions, medications
-- 200 sample Q&A questions (labeled allowed/refused) for classifier eval
+Runs all five seed scripts in order: `seed:dev` (tenant, users, patients,
+encounters, base observations/conditions/medications), `seed:enrich`
+(procedures, imaging, vitals, extra labs), `seed:symptoms` (per-clinic
+symptom history), `seed:reconciliation` (multi-source medication feeds),
+and `seed:index` (retrieval chunks for Q&A).
+
+> Running only `seed:dev` leaves the patient brief, clinic cards,
+> procedures, imaging, and reconciliation panels empty — run `seed:all`.
 
 All synthetic data — never includes real PHI.
 
