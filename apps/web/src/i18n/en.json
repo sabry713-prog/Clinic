@@ -1,6 +1,6 @@
 {
   "login": {
-    "title": "Clinical Copilot",
+    "title": "Cortex.ai",
     "subtitle": "Healthcare AI Platform",
     "description": "Clinical information support system for licensed healthcare professionals",
     "button": "Sign in with Hospital Identity",
@@ -76,7 +76,7 @@
     "error_generic": "Request failed. Please try again."
   },
   "shell": {
-    "brand": "Clinical Copilot",
+    "brand": "Cortex.ai",
     "patients": "Patients",
     "commandBar": "Quick actions",
     "commandPlaceholder": "Search patients by name or MRN…",

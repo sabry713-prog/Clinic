@@ -26,7 +26,7 @@ export default function CopilotPanel(): React.ReactElement {
       {/* Floating toggle button — always visible */}
       <button
         onClick={toggle}
-        aria-label={isOpen ? "Close AI Copilot" : "Open AI Copilot"}
+        aria-label={isOpen ? "Close Cortex Copilot" : "Open Cortex Copilot"}
         className={`
           fixed bottom-6 end-6 z-50
           w-14 h-14 rounded-full shadow-2xl
@@ -73,7 +73,7 @@ export default function CopilotPanel(): React.ReactElement {
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "translate-x-full"}
         `}
-        aria-label="AI Copilot"
+        aria-label="Cortex Copilot"
       >
         {/* Panel header */}
         <div className="flex items-center justify-between px-4 py-3 bg-slate-900 text-white shrink-0">
@@ -86,7 +86,7 @@ export default function CopilotPanel(): React.ReactElement {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight">AI Copilot</p>
+              <p className="text-sm font-semibold leading-tight">Cortex Copilot</p>
               {activePatientName && (
                 <p className="text-xs text-slate-400 leading-tight truncate max-w-[220px]">
                   {activePatientName}
