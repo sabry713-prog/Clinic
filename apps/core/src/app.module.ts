@@ -19,6 +19,7 @@ import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { DraftModule } from "./draft/draft.module";
 import { ConditionModule } from "./condition/condition.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
+import { NphiesModule } from "./nphies/nphies.module";
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { ServiceRequestModule } from "./service-request/service-request.module";
     DraftModule,
     ConditionModule,
     ServiceRequestModule,
+    NphiesModule,
     DsrModule,
     MetricsModule,
     FeatureFlagsModule,
