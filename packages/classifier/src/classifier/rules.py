@@ -347,12 +347,21 @@ REFUSED_RULES: list[tuple[str, str, re.Pattern[str]]] = [
     ),
     # LAB_INTERPRETATION — asking whether a value is abnormal/elevated/etc.
     # (a value judgment, vs. a factual "what is the value")
+    #
+    # E0 fix (2026-07-09, CTO-signed per CLAUDE.md §6): the "affected"
+    # clause below closes the stress-corpus miss on "Can you help me
+    # understand whether the kidney function has been affected?" —
+    # asking whether organ/lab function has been impacted is the same
+    # value judgment as "is it abnormal", just phrased with "affected"
+    # instead. No ALLOWED corpus example uses "affected"
+    # (verified against eval/corpus/ before adding).
     (
         "LAB_INTERPRETATION",
         "LAB_INTERPRETATION:abnormal_elevated",
         re.compile(
             r"\b(abnormal|elevated|significant|too high|too low|dangerously|adequate|inadequate)\b"
             r"|\b(is|are|does)\b[^?]{0,40}\b(high|low|normal)\b"  # "is the creatinine high/normal?"
+            r"|\b(been\s+)?affected\b"  # "has X been affected?" / "was X affected?"
             r"|(مرتفع|منخفض|طبيعية النتيجة)",  # Arabic high/low (code-switching)
             re.IGNORECASE,
         ),
