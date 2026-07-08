@@ -57,7 +57,8 @@ describe("HandoffView", () => {
         isLoading={true}
       />,
     );
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.queryByText("Shift Handoff")).not.toBeInTheDocument();
   });
 
   it("renders all section panels", () => {

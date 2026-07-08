@@ -119,8 +119,9 @@ export default function AuditPage(): JSX.Element {
           <h2 className="text-sm font-medium text-slate-300">Filters</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Action</label>
+              <label htmlFor="audit-filter-action" className="block text-xs text-slate-400 mb-1">Action</label>
               <select
+                id="audit-filter-action"
                 value={filters.action}
                 onChange={(e) => setFilters((f) => ({ ...f, action: e.target.value }))}
                 className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white"
@@ -132,8 +133,9 @@ export default function AuditPage(): JSX.Element {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Outcome</label>
+              <label htmlFor="audit-filter-outcome" className="block text-xs text-slate-400 mb-1">Outcome</label>
               <select
+                id="audit-filter-outcome"
                 value={filters.outcome}
                 onChange={(e) => setFilters((f) => ({ ...f, outcome: e.target.value }))}
                 className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white"
@@ -145,8 +147,9 @@ export default function AuditPage(): JSX.Element {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Actor ID</label>
+              <label htmlFor="audit-filter-actor-id" className="block text-xs text-slate-400 mb-1">Actor ID</label>
               <input
+                id="audit-filter-actor-id"
                 type="text"
                 value={filters.actor_id}
                 onChange={(e) => setFilters((f) => ({ ...f, actor_id: e.target.value }))}
@@ -156,8 +159,9 @@ export default function AuditPage(): JSX.Element {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Target ID</label>
+              <label htmlFor="audit-filter-target-id" className="block text-xs text-slate-400 mb-1">Target ID</label>
               <input
+                id="audit-filter-target-id"
                 type="text"
                 value={filters.target_id}
                 onChange={(e) => setFilters((f) => ({ ...f, target_id: e.target.value }))}
@@ -167,8 +171,9 @@ export default function AuditPage(): JSX.Element {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Since</label>
+              <label htmlFor="audit-filter-since" className="block text-xs text-slate-400 mb-1">Since</label>
               <input
+                id="audit-filter-since"
                 type="datetime-local"
                 value={filters.since}
                 onChange={(e) => setFilters((f) => ({ ...f, since: e.target.value }))}
@@ -177,8 +182,9 @@ export default function AuditPage(): JSX.Element {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Until</label>
+              <label htmlFor="audit-filter-until" className="block text-xs text-slate-400 mb-1">Until</label>
               <input
+                id="audit-filter-until"
                 type="datetime-local"
                 value={filters.until}
                 onChange={(e) => setFilters((f) => ({ ...f, until: e.target.value }))}

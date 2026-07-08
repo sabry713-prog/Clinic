@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import PatientDetailPage from "./PatientDetailPage";
+import { CopilotProvider } from "../../context/CopilotContext";
 import { api, ApiError } from "../../lib/api";
 
 vi.mock("../../lib/api", () => ({
@@ -10,6 +11,12 @@ vi.mock("../../lib/api", () => ({
       get: vi.fn(),
       observations: vi.fn(),
       medications: vi.fn(),
+      medicationReconciliation: vi.fn(),
+      brief: vi.fn(),
+      serviceRequests: vi.fn(),
+    },
+    handoff: {
+      generatePatient: vi.fn(),
     },
   },
   ApiError: class extends Error {
@@ -22,14 +29,19 @@ vi.mock("../../lib/api", () => ({
 const mockGet = api.patients.get as ReturnType<typeof vi.fn>;
 const mockObs = api.patients.observations as ReturnType<typeof vi.fn>;
 const mockMeds = api.patients.medications as ReturnType<typeof vi.fn>;
+const mockRecon = api.patients.medicationReconciliation as ReturnType<typeof vi.fn>;
+const mockBrief = api.patients.brief as ReturnType<typeof vi.fn>;
+const mockServiceRequests = api.patients.serviceRequests as ReturnType<typeof vi.fn>;
 
 function renderWithRoute(patientId = "patient-001"): ReturnType<typeof render> {
   return render(
-    <MemoryRouter initialEntries={[`/patients/${patientId}`]}>
-      <Routes>
-        <Route path="/patients/:id" element={<PatientDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
+    <CopilotProvider>
+      <MemoryRouter initialEntries={[`/patients/${patientId}`]}>
+        <Routes>
+          <Route path="/patients/:id" element={<PatientDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </CopilotProvider>,
   );
 }
 
@@ -38,6 +50,11 @@ describe("PatientDetailPage", () => {
     vi.clearAllMocks();
     mockObs.mockResolvedValue({ data: [], next_cursor: null, total: null });
     mockMeds.mockResolvedValue({ data: [], next_cursor: null, total: null });
+    mockRecon.mockResolvedValue(null);
+    // Keep the auxiliary panels in their loading state — these specs cover
+    // the page shell, header, and lab panel only.
+    mockBrief.mockReturnValue(new Promise(() => {}));
+    mockServiceRequests.mockReturnValue(new Promise(() => {}));
   });
 
   it("shows loading initially", () => {

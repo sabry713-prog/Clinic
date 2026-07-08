@@ -106,7 +106,7 @@ async def test_stub_mode_metadata_populated() -> None:
             model=model,
         )
     assert output.model_version == "stub-v1"
-    assert output.prompt_template_version == "v1.0"
+    assert output.prompt_template_version == "v1.1"
     assert output.language == "en"
     assert output.scope == "full"
     assert output.patient_id == "patient-001"
