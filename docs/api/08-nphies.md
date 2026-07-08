@@ -135,7 +135,29 @@ result exists within 7 days (the detail names the connector mode).
 
 Tables: migration `1719100000000`. Env: `NPHIES_CONNECTOR=stub|live`.
 
+## Rejection analytics (admin-only)
+
+Hospital-wide, factual dashboard over `app.nphies_claim` — counts only,
+no interpretation of *why* claims were rejected or *what to do*. Lives
+in `AdminController` (not `NphiesController`) because it aggregates
+across patients rather than reading one patient's record, matching the
+existing audit-summary endpoint's shape and admin-guard pattern.
+
+- `GET /api/v1/admin/nphies/rejection-analytics?since=&until=`
+  (hospital_admin / sysadmin only, via `AdminController.assertAdmin`) —
+  total/rejected claim counts, rejection rate, breakdown by status, by
+  rejection code, and by week.
+
+Dev seed: `pnpm --filter @app/core run seed:nphies-claims` (included in
+`seed:all`) inserts 60 synthetic historical claims across the in-scope
+patients with a ~30% illustrative rejection rate, using the same
+deterministic-seed pattern as the rest of the dev data, so the dashboard
+has real numbers to show without needing the live connector. Also adds
+a seeded `hospital_admin` dev user (`admin1` / `Test1234!` in Keycloak,
+external_subject `...012`) — the dev seed previously had no admin-role
+account, which had blocked live verification of any admin-only endpoint
+(flagged in `docs/evidence-pack-e0.md`).
+
 ## Roadmap (not yet implemented)
 
-1. **Live NPHIES connector**: CCHI onboarding, sandbox credentials, certificates; real eligibility/claim/rejection exchange.
-2. **Rejection analytics**: factual dashboard of rejection codes over time (schema already captures `rejection_codes` per claim).
+1. **Live NPHIES connector**: CCHI onboarding, sandbox credentials, certificates; real eligibility/claim/rejection exchange. Once live, rejection-analytics numbers reflect real payer responses instead of the seeded/stub history.

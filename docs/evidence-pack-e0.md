@@ -65,7 +65,7 @@ Refusals are deterministic (rules layer, no model call), so they are effectively
 ## What is NOT yet closed (honest gaps)
 
 1. **Combined rules+model sensitivity ≥ 0.98** — still not measurable. `QA_MODEL_PROVIDER=stub` and `MODEL_API_KEY=EMPTY` in this environment; no live model is configured. Rules-only now reaches 1.00 on all three corpora (holdout EN/AR, stress), so the model layer's remaining job is to hold that line on cases the static corpora don't cover, not to close a known gap.
-2. **Dev seed has no `hospital_admin`/`sysadmin` user** — blocks live (non-unit-test) verification of admin-only audit endpoints (`/admin/audit/verify`, `/admin/audit/export-worm`) in this environment. Low effort to add if live verification is wanted before the stakeholder meeting.
+2. ~~Dev seed has no `hospital_admin`/`sysadmin` user~~ — **closed 2026-07-09**: `seed:dev` now provisions a dev admin (`admin1` / Keycloak role `hospital_admin`, external_subject `...012`), added while building the NPHIES rejection-analytics dashboard, which needed one. Live admin-endpoint verification (`/admin/audit/verify`, `/admin/audit/export-worm`) is unblocked but not re-run as part of this pack; the underlying services remain covered by the unit tests above.
 3. **Regulatory:** IUS Addendum 1 (Factual Q&A) sign-off by the Saudi regulatory consultant.
 
 ## Reproducibility

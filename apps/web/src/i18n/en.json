@@ -102,6 +102,7 @@
       "draft": "Draft document",
       "orders": "Service requests",
       "claims": "NPHIES claims"
-    }
+    },
+    "nphiesAnalytics": "NPHIES analytics"
   }
 }

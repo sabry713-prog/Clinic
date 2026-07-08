@@ -85,6 +85,24 @@
         "nurse"
       ],
       "id": "00000000-0000-0000-0000-000000000011"
+    },
+    {
+      "username": "admin1",
+      "email": "admin1@dev.local",
+      "firstName": "Layla",
+      "lastName": "Al-Faisal",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Test1234!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "hospital_admin"
+      ],
+      "id": "00000000-0000-0000-0000-000000000012"
     }
   ],
   "roles": {

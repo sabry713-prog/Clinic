@@ -565,6 +565,61 @@ export class AdminController {
     }
   }
 
+  // ─── NPHIES rejection analytics ─────────────────────────────────────────────
+
+  @Get("nphies/rejection-analytics")
+  @ApiOperation({ summary: "Factual dashboard of NPHIES claim outcomes and rejection codes over time" })
+  async nphiesRejectionAnalytics(@Req() req: Request, @Query() query: AuditQueryDto) {
+    this.assertAdmin(req);
+
+    const conds: string[] = [];
+    const params: unknown[] = [];
+    let i = 1;
+    if (query.since) { conds.push(`submitted_at >= $${i++}`); params.push(query.since); }
+    if (query.until) { conds.push(`submitted_at <= $${i++}`); params.push(query.until); }
+    const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
+
+    const [totals, byStatus, byCode, byWeek] = await Promise.all([
+      this.pool.query<{ total: string; rejected: string; first_ts: string | null; last_ts: string | null }>(
+        `SELECT count(*)::text AS total,
+                count(*) FILTER (WHERE status = 'rejected')::text AS rejected,
+                min(submitted_at)::text AS first_ts, max(submitted_at)::text AS last_ts
+           FROM app.nphies_claim ${where}`, params),
+      this.pool.query<{ status: string; n: string }>(
+        `SELECT status, count(*)::text AS n FROM app.nphies_claim ${where}
+          GROUP BY status ORDER BY status`, params),
+      this.pool.query<{ code: string; n: string }>(
+        `SELECT code, count(*)::text AS n
+           FROM app.nphies_claim, unnest(rejection_codes) AS code
+           ${where} ${where ? "AND" : "WHERE"} status = 'rejected'
+          GROUP BY code ORDER BY count(*) DESC`, params),
+      this.pool.query<{ week: string; total: string; rejected: string }>(
+        `SELECT date_trunc('week', submitted_at)::date::text AS week,
+                count(*)::text AS total,
+                count(*) FILTER (WHERE status = 'rejected')::text AS rejected
+           FROM app.nphies_claim ${where}
+          GROUP BY week ORDER BY week`, params),
+    ]);
+
+    const t = totals.rows[0];
+    const total = Number(t?.total ?? 0);
+    const rejected = Number(t?.rejected ?? 0);
+
+    return {
+      range: { since: query.since ?? null, until: query.until ?? null },
+      total_claims: total,
+      rejected_claims: rejected,
+      rejection_rate: total > 0 ? Math.round((rejected / total) * 1000) / 1000 : 0,
+      first_claim_at: t?.first_ts ?? null,
+      last_claim_at: t?.last_ts ?? null,
+      by_status: byStatus.rows.map((r) => ({ status: r.status, count: Number(r.n) })),
+      by_rejection_code: byCode.rows.map((r) => ({ code: r.code, count: Number(r.n) })),
+      by_week: byWeek.rows.map((r) => ({ week: r.week, total: Number(r.total), rejected: Number(r.rejected) })),
+      disclaimer: "Factual counts of submitted claim outcomes. Not billing advice; rejection codes reflect the configured connector's responses.",
+      generated_at: new Date().toISOString(),
+    };
+  }
+
   // ─── Config ────────────────────────────────────────────────────────────────
 
   @Get("config")
