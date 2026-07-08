@@ -49,17 +49,18 @@ Working end-to-end (local `docker-compose.dev.yml` + dev seed): authentication/R
 aggregated patient view, factual narrative, factual Q&A (EN/AR/code-switched), shift
 handoff, audit log with hash-chain verification and WORM export.
 
-Phase E0 measured results (June 2026, classifier rules-only):
+Phase E0 measured results (2026-07-09, classifier rules-only — see `docs/evidence-pack-e0.md` for full detail):
 
 | Metric | Result |
 |---|---|
 | Classifier unit tests | 73/73 pass |
+| Full test suites (core/qa/narrative/classifier/blocklist) | all green |
 | Eval harness | runs in CI-ready form |
-| EN holdout sensitivity / specificity | 1.00 / 1.00 |
-| AR holdout sensitivity / specificity | 1.00 / 1.00 |
-| Code-switching stress sensitivity | 0.95 |
+| EN holdout sensitivity / specificity | 1.00 / 1.00 (100 items) |
+| AR holdout sensitivity / specificity | 1.00 / 1.00 (101 items) |
+| Stress corpus sensitivity (borderline + code-switching + polite) | 0.947 (target 0.98; 1 named miss, root-caused) |
 | Blocklist corpus gates | 107/107 (100% block, 0 false-positive) |
-| Q&A refused-path latency | ~10 ms (budget ≤ 1 s) |
+| Q&A refused-path latency | 16 ms (budget ≤ 1 s) |
 | Out-of-scope patient access | denied (403 PATIENT_OUT_OF_SCOPE) |
 
 Remaining before the E0 gate fully closes: combined rules+model classifier

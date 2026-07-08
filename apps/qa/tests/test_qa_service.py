@@ -174,7 +174,7 @@ async def test_refused_returns_refusal_text():
         pool=None,
     )
     assert result.classification == "REFUSED"
-    assert "don't recommend" in result.answer_text.lower() or "not recommend" in result.answer_text.lower() or "recommend" in result.answer_text.lower()
+    assert "factual" in result.answer_text.lower()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -210,21 +210,20 @@ async def test_blocklist_fallback_after_max_retries():
     def fake_scan(text: str, language: str = "en") -> FakeScanResult:
         return FakeScanResult()
 
-    with patch("src.qa.synthesis.scan", fake_scan), \
-         patch("src.qa.synthesis.has_blocklist", True, create=True):
-        from src.qa import synthesis as synth_module
-        synth_module.has_blocklist = True  # type: ignore[attr-defined]
-
-        with patch.dict("sys.modules", {"blocklist": MagicMock(scan=fake_scan)}):
-            result = await answer(
-                patient_id="00000000-0000-0000-0000-000000000001",
-                question="What is the last creatinine?",
-                language="en",
-                conversation_id=None,
-                pool=None,
-                embedder=None,
-                model=BlocklistedModel(),  # type: ignore[arg-type]
-            )
+    # `scan` and `has_blocklist` are resolved via a local `from blocklist
+    # import scan` inside synthesize() on each call, not module-level
+    # attributes of src.qa.synthesis — so the module-level patch target
+    # is sys.modules["blocklist"], not src.qa.synthesis.scan.
+    with patch.dict("sys.modules", {"blocklist": MagicMock(scan=fake_scan)}):
+        result = await answer(
+            patient_id="00000000-0000-0000-0000-000000000001",
+            question="What is the last creatinine?",
+            language="en",
+            conversation_id=None,
+            pool=None,
+            embedder=None,
+            model=BlocklistedModel(),  # type: ignore[arg-type]
+        )
 
     # Result may be ALLOWED but with blocklist_triggered or fallback text
     assert result.classification == "ALLOWED"

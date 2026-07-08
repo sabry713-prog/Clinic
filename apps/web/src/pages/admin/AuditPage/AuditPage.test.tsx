@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import AuditPage from "./AuditPage";
 import { api } from "../../../lib/api";
 
@@ -51,6 +51,8 @@ describe("AuditPage", () => {
     expect(screen.getByText("Filters")).toBeInTheDocument();
     expect(screen.getByLabelText("Action")).toBeInTheDocument();
     expect(screen.getByLabelText("Outcome")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "All actions" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "All outcomes" })).toBeInTheDocument();
     expect(screen.getByPlaceholderText("User UUID")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Resource UUID")).toBeInTheDocument();
   });
@@ -64,12 +66,12 @@ describe("AuditPage", () => {
     render(<AuditPage />);
     fireEvent.click(screen.getByText("Search"));
 
-    await waitFor(() => {
-      expect(screen.getByText("PATIENT_VIEW")).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("Dr. Ahmed")).toBeInTheDocument();
-    expect(screen.getByText("SUCCESS")).toBeInTheDocument();
+    // Scope to the results table: "PATIENT_VIEW" and "SUCCESS" also appear
+    // as filter <option> text.
+    const table = await screen.findByRole("table");
+    expect(within(table).getByText("PATIENT_VIEW")).toBeInTheDocument();
+    expect(within(table).getByText("Dr. Ahmed")).toBeInTheDocument();
+    expect(within(table).getByText("SUCCESS")).toBeInTheDocument();
   });
 
   it("verify button calls api and shows passed result", async () => {

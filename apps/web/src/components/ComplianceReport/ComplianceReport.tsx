@@ -28,13 +28,13 @@ export default function ComplianceReport(): JSX.Element {
       <div className="flex flex-wrap items-end gap-3 print:hidden">
         <h2 className="text-sm font-medium text-slate-300">Compliance summary (DPO)</h2>
         <div>
-          <label className="block text-xs text-slate-400 mb-1">Since</label>
-          <input type="date" value={since} onChange={(e) => setSince(e.target.value)}
+          <label htmlFor="compliance-since" className="block text-xs text-slate-400 mb-1">Since</label>
+          <input id="compliance-since" type="date" value={since} onChange={(e) => setSince(e.target.value)}
             className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white" />
         </div>
         <div>
-          <label className="block text-xs text-slate-400 mb-1">Until</label>
-          <input type="date" value={until} onChange={(e) => setUntil(e.target.value)}
+          <label htmlFor="compliance-until" className="block text-xs text-slate-400 mb-1">Until</label>
+          <input id="compliance-until" type="date" value={until} onChange={(e) => setUntil(e.target.value)}
             className="bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white" />
         </div>
         <button onClick={generate} disabled={loading}
