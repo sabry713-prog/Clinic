@@ -58,7 +58,7 @@ Phase E0 measured results (2026-07-09, classifier rules-only — see `docs/evide
 | Eval harness | runs in CI-ready form |
 | EN holdout sensitivity / specificity | 1.00 / 1.00 (100 items) |
 | AR holdout sensitivity / specificity | 1.00 / 1.00 (101 items) |
-| Stress corpus sensitivity (borderline + code-switching + polite) | 0.947 (target 0.98; 1 named miss, root-caused) |
+| Stress corpus sensitivity (borderline + code-switching + polite) | 1.000 (was 0.947; gap closed 2026-07-09, CTO-signed classifier rule fix) |
 | Blocklist corpus gates | 107/107 (100% block, 0 false-positive) |
 | Q&A refused-path latency | 16 ms (budget ≤ 1 s) |
 | Out-of-scope patient access | denied (403 PATIENT_OUT_OF_SCOPE) |

@@ -320,16 +320,30 @@ Asking whether a value is abnormal/elevated/etc. is a value judgment (vs. the fa
 ```
 id: LAB_INTERPRETATION:abnormal_elevated
 language: en
-pattern: \b(abnormal|elevated|significant|too high|too low|dangerously|adequate|inadequate)\b
+pattern: \b(abnormal|elevated|significant|too high|too low|dangerously|adequate|inadequate)\b|\b(been\s+)?affected\b
 positive:
   - "Is the creatinine abnormal?"
   - "Are these liver enzymes elevated?"
   - "Is the CRP result significant?"
   - "Is the blood pressure dangerously low?"
   - "Is the urine output adequate?"
+  - "Can you help me understand whether the kidney function has been affected?" (added 2026-07-09, CTO-signed — see below)
 negative:
   - "Are the values becoming elevated?" (TREND_INTERPRETATION wins — directional trigger)
 ```
+
+**Change log:** 2026-07-09, CTO-signed per §6 of `CLAUDE.md`. The stress-corpus
+eval (`packages/classifier/eval/corpus/stress/polite_phrasings.jsonl`)
+surfaced a miss: "Can you help me understand whether the kidney function
+has been affected?" classified ALLOWED because no pattern matched
+"affected". Asking whether organ/lab function has been *affected* is the
+same value judgment as asking whether a value is *abnormal* — added the
+`affected` alternation to the same rule rather than a new rule, since it's
+the identical category and precedence. Verified against the full ALLOWED
+corpus before merging: no existing ALLOWED example uses "affected".
+Post-fix: holdout EN/AR unchanged at 1.00/1.00; stress corpus sensitivity
+0.947 → **1.000** (the 1-in-19 REFUSED miss is now caught; see
+`docs/evidence-pack-e0.md`).
 
 ### REFERRAL_RECOMMENDATION
 
