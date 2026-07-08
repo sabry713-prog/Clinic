@@ -100,7 +100,12 @@ export default function PatientDetailPage(): JSX.Element {
         </button>
 
         {view === "workspace" ? (
-          <PatientWorkspace patient={patient} initialOpen={initialOpen} onDiagnosisAdded={refreshPatient} />
+          <PatientWorkspace
+            patient={patient}
+            initialOpen={initialOpen}
+            openRequest={openParam && (CARD_IDS as readonly string[]).includes(openParam) ? (openParam as CardId) : null}
+            onDiagnosisAdded={refreshPatient}
+          />
         ) : (
           <PatientFilePage patient={patient} />
         )}
