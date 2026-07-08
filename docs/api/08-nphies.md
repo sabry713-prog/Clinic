@@ -87,8 +87,26 @@ persist to `app.service_request_sbs_coding`.
 The `sbs_coding_confirmed` readiness check passes once every active order
 has a clinician-confirmed SBS code.
 
+## Diagnosis linkage (clinician-captured)
+
+NPHIES claims require each item to reference a supporting diagnosis.
+Unlike the vocabulary mappings above, the system offers **no suggestions**
+here — deciding which diagnosis supports which order is clinical
+reasoning (CLAUDE.md §2). The clinician picks from their own documented
+active conditions; the system records the choice in
+`app.service_request_diagnosis_link` (migration `1719000000000`).
+
+- `GET /api/v1/patients/:id/nphies/linkage` (`patient:read`) —
+  audit: `NPHIES_LINKAGE_VIEW`.
+- `POST /api/v1/patients/:id/nphies/linkage/:orderId/:conditionId`
+  (`service_request:write`) — audit: `NPHIES_LINKAGE_LINK`.
+- `DELETE /api/v1/patients/:id/nphies/linkage/:orderId/:conditionId`
+  (`service_request:write`) — audit: `NPHIES_LINKAGE_UNLINK`.
+
+The `order_diagnosis_linkage` readiness check passes once every active
+order has at least one clinician-captured diagnosis link.
+
 ## Roadmap (not yet implemented)
 
-1. **Diagnosis-linkage capture** at claim assembly.
-2. **NPHIES FHIR connector**: eligibility check, claim submission, rejection-reason ingestion.
-3. **Rejection analytics**: factual dashboard of rejection codes over time.
+1. **NPHIES FHIR connector**: eligibility check, claim submission, rejection-reason ingestion.
+2. **Rejection analytics**: factual dashboard of rejection codes over time.

@@ -17,6 +17,7 @@ import type { RequestId, UserId, UserRole } from "@clinical-copilot/shared-types
 import { ClaimReadinessService } from "./claim-readiness.service";
 import { IcdCodingService } from "./icd-coding.service";
 import { SbsCodingService } from "./sbs-coding.service";
+import { LinkageService } from "./linkage.service";
 
 function uid(req: Request): string {
   const u = req.authenticatedUserId;
@@ -33,6 +34,7 @@ export class NphiesController {
     private readonly readiness: ClaimReadinessService,
     private readonly coding: IcdCodingService,
     private readonly sbsCoding: SbsCodingService,
+    private readonly linkage: LinkageService,
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
@@ -136,6 +138,52 @@ export class NphiesController {
   ) {
     await this.sbsCoding.unconfirm(uid(req), patientId, orderId);
     await this.audit(req, "NPHIES_ORDER_CODING_UNCONFIRM", orderId, { patient_id: patientId });
+    return { ok: true };
+  }
+
+  @Get("patients/:id/nphies/linkage")
+  @RequirePermission("patient:read")
+  @ApiOperation({
+    summary:
+      "Order→diagnosis linkage status (clinician-captured; the system does not suggest linkages)",
+  })
+  async linkageStatus(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.linkage.status(uid(req), patientId);
+    await this.audit(req, "NPHIES_LINKAGE_VIEW", patientId, { orders: result.orders.length });
+    return result;
+  }
+
+  @Post("patients/:id/nphies/linkage/:orderId/:conditionId")
+  @RequirePermission("service_request:write")
+  @ApiOperation({ summary: "Clinician links a confirmed order to a documented diagnosis" })
+  async linkDiagnosis(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+    @Param("orderId") orderId: string,
+    @Param("conditionId") conditionId: string,
+  ) {
+    await this.linkage.link(uid(req), patientId, orderId, conditionId);
+    await this.audit(req, "NPHIES_LINKAGE_LINK", orderId, {
+      patient_id: patientId,
+      condition_id: conditionId,
+    });
+    return { ok: true };
+  }
+
+  @Delete("patients/:id/nphies/linkage/:orderId/:conditionId")
+  @RequirePermission("service_request:write")
+  @ApiOperation({ summary: "Clinician removes an order→diagnosis link" })
+  async unlinkDiagnosis(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+    @Param("orderId") orderId: string,
+    @Param("conditionId") conditionId: string,
+  ) {
+    await this.linkage.unlink(uid(req), patientId, orderId, conditionId);
+    await this.audit(req, "NPHIES_LINKAGE_UNLINK", orderId, {
+      patient_id: patientId,
+      condition_id: conditionId,
+    });
     return { ok: true };
   }
 

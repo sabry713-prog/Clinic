@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useState } from "react";
-import { api, type CodingStatus, type OrderCodingStatus, ApiError } from "../../lib/api";
+import { api, type CodingStatus, type OrderCodingStatus, type LinkageStatus, ApiError } from "../../lib/api";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -20,26 +20,34 @@ function formatDate(iso: string | null): string {
 export default function CodingQueue({ patientId }: { readonly patientId: string }): JSX.Element {
   const [status, setStatus] = useState<CodingStatus | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderCodingStatus | null>(null);
+  const [linkage, setLinkage] = useState<LinkageStatus | null>(null);
+  const [linkChoice, setLinkChoice] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [rowBusy, setRowBusy] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+
+  const fetchAll = useCallback(async () => {
+    const [cond, ord, lnk] = await Promise.all([
+      api.patients.codingStatus(patientId),
+      api.patients.orderCodingStatus(patientId),
+      api.patients.linkageStatus(patientId),
+    ]);
+    setStatus(cond);
+    setOrderStatus(ord);
+    setLinkage(lnk);
+  }, [patientId]);
 
   const load = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
-      const [cond, ord] = await Promise.all([
-        api.patients.codingStatus(patientId),
-        api.patients.orderCodingStatus(patientId),
-      ]);
-      setStatus(cond);
-      setOrderStatus(ord);
+      await fetchAll();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load coding status");
     } finally {
       setBusy(false);
     }
-  }, [patientId]);
+  }, [fetchAll]);
 
   const withRow = useCallback(
     async (rowId: string, fn: () => Promise<unknown>) => {
@@ -47,12 +55,7 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
       setError(null);
       try {
         await fn();
-        const [cond, ord] = await Promise.all([
-          api.patients.codingStatus(patientId),
-          api.patients.orderCodingStatus(patientId),
-        ]);
-        setStatus(cond);
-        setOrderStatus(ord);
+        await fetchAll();
       } catch (e) {
         setError(e instanceof ApiError ? e.message : "Coding update failed");
       } finally {
@@ -63,7 +66,7 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
         });
       }
     },
-    [patientId],
+    [fetchAll],
   );
 
   const unconfirmed = status?.conditions.filter((c) => c.confirmed === null) ?? [];
@@ -243,6 +246,77 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
                   </ul>
                 </div>
               )}
+            </div>
+          )}
+
+          {linkage !== null && (
+            <div className="pt-2 space-y-2">
+              <h3 className="text-sm font-medium text-slate-300">Diagnosis linkage (claim items)</h3>
+              <p className="text-xs text-slate-500">
+                Link each order to the documented diagnosis it supports. The system does not suggest linkages — this is the clinician's association.
+              </p>
+              {linkage.orders.length === 0 && (
+                <p className="text-sm text-slate-500">No active orders to link.</p>
+              )}
+              <ul className="space-y-2">
+                {linkage.orders.map((o) => {
+                  const isBusy = rowBusy.has(`link-${o.service_request_id}`);
+                  const choice = linkChoice[o.service_request_id] ?? "";
+                  return (
+                    <li key={o.service_request_id} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3 space-y-2">
+                      <p className="text-sm text-white" dir="ltr">
+                        {o.order_display}
+                        <span className="text-xs text-slate-500 ml-2">
+                          {o.category} · {formatDate(o.requested_at)}
+                        </span>
+                      </p>
+                      {o.linked.length > 0 && (
+                        <ul className="space-y-1">
+                          {o.linked.map((l) => (
+                            <li key={l.condition_id} className="flex items-center gap-2 text-xs" dir="ltr">
+                              <span className="text-slate-400">Linked to</span>
+                              <span className="text-slate-200 bg-slate-800 rounded px-1.5 py-0.5">{l.condition_display ?? "Unknown"}</span>
+                              <button
+                                type="button"
+                                onClick={() => void withRow(`link-${o.service_request_id}`, () => api.patients.unlinkDiagnosis(patientId, o.service_request_id, l.condition_id))}
+                                disabled={isBusy}
+                                className="text-slate-500 hover:text-slate-300 underline disabled:opacity-50"
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={choice}
+                          onChange={(e) => setLinkChoice((prev) => ({ ...prev, [o.service_request_id]: e.target.value }))}
+                          className="text-xs bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-200 max-w-72"
+                          dir="ltr"
+                        >
+                          <option value="">Select documented diagnosis…</option>
+                          {linkage.available_conditions
+                            .filter((c) => !o.linked.some((l) => l.condition_id === c.condition_id))
+                            .map((c) => (
+                              <option key={c.condition_id} value={c.condition_id}>
+                                {c.condition_display ?? "Unknown"} ({formatDate(c.onset_date)})
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => choice && void withRow(`link-${o.service_request_id}`, () => api.patients.linkDiagnosis(patientId, o.service_request_id, choice))}
+                          disabled={isBusy || !choice}
+                          className="text-xs px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+                        >
+                          {isBusy ? "Linking…" : "Link"}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
 
