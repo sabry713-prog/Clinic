@@ -547,6 +547,20 @@ export interface AuditSummary {
   readonly generated_at: string;
 }
 
+export interface NphiesRejectionAnalytics {
+  readonly range: { since: string | null; until: string | null };
+  readonly total_claims: number;
+  readonly rejected_claims: number;
+  readonly rejection_rate: number;
+  readonly first_claim_at: string | null;
+  readonly last_claim_at: string | null;
+  readonly by_status: readonly { status: string; count: number }[];
+  readonly by_rejection_code: readonly { code: string; count: number }[];
+  readonly by_week: readonly { week: string; total: number; rejected: number }[];
+  readonly disclaimer: string;
+  readonly generated_at: string;
+}
+
 export interface AuditVerifyResult {
   readonly passed: boolean;
   readonly events_verified: number;
@@ -947,6 +961,14 @@ export const api = {
       if (params?.until) qs.set("until", params.until);
       const query = qs.toString();
       return request<AuditSummary>(`/api/v1/admin/audit/summary${query ? `?${query}` : ""}`);
+    },
+
+    nphiesRejectionAnalytics: (params?: { since?: string; until?: string }) => {
+      const qs = new URLSearchParams();
+      if (params?.since) qs.set("since", params.since);
+      if (params?.until) qs.set("until", params.until);
+      const query = qs.toString();
+      return request<NphiesRejectionAnalytics>(`/api/v1/admin/nphies/rejection-analytics${query ? `?${query}` : ""}`);
     },
   },
 

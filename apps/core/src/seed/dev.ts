@@ -46,6 +46,12 @@ const TENANT_ID = "00000000-0000-0000-0000-000000000001";
 const DEV_PHYSICIAN_EXTERNAL_SUBJECT = "00000000-0000-0000-0000-000000000010";
 const DEV_PHYSICIAN_DISPLAY_NAME = "Dr. Tariq Al-Mansouri (Dev)";
 
+// Dev hospital_admin user -- linked to Keycloak dev realm user "admin1".
+// Needed to exercise admin-only endpoints locally (audit, rejection
+// analytics, user management) without a real hospital admin account.
+const DEV_ADMIN_EXTERNAL_SUBJECT = "00000000-0000-0000-0000-000000000012";
+const DEV_ADMIN_DISPLAY_NAME = "Layla Al-Faisal (Dev Admin)";
+
 // Synthetic patient data -- no real PHI
 const FAKE_PATIENTS: Array<{
   givenName: string;
@@ -146,6 +152,30 @@ async function seed(): Promise<void> {
     );
 
     console.log(`Dev physician ID: ${physicianDbId}`);
+
+    // ── Dev hospital_admin user ─────────────────────────────────────────────
+
+    const adminResult = await client.query<{ id: string }>(
+      `INSERT INTO app."user"
+         (tenant_id, external_subject, email, display_name, preferred_language)
+       VALUES ($1, $2, $3, $4, 'ar')
+       ON CONFLICT (tenant_id, external_subject) DO UPDATE
+         SET display_name = EXCLUDED.display_name
+       RETURNING id`,
+      [TENANT_ID, DEV_ADMIN_EXTERNAL_SUBJECT, "dev-admin@dev.hospital.local", DEV_ADMIN_DISPLAY_NAME],
+    );
+
+    const adminDbId = adminResult.rows[0]?.id;
+    if (!adminDbId) throw new Error("Failed to insert dev admin");
+
+    await client.query(
+      `INSERT INTO app.user_role (user_id, role)
+       VALUES ($1, 'hospital_admin')
+       ON CONFLICT DO NOTHING`,
+      [adminDbId],
+    );
+
+    console.log(`Dev admin ID: ${adminDbId}`);
 
     // ── Patients ────────────────────────────────────────────────────────────
 
@@ -347,6 +377,7 @@ async function seed(): Promise<void> {
     await client.query("COMMIT");
     console.log("Seed completed successfully");
     console.log(`Dev physician external_subject: ${DEV_PHYSICIAN_EXTERNAL_SUBJECT}`);
+    console.log(`Dev admin external_subject: ${DEV_ADMIN_EXTERNAL_SUBJECT}`);
     console.log(`In-scope patients: MRN-006 through MRN-010`);
     console.log(`Out-of-scope patient: MRN-011`);
   } catch (err) {

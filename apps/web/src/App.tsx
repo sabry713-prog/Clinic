@@ -12,6 +12,7 @@ const PatientDetailPage = lazy(() => import("./pages/PatientDetailPage/PatientDe
 const QuarantinePage = lazy(() => import("./pages/admin/QuarantinePage/QuarantinePage"));
 const AuditPage = lazy(() => import("./pages/admin/AuditPage/AuditPage"));
 const UserManagementPage = lazy(() => import("./pages/admin/UserManagementPage/UserManagementPage"));
+const NphiesAnalyticsPage = lazy(() => import("./pages/admin/NphiesAnalyticsPage/NphiesAnalyticsPage"));
 
 function AppRoutes(): JSX.Element {
   const { user, loading } = useAuth();
@@ -38,6 +39,7 @@ function AppRoutes(): JSX.Element {
         <Route path="/admin/quarantine" element={<QuarantinePage />} />
         <Route path="/admin/audit" element={<AuditPage />} />
         <Route path="/admin/users" element={<UserManagementPage />} />
+        <Route path="/admin/nphies" element={<NphiesAnalyticsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
