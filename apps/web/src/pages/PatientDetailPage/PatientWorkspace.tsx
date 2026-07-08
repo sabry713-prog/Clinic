@@ -18,7 +18,7 @@
  *   reviewed features.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type PatientDetail, type HandoffOutput } from "../../lib/api";
 import QAConversation from "../../components/QAConversation/QAConversation";
 import NarrativePanel from "../../components/NarrativePanel/NarrativePanel";
@@ -70,10 +70,15 @@ function Icon({ path, className = "w-4 h-4" }: { readonly path: string; readonly
 interface PatientWorkspaceProps {
   readonly patient: PatientDetail;
   readonly initialOpen: readonly CardId[];
+  /** A card id requested from outside (sidebar/command-bar deep link via
+   * ?open=). Unlike initialOpen (applied once on mount), this is watched
+   * continuously so a quick action still opens its card when the doctor
+   * is already sitting on this patient's workspace. */
+  readonly openRequest: CardId | null;
   readonly onDiagnosisAdded: () => void;
 }
 
-export default function PatientWorkspace({ patient, initialOpen, onDiagnosisAdded }: PatientWorkspaceProps): JSX.Element {
+export default function PatientWorkspace({ patient, initialOpen, openRequest, onDiagnosisAdded }: PatientWorkspaceProps): JSX.Element {
   const patientId = patient.id;
 
   const [openCards, setOpenCards] = useState<CardId[]>(() =>
@@ -84,12 +89,14 @@ export default function PatientWorkspace({ patient, initialOpen, onDiagnosisAdde
   const [handoff, setHandoff] = useState<HandoffOutput | null>(null);
   const [isLoadingHandoff, setIsLoadingHandoff] = useState(false);
   const [pendingQaQuestion, setPendingQaQuestion] = useState<string | null>(null);
+  const lastOpenRequest = useRef<string | null>(null);
 
   // Reset the accumulated session when the patient changes.
   useEffect(() => {
     setOpenCards(initialOpen.length > 0 ? Array.from(new Set(initialOpen)) : []);
     setHandoff(null);
     setPendingQaQuestion(null);
+    lastOpenRequest.current = initialOpen[0] ?? null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
@@ -107,6 +114,17 @@ export default function PatientWorkspace({ patient, initialOpen, onDiagnosisAdde
         .finally(() => setIsLoadingHandoff(false));
     }
   }, [handoff, isLoadingHandoff, patientId, patient.preferred_language]);
+
+  // React to deep-link requests (sidebar / command bar ?open=) that arrive
+  // while this workspace is already mounted for the same patient — the
+  // mount-time initialOpen above only covers the very first render.
+  useEffect(() => {
+    if (openRequest && lastOpenRequest.current !== openRequest) {
+      lastOpenRequest.current = openRequest;
+      openCard(openRequest);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openRequest]);
 
   const closeCard = useCallback((id: CardId) => {
     setOpenCards((prev) => prev.filter((c) => c !== id));
