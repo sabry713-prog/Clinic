@@ -188,6 +188,29 @@ export interface OrderCodingStatus {
   readonly disclaimer: string;
 }
 
+export interface OrderLinkage {
+  readonly service_request_id: string;
+  readonly order_display: string;
+  readonly category: string;
+  readonly requested_at: string;
+  readonly linked: readonly {
+    readonly condition_id: string;
+    readonly condition_display: string | null;
+    readonly linked_at: string;
+  }[];
+}
+
+export interface LinkageStatus {
+  readonly patient_id: string;
+  readonly orders: readonly OrderLinkage[];
+  readonly available_conditions: readonly {
+    readonly condition_id: string;
+    readonly condition_display: string | null;
+    readonly onset_date: string | null;
+  }[];
+  readonly disclaimer: string;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
@@ -704,6 +727,21 @@ export const api = {
     unconfirmOrderCoding: (patientId: string, orderId: string) =>
       request<{ ok: boolean }>(
         `/api/v1/patients/${patientId}/nphies/order-coding/${orderId}`,
+        { method: "DELETE" },
+      ),
+
+    linkageStatus: (patientId: string) =>
+      request<LinkageStatus>(`/api/v1/patients/${patientId}/nphies/linkage`),
+
+    linkDiagnosis: (patientId: string, orderId: string, conditionId: string) =>
+      request<{ ok: boolean }>(
+        `/api/v1/patients/${patientId}/nphies/linkage/${orderId}/${conditionId}`,
+        { method: "POST" },
+      ),
+
+    unlinkDiagnosis: (patientId: string, orderId: string, conditionId: string) =>
+      request<{ ok: boolean }>(
+        `/api/v1/patients/${patientId}/nphies/linkage/${orderId}/${conditionId}`,
         { method: "DELETE" },
       ),
   },

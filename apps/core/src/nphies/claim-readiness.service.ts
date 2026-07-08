@@ -190,12 +190,25 @@ export class ClaimReadinessService {
             ? `All ${ordTotal} active order(s) have a clinician-confirmed SBS code.`
             : `${sbsConfirmed} of ${ordTotal} active order(s) have a clinician-confirmed SBS code. Confirm the remaining codes in the coding panel before submission.`,
       });
+      // Linkage coverage — counts orders with at least one clinician-
+      // captured diagnosis link. Administrative fact only; the system
+      // never suggests which diagnosis supports an order.
+      const linked = await this.pool.query<{ n: string }>(
+        `SELECT count(DISTINCT l.service_request_id)::text AS n
+         FROM app.service_request_diagnosis_link l
+         JOIN app.service_request sr ON sr.id = l.service_request_id
+         WHERE l.patient_id = $1 AND sr.status = 'active'`,
+        [patientId],
+      );
+      const linkedCount = Number(linked.rows[0]?.n ?? "0");
       checks.push({
         id: "order_diagnosis_linkage",
         label: "Order-to-diagnosis linkage",
-        status: "warning",
+        status: linkedCount >= ordTotal ? "pass" : "warning",
         detail:
-          "NPHIES requires each claim item to reference a supporting diagnosis. Linkage is not yet recorded for orders — it must be captured at claim assembly.",
+          linkedCount >= ordTotal
+            ? `All ${ordTotal} active order(s) are linked to a documented diagnosis.`
+            : `${linkedCount} of ${ordTotal} active order(s) are linked to a documented diagnosis. NPHIES requires each claim item to reference a supporting diagnosis — link the remaining orders in the coding panel.`,
       });
     }
 
