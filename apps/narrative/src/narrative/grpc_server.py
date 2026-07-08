@@ -126,7 +126,15 @@ try:
     _NARRATIVE_STUBS_AVAILABLE = True
 except ImportError:
     _NARRATIVE_STUBS_AVAILABLE = False
-    logger.warning("narrative_grpc_stubs_not_found", detail="Run grpc_tools.protoc to generate stubs")
+    # Not an error: core talks to this service over REST (see
+    # apps/core/src/narrative-proxy/narrative-proxy.service.ts). gRPC is
+    # reserved for a future transport swap and nothing calls it today, so
+    # missing stubs are expected in every environment until that swap
+    # happens — only the health check + narrative REST API need to be up.
+    logger.info(
+        "narrative_grpc_stubs_not_found",
+        detail="gRPC transport not built (REST is the active transport; run grpc_tools.protoc only if you need to test gRPC)",
+    )
 
 
 def create_grpc_server(

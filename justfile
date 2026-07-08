@@ -162,5 +162,5 @@ smoke:
     echo "Checking qa health..."
     curl -sf http://localhost:5002/health | jq .
     echo "Checking core metrics..."
-    curl -sf http://localhost:4000/metrics | grep "http_requests_total" | head -3
+    curl -sf http://localhost:4000/api/v1/metrics | grep "http_requests_total" | head -3
     echo "All services healthy!"
