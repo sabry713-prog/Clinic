@@ -96,6 +96,12 @@
       "qa": "Q&A",
       "handoff": "Handoff",
       "drafts": "Drafts"
+    },
+    "cards": {
+      "diagnosis": "Add diagnosis",
+      "draft": "Draft document",
+      "orders": "Service requests",
+      "claims": "NPHIES claims"
     }
   }
 }

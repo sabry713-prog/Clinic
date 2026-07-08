@@ -5,7 +5,6 @@ import { LoginPage } from "./pages/LoginPage";
 import { HomePage } from "./pages/HomePage";
 import { useTranslation } from "react-i18next";
 import { CopilotProvider } from "./context/CopilotContext";
-import CopilotPanel from "./components/CopilotPanel/CopilotPanel";
 import AppShell from "./components/AppShell/AppShell";
 
 const PatientListPage = lazy(() => import("./pages/PatientListPage/PatientListPage"));
@@ -52,7 +51,6 @@ export function App(): JSX.Element {
         <Suspense>
           <AppRoutes />
         </Suspense>
-        <CopilotPanel />
       </CopilotProvider>
     </BrowserRouter>
   );
