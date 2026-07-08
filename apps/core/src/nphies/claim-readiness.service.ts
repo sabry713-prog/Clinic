@@ -234,13 +234,23 @@ export class ClaimReadinessService {
       });
     }
 
-    // R9 — eligibility. Honest connector status; no fabricated result.
+    // R9 — eligibility. Reports the most recent connector check honestly,
+    // including whether it came from the stub connector.
+    const elig = await this.pool.query<{ status: string; mode: string; checked_at: string }>(
+      `SELECT status, mode, checked_at::text AS checked_at
+       FROM app.nphies_eligibility_check
+       WHERE patient_id = $1 AND checked_at > now() - interval '7 days'
+       ORDER BY checked_at DESC LIMIT 1`,
+      [patientId],
+    );
+    const lastElig = elig.rows[0];
     checks.push({
       id: "eligibility_checked",
       label: "NPHIES eligibility check",
-      status: "warning",
-      detail:
-        "Not checked — the NPHIES connector is not configured in this environment. Eligibility must be verified before claim submission.",
+      status: lastElig && lastElig.status === "eligible" ? "pass" : "warning",
+      detail: lastElig
+        ? `Last check: ${lastElig.status} (${lastElig.checked_at.slice(0, 10)}, ${lastElig.mode} connector${lastElig.mode === "stub" ? " — development response, not a payer decision" : ""}).`
+        : "Not checked in the last 7 days. Run the eligibility check before claim submission.",
     });
 
     const overall: ClaimReadiness["overall"] = checks.some((c) => c.status === "fail")

@@ -106,7 +106,36 @@ active conditions; the system records the choice in
 The `order_diagnosis_linkage` readiness check passes once every active
 order has at least one clinician-captured diagnosis link.
 
+## Connector: eligibility, claim assembly, submission
+
+Provider pattern mirrors the model providers: `NPHIES_CONNECTOR=stub`
+(default) returns canned payer responses so the full workflow runs
+without CCHI onboarding; `live` requires NPHIES credentials +
+certificates (not yet implemented — selecting it errors honestly).
+Every persisted row records its `mode` so stub data can never be
+mistaken for a real payer response.
+
+Claim assembly is a deterministic aggregation of clinician-confirmed
+artifacts only — confirmed ICD-10-AM codes, confirmed SBS codes,
+clinician-captured diagnosis links. Anything unconfirmed is a blocker,
+never a guess.
+
+- `GET /api/v1/patients/:id/nphies/claim-draft` (`patient:read`) — FHIR
+  Claim draft + blockers. Audit: `NPHIES_CLAIM_DRAFT_VIEW`.
+- `POST /api/v1/patients/:id/nphies/eligibility` (`service_request:write`)
+  — persists to `app.nphies_eligibility_check`. Audit: `NPHIES_ELIGIBILITY_CHECK`.
+- `POST /api/v1/patients/:id/nphies/claims` (`service_request:write`) —
+  rejects with blocker list unless the draft is ready; persists bundle +
+  payer response to `app.nphies_claim`. Audit: `NPHIES_CLAIM_SUBMIT`.
+- `GET /api/v1/patients/:id/nphies/claims` (`patient:read`) — recent
+  claims with status/rejection codes. Audit: `NPHIES_CLAIMS_VIEW`.
+
+The `eligibility_checked` readiness check passes when an `eligible`
+result exists within 7 days (the detail names the connector mode).
+
+Tables: migration `1719100000000`. Env: `NPHIES_CONNECTOR=stub|live`.
+
 ## Roadmap (not yet implemented)
 
-1. **NPHIES FHIR connector**: eligibility check, claim submission, rejection-reason ingestion.
-2. **Rejection analytics**: factual dashboard of rejection codes over time.
+1. **Live NPHIES connector**: CCHI onboarding, sandbox credentials, certificates; real eligibility/claim/rejection exchange.
+2. **Rejection analytics**: factual dashboard of rejection codes over time (schema already captures `rejection_codes` per claim).

@@ -13,6 +13,7 @@
 import { useCallback, useState } from "react";
 import { api, type ClaimReadiness, ApiError } from "../../lib/api";
 import CodingQueue from "./CodingQueue";
+import ClaimActions from "./ClaimActions";
 
 const STATUS_STYLE: { [K in "pass" | "warning" | "fail"]: { icon: string; cls: string } } = {
   pass: {
@@ -112,6 +113,11 @@ export default function ClaimReadinessPanel({ patientId }: { readonly patientId:
 
           {/* ICD-10-AM coding confirm flow — deterministic suggestions, doctor confirms */}
           <CodingQueue patientId={patientId} />
+
+          <hr className="border-slate-800" />
+
+          {/* Eligibility, claim-draft assembly, submission (stub connector in dev) */}
+          <ClaimActions patientId={patientId} />
         </div>
       )}
     </div>

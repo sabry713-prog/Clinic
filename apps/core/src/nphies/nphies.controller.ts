@@ -18,6 +18,7 @@ import { ClaimReadinessService } from "./claim-readiness.service";
 import { IcdCodingService } from "./icd-coding.service";
 import { SbsCodingService } from "./sbs-coding.service";
 import { LinkageService } from "./linkage.service";
+import { NphiesConnectorService } from "./connector.service";
 
 function uid(req: Request): string {
   const u = req.authenticatedUserId;
@@ -35,6 +36,7 @@ export class NphiesController {
     private readonly coding: IcdCodingService,
     private readonly sbsCoding: SbsCodingService,
     private readonly linkage: LinkageService,
+    private readonly connector: NphiesConnectorService,
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
@@ -185,6 +187,55 @@ export class NphiesController {
       condition_id: conditionId,
     });
     return { ok: true };
+  }
+
+  @Get("patients/:id/nphies/claim-draft")
+  @RequirePermission("patient:read")
+  @ApiOperation({
+    summary: "Assemble the FHIR claim draft from clinician-confirmed codes and linkages",
+  })
+  async claimDraft(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.connector.assembleClaimDraft(uid(req), patientId);
+    await this.audit(req, "NPHIES_CLAIM_DRAFT_VIEW", patientId, {
+      ready: result.ready,
+      blockers: result.blockers.length,
+    });
+    return result;
+  }
+
+  @Post("patients/:id/nphies/eligibility")
+  @RequirePermission("service_request:write")
+  @ApiOperation({ summary: "Run an NPHIES eligibility check (stub connector in dev)" })
+  async checkEligibility(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.connector.checkEligibility(uid(req), patientId);
+    await this.audit(req, "NPHIES_ELIGIBILITY_CHECK", patientId, {
+      status: result.status,
+      mode: result.mode,
+    });
+    return result;
+  }
+
+  @Post("patients/:id/nphies/claims")
+  @RequirePermission("service_request:write")
+  @ApiOperation({ summary: "Submit the assembled claim (stub connector in dev)" })
+  async submitClaim(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.connector.submitClaim(uid(req), patientId);
+    await this.audit(req, "NPHIES_CLAIM_SUBMIT", result.id, {
+      patient_id: patientId,
+      status: result.status,
+      mode: result.mode,
+      items: result.item_count,
+    });
+    return result;
+  }
+
+  @Get("patients/:id/nphies/claims")
+  @RequirePermission("patient:read")
+  @ApiOperation({ summary: "List submitted claims for a patient" })
+  async listClaims(@Req() req: Request, @Param("id") patientId: string) {
+    const data = await this.connector.listClaims(uid(req), patientId);
+    await this.audit(req, "NPHIES_CLAIMS_VIEW", patientId, { count: data.length });
+    return { data };
   }
 
   @Get("patients/:id/nphies/claim-readiness")
