@@ -1,38 +1,24 @@
 /**
  * CopilotContext
  *
- * Global state for the persistent Copilot side panel.
- * Any page can set the active patient; the panel opens/closes independently.
+ * Tracks which patient is currently open so the sidebar and command bar
+ * can show per-patient navigation (Copilot workspace / Patient File) and
+ * deep-link into it from anywhere in the app.
  */
 
 import React, { createContext, useCallback, useContext, useState } from "react";
 
 interface CopilotContextValue {
-  isOpen: boolean;
   activePatientId: string | null;
   activePatientName: string | null;
-  open: (patientId?: string, patientName?: string) => void;
-  close: () => void;
-  toggle: () => void;
   setPatient: (patientId: string, patientName: string) => void;
 }
 
 const CopilotContext = createContext<CopilotContextValue | null>(null);
 
 export function CopilotProvider({ children }: { children: React.ReactNode }): React.ReactElement {
-  const [isOpen, setIsOpen] = useState(false);
   const [activePatientId, setActivePatientId] = useState<string | null>(null);
   const [activePatientName, setActivePatientName] = useState<string | null>(null);
-
-  const open = useCallback((patientId?: string, patientName?: string) => {
-    if (patientId) setActivePatientId(patientId);
-    if (patientName) setActivePatientName(patientName);
-    setIsOpen(true);
-  }, []);
-
-  const close = useCallback(() => setIsOpen(false), []);
-
-  const toggle = useCallback(() => setIsOpen((v) => !v), []);
 
   const setPatient = useCallback((patientId: string, patientName: string) => {
     setActivePatientId(patientId);
@@ -40,7 +26,7 @@ export function CopilotProvider({ children }: { children: React.ReactNode }): Re
   }, []);
 
   return (
-    <CopilotContext.Provider value={{ isOpen, activePatientId, activePatientName, open, close, toggle, setPatient }}>
+    <CopilotContext.Provider value={{ activePatientId, activePatientName, setPatient }}>
       {children}
     </CopilotContext.Provider>
   );

@@ -33,10 +33,10 @@ const mockRecon = api.patients.medicationReconciliation as ReturnType<typeof vi.
 const mockBrief = api.patients.brief as ReturnType<typeof vi.fn>;
 const mockServiceRequests = api.patients.serviceRequests as ReturnType<typeof vi.fn>;
 
-function renderWithRoute(patientId = "patient-001"): ReturnType<typeof render> {
+function renderWithRoute(patientId = "patient-001", search = ""): ReturnType<typeof render> {
   return render(
     <CopilotProvider>
-      <MemoryRouter initialEntries={[`/patients/${patientId}`]}>
+      <MemoryRouter initialEntries={[`/patients/${patientId}${search}`]}>
         <Routes>
           <Route path="/patients/:id" element={<PatientDetailPage />} />
         </Routes>
@@ -97,7 +97,7 @@ describe("PatientDetailPage", () => {
     expect(screen.getByText(/PATIENT_OUT_OF_SCOPE/i)).toBeInTheDocument();
   });
 
-  it("does not display color-coding or severity words in lab panel", async () => {
+  it("does not display color-coding or severity words in lab panel (Patient File view)", async () => {
     mockGet.mockResolvedValue({
       id: "patient-001",
       mrn: "MRN-006",
@@ -130,7 +130,9 @@ describe("PatientDetailPage", () => {
       total: null,
     });
 
-    renderWithRoute();
+    // Lab data only renders in the Patient File (chart) view — the
+    // default landing view is now the Copilot workspace.
+    renderWithRoute("patient-001", "?view=chart");
 
     await waitFor(() => {
       expect(screen.getByText("Creatinine")).toBeInTheDocument();

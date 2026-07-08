@@ -41,7 +41,7 @@ function Icon({ name, className = "w-5 h-5" }: { readonly name: string; readonly
   );
 }
 
-const PATIENT_TABS = ["overview", "search", "narrative", "qa", "handoff", "drafts"] as const;
+const PATIENT_VIEWS = ["workspace", "chart"] as const;
 
 interface NavItemProps {
   readonly icon: string;
@@ -74,7 +74,7 @@ export default function AppShell(): JSX.Element {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, logout } = useAuth();
-  const { activePatientId, activePatientName, toggle: toggleCopilot } = useCopilot();
+  const { activePatientId, activePatientName } = useCopilot();
 
   const [collapsed, setCollapsed] = useState<boolean>(() => localStorage.getItem("shell.collapsed") === "1");
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -98,12 +98,12 @@ export default function AppShell(): JSX.Element {
   }, []);
 
   const onPatientPage = activePatientId !== null && location.pathname === `/patients/${activePatientId}`;
-  const currentTab = onPatientPage ? (searchParams.get("tab") ?? "overview") : null;
+  const currentView = onPatientPage ? (searchParams.get("view") === "chart" ? "chart" : "workspace") : null;
 
-  const goToTab = useCallback(
-    (tab: string): void => {
+  const goToView = useCallback(
+    (view: string): void => {
       if (!activePatientId) return;
-      void navigate(`/patients/${activePatientId}?tab=${tab}`);
+      void navigate(`/patients/${activePatientId}?view=${view}`);
     },
     [activePatientId, navigate],
   );
@@ -142,12 +142,6 @@ export default function AppShell(): JSX.Element {
             collapsed={collapsed}
             onClick={() => setCmdOpen(true)}
           />
-          <NavItem
-            icon="copilot"
-            label={t("shell.copilot")}
-            collapsed={collapsed}
-            onClick={toggleCopilot}
-          />
 
           {activePatientId && (
             <>
@@ -160,14 +154,14 @@ export default function AppShell(): JSX.Element {
                   <div className="mx-auto w-6 border-t border-slate-700" />
                 )}
               </div>
-              {PATIENT_TABS.map((tab) => (
+              {PATIENT_VIEWS.map((view) => (
                 <NavItem
-                  key={tab}
-                  icon={tab}
-                  label={t(`shell.tabs.${tab}`)}
-                  active={currentTab === tab}
+                  key={view}
+                  icon={view === "workspace" ? "copilot" : "overview"}
+                  label={view === "workspace" ? t("shell.copilot") : t("shell.patientFile")}
+                  active={currentView === view}
                   collapsed={collapsed}
-                  onClick={() => goToTab(tab)}
+                  onClick={() => goToView(view)}
                 />
               ))}
             </>

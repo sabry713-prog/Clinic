@@ -50,12 +50,16 @@ interface QAConversationProps {
   readonly patientId: string;
   readonly language: "en" | "ar";
   readonly onLanguageToggle: () => void;
+  /** Optional question to auto-submit once, e.g. typed into the workspace
+   * composer before this card was open. Each distinct value submits once. */
+  readonly initialQuestion?: string;
 }
 
 export default function QAConversation({
   patientId,
   language,
   onLanguageToggle,
+  initialQuestion,
 }: QAConversationProps): React.ReactElement {
   const { t } = useTranslation();
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -69,6 +73,7 @@ export default function QAConversation({
   const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const consumedInitialQuestion = useRef<string | null>(null);
 
   // Clear conversation when patient or language changes
   useEffect(() => {
@@ -95,8 +100,8 @@ export default function QAConversation({
     });
   }, []);
 
-  const submit = useCallback(async () => {
-    const question = input.trim();
+  const submit = useCallback(async (override?: string) => {
+    const question = (override ?? input).trim();
     if (!question || loading) return;
 
     setInput("");
@@ -130,6 +135,16 @@ export default function QAConversation({
       inputRef.current?.focus();
     }
   }, [input, loading, conversationId, patientId, language, t]);
+
+  // Auto-submit a question handed in from outside (workspace composer),
+  // once per distinct value.
+  useEffect(() => {
+    if (initialQuestion && consumedInitialQuestion.current !== initialQuestion) {
+      consumedInitialQuestion.current = initialQuestion;
+      void submit(initialQuestion);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuestion]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     if (e.key === "Enter" && !e.shiftKey) {

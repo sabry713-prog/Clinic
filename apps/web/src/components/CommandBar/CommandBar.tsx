@@ -3,7 +3,7 @@
  *
  * Routes typed input to existing, doctor-controlled features:
  *  - free text → patient search (name / MRN)
- *  - active-patient quick actions → deep-link to service tabs / Copilot
+ *  - active-patient quick actions → deep-link into a workspace card
  *
  * Constraints (non-SaMD boundary — see CLAUDE.md):
  * - Navigation and retrieval only. Nothing executes clinical actions;
@@ -28,12 +28,22 @@ interface ActionItem {
   readonly run: () => void;
 }
 
-const TAB_ACTIONS = ["overview", "search", "narrative", "qa", "handoff", "drafts"] as const;
+const CARD_ACTIONS = ["qa", "diagnosis", "narrative", "handoff", "draft", "orders", "claims", "search"] as const;
+const CARD_LABEL_KEY: Record<(typeof CARD_ACTIONS)[number], string> = {
+  qa: "shell.tabs.qa",
+  diagnosis: "shell.cards.diagnosis",
+  narrative: "shell.tabs.narrative",
+  handoff: "shell.tabs.handoff",
+  draft: "shell.cards.draft",
+  orders: "shell.cards.orders",
+  claims: "shell.cards.claims",
+  search: "shell.tabs.search",
+};
 
 export default function CommandBar({ open, onClose }: CommandBarProps): JSX.Element | null {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { activePatientId, activePatientName, open: openCopilot } = useCopilot();
+  const { activePatientId, activePatientName } = useCopilot();
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PatientSummary[]>([]);
@@ -70,20 +80,20 @@ export default function CommandBar({ open, onClose }: CommandBarProps): JSX.Elem
 
   const quickActions: ActionItem[] = useMemo(() => {
     if (!activePatientId || query.trim().length >= 2) return [];
-    const items: ActionItem[] = TAB_ACTIONS.map((tab) => ({
-      id: `tab-${tab}`,
-      label: t(`shell.tabs.${tab}`),
+    const items: ActionItem[] = CARD_ACTIONS.map((card) => ({
+      id: `card-${card}`,
+      label: t(CARD_LABEL_KEY[card]),
       hint: activePatientName ?? undefined,
-      run: () => void navigate(`/patients/${activePatientId}?tab=${tab}`),
+      run: () => void navigate(`/patients/${activePatientId}?view=workspace&open=${card}`),
     }));
     items.push({
-      id: "copilot",
-      label: t("shell.copilot"),
+      id: "chart",
+      label: t("shell.patientFile"),
       hint: activePatientName ?? undefined,
-      run: () => openCopilot(),
+      run: () => void navigate(`/patients/${activePatientId}?view=chart`),
     });
     return items;
-  }, [activePatientId, activePatientName, query, t, navigate, openCopilot]);
+  }, [activePatientId, activePatientName, query, t, navigate]);
 
   const rows: ActionItem[] = useMemo(() => {
     const patientRows: ActionItem[] = results.map((p) => ({
