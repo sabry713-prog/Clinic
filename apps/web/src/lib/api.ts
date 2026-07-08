@@ -211,6 +211,31 @@ export interface LinkageStatus {
   readonly disclaimer: string;
 }
 
+export interface ClaimDraft {
+  readonly patient_id: string;
+  readonly ready: boolean;
+  readonly blockers: readonly string[];
+  readonly bundle: Record<string, unknown> | null;
+  readonly disclaimer: string;
+}
+
+export interface EligibilityResult {
+  readonly id: string;
+  readonly status: string;
+  readonly mode: string;
+  readonly checked_at: string;
+  readonly detail: string;
+}
+
+export interface ClaimRecord {
+  readonly id: string;
+  readonly status: string;
+  readonly rejection_codes: readonly string[];
+  readonly mode: string;
+  readonly submitted_at: string;
+  readonly item_count: number;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
@@ -744,6 +769,20 @@ export const api = {
         `/api/v1/patients/${patientId}/nphies/linkage/${orderId}/${conditionId}`,
         { method: "DELETE" },
       ),
+
+    claimDraft: (patientId: string) =>
+      request<ClaimDraft>(`/api/v1/patients/${patientId}/nphies/claim-draft`),
+
+    checkEligibility: (patientId: string) =>
+      request<EligibilityResult>(`/api/v1/patients/${patientId}/nphies/eligibility`, {
+        method: "POST",
+      }),
+
+    submitClaim: (patientId: string) =>
+      request<ClaimRecord>(`/api/v1/patients/${patientId}/nphies/claims`, { method: "POST" }),
+
+    listClaims: (patientId: string) =>
+      request<{ data: ClaimRecord[] }>(`/api/v1/patients/${patientId}/nphies/claims`),
   },
 
   drafts: {
