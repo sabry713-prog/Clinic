@@ -30,7 +30,6 @@ import ServiceRequestPanel from "../../components/ServiceRequestPanel/ServiceReq
 import ClaimReadinessPanel from "../../components/ClaimReadinessPanel/ClaimReadinessPanel";
 import InterpreterPanel from "../../components/InterpreterPanel/InterpreterPanel";
 import AmbientPanel from "../../components/AmbientPanel/AmbientPanel";
-import SinceLastVisitPanel from "../../components/SinceLastVisitPanel/SinceLastVisitPanel";
 
 type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter" | "ambient";
 
@@ -158,9 +157,6 @@ export default function PatientWorkspace({ patient, initialOpen, openRequest, on
           </span>
         )}
       </div>
-
-      {/* Documented since last visit — always visible, not chip-gated */}
-      <SinceLastVisitPanel patientId={patientId} />
 
       {/* Composer */}
       <div className="bg-slate-900 border border-slate-700 rounded-2xl p-3 space-y-3">
