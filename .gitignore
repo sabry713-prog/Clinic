@@ -55,3 +55,6 @@ coverage/
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Claude Code — personal/local overrides (not shared with the team)
+.claude/settings.local.json
