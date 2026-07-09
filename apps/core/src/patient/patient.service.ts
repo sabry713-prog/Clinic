@@ -240,6 +240,37 @@ export interface PatientBrief {
   readonly other_active_medications: readonly BriefMedication[];
 }
 
+// docs/architecture/since-last-visit.md — purely factual, boundary-filtered
+// reproduction. No pairing/diffing of individual fields (e.g. dose changes)
+// is attempted; each item carries its own real timestamp so the UI never
+// implies more precision than the schema actually supports.
+export interface SinceLastVisitCondition {
+  readonly type: "condition";
+  readonly code_display: string | null;
+  readonly onset_date: string | null;
+}
+export interface SinceLastVisitAllergy {
+  readonly type: "allergy";
+  readonly code_display: string | null;
+  readonly reaction: string | null;
+  readonly recorded_at: string | null;
+}
+export interface SinceLastVisitMedication {
+  readonly type: "medication";
+  readonly medication_display: string | null;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly started_at: string | null;
+}
+export type SinceLastVisitItem = SinceLastVisitCondition | SinceLastVisitAllergy | SinceLastVisitMedication;
+
+export interface SinceLastVisit {
+  readonly has_previous_encounter: boolean;
+  readonly boundary_at: string | null;
+  readonly items: readonly SinceLastVisitItem[];
+}
+
 export interface CursorPage<T> {
   readonly data: readonly T[];
   readonly next_cursor: string | null;
@@ -842,6 +873,63 @@ export class PatientService {
       procedures: proceduresResult.rows,
       other_active_medications: otherActiveMeds,
     };
+  }
+
+  // ─── Since last visit ─────────────────────────────────────────────────────
+  // docs/architecture/since-last-visit.md. Deterministic, boundary-filtered
+  // reproduction of newly-documented facts between the patient's previous
+  // encounter and now — no interpretation, no risk characterization, no
+  // drug-interaction checking, no dose-change pairing (no supersession link
+  // exists in the schema; pairing two rows by code would be an inference).
+
+  async getSinceLastVisit(userId: string, patientId: string): Promise<SinceLastVisit> {
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const encountersResult = await this.pool.query<{ id: string; started_at: string | null }>(
+      `SELECT id, started_at::text AS started_at FROM hospital.encounter
+       WHERE patient_id = $1 ORDER BY started_at DESC NULLS LAST LIMIT 2`,
+      [patientId],
+    );
+    if (encountersResult.rows.length < 2 || !encountersResult.rows[1]!.started_at) {
+      return { has_previous_encounter: false, boundary_at: null, items: [] };
+    }
+    const boundary = encountersResult.rows[1]!.started_at;
+
+    const [conditionsResult, allergiesResult, medicationsResult] = await Promise.all([
+      this.pool.query<{ code_display: string | null; onset_date: string | null }>(
+        `SELECT code_display, onset_date::text AS onset_date FROM hospital.condition
+         WHERE patient_id = $1 AND onset_date >= $2::date
+         ORDER BY onset_date DESC NULLS LAST`,
+        [patientId, boundary],
+      ),
+      this.pool.query<{ code_display: string | null; reaction: string | null; recorded_at: string | null }>(
+        `SELECT code_display, reaction, recorded_at::text AS recorded_at FROM hospital.allergy_intolerance
+         WHERE patient_id = $1 AND recorded_at >= $2::date
+         ORDER BY recorded_at DESC NULLS LAST`,
+        [patientId, boundary],
+      ),
+      this.pool.query<{
+        medication_display: string | null;
+        dose: string | null;
+        route: string | null;
+        frequency: string | null;
+        started_at: string | null;
+      }>(
+        `SELECT medication_display, dose, route, frequency, started_at::text AS started_at
+         FROM hospital.medication_request
+         WHERE patient_id = $1 AND status = 'active' AND started_at >= $2
+         ORDER BY started_at DESC NULLS LAST`,
+        [patientId, boundary],
+      ),
+    ]);
+
+    const items: SinceLastVisitItem[] = [
+      ...conditionsResult.rows.map((r): SinceLastVisitCondition => ({ type: "condition", ...r })),
+      ...allergiesResult.rows.map((r): SinceLastVisitAllergy => ({ type: "allergy", ...r })),
+      ...medicationsResult.rows.map((r): SinceLastVisitMedication => ({ type: "medication", ...r })),
+    ];
+
+    return { has_previous_encounter: true, boundary_at: boundary, items };
   }
 
   // ─── Condition history ────────────────────────────────────────────────────

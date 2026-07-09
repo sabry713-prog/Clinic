@@ -92,8 +92,8 @@
     "tabs": {
       "overview": "Overview",
       "search": "Record search",
-      "narrative": "Narrative",
-      "qa": "Q&A",
+      "narrative": "Researcher",
+      "qa": "Consultant",
       "handoff": "Handoff",
       "drafts": "Drafts"
     },
@@ -101,9 +101,9 @@
       "diagnosis": "Add diagnosis",
       "draft": "Draft document",
       "orders": "Service requests",
-      "claims": "NPHIES claims",
+      "claims": "Coder",
       "interpreter": "Medical Interpreter",
-      "ambient": "Encounter Recording"
+      "ambient": "Scribe"
     },
     "nphiesAnalytics": "NPHIES analytics"
   }

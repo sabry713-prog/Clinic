@@ -13,6 +13,7 @@ vi.mock("../../lib/api", () => ({
       medications: vi.fn(),
       medicationReconciliation: vi.fn(),
       brief: vi.fn(),
+      sinceLastVisit: vi.fn(),
       serviceRequests: vi.fn(),
     },
     handoff: {
@@ -31,6 +32,7 @@ const mockObs = api.patients.observations as ReturnType<typeof vi.fn>;
 const mockMeds = api.patients.medications as ReturnType<typeof vi.fn>;
 const mockRecon = api.patients.medicationReconciliation as ReturnType<typeof vi.fn>;
 const mockBrief = api.patients.brief as ReturnType<typeof vi.fn>;
+const mockSinceLastVisit = api.patients.sinceLastVisit as ReturnType<typeof vi.fn>;
 const mockServiceRequests = api.patients.serviceRequests as ReturnType<typeof vi.fn>;
 
 function renderWithRoute(patientId = "patient-001", search = ""): ReturnType<typeof render> {
@@ -54,6 +56,7 @@ describe("PatientDetailPage", () => {
     // Keep the auxiliary panels in their loading state — these specs cover
     // the page shell, header, and lab panel only.
     mockBrief.mockReturnValue(new Promise(() => {}));
+    mockSinceLastVisit.mockReturnValue(new Promise(() => {}));
     mockServiceRequests.mockReturnValue(new Promise(() => {}));
   });
 

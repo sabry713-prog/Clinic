@@ -223,6 +223,29 @@ export class PatientController {
     return result;
   }
 
+  @Get(":id/since-last-visit")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Deterministic list of facts newly documented since the patient's previous encounter" })
+  async getSinceLastVisit(@Req() req: Request, @Param("id") id: string) {
+    const userId = getRequestingUserId(req);
+    const requestId = (req.requestId ?? uuidv4()) as RequestId;
+
+    const result = await this.patientService.getSinceLastVisit(userId, id);
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "PATIENT_SINCE_LAST_VISIT_VIEW",
+      target_type: "patient",
+      target_id: id,
+      outcome: "SUCCESS",
+      metadata_json: { item_count: result.items.length },
+      request_id: requestId,
+    });
+
+    return result;
+  }
+
   @Get(":id/conditions/:condition_id/history")
   @HttpCode(200)
   @ApiOperation({ summary: "All documented episodes of a coded condition with linked visit notes" })
