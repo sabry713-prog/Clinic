@@ -21,6 +21,7 @@ import { ConditionModule } from "./condition/condition.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
 import { NphiesModule } from "./nphies/nphies.module";
 import { InterpreterModule } from "./interpreter/interpreter.module";
+import { AmbientModule } from "./ambient/ambient.module";
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { InterpreterModule } from "./interpreter/interpreter.module";
     ServiceRequestModule,
     NphiesModule,
     InterpreterModule,
+    AmbientModule,
     DsrModule,
     MetricsModule,
     FeatureFlagsModule,

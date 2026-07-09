@@ -25,5 +25,10 @@ class Settings(BaseSettings):
     model_api_key: str = "EMPTY"
     model_timeout_s: float = 30.0
 
+    # Ambient segmentation mode: "stub" (default — everything unclassified) or
+    # "llm" (on-prem classification — see docs/prompts/ambient-segmentation-prompt.md).
+    # Reuses the same model_endpoint_url/model_name/model_api_key as reformat above.
+    transcription_segmentation: str = "stub"
+
 
 settings = Settings()

@@ -4,7 +4,8 @@ import {
 import type { Request } from "express";
 import { ApiTags, ApiCookieAuth, ApiOperation } from "@nestjs/swagger";
 import { v4 as uuidv4 } from "uuid";
-import { IsString, IsOptional, IsIn } from "class-validator";
+import { IsString, IsOptional, IsIn, IsArray, ValidateNested, ArrayMaxSize, MaxLength } from "class-validator";
+import { Type } from "class-transformer";
 import { RbacGuard, RequirePermission } from "../rbac/rbac.guard";
 import { writeAuditEvent } from "@clinical-copilot/audit";
 import { PG_POOL } from "../database/database.module";
@@ -12,7 +13,17 @@ import type { Pool } from "pg";
 import type { UserId, UserRole, RequestId } from "@clinical-copilot/shared-types";
 import { DraftService, SPECIALTIES, type DocumentType, type Specialty } from "./draft.service";
 
-const DOC_TYPES = ["discharge_summary", "referral_letter", "transfer_note", "visit_summary"];
+const DOC_TYPES = ["discharge_summary", "referral_letter", "transfer_note", "visit_summary", "encounter_note"];
+
+class PrefillSectionDto {
+  @IsString()
+  @MaxLength(50)
+  key!: string;
+
+  @IsString()
+  @MaxLength(20000)
+  text!: string;
+}
 
 class CreateDraftDto {
   @IsString()
@@ -27,6 +38,21 @@ class CreateDraftDto {
   @IsString()
   @IsIn(SPECIALTIES)
   specialty?: Specialty;
+
+  // Ambient structured-transcription capture: pre-fills clinician-authored-only
+  // sections from a segmented recording transcript. `transcript` is the source
+  // every prefill_section is re-verified against (see DraftService.generate()).
+  @IsOptional()
+  @IsString()
+  @MaxLength(20000)
+  transcript?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => PrefillSectionDto)
+  prefill_sections?: PrefillSectionDto[];
 }
 
 class TranscribeDto {
@@ -86,8 +112,16 @@ export class DraftController {
   @HttpCode(201)
   @ApiOperation({ summary: "Generate a grounded document draft (unsigned)" })
   async create(@Req() req: Request, @Param("id") id: string, @Body() body: CreateDraftDto) {
-    const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en", body.specialty ?? "general");
-    await this.audit(req, "DRAFT_GENERATED", draft.id, { document_type: draft.document_type, specialty: draft.specialty, patient_id: id });
+    const prefill = body.prefill_sections?.length && body.transcript
+      ? { transcript: body.transcript, sections: Object.fromEntries(body.prefill_sections.map((s) => [s.key, s.text])) }
+      : undefined;
+    const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en", body.specialty ?? "general", prefill);
+    await this.audit(req, "DRAFT_GENERATED", draft.id, {
+      document_type: draft.document_type,
+      specialty: draft.specialty,
+      patient_id: id,
+      from_ambient_capture: !!prefill,
+    });
     return draft;
   }
 

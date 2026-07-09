@@ -47,6 +47,7 @@ const DOC_TYPES: { value: DraftDocumentType; label: string }[] = [
   { value: "referral_letter", label: "Referral letter" },
   { value: "transfer_note", label: "Transfer note" },
   { value: "visit_summary", label: "Visit summary" },
+  { value: "encounter_note", label: "Encounter note" },
 ];
 
 // Section-title terminology only (docs/prompts/specialty-templates.md) — the
