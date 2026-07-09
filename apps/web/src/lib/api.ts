@@ -479,6 +479,14 @@ export interface PatientRecap {
   readonly disclaimer: string;
 }
 
+export interface TranslatedMessage {
+  readonly text: string | null;
+  readonly fallback_message: string | null;
+  readonly prompt_template_version: string;
+  readonly blocklist_triggered: boolean;
+  readonly disclaimer: string;
+}
+
 export interface AnswerSource {
   readonly fact_segment: string;
   readonly type: string;
@@ -876,6 +884,21 @@ export const api = {
       request<{ sources: readonly SourceRef[] }>(
         `/api/v1/patients/${patientId}/narrative/${narrativeId}/sources`,
       ),
+  },
+
+  interpreter: {
+    translate: (
+      patientId: string,
+      params: { text: string; sourceLanguage: string; targetLanguage: string },
+    ) =>
+      request<TranslatedMessage>(`/api/v1/patients/${patientId}/interpreter/translate`, {
+        method: "POST",
+        body: JSON.stringify({
+          text: params.text,
+          source_language: params.sourceLanguage,
+          target_language: params.targetLanguage,
+        }),
+      }),
   },
 
   quarantine: {

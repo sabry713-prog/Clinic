@@ -28,7 +28,7 @@ interface ActionItem {
   readonly run: () => void;
 }
 
-const CARD_ACTIONS = ["qa", "diagnosis", "narrative", "handoff", "draft", "orders", "claims", "search"] as const;
+const CARD_ACTIONS = ["qa", "diagnosis", "narrative", "handoff", "draft", "orders", "claims", "search", "interpreter"] as const;
 const CARD_LABEL_KEY: Record<(typeof CARD_ACTIONS)[number], string> = {
   qa: "shell.tabs.qa",
   diagnosis: "shell.cards.diagnosis",
@@ -38,6 +38,7 @@ const CARD_LABEL_KEY: Record<(typeof CARD_ACTIONS)[number], string> = {
   orders: "shell.cards.orders",
   claims: "shell.cards.claims",
   search: "shell.tabs.search",
+  interpreter: "shell.cards.interpreter",
 };
 
 export default function CommandBar({ open, onClose }: CommandBarProps): JSX.Element | null {

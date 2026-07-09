@@ -40,4 +40,4 @@ See the `_SYSTEM` constant in that file — the eight numbered rules there are t
 
 `POST /narrative/patient-recap` (`apps/narrative/main.py`) — `{ narrative_text, language }` → `{ text, fallback_message, prompt_template_version, blocklist_triggered, blocklist_retries }`.
 
-Not yet wired into `apps/core`'s narrative proxy or the web `NarrativePanel` — see the tracking task for that integration.
+Wired end-to-end: `apps/core`'s narrative proxy (`POST /api/v1/patients/:id/narrative/:narrative_id/patient-recap`, audited as `NARRATIVE_PATIENT_RECAP_GENERATED`) and the web `NarrativePanel` "Patient recap" toggle. See `docs/api/04-narrative.md`.

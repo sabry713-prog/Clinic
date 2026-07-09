@@ -13,8 +13,8 @@ import PatientWorkspace from "./PatientWorkspace";
 import PatientFilePage from "./PatientFilePage";
 
 type ViewId = "workspace" | "chart";
-type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search";
-const CARD_IDS: readonly CardId[] = ["qa", "diagnosis", "narrative", "handoff", "draft", "orders", "claims", "search"];
+type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter";
+const CARD_IDS: readonly CardId[] = ["qa", "diagnosis", "narrative", "handoff", "draft", "orders", "claims", "search", "interpreter"];
 
 export default function PatientDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
