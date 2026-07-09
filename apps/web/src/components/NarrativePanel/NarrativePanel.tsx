@@ -10,7 +10,7 @@
  * - Fallback shown as neutral info box (no alarm styling)
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../lib/api";
 import type { NarrativeItem, PatientRecap, ProvenanceEntry } from "../../lib/api";
@@ -26,20 +26,85 @@ const DISCLAIMER_EN =
 const DISCLAIMER_AR =
   "ملخص وصفي تلقائي. لا يمثل تفسيراً سريرياً. للمراجعة من قِبَل الطاقم الطبي فقط.";
 
-function splitIntoSentences(text: string): Array<{ start: number; end: number; text: string }> {
-  const parts: Array<{ start: number; end: number; text: string }> = [];
+type SegmentKind = "sentence" | "bullet" | "header";
+interface Segment { start: number; end: number; text: string; kind: SegmentKind; }
+
+const BULLET_LINE_RE = /^[•\-*]\s+/;
+const HEADER_LINE_RE = /^\*\*[^*]+\*\*:?$/;
+
+// Splits narrative text into hoverable segments for the provenance feature.
+// Line-aware: a whole bullet line or a whole bolded-header line is one
+// segment (list items and headers don't reliably end in sentence
+// punctuation); ordinary prose lines are still split sentence-by-sentence as
+// before. start/end are char offsets into the ORIGINAL text, unchanged by
+// this line-awareness, so provenance char-range matching is unaffected.
+function splitIntoSentences(text: string): Segment[] {
+  const segments: Segment[] = [];
   let pos = 0;
-  const re = /[.!?]\s+/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
-    const end = m.index + m[0].length;
-    const sentence = text.slice(pos, end).trim();
-    if (sentence) parts.push({ start: pos, end, text: sentence });
-    pos = end;
+  for (const line of text.split("\n")) {
+    const lineStart = pos;
+    const trimmed = line.trim();
+    if (trimmed === "") {
+      pos += line.length + 1;
+      continue;
+    }
+    const leadingWs = line.length - line.replace(/^\s+/, "").length;
+    const contentStart = lineStart + leadingWs;
+    const contentEnd = lineStart + line.replace(/\s+$/, "").length;
+
+    if (BULLET_LINE_RE.test(trimmed)) {
+      // start/end still span the FULL original line (bullet marker included)
+      // so provenance char-range matching stays correct; only the displayed
+      // text has the marker stripped, since the <li> already renders one.
+      segments.push({ start: contentStart, end: contentEnd, text: trimmed.replace(BULLET_LINE_RE, ""), kind: "bullet" });
+    } else if (HEADER_LINE_RE.test(trimmed)) {
+      segments.push({ start: contentStart, end: contentEnd, text: trimmed, kind: "header" });
+    } else {
+      const lineText = text.slice(contentStart, contentEnd);
+      const re = /[.!?]\s+/g;
+      let localPos = 0;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(lineText)) !== null) {
+        const end = m.index + m[0].length;
+        const sentence = lineText.slice(localPos, end).trim();
+        if (sentence) segments.push({ start: contentStart + localPos, end: contentStart + end, text: sentence, kind: "sentence" });
+        localPos = end;
+      }
+      const tail = lineText.slice(localPos).trim();
+      if (tail) segments.push({ start: contentStart + localPos, end: contentEnd, text: tail, kind: "sentence" });
+    }
+    pos += line.length + 1;
   }
-  const tail = text.slice(pos).trim();
-  if (tail) parts.push({ start: pos, end: text.length, text: tail });
-  return parts;
+  return segments;
+}
+
+// Renders inline **bold** markdown segments. No other markdown (italics,
+// links) is interpreted — kept deliberately narrow, matching QAConversation.
+function renderInline(text: string): JSX.Element[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={i}>{part.slice(2, -2)}</strong>
+    ) : (
+      <Fragment key={i}>{part}</Fragment>
+    ),
+  );
+}
+
+// Groups consecutive same-kind segments (a run of bullets, a run of
+// sentences) so they render as one <ul> or one flowing paragraph, while
+// keeping each segment's own start/end for per-segment hover-to-source.
+function groupSegments(segments: Segment[]): Array<{ kind: SegmentKind; segments: Array<Segment & { index: number }> }> {
+  const groups: Array<{ kind: SegmentKind; segments: Array<Segment & { index: number }> }> = [];
+  segments.forEach((seg, index) => {
+    const last = groups[groups.length - 1];
+    if (last && last.kind === seg.kind && seg.kind !== "header") {
+      last.segments.push({ ...seg, index });
+    } else {
+      groups.push({ kind: seg.kind, segments: [{ ...seg, index }] });
+    }
+  });
+  return groups;
 }
 
 function findProvenanceForSentence(
@@ -263,35 +328,51 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
       {narrative?.text && !showRecap && (
         <div className="flex gap-4">
           {/* Text area */}
-          <div className="flex-1 text-slate-200 text-sm leading-relaxed space-y-1" data-testid="narrative-text">
-            {sentences.map((sent, idx) => {
-              const prov = findProvenanceForSentence(
-                sent.start,
-                sent.end,
-                narrative.provenance,
-              );
-              const isHovered = hoveredEntryIndex === idx;
-              return (
-                <span
-                  key={idx}
-                  onMouseEnter={() => {
-                    setHoveredEntryIndex(idx);
-                    setSidebarSources(prov);
-                  }}
-                  onMouseLeave={() => {
-                    setHoveredEntryIndex(null);
-                    setSidebarSources(null);
-                  }}
-                  className={`cursor-default ${
-                    isHovered
-                      ? "bg-slate-700 rounded px-0.5"
-                      : "hover:bg-slate-800 rounded px-0.5"
-                  }`}
-                  data-testid={`narrative-sentence-${idx}`}
-                >
-                  {sent.text}{" "}
-                </span>
-              );
+          <div className="flex-1 text-slate-200 text-sm leading-relaxed space-y-2" data-testid="narrative-text">
+            {groupSegments(sentences).map((group, gi) => {
+              const renderSegment = (seg: Segment & { index: number }) => {
+                const prov = findProvenanceForSentence(seg.start, seg.end, narrative.provenance);
+                const isHovered = hoveredEntryIndex === seg.index;
+                return (
+                  <span
+                    key={seg.index}
+                    onMouseEnter={() => {
+                      setHoveredEntryIndex(seg.index);
+                      setSidebarSources(prov);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredEntryIndex(null);
+                      setSidebarSources(null);
+                    }}
+                    className={`cursor-default ${
+                      isHovered
+                        ? "bg-slate-700 rounded px-0.5"
+                        : "hover:bg-slate-800 rounded px-0.5"
+                    }`}
+                    data-testid={`narrative-sentence-${seg.index}`}
+                  >
+                    {renderInline(seg.text)}{" "}
+                  </span>
+                );
+              };
+
+              if (group.kind === "header") {
+                return (
+                  <p key={gi} className="font-semibold text-slate-100 mt-3 first:mt-0">
+                    {renderSegment(group.segments[0]!)}
+                  </p>
+                );
+              }
+              if (group.kind === "bullet") {
+                return (
+                  <ul key={gi} className="list-disc list-inside space-y-1 marker:text-slate-500">
+                    {group.segments.map((seg) => (
+                      <li key={seg.index}>{renderSegment(seg)}</li>
+                    ))}
+                  </ul>
+                );
+              }
+              return <p key={gi}>{group.segments.map((seg) => renderSegment(seg))}</p>;
             })}
           </div>
 
