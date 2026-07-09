@@ -29,8 +29,8 @@ const TEMPLATES: Record<DocumentType, SectionDef[]> = {
     { key: "problems", title: "Documented Problems", policy: "assembled_facts" },
     { key: "medications", title: "Medications on Discharge", policy: "assembled_facts" },
     { key: "results", title: "Results", policy: "assembled_facts" },
-    { key: "assessment", title: "Assessment", policy: "clinician_authored_only" },
-    { key: "plan", title: "Plan / Follow-up", policy: "clinician_authored_only" },
+    { key: "assessment", title: "Assessment", policy: "clinician_authored_only", prefill: false },
+    { key: "plan", title: "Plan / Follow-up", policy: "clinician_authored_only", prefill: false },
   ],
   referral_letter: [
     { key: "identity", title: "Identity", policy: "assembled_facts" },
