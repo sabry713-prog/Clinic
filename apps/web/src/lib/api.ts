@@ -471,6 +471,14 @@ export interface NarrativeItem {
   readonly disclaimer: string;
 }
 
+export interface PatientRecap {
+  readonly text: string | null;
+  readonly fallback_message: string | null;
+  readonly prompt_template_version: string;
+  readonly blocklist_triggered: boolean;
+  readonly disclaimer: string;
+}
+
 export interface AnswerSource {
   readonly fact_segment: string;
   readonly type: string;
@@ -857,6 +865,12 @@ export const api = {
 
     get: (patientId: string, narrativeId: string) =>
       request<NarrativeItem>(`/api/v1/patients/${patientId}/narrative/${narrativeId}`),
+
+    patientRecap: (patientId: string, narrativeId: string) =>
+      request<PatientRecap>(
+        `/api/v1/patients/${patientId}/narrative/${narrativeId}/patient-recap`,
+        { method: "POST" },
+      ),
 
     sources: (patientId: string, narrativeId: string) =>
       request<{ sources: readonly SourceRef[] }>(

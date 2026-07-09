@@ -15,6 +15,7 @@ from src.narrative.grpc_server import create_grpc_server
 from src.narrative.logging_config import configure_logging
 from src.narrative.model_client import get_model
 from src.narrative.narrative_service import generate_narrative
+from src.narrative.patient_recap import PATIENT_RECAP_TEMPLATE_VERSION, generate_patient_recap
 from src.narrative.tracing import configure_tracing
 
 configure_logging(settings.otel_service_name)
@@ -118,6 +119,30 @@ async def generate(request: GenerateNarrativeRequest) -> dict[str, Any]:
         "scope": output.scope,
         "blocklist_triggered": output.blocklist_triggered,
         "blocklist_retries": output.blocklist_retries,
+    }
+
+
+class PatientRecapRequest(BaseModel):
+    narrative_text: str
+    language: str = "en"
+
+
+@app.post("/narrative/patient-recap", response_class=JSONResponse)
+async def patient_recap(request: PatientRecapRequest) -> dict[str, Any]:
+    """Restyle an already-generated, already-blocklist-passed narrative
+    into patient-friendly prose. See src/narrative/patient_recap.py.
+    """
+    text, blocklist_triggered, retries = await generate_patient_recap(
+        narrative_text=request.narrative_text,
+        language=request.language,
+        model=_model,
+    )
+    return {
+        "text": text,
+        "fallback_message": None if text else "Plain-language recap unavailable. Showing the clinical summary instead.",
+        "prompt_template_version": PATIENT_RECAP_TEMPLATE_VERSION,
+        "blocklist_triggered": blocklist_triggered,
+        "blocklist_retries": retries,
     }
 
 

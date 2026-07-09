@@ -141,6 +141,42 @@ export class NarrativeProxyController {
     return narrative;
   }
 
+  @Post(":narrative_id/patient-recap")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Restyle an existing narrative into patient-friendly plain language" })
+  async patientRecap(
+    @Param("id") patientId: string,
+    @Param("narrative_id") narrativeId: string,
+    @Req() req: Request,
+  ): Promise<object> {
+    const userId = getRequestingUserId(req);
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const recap = await this.narrativeService.patientRecap(patientId, narrativeId);
+    if (!recap) {
+      throw new NotFoundException({
+        error: { code: "NARRATIVE_NOT_FOUND", message: "Narrative not found or has no text to restyle" },
+      });
+    }
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as import("@clinical-copilot/shared-types").UserId,
+      actor_role: null,
+      action: "NARRATIVE_PATIENT_RECAP_GENERATED",
+      target_type: "narrative_output",
+      target_id: narrativeId,
+      outcome: "SUCCESS",
+      metadata_json: {
+        patient_id: patientId,
+        prompt_template_version: recap.prompt_template_version,
+        fallback: recap.text === null,
+      },
+      request_id: (req.headers["x-request-id"] as string | undefined ?? null) as import("@clinical-copilot/shared-types").RequestId | null,
+    });
+
+    return recap;
+  }
+
   @Get(":narrative_id/sources")
   @HttpCode(200)
   @ApiOperation({ summary: "Get source records referenced by a narrative" })

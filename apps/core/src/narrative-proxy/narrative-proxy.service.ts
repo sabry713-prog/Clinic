@@ -191,6 +191,49 @@ export class NarrativeProxyService {
     };
   }
 
+  /**
+   * Restyles an already-generated, already-blocklist-passed narrative into
+   * patient-friendly prose. Reuses the stored narrative text as the sole
+   * source of facts -- no new patient data is read. Not persisted or
+   * cached; regenerated on each request, same as a fresh reformat.
+   */
+  async patientRecap(
+    patientId: string,
+    narrativeId: string,
+  ): Promise<{
+    text: string | null;
+    fallback_message: string | null;
+    prompt_template_version: string;
+    blocklist_triggered: boolean;
+    disclaimer: string;
+  } | null> {
+    const narrative = await this.getById(patientId, narrativeId);
+    if (!narrative || !narrative.text) return null;
+
+    const res = await fetch(`${this.narrativeServiceUrl}/narrative/patient-recap`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ narrative_text: narrative.text, language: narrative.language }),
+    });
+    if (!res.ok) {
+      throw new ServiceUnavailableException({
+        error: { code: "NARRATIVE_SERVICE_UNAVAILABLE", message: "Narrative service returned an error" },
+      });
+    }
+    const body = (await res.json()) as {
+      text: string | null;
+      fallback_message: string | null;
+      prompt_template_version: string;
+      blocklist_triggered: boolean;
+    };
+
+    return {
+      ...body,
+      disclaimer:
+        "Plain-language restyling of the clinical summary above -- same documented facts, friendlier wording. Not a clinical interpretation.",
+    };
+  }
+
   async getSources(
     patientId: string,
     narrativeId: string,
