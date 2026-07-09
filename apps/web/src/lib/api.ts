@@ -211,6 +211,32 @@ export interface LinkageStatus {
   readonly disclaimer: string;
 }
 
+export interface PairingCheck {
+  readonly condition_id: string;
+  readonly condition_display: string | null;
+  readonly icd10am_code: string;
+  readonly service_request_id: string;
+  readonly order_display: string;
+  readonly sbs_code: string;
+  readonly known_valid_pairing: boolean;
+}
+
+export interface CodeRejectionHistory {
+  readonly code: string;
+  readonly code_type: "diagnosis" | "procedure";
+  readonly total_claims: number;
+  readonly rejected_claims: number;
+  readonly rejection_rate: number;
+  readonly common_rejection_codes: readonly string[];
+}
+
+export interface RejectionRiskReport {
+  readonly patient_id: string;
+  readonly pairings: readonly PairingCheck[];
+  readonly history: readonly CodeRejectionHistory[];
+  readonly disclaimer: string;
+}
+
 export interface ClaimDraft {
   readonly patient_id: string;
   readonly ready: boolean;
@@ -786,6 +812,9 @@ export const api = {
 
     claimDraft: (patientId: string) =>
       request<ClaimDraft>(`/api/v1/patients/${patientId}/nphies/claim-draft`),
+
+    rejectionRisk: (patientId: string) =>
+      request<RejectionRiskReport>(`/api/v1/patients/${patientId}/nphies/rejection-risk`),
 
     checkEligibility: (patientId: string) =>
       request<EligibilityResult>(`/api/v1/patients/${patientId}/nphies/eligibility`, {

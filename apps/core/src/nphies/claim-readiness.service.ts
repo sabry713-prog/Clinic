@@ -210,6 +210,36 @@ export class ClaimReadinessService {
             ? `All ${ordTotal} active order(s) are linked to a documented diagnosis.`
             : `${linkedCount} of ${ordTotal} active order(s) are linked to a documented diagnosis. NPHIES requires each claim item to reference a supporting diagnosis — link the remaining orders in the coding panel.`,
       });
+
+      // R10 — pairing compatibility. Deterministic set-membership check
+      // against app.diagnosis_procedure_compat (payer-published pairing
+      // rules): does this linked diagnosis+procedure combination appear
+      // in the known-valid table? Never a judgment about whether the
+      // pairing makes clinical sense — that determination belongs to the
+      // doctor and, ultimately, the payer.
+      const pairings = await this.pool.query<{ known_valid: string }>(
+        `SELECT (compat.icd10am_code IS NOT NULL)::text AS known_valid
+         FROM app.service_request_diagnosis_link l
+         JOIN app.condition_icd_coding cc ON cc.condition_id = l.condition_id
+         JOIN app.service_request_sbs_coding sc ON sc.service_request_id = l.service_request_id
+         LEFT JOIN app.diagnosis_procedure_compat compat
+           ON compat.icd10am_code = cc.icd10am_code AND compat.sbs_code = sc.sbs_code
+         WHERE l.patient_id = $1`,
+        [patientId],
+      );
+      const pairingTotal = pairings.rows.length;
+      const pairingUnknown = pairings.rows.filter((r) => r.known_valid === "false").length;
+      if (pairingTotal > 0) {
+        checks.push({
+          id: "diagnosis_procedure_pairing",
+          label: "Diagnosis/procedure pairing compatibility",
+          status: pairingUnknown === 0 ? "pass" : "warning",
+          detail:
+            pairingUnknown === 0
+              ? `All ${pairingTotal} coded, linked pairing(s) appear in the known-valid compatibility table.`
+              : `${pairingUnknown} of ${pairingTotal} coded, linked pairing(s) are not in the known compatibility table — verify before submission (see rejection-risk check).`,
+        });
+      }
     }
 
     // R8 — medications coding (only relevant if active prescriptions exist).

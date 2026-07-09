@@ -8,6 +8,14 @@
  * realistic accepted/rejected mix, using deterministic randomness so the
  * dashboard looks the same on every machine.
  *
+ * Each claim also carries a diagnosis_codes/procedure_codes pair drawn
+ * from the existing ICD-10-AM/SBS vocabulary. Rejection likelihood is
+ * biased by whether that pair appears in app.diagnosis_procedure_compat
+ * (valid pairing -> mostly accepted; unlisted pairing -> mostly
+ * rejected), so the historical-pattern check has real, internally
+ * consistent signal to report -- a plain retrospective count over past
+ * outcomes, not a prediction (see nphies/rejection-risk.service.ts).
+ *
  * Rejection codes here are illustrative dev-only labels, not real NPHIES
  * codes -- see docs/api/08-nphies.md for the live connector's real
  * status/rejection handling once it exists.
@@ -49,6 +57,16 @@ const REJECTION_REASONS = [
   { code: "DEV-DUP-05", display: "Duplicate claim for this encounter" },
   { code: "DEV-AUTH-06", display: "Prior authorization required" },
 ] as const;
+// Reasons that plausibly follow from a payer not recognising the
+// diagnosis/procedure pairing, vs. reasons unrelated to pairing at all.
+const PAIRING_REJECTION_REASONS = ["DEV-COD-02", "DEV-COD-03", "DEV-LINK-04"] as const;
+const OTHER_REJECTION_REASONS = ["DEV-ELIG-01", "DEV-DUP-05", "DEV-AUTH-06"] as const;
+
+function pick<T>(arr: readonly T[]): T {
+  const item = arr[Math.floor(rng() * arr.length)];
+  if (item === undefined) throw new Error("pick() called on empty array");
+  return item;
+}
 
 async function seed(): Promise<void> {
   const client = await pool.connect();
@@ -72,6 +90,23 @@ async function seed(): Promise<void> {
       throw new Error("In-scope patients not found -- run seed:dev first");
     }
 
+    const icdCodes = await client.query<{ icd10am_code: string }>(
+      `SELECT DISTINCT icd10am_code FROM app.snomed_icd10am_map`,
+    );
+    const sbsCodes = await client.query<{ sbs_code: string }>(
+      `SELECT DISTINCT sbs_code FROM app.order_sbs_map`,
+    );
+    const compat = await client.query<{ icd10am_code: string; sbs_code: string }>(
+      `SELECT icd10am_code, sbs_code FROM app.diagnosis_procedure_compat`,
+    );
+    const compatSet = new Set(compat.rows.map((r) => `${r.icd10am_code}|${r.sbs_code}`));
+    const icdList = icdCodes.rows.map((r) => r.icd10am_code);
+    const sbsList = sbsCodes.rows.map((r) => r.sbs_code);
+    const compatPairs = compat.rows;
+    if (icdList.length === 0 || sbsList.length === 0 || compatPairs.length === 0) {
+      throw new Error("ICD-10-AM / SBS / compatibility reference data not found -- run migrations first");
+    }
+
     let inserted = 0;
     let rejected = 0;
     const CLAIMS_PER_PATIENT = 12;
@@ -80,16 +115,38 @@ async function seed(): Promise<void> {
     for (const patient of patients.rows) {
       for (let i = 0; i < CLAIMS_PER_PATIENT; i++) {
         const daysAgo = Math.floor(rng() * DAYS_SPAN);
-        const isRejected = rng() < 0.3; // ~30% rejection rate, illustrative
+        // Half the time draw a known-valid pairing, half the time draw two
+        // independent codes (usually landing outside the compat table,
+        // since it's small relative to the full code space) -- this keeps
+        // both buckets populated with real examples for the historical
+        // check to report on, instead of both codes being pure noise.
+        let diagnosisCode: string;
+        let procedureCode: string;
+        if (rng() < 0.5) {
+          const validPair = pick(compatPairs);
+          diagnosisCode = validPair.icd10am_code;
+          procedureCode = validPair.sbs_code;
+        } else {
+          diagnosisCode = pick(icdList);
+          procedureCode = pick(sbsList);
+        }
+        const isValidPairing = compatSet.has(`${diagnosisCode}|${procedureCode}`);
+
+        // Rejection likelihood biased by pairing validity -- internally
+        // consistent with the compatibility check, not independent noise.
+        const rejectionChance = isValidPairing ? 0.12 : 0.55;
+        const isRejected = rng() < rejectionChance;
         const status = isRejected ? "rejected" : "accepted";
 
         const rejectionCodes: string[] = [];
         if (isRejected) {
-          const numReasons = rng() < 0.75 ? 1 : 2;
-          const shuffled = [...REJECTION_REASONS].sort(() => rng() - 0.5);
-          for (let r = 0; r < numReasons; r++) {
-            const reason = shuffled[r];
-            if (reason) rejectionCodes.push(reason.code);
+          // If the pairing is invalid, the rejection is plausibly a
+          // coding/linkage reason; otherwise pick from the other reasons.
+          const pool_ = isValidPairing ? OTHER_REJECTION_REASONS : PAIRING_REJECTION_REASONS;
+          rejectionCodes.push(pick(pool_));
+          if (rng() < 0.25) {
+            const second = pick(REJECTION_REASONS).code;
+            if (!rejectionCodes.includes(second)) rejectionCodes.push(second);
           }
         }
 
@@ -97,7 +154,8 @@ async function seed(): Promise<void> {
           resourceType: "Claim",
           status: "active",
           patient: { reference: `Patient/${patient.mrn}` },
-          item: [{ sequence: 1 }],
+          diagnosis: [{ sequence: 1, diagnosisCodeableConcept: { coding: [{ code: diagnosisCode }] } }],
+          item: [{ sequence: 1, diagnosisSequence: [1], productOrService: { coding: [{ code: procedureCode }] } }],
         };
         const response = isRejected
           ? {
@@ -113,13 +171,16 @@ async function seed(): Promise<void> {
 
         await client.query(
           `INSERT INTO app.nphies_claim
-             (patient_id, bundle_json, status, rejection_codes, response_json, mode, submitted_by, submitted_at)
-           VALUES ($1, $2::jsonb, $3, $4, $5::jsonb, 'stub', $6, now() - ($7 || ' days')::interval)`,
+             (patient_id, bundle_json, status, rejection_codes, diagnosis_codes, procedure_codes,
+              response_json, mode, submitted_by, submitted_at)
+           VALUES ($1, $2::jsonb, $3, $4, $5, $6, $7::jsonb, 'stub', $8, now() - ($9 || ' days')::interval)`,
           [
             patient.id,
             JSON.stringify(bundle),
             status,
             rejectionCodes,
+            [diagnosisCode],
+            [procedureCode],
             JSON.stringify(response),
             submittedBy,
             String(daysAgo),

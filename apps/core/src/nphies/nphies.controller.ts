@@ -19,6 +19,7 @@ import { IcdCodingService } from "./icd-coding.service";
 import { SbsCodingService } from "./sbs-coding.service";
 import { LinkageService } from "./linkage.service";
 import { NphiesConnectorService } from "./connector.service";
+import { RejectionRiskService } from "./rejection-risk.service";
 
 function uid(req: Request): string {
   const u = req.authenticatedUserId;
@@ -37,6 +38,7 @@ export class NphiesController {
     private readonly sbsCoding: SbsCodingService,
     private readonly linkage: LinkageService,
     private readonly connector: NphiesConnectorService,
+    private readonly rejectionRisk: RejectionRiskService,
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
@@ -258,6 +260,21 @@ export class NphiesController {
       request_id: (req.requestId ?? uuidv4()) as RequestId,
     });
 
+    return result;
+  }
+
+  @Get("patients/:id/nphies/rejection-risk")
+  @RequirePermission("patient:read")
+  @ApiOperation({
+    summary:
+      "Pairing-compatibility check + historical rejection frequency for this patient's confirmed diagnosis/procedure codes (deterministic; not a prediction)",
+  })
+  async getRejectionRisk(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.rejectionRisk.evaluate(uid(req), patientId);
+    await this.audit(req, "NPHIES_REJECTION_RISK_VIEW", patientId, {
+      pairings: result.pairings.length,
+      unknown_pairings: result.pairings.filter((p) => !p.known_valid_pairing).length,
+    });
     return result;
   }
 }

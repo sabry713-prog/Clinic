@@ -158,6 +158,40 @@ external_subject `...012`) — the dev seed previously had no admin-role
 account, which had blocked live verification of any admin-only endpoint
 (flagged in `docs/evidence-pack-e0.md`).
 
+## Rejection-risk checks (pairing compatibility + historical frequency)
+
+Modeled directly on how Sully.ai describes its own AI Medical Coder
+validation step — "validates code pairs against payer-specific edits"
+and "predictive denial scoring" from past claim outcomes
+([sully.ai/blog](https://www.sully.ai/blog/medical-billing-automation)).
+Two deterministic checks over doctor-confirmed codes only; neither
+interprets clinical data, suggests a diagnosis, or judges medical
+necessity (CLAUDE.md §2):
+
+1. **Pairing compatibility** — set-membership lookup against
+   `app.diagnosis_procedure_compat` (payer-published pairing rules in
+   production; illustrative dev rows seeded by migration
+   `1719200000000`, drawn from the existing ICD-10-AM/SBS vocabulary).
+   "Is this combination in the known-valid table?" is a lookup, not a
+   clinical-appropriateness judgment. Also surfaced as the
+   `diagnosis_procedure_pairing` claim-readiness check.
+2. **Historical rejection frequency** — a plain retrospective count per
+   code ("N of M past claims with this code were rejected, most common
+   reason: X"), computed from `app.nphies_claim.diagnosis_codes` /
+   `procedure_codes` (added alongside the compat table). States what has
+   happened before; makes no forward-looking claim.
+
+- `GET /api/v1/patients/:id/nphies/rejection-risk` (`patient:read`) —
+  pairing checks + historical stats for the patient's currently linked,
+  coded items. Audit: `NPHIES_REJECTION_RISK_VIEW`.
+
+Dev seed: `seed:nphies-claims` now draws each historical claim's
+diagnosis/procedure pair with a 50% bias toward the compatibility
+table, and biases rejection likelihood accordingly (~12% for a
+known-valid pairing, ~55% otherwise) — so the two checks are internally
+consistent and both have real signal to show, instead of being
+independent noise.
+
 ## Roadmap (not yet implemented)
 
 1. **Live NPHIES connector**: CCHI onboarding, sandbox credentials, certificates; real eligibility/claim/rejection exchange. Once live, rejection-analytics numbers reflect real payer responses instead of the seeded/stub history.
