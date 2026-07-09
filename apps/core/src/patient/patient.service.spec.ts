@@ -178,4 +178,95 @@ describe("PatientService", () => {
       expect(result.data[0]?.code).toBe("2160-0");
     });
   });
+
+  describe("getSinceLastVisit", () => {
+    // docs/architecture/since-last-visit.md exit-gate checks.
+    const BLOCKLIST_WORDS = [
+      "worsening", "improving", "concerning", "trending", "elevated", "abnormal",
+      "suggests", "indicates", "consistent with", "significant", "critical",
+      "deteriorating", "risk", "diagnos", "recommend", "warning", "monitor",
+      "assess", "high-risk", "should", "consider",
+    ];
+
+    function containsBlocklistWord(text: string): boolean {
+      const lower = text.toLowerCase();
+      return BLOCKLIST_WORDS.some((w) => lower.includes(w));
+    }
+
+    it("returns empty with has_previous_encounter=false when fewer than 2 encounters exist", async () => {
+      const pool = makeMockPool({ "hospital.encounter": [{ id: "enc-1", started_at: "2026-07-01" }] });
+      const svc = new PatientService(pool, mockScopeService);
+      const result = await svc.getSinceLastVisit(USER_ID, "pid-001");
+
+      expect(result.has_previous_encounter).toBe(false);
+      expect(result.boundary_at).toBeNull();
+      expect(result.items).toHaveLength(0);
+    });
+
+    it("uses the previous (second-most-recent) encounter as the boundary and surfaces new items", async () => {
+      const pool = makeMockPool({
+        "hospital.encounter": [
+          { id: "enc-current", started_at: "2026-07-01" },
+          { id: "enc-previous", started_at: "2026-06-01" },
+        ],
+        "hospital.condition": [
+          { code_display: "Atrial fibrillation", onset_date: "2026-06-15" },
+        ],
+        "hospital.allergy_intolerance": [
+          { code_display: "Penicillin", reaction: "Rash", recorded_at: "2026-06-20" },
+        ],
+        "hospital.medication_request": [
+          { medication_display: "Warfarin", dose: "5mg", route: "oral", frequency: "once daily", started_at: "2026-06-25" },
+        ],
+      });
+      const svc = new PatientService(pool, mockScopeService);
+      const result = await svc.getSinceLastVisit(USER_ID, "pid-001");
+
+      expect(result.has_previous_encounter).toBe(true);
+      expect(result.boundary_at).toBe("2026-06-01");
+      expect(result.items).toHaveLength(3);
+      expect(result.items.map((i) => i.type).sort()).toEqual(["allergy", "condition", "medication"]);
+    });
+
+    it("does not attempt dose-change pairing -- each medication row stands alone", async () => {
+      const pool = makeMockPool({
+        "hospital.encounter": [
+          { id: "enc-current", started_at: "2026-07-01" },
+          { id: "enc-previous", started_at: "2026-06-01" },
+        ],
+        "hospital.medication_request": [
+          { medication_display: "Prozac", dose: "20mg", route: "oral", frequency: "once daily", started_at: "2026-06-25" },
+        ],
+      });
+      const svc = new PatientService(pool, mockScopeService);
+      const result = await svc.getSinceLastVisit(USER_ID, "pid-001");
+
+      const med = result.items.find((i) => i.type === "medication");
+      expect(med).toBeDefined();
+      // No "changed from X to Y" framing anywhere in the item.
+      expect(JSON.stringify(med)).not.toMatch(/changed|previous|was\s/i);
+    });
+
+    it("contains no interpretive, risk, or recommendation language anywhere in the response", async () => {
+      const pool = makeMockPool({
+        "hospital.encounter": [
+          { id: "enc-current", started_at: "2026-07-01" },
+          { id: "enc-previous", started_at: "2026-06-01" },
+        ],
+        "hospital.condition": [
+          { code_display: "Atrial fibrillation", onset_date: "2026-06-15" },
+        ],
+        "hospital.allergy_intolerance": [
+          { code_display: "Penicillin", reaction: "Anaphylaxis", recorded_at: "2026-06-20" },
+        ],
+        "hospital.medication_request": [
+          { medication_display: "Warfarin", dose: "5mg", route: "oral", frequency: "once daily", started_at: "2026-06-25" },
+        ],
+      });
+      const svc = new PatientService(pool, mockScopeService);
+      const result = await svc.getSinceLastVisit(USER_ID, "pid-001");
+
+      expect(containsBlocklistWord(JSON.stringify(result))).toBe(false);
+    });
+  });
 });

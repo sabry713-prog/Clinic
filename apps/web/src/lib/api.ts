@@ -301,6 +301,33 @@ export interface PatientBrief {
   readonly other_active_medications: readonly BriefMedication[];
 }
 
+export interface SinceLastVisitCondition {
+  readonly type: "condition";
+  readonly code_display: string | null;
+  readonly onset_date: string | null;
+}
+export interface SinceLastVisitAllergy {
+  readonly type: "allergy";
+  readonly code_display: string | null;
+  readonly reaction: string | null;
+  readonly recorded_at: string | null;
+}
+export interface SinceLastVisitMedication {
+  readonly type: "medication";
+  readonly medication_display: string | null;
+  readonly dose: string | null;
+  readonly route: string | null;
+  readonly frequency: string | null;
+  readonly started_at: string | null;
+}
+export type SinceLastVisitItem = SinceLastVisitCondition | SinceLastVisitAllergy | SinceLastVisitMedication;
+
+export interface SinceLastVisit {
+  readonly has_previous_encounter: boolean;
+  readonly boundary_at: string | null;
+  readonly items: readonly SinceLastVisitItem[];
+}
+
 export interface ObservationItem {
   readonly id: string;
   readonly category: string | null;
@@ -788,6 +815,9 @@ export const api = {
 
     brief: (patientId: string) =>
       request<PatientBrief>(`/api/v1/patients/${patientId}/brief`),
+
+    sinceLastVisit: (patientId: string) =>
+      request<SinceLastVisit>(`/api/v1/patients/${patientId}/since-last-visit`),
 
     serviceRequestCandidates: (patientId: string) =>
       request<{ data: ServiceCandidate[] }>(
