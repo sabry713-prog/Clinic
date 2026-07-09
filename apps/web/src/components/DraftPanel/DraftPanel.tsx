@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { api, type DocumentDraft, type DraftDocumentType, type DraftSummary, ApiError } from "../../lib/api";
+import { api, type DocumentDraft, type DraftDocumentType, type DraftSpecialty, type DraftSummary, ApiError } from "../../lib/api";
 
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -49,6 +49,17 @@ const DOC_TYPES: { value: DraftDocumentType; label: string }[] = [
   { value: "visit_summary", label: "Visit summary" },
 ];
 
+// Section-title terminology only (docs/prompts/specialty-templates.md) — the
+// same facts are assembled regardless of specialty; only labels change.
+const SPECIALTIES: { value: DraftSpecialty; label: string }[] = [
+  { value: "general", label: "General" },
+  { value: "cardiology", label: "Cardiology" },
+  { value: "orthopedics", label: "Orthopedics" },
+  { value: "pediatrics", label: "Pediatrics" },
+  { value: "obstetrics_gynecology", label: "OB/GYN" },
+  { value: "emergency_medicine", label: "Emergency Medicine" },
+];
+
 interface DraftPanelProps {
   readonly patientId: string;
 }
@@ -58,6 +69,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
   // Arabic. (Not tied to the patient's preferred language.)
   const [language, setLanguage] = useState<"en" | "ar">("en");
   const [docType, setDocType] = useState<DraftDocumentType>("discharge_summary");
+  const [specialty, setSpecialty] = useState<DraftSpecialty>("general");
   const [draft, setDraft] = useState<DocumentDraft | null>(null);
   const [list, setList] = useState<DraftSummary[]>([]);
   const [editText, setEditText] = useState("");
@@ -215,8 +227,18 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
           >
             {DOC_TYPES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
           </select>
+          <select
+            value={specialty}
+            disabled={busy}
+            onChange={(e) => setSpecialty(e.target.value as DraftSpecialty)}
+            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            aria-label="Specialty"
+            data-testid="specialty-select"
+          >
+            {SPECIALTIES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
           <button
-            onClick={() => void run(() => api.patients.createDraft(patientId, docType, language))}
+            onClick={() => void run(() => api.patients.createDraft(patientId, docType, language, specialty))}
             disabled={busy}
             className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm px-3 py-1 rounded"
           >

@@ -10,7 +10,7 @@ import { writeAuditEvent } from "@clinical-copilot/audit";
 import { PG_POOL } from "../database/database.module";
 import type { Pool } from "pg";
 import type { UserId, UserRole, RequestId } from "@clinical-copilot/shared-types";
-import { DraftService, type DocumentType } from "./draft.service";
+import { DraftService, SPECIALTIES, type DocumentType, type Specialty } from "./draft.service";
 
 const DOC_TYPES = ["discharge_summary", "referral_letter", "transfer_note", "visit_summary"];
 
@@ -22,6 +22,11 @@ class CreateDraftDto {
   @IsOptional()
   @IsString()
   language?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(SPECIALTIES)
+  specialty?: Specialty;
 }
 
 class TranscribeDto {
@@ -81,8 +86,8 @@ export class DraftController {
   @HttpCode(201)
   @ApiOperation({ summary: "Generate a grounded document draft (unsigned)" })
   async create(@Req() req: Request, @Param("id") id: string, @Body() body: CreateDraftDto) {
-    const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en");
-    await this.audit(req, "DRAFT_GENERATED", draft.id, { document_type: draft.document_type, patient_id: id });
+    const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en", body.specialty ?? "general");
+    await this.audit(req, "DRAFT_GENERATED", draft.id, { document_type: draft.document_type, specialty: draft.specialty, patient_id: id });
     return draft;
   }
 
