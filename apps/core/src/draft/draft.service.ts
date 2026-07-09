@@ -12,7 +12,7 @@ import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { PatientScopeService } from "../patient/patient-scope.service";
 
-export type DocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary";
+export type DocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary" | "encounter_note";
 export type Specialty = "general" | "cardiology" | "orthopedics" | "pediatrics" | "obstetrics_gynecology" | "emergency_medicine";
 type Policy = "assembled_facts" | "clinician_authored_only";
 
@@ -52,6 +52,18 @@ const TEMPLATES: Record<DocumentType, SectionDef[]> = {
     { key: "assessment", title: "Assessment", policy: "clinician_authored_only", prefill: false },
     { key: "plan", title: "Plan", policy: "clinician_authored_only", prefill: false },
   ],
+  // Ambient structured-transcription capture (docs/prompts/ambient-segmentation-prompt.md):
+  // every section here is clinician-authored-only, normally filled by
+  // prefillSections from an ambient-capture transcript (see generate()) --
+  // same verbatim-substring guarantee as every other CAO section, just sourced
+  // from a recorded encounter instead of a typed/dictated note.
+  encounter_note: [
+    { key: "identity", title: "Identity", policy: "assembled_facts" },
+    { key: "chief_complaint", title: "Chief Complaint", policy: "clinician_authored_only", prefill: false },
+    { key: "history", title: "History", policy: "clinician_authored_only", prefill: false },
+    { key: "assessment", title: "Assessment", policy: "clinician_authored_only", prefill: false },
+    { key: "plan", title: "Plan", policy: "clinician_authored_only", prefill: false },
+  ],
 };
 
 // Arabic section titles (values stay verbatim; only structure is localized).
@@ -72,6 +84,8 @@ const TITLE_AR: Record<string, string> = {
   "Reason for Transfer": "سبب التحويل",
   "Clinical Question": "السؤال السريري",
   "Allergies": "الحساسيات",
+  "Chief Complaint": "الشكوى الرئيسية",
+  "History": "التاريخ المرضي",
 };
 
 // Specialty section templates (E-Backlog): per-key title overrides only — no
@@ -178,7 +192,24 @@ export class DraftService {
     return (await res.json()) as { text: string; raw_text: string; reformat: string };
   }
 
-  async generate(userId: string, patientId: string, documentType: DocumentType, language: string, specialty: Specialty = "general"): Promise<DraftRow> {
+  /**
+   * @param prefill Ambient-capture prefill (docs/prompts/ambient-segmentation-prompt.md):
+   *   for each clinician-authored-only section whose key appears in
+   *   `sections`, uses that text instead of the stored-notes lookup -- but
+   *   ALWAYS re-validates it with isClinicianAuthoredOnly against `transcript`
+   *   (not hospital.document_reference, since this content came from a live
+   *   recording, not a stored note). A section that fails this check throws,
+   *   exactly like a stored-note violation does today -- the guarantee is
+   *   identical regardless of where the clinician's words came from.
+   */
+  async generate(
+    userId: string,
+    patientId: string,
+    documentType: DocumentType,
+    language: string,
+    specialty: Specialty = "general",
+    prefill?: { transcript: string; sections: Record<string, string> },
+  ): Promise<DraftRow> {
     await this.scope.assertPatientInScope(userId, patientId);
     const baseTemplate = TEMPLATES[documentType];
     if (!baseTemplate) throw new BadRequestException("Unknown document_type");
@@ -207,8 +238,16 @@ export class DraftService {
       const override = SPECIALTY_TITLE_OVERRIDES[specialty]?.[def.key];
       const baseTitle = override?.en ?? def.title;
       const title = language === "ar" ? (override?.ar ?? TITLE_AR[baseTitle] ?? baseTitle) : baseTitle;
+      const prefillText = def.policy === "clinician_authored_only" ? prefill?.sections[def.key] : undefined;
       if (def.policy === "assembled_facts") {
         text = await this.assembleFacts(patientId, def.key, language);
+      } else if (prefillText !== undefined) {
+        text = prefillText;
+        if (!isClinicianAuthoredOnly(text, prefill!.transcript)) {
+          throw new BadRequestException(
+            `Section '${def.key}' prefill is not a verbatim substring of the source transcript`,
+          );
+        }
       } else if (def.prefill === false) {
         // Dictate-fresh: start empty so the clinician dictates THIS encounter's
         // content (e.g. a new visit's Assessment/Plan). No old notes bleed in.

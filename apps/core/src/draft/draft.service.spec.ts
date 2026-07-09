@@ -91,3 +91,50 @@ describe("DraftService specialty templates", () => {
     expect(sections.find((s) => s.key === "allergies")?.title).toBe("الحساسيات");
   });
 });
+
+describe("DraftService ambient-capture prefill", () => {
+  const TRANSCRIPT = "Patient reports a cough for three days. I think this is bronchitis. Start amoxicillin.";
+
+  it("uses prefill text for clinician-authored-only sections when it is a verbatim substring", async () => {
+    const service = new DraftService(makePool(), makeScope());
+    const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+      transcript: TRANSCRIPT,
+      sections: {
+        chief_complaint: "Patient reports a cough for three days.",
+        assessment: "I think this is bronchitis.",
+        plan: "Start amoxicillin.",
+      },
+    });
+    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    expect(sections.find((s) => s.key === "chief_complaint")?.text).toBe("Patient reports a cough for three days.");
+    expect(sections.find((s) => s.key === "assessment")?.text).toBe("I think this is bronchitis.");
+    expect(sections.find((s) => s.key === "plan")?.text).toBe("Start amoxicillin.");
+  });
+
+  it("rejects prefill text that is not a verbatim substring of the transcript", async () => {
+    const service = new DraftService(makePool(), makeScope());
+    await expect(
+      service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+        transcript: TRANSCRIPT,
+        sections: { assessment: "This is likely a bacterial infection requiring urgent care." },
+      }),
+    ).rejects.toThrow(/verbatim substring/);
+  });
+
+  it("sections without a matching prefill key fall back to the dictate-fresh placeholder", async () => {
+    const service = new DraftService(makePool(), makeScope());
+    const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+      transcript: TRANSCRIPT,
+      sections: { chief_complaint: "Patient reports a cough for three days." },
+    });
+    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    expect(sections.find((s) => s.key === "history")?.text).toContain("Dictate or type");
+  });
+
+  it("no prefill behaves exactly like manual encounter_note drafting (dictate-fresh placeholders)", async () => {
+    const service = new DraftService(makePool(), makeScope());
+    const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general");
+    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    expect(sections.find((s) => s.key === "chief_complaint")?.text).toContain("Dictate or type");
+  });
+});

@@ -29,8 +29,9 @@ import RecordSearch from "../../components/RecordSearch/RecordSearch";
 import ServiceRequestPanel from "../../components/ServiceRequestPanel/ServiceRequestPanel";
 import ClaimReadinessPanel from "../../components/ClaimReadinessPanel/ClaimReadinessPanel";
 import InterpreterPanel from "../../components/InterpreterPanel/InterpreterPanel";
+import AmbientPanel from "../../components/AmbientPanel/AmbientPanel";
 
-type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter";
+type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter" | "ambient";
 
 interface ChipDef {
   readonly id: CardId;
@@ -48,6 +49,7 @@ const CHIPS: readonly ChipDef[] = [
   { id: "claims", label: "Claims", icon: "M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" },
   { id: "search", label: "Search", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
   { id: "interpreter", label: "Interpreter", icon: "M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" },
+  { id: "ambient", label: "Encounter", icon: "M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" },
 ];
 
 const CARD_LABEL: Record<CardId, string> = {
@@ -60,6 +62,7 @@ const CARD_LABEL: Record<CardId, string> = {
   claims: "NPHIES claim readiness",
   search: "Search this patient's records",
   interpreter: "Medical Interpreter",
+  ambient: "Encounter Recording",
 };
 
 function Icon({ path, className = "w-4 h-4" }: { readonly path: string; readonly className?: string }): JSX.Element {
@@ -260,6 +263,9 @@ export default function PatientWorkspace({ patient, initialOpen, openRequest, on
                 {id === "claims" && <ClaimReadinessPanel patientId={patientId} />}
                 {id === "search" && <RecordSearch patientId={patientId} />}
                 {id === "interpreter" && <InterpreterPanel patientId={patientId} />}
+                {id === "ambient" && (
+                  <AmbientPanel patientId={patientId} onDraftCreated={() => openCard("draft")} />
+                )}
               </div>
             </div>
           ))}

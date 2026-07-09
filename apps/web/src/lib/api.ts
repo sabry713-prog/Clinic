@@ -379,8 +379,24 @@ export interface RecordSearchResponse {
   readonly groups: readonly SearchResultGroup[];
 }
 
-export type DraftDocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary";
+export type DraftDocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary" | "encounter_note";
 export type DraftSpecialty = "general" | "cardiology" | "orthopedics" | "pediatrics" | "obstetrics_gynecology" | "emergency_medicine";
+
+export interface PrefillSection {
+  readonly key: string;
+  readonly text: string;
+}
+
+export interface SectionSpec {
+  readonly key: string;
+  readonly title: string;
+}
+
+export interface SegmentResult {
+  readonly sections: ReadonlyArray<{ key: string; text: string }>;
+  readonly unclassified_text: string;
+  readonly retries: number;
+}
 
 export interface DraftSection {
   readonly key: string;
@@ -716,10 +732,21 @@ export const api = {
         `/api/v1/patients/${id}/search?q=${encodeURIComponent(q)}`,
       ),
 
-    createDraft: (id: string, documentType: DraftDocumentType, language: string, specialty: DraftSpecialty = "general") =>
+    createDraft: (
+      id: string,
+      documentType: DraftDocumentType,
+      language: string,
+      specialty: DraftSpecialty = "general",
+      prefill?: { transcript: string; sections: readonly PrefillSection[] },
+    ) =>
       request<DocumentDraft>(`/api/v1/patients/${id}/drafts`, {
         method: "POST",
-        body: JSON.stringify({ document_type: documentType, language, specialty }),
+        body: JSON.stringify({
+          document_type: documentType,
+          language,
+          specialty,
+          ...(prefill ? { transcript: prefill.transcript, prefill_sections: prefill.sections } : {}),
+        }),
       }),
 
     transcribe: (id: string, audioBase64: string, language: string) =>
@@ -900,6 +927,14 @@ export const api = {
           source_language: params.sourceLanguage,
           target_language: params.targetLanguage,
         }),
+      }),
+  },
+
+  ambient: {
+    segment: (patientId: string, text: string, sections: readonly SectionSpec[], language: string) =>
+      request<SegmentResult>(`/api/v1/patients/${patientId}/ambient/segment`, {
+        method: "POST",
+        body: JSON.stringify({ text, sections, language }),
       }),
   },
 

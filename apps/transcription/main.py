@@ -19,11 +19,13 @@ from src.transcription.config import settings
 from src.transcription.engine import get_engine
 from src.transcription.reformat import light_reformat
 from src.transcription.reformat_llm import faithful_reformat
+from src.transcription.segment import SectionSpec, get_segmentation_model, segment_transcript
 
 logger = structlog.get_logger()
 app = FastAPI(title="Clinical Copilot Transcription Service", version="0.1.0")
 
 _engine = get_engine()
+_segment_model = get_segmentation_model()
 
 
 class TranscribeRequest(BaseModel):
@@ -33,6 +35,17 @@ class TranscribeRequest(BaseModel):
 
 class ReformatRequest(BaseModel):
     text: str
+    language: str = "en"
+
+
+class SectionSpecRequest(BaseModel):
+    key: str
+    title: str
+
+
+class SegmentRequest(BaseModel):
+    text: str
+    sections: list[SectionSpecRequest]
     language: str = "en"
 
 
@@ -76,6 +89,31 @@ async def reformat(body: ReformatRequest) -> dict[str, str]:
     text = polished if polished is not None else light_reformat(body.text)
     logger.info("reformatted", language=lang, chars=len(text), reformat=mode)
     return {"text": text, "raw_text": body.text, "reformat": mode}
+
+
+@app.post("/segment", response_class=JSONResponse)
+async def segment(body: SegmentRequest) -> dict[str, object]:
+    """Classify an ambient-capture transcript into note sections. See
+    src/transcription/segment.py — every returned section is server-side
+    verified to be a verbatim substring of the transcript before being trusted;
+    nothing is ever paraphrased, added, or silently dropped (docs/prompts/
+    ambient-segmentation-prompt.md)."""
+    lang = body.language if body.language in ("en", "ar") else "en"
+    specs = [SectionSpec(key=s.key, title=s.title) for s in body.sections]
+    result = await segment_transcript(body.text, specs, lang, _segment_model)
+    logger.info(
+        "segmented",
+        language=lang,
+        chars=len(body.text),
+        sections=list(result.sections.keys()),
+        has_unclassified=bool(result.unclassified_text),
+        retries=result.retries,
+    )
+    return {
+        "sections": [{"key": k, "text": v} for k, v in result.sections.items()],
+        "unclassified_text": result.unclassified_text,
+        "retries": result.retries,
+    }
 
 
 if __name__ == "__main__":

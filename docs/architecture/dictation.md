@@ -1,15 +1,24 @@
 # Dictation (Doctor Voice → Draft Text)
 
 **Scope (approved):** transcribe + **light reformat only**. The clinician is the
-author; the system introduces **no clinical content**. AI rewriting/expansion of
-a diagnosis is SaMD (CLAUDE.md §2) and is explicitly out of scope (Project 2).
+author; the system introduces **no clinical content**.
 
-**Clinician dictation only — never patient recording.** The doctor manually
-dictates their own notes/assessment at their workstation (🎙 → speak → Stop).
-The tool does not record the patient and has no ambient/always-on capture. Audio
-is held in-memory only for the request and **discarded immediately after
-transcription** — never stored or logged. Only the resulting text (which the
-clinician reviews, edits, and signs) is retained.
+**Clinician dictation only — never patient recording, here.** The doctor
+manually dictates their own notes/assessment at their workstation (🎙 → speak →
+Stop). This flow does not record the patient. Audio is held in-memory only for
+the request and **discarded immediately after transcription** — never stored or
+logged. Only the resulting text (which the clinician reviews, edits, and signs)
+is retained.
+
+> **Update:** the "no ambient/always-on capture" boundary that used to be stated
+> here (as "Project 2, deferred") has since been scoped and built — see
+> [`docs/architecture/ambient-capture.md`](./ambient-capture.md) and
+> [`docs/prompts/ambient-segmentation-prompt.md`](../prompts/ambient-segmentation-prompt.md).
+> That feature is a **separate, explicit-start/explicit-stop, consent-gated**
+> recording of the clinician<->patient conversation — still no always-on/
+> background capture, and still no AI-authored clinical content (segmentation
+> only relocates the speaker's own verbatim words; CLAUDE.md §2 still applies in
+> full). This dictation flow is unchanged.
 
 ## Flow
 
