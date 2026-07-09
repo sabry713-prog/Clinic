@@ -13,6 +13,7 @@ import { PG_POOL } from "../database/database.module";
 import { PatientScopeService } from "../patient/patient-scope.service";
 
 export type DocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary";
+export type Specialty = "general" | "cardiology" | "orthopedics" | "pediatrics" | "obstetrics_gynecology" | "emergency_medicine";
 type Policy = "assembled_facts" | "clinician_authored_only";
 
 // prefill (clinician-authored-only sections only):
@@ -70,7 +71,42 @@ const TITLE_AR: Record<string, string> = {
   "Reason for Referral": "سبب الإحالة",
   "Reason for Transfer": "سبب التحويل",
   "Clinical Question": "السؤال السريري",
+  "Allergies": "الحساسيات",
 };
+
+// Specialty section templates (E-Backlog): per-key title overrides only — no
+// change to which facts are assembled, how they're assembled, or the
+// clinician-authored-only policy. Purely note-format terminology, matching
+// the competitive-assessment classification "Templating / terminology only;
+// no judgment." A key with no override for a given specialty keeps the
+// generic title. "general" (or an unrecognized specialty) always keeps the
+// unmodified generic template, so default draft generation is unaffected.
+const SPECIALTY_TITLE_OVERRIDES: Partial<Record<Specialty, Partial<Record<string, { en: string; ar: string }>>>> = {
+  cardiology: {
+    problems: { en: "Cardiac Problem List", ar: "قائمة المشاكل القلبية" },
+    medications: { en: "Cardiac Medications", ar: "الأدوية القلبية" },
+    results: { en: "Cardiac & Laboratory Results", ar: "نتائج القلب والمختبر" },
+  },
+  orthopedics: {
+    problems: { en: "Musculoskeletal Problem List", ar: "قائمة مشاكل الجهاز الحركي" },
+    results: { en: "Imaging & Laboratory Results", ar: "نتائج التصوير والمختبر" },
+  },
+  pediatrics: {
+    problems: { en: "Pediatric Problem List", ar: "قائمة المشاكل عند الأطفال" },
+  },
+  obstetrics_gynecology: {
+    problems: { en: "Gynecologic / Obstetric Problem List", ar: "قائمة مشاكل النساء والولادة" },
+    history: { en: "Obstetric & Gynecologic History", ar: "تاريخ النساء والولادة" },
+  },
+  emergency_medicine: {
+    reason: { en: "Reason for ED Presentation", ar: "سبب زيارة الطوارئ" },
+    results: { en: "ED Results", ar: "نتائج الطوارئ" },
+  },
+};
+
+export const SPECIALTIES: readonly Specialty[] = [
+  "general", "cardiology", "orthopedics", "pediatrics", "obstetrics_gynecology", "emergency_medicine",
+];
 
 // Defense-in-depth blocklist (mirrors handoff.service).
 const BLOCKLIST = [
@@ -142,10 +178,24 @@ export class DraftService {
     return (await res.json()) as { text: string; raw_text: string; reformat: string };
   }
 
-  async generate(userId: string, patientId: string, documentType: DocumentType, language: string): Promise<DraftRow> {
+  async generate(userId: string, patientId: string, documentType: DocumentType, language: string, specialty: Specialty = "general"): Promise<DraftRow> {
     await this.scope.assertPatientInScope(userId, patientId);
-    const template = TEMPLATES[documentType];
-    if (!template) throw new BadRequestException("Unknown document_type");
+    const baseTemplate = TEMPLATES[documentType];
+    if (!baseTemplate) throw new BadRequestException("Unknown document_type");
+
+    // Specialty templates (E-Backlog): "general" is byte-identical to the
+    // base template. Other specialties insert an Allergies section (currently
+    // missing from every generic template despite being universally relevant)
+    // right after Identity — still a plain assembled-facts reproduction, same
+    // as every other section.
+    const template: SectionDef[] = specialty === "general"
+      ? baseTemplate
+      : (() => {
+          const idx = baseTemplate.findIndex((s) => s.key === "identity");
+          const withAllergies = [...baseTemplate];
+          withAllergies.splice(idx + 1, 0, { key: "allergies", title: "Allergies", policy: "assembled_facts" });
+          return withAllergies;
+        })();
 
     // Clinician-authored source (verbatim notes) — the only permitted content
     // for clinician-authored-only sections.
@@ -154,7 +204,9 @@ export class DraftService {
     const sections: DraftSection[] = [];
     for (const def of template) {
       let text: string;
-      const title = language === "ar" ? (TITLE_AR[def.title] ?? def.title) : def.title;
+      const override = SPECIALTY_TITLE_OVERRIDES[specialty]?.[def.key];
+      const baseTitle = override?.en ?? def.title;
+      const title = language === "ar" ? (override?.ar ?? TITLE_AR[baseTitle] ?? baseTitle) : baseTitle;
       if (def.policy === "assembled_facts") {
         text = await this.assembleFacts(patientId, def.key, language);
       } else if (def.prefill === false) {
@@ -186,11 +238,11 @@ export class DraftService {
 
     const res = await this.pool.query<DraftRow>(
       `INSERT INTO app.document_draft
-         (patient_id, document_type, language, sections_json, generated_text,
+         (patient_id, document_type, language, specialty, sections_json, generated_text,
           blocklist_triggered, disclaimer, generated_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING ${DRAFT_COLS}`,
-      [patientId, documentType, language, JSON.stringify(sections), generated, blocked, disclaimer, userId],
+      [patientId, documentType, language, specialty, JSON.stringify(sections), generated, blocked, disclaimer, userId],
     );
     return res.rows[0]!;
   }
@@ -287,6 +339,19 @@ export class DraftService {
         return `- ${o.code_display}: ${v}${ref} (${o.effective_at ?? "—"}).`;
       }).join("\n");
     }
+    if (key === "allergies") {
+      // Reaction term reproduced verbatim only -- no severity adjective, same
+      // rule as the narrative prompt (docs/prompts/narrative-prompt.md §3).
+      const r = await this.pool.query(
+        `SELECT code_display, reaction, recorded_at::text FROM hospital.allergy_intolerance WHERE patient_id=$1 ORDER BY recorded_at DESC NULLS LAST`, [patientId]);
+      if (!r.rows.length) return none;
+      return r.rows.map((a) => {
+        const parts = [String(a.code_display)];
+        if (a.reaction) parts.push(ar ? `التفاعل: ${a.reaction}` : `reaction: ${a.reaction}`);
+        if (a.recorded_at) parts.push(ar ? `تاريخ التسجيل: ${a.recorded_at}` : `recorded: ${a.recorded_at}`);
+        return `- ${parts.join(sep)}.`;
+      }).join("\n");
+    }
     return none;
   }
 
@@ -309,7 +374,7 @@ export class DraftService {
   }
 }
 
-const DRAFT_COLS = `id, patient_id, document_type, language, status, sections_json,
+const DRAFT_COLS = `id, patient_id, document_type, language, specialty, status, sections_json,
   generated_text, edited_text, blocklist_triggered, disclaimer,
   generated_by, signed_by, signed_at::text AS signed_at, signed_text,
   created_at::text AS created_at`;
@@ -319,6 +384,7 @@ export interface DraftRow {
   patient_id: string;
   document_type: string;
   language: string;
+  specialty: string;
   status: string;
   sections_json: DraftSection[];
   generated_text: string;

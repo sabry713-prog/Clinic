@@ -380,6 +380,7 @@ export interface RecordSearchResponse {
 }
 
 export type DraftDocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary";
+export type DraftSpecialty = "general" | "cardiology" | "orthopedics" | "pediatrics" | "obstetrics_gynecology" | "emergency_medicine";
 
 export interface DraftSection {
   readonly key: string;
@@ -407,6 +408,7 @@ export interface DocumentDraft {
   readonly patient_id: string;
   readonly document_type: string;
   readonly language: string;
+  readonly specialty: string;
   readonly status: "draft" | "signed";
   readonly sections_json: readonly DraftSection[];
   readonly generated_text: string;
@@ -714,10 +716,10 @@ export const api = {
         `/api/v1/patients/${id}/search?q=${encodeURIComponent(q)}`,
       ),
 
-    createDraft: (id: string, documentType: DraftDocumentType, language: string) =>
+    createDraft: (id: string, documentType: DraftDocumentType, language: string, specialty: DraftSpecialty = "general") =>
       request<DocumentDraft>(`/api/v1/patients/${id}/drafts`, {
         method: "POST",
-        body: JSON.stringify({ document_type: documentType, language }),
+        body: JSON.stringify({ document_type: documentType, language, specialty }),
       }),
 
     transcribe: (id: string, audioBase64: string, language: string) =>
