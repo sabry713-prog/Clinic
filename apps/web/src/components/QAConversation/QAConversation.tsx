@@ -285,37 +285,55 @@ function TypingDots(): React.ReactElement {
 
 // ── AnswerBody ────────────────────────────────────────────────────────────────
 //
-// Renders bulleted answers ("• Label: text" lines) as a structured list with
-// a neutral record-type tag per row. All tags share one muted style — no
-// color-coding by record type or content. Non-bulleted answers (refusals,
-// single-fact answers) render as plain text.
+// Renders bulleted answers as a structured list with a neutral record-type
+// tag per row where a "Label: text" pattern is present. Recognizes "•", "-",
+// and "*" bullet markers (different model providers format lists
+// differently — the underlying content is unchanged, only its display).
+// Inline **bold** markdown renders as emphasis. All rows and emphasis share
+// one muted style — no color-coding by record type or content. Non-bulleted
+// answers (refusals, single-fact answers) render as plain text.
 
 function prettyLabel(raw: string): string {
   const cleaned = raw.replace(/-/g, " ").trim();
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
+const BULLET_RE = /^[•\-*]\s+/;
+
+// Renders inline **bold** markdown segments. No other markdown (italics,
+// links) is interpreted — kept deliberately narrow.
+function renderInline(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={i}>{part.slice(2, -2)}</strong>
+    ) : (
+      <React.Fragment key={i}>{part}</React.Fragment>
+    ),
+  );
+}
+
 function AnswerBody({ text }: { readonly text: string }): React.ReactElement {
-  const lines = text.split("\n");
-  const hasBullets = lines.some((l) => l.startsWith("• "));
+  const lines = text.split("\n").map((l) => l.trim());
+  const hasBullets = lines.some((l) => BULLET_RE.test(l));
 
   if (!hasBullets) {
-    return <span className="whitespace-pre-wrap">{text}</span>;
+    return <span className="whitespace-pre-wrap">{renderInline(text)}</span>;
   }
 
-  const preamble = lines.filter((l) => !l.startsWith("• ") && l.trim() !== "");
+  const preamble = lines.filter((l) => !BULLET_RE.test(l) && l !== "");
   const bullets = lines
-    .filter((l) => l.startsWith("• "))
-    .map((l) => l.slice(2));
+    .filter((l) => BULLET_RE.test(l))
+    .map((l) => l.replace(BULLET_RE, ""));
 
   return (
     <div className="space-y-2">
       {preamble.map((line, i) => (
         <p key={`p-${i}`} className="font-medium">
-          {line}
+          {renderInline(line)}
         </p>
       ))}
-      <ul className="space-y-1.5">
+      <ul className="space-y-1.5 list-disc list-inside marker:text-gray-400">
         {bullets.map((item, i) => {
           const match = /^([^:]{2,40}?(?:\([^)]*\))?):\s+(.*)$/s.exec(item);
           return (
@@ -325,10 +343,10 @@ function AnswerBody({ text }: { readonly text: string }): React.ReactElement {
                   <span className="shrink-0 mt-0.5 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600 whitespace-nowrap">
                     {prettyLabel(match[1]!)}
                   </span>
-                  <span className="min-w-0">{match[2]}</span>
+                  <span className="min-w-0">{renderInline(match[2]!)}</span>
                 </>
               ) : (
-                <span className="min-w-0">{item}</span>
+                <span className="min-w-0">{renderInline(item)}</span>
               )}
             </li>
           );
