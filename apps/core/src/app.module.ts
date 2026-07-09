@@ -20,6 +20,7 @@ import { DraftModule } from "./draft/draft.module";
 import { ConditionModule } from "./condition/condition.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
 import { NphiesModule } from "./nphies/nphies.module";
+import { InterpreterModule } from "./interpreter/interpreter.module";
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { NphiesModule } from "./nphies/nphies.module";
     ConditionModule,
     ServiceRequestModule,
     NphiesModule,
+    InterpreterModule,
     DsrModule,
     MetricsModule,
     FeatureFlagsModule,

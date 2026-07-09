@@ -12,6 +12,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from src.narrative.config import settings
 from src.narrative.grpc_server import create_grpc_server
+from src.narrative.interpreter import INTERPRETER_TEMPLATE_VERSION, translate_message
 from src.narrative.logging_config import configure_logging
 from src.narrative.model_client import get_model
 from src.narrative.narrative_service import generate_narrative
@@ -141,6 +142,34 @@ async def patient_recap(request: PatientRecapRequest) -> dict[str, Any]:
         "text": text,
         "fallback_message": None if text else "Plain-language recap unavailable. Showing the clinical summary instead.",
         "prompt_template_version": PATIENT_RECAP_TEMPLATE_VERSION,
+        "blocklist_triggered": blocklist_triggered,
+        "blocklist_retries": retries,
+    }
+
+
+class InterpreterRequest(BaseModel):
+    text: str
+    source_language: str = "en"
+    target_language: str = "ar"
+
+
+@app.post("/narrative/interpret", response_class=JSONResponse)
+async def interpret(request: InterpreterRequest) -> dict[str, Any]:
+    """Translate an ad-hoc clinician<->patient communication message.
+
+    See src/narrative/interpreter.py. Not tied to a stored narrative --
+    this translates whatever short message text the caller supplies.
+    """
+    text, blocklist_triggered, retries = await translate_message(
+        text=request.text,
+        source_language=request.source_language,
+        target_language=request.target_language,
+        model=_model,
+    )
+    return {
+        "text": text,
+        "fallback_message": None if text else "Translation unavailable. Please rephrase or use an in-person interpreter.",
+        "prompt_template_version": INTERPRETER_TEMPLATE_VERSION,
         "blocklist_triggered": blocklist_triggered,
         "blocklist_retries": retries,
     }

@@ -101,7 +101,8 @@
       "diagnosis": "Add diagnosis",
       "draft": "Draft document",
       "orders": "Service requests",
-      "claims": "NPHIES claims"
+      "claims": "NPHIES claims",
+      "interpreter": "Medical Interpreter"
     },
     "nphiesAnalytics": "NPHIES analytics"
   }
