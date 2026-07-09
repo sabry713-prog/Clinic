@@ -13,7 +13,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../lib/api";
-import type { NarrativeItem, ProvenanceEntry } from "../../lib/api";
+import type { NarrativeItem, PatientRecap, ProvenanceEntry } from "../../lib/api";
 import GeneratingIndicator from "../common/GeneratingIndicator";
 
 export interface NarrativePanelProps {
@@ -68,6 +68,10 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
   const [error, setError] = useState<string | null>(null);
   const [hoveredEntryIndex, setHoveredEntryIndex] = useState<number | null>(null);
   const [sidebarSources, setSidebarSources] = useState<ProvenanceEntry | null>(null);
+  const [recap, setRecap] = useState<PatientRecap | null>(null);
+  const [isLoadingRecap, setIsLoadingRecap] = useState(false);
+  const [recapError, setRecapError] = useState<string | null>(null);
+  const [showRecap, setShowRecap] = useState(false);
 
   const handleGenerate = useCallback(
     (regenerate = false) => {
@@ -79,6 +83,9 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
           setNarrative(data);
           setHoveredEntryIndex(null);
           setSidebarSources(null);
+          setRecap(null);
+          setShowRecap(false);
+          setRecapError(null);
         })
         .catch((err: unknown) => {
           setError(
@@ -89,6 +96,26 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
     },
     [patientId, language, scope],
   );
+
+  const handleToggleRecap = useCallback(() => {
+    if (!narrative) return;
+    if (recap !== null) {
+      setShowRecap((v) => !v);
+      return;
+    }
+    setIsLoadingRecap(true);
+    setRecapError(null);
+    api.narrative
+      .patientRecap(patientId, narrative.id)
+      .then((data) => {
+        setRecap(data);
+        setShowRecap(true);
+      })
+      .catch((err: unknown) => {
+        setRecapError(err instanceof Error ? err.message : "Failed to generate patient recap");
+      })
+      .finally(() => setIsLoadingRecap(false));
+  }, [patientId, narrative, recap]);
 
   const disclaimer = language === "ar" ? DISCLAIMER_AR : DISCLAIMER_EN;
 
@@ -170,6 +197,21 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
               ? t("narrative.regenerate", "Regenerate")
               : t("narrative.generate", "Generate Narrative")}
           </button>
+          {/* Patient-facing plain-language recap toggle */}
+          {narrative?.text && (
+            <button
+              onClick={handleToggleRecap}
+              disabled={isLoadingRecap}
+              className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm px-3 py-1 rounded transition-colors"
+              data-testid="patient-recap-toggle"
+            >
+              {isLoadingRecap
+                ? t("narrative.recapLoading", "Restyling…")
+                : showRecap
+                ? t("narrative.recapShowClinical", "Show clinical summary")
+                : t("narrative.recapShow", "Patient recap")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -188,6 +230,25 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
         </div>
       )}
 
+      {recapError && (
+        <div className="text-slate-400 text-sm bg-slate-800 rounded p-3" data-testid="recap-error-message">
+          {recapError}
+        </div>
+      )}
+
+      {/* Patient recap — same facts, friendlier prose. Distinct styling so
+          it's never confused with the clinical text underneath. */}
+      {showRecap && recap && (
+        <div className="bg-blue-950/30 border border-blue-800/50 rounded-lg p-4 space-y-2" data-testid="patient-recap">
+          {recap.text ? (
+            <p className="text-slate-100 text-sm leading-relaxed whitespace-pre-line">{recap.text}</p>
+          ) : (
+            <p className="text-slate-300 text-sm">{recap.fallback_message}</p>
+          )}
+          <p className="text-blue-300/70 text-xs border-t border-blue-800/40 pt-2">{recap.disclaimer}</p>
+        </div>
+      )}
+
       {/* Fallback message — neutral info box, no alarm styling */}
       {narrative && !narrative.text && narrative.fallback_message && (
         <div
@@ -199,7 +260,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
       )}
 
       {/* Narrative text + hover-to-source */}
-      {narrative?.text && (
+      {narrative?.text && !showRecap && (
         <div className="flex gap-4">
           {/* Text area */}
           <div className="flex-1 text-slate-200 text-sm leading-relaxed space-y-1" data-testid="narrative-text">
