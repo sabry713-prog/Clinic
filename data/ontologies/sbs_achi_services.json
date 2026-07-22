@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "ontology": "SBS / ACHI",
+    "description": "Service and procedure nodes (Saudi Billing System / Australian Classification of Health Interventions). Illustrative dev subset. Production loads the licensed SBS catalogue.",
+    "licensed": false
+  },
+  "nodes": [
+    { "code": "11700-00-10", "display": "Electrocardiogram (ECG), 12 lead", "category": "diagnostic_cardiology", "system": "SBS" },
+    { "code": "58500-00-10", "display": "Chest X-ray", "category": "diagnostic_imaging", "system": "SBS" },
+    { "code": "55036-00-10", "display": "Ultrasound of abdomen", "category": "diagnostic_imaging", "system": "SBS" },
+    { "code": "11506-00-10", "display": "Spirometry / respiratory function test", "category": "diagnostic_respiratory", "system": "SBS" },
+    { "code": "11000-00-10", "display": "Electroencephalogram (EEG)", "category": "diagnostic_neurology", "system": "SBS" },
+    { "code": "66536-00-10", "display": "Lipid profile", "category": "pathology", "system": "SBS" },
+    { "code": "66500-00-10", "display": "Renal function profile", "category": "pathology", "system": "SBS" },
+    { "code": "66551-00-10", "display": "Glycated haemoglobin (HbA1c)", "category": "pathology", "system": "SBS" },
+    { "code": "66819-00-10", "display": "Urinalysis", "category": "pathology", "system": "SBS" },
+    { "code": "66716-00-10", "display": "Thyroid function test (TSH)", "category": "pathology", "system": "SBS" },
+    { "code": "65060-00-10", "display": "X-ray of ankle", "category": "diagnostic_imaging", "system": "SBS" },
+    { "code": "16400-00-10", "display": "Antenatal dating ultrasound", "category": "obstetrics", "system": "SBS" },
+    { "code": "13706-00-10", "display": "Full blood count", "category": "pathology", "system": "SBS" }
+  ]
+}

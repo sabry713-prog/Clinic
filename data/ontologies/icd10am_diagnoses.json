@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "ontology": "ICD-10-AM",
+    "description": "Diagnosis nodes. Illustrative dev subset covering the synthetic seed encounters. Production loads the licensed ICD-10-AM release.",
+    "licensed": false
+  },
+  "nodes": [
+    { "code": "I10",   "display": "Essential hypertension", "chapter": "IX Diseases of the circulatory system" },
+    { "code": "E11.9", "display": "Type 2 diabetes mellitus without complications", "chapter": "IV Endocrine, nutritional and metabolic diseases" },
+    { "code": "E11.4", "display": "Type 2 diabetes mellitus with neurological complications", "chapter": "IV Endocrine, nutritional and metabolic diseases" },
+    { "code": "E78.0", "display": "Pure hypercholesterolaemia", "chapter": "IV Endocrine, nutritional and metabolic diseases" },
+    { "code": "E03.9", "display": "Hypothyroidism, unspecified", "chapter": "IV Endocrine, nutritional and metabolic diseases" },
+    { "code": "N18.2", "display": "Chronic kidney disease, stage 2", "chapter": "XIV Diseases of the genitourinary system" },
+    { "code": "N18.3", "display": "Chronic kidney disease, stage 3", "chapter": "XIV Diseases of the genitourinary system" },
+    { "code": "J45.9", "display": "Asthma, unspecified", "chapter": "X Diseases of the respiratory system" },
+    { "code": "J06.9", "display": "Acute upper respiratory infection, unspecified", "chapter": "X Diseases of the respiratory system" },
+    { "code": "R07.4", "display": "Chest pain, unspecified", "chapter": "XVIII Symptoms and abnormal findings" },
+    { "code": "R06.0", "display": "Dyspnoea", "chapter": "XVIII Symptoms and abnormal findings" },
+    { "code": "R10.4", "display": "Other and unspecified abdominal pain", "chapter": "XVIII Symptoms and abnormal findings" },
+    { "code": "R51",   "display": "Headache", "chapter": "XVIII Symptoms and abnormal findings" },
+    { "code": "R35",   "display": "Polyuria", "chapter": "XVIII Symptoms and abnormal findings" },
+    { "code": "K21.9", "display": "Gastro-oesophageal reflux disease without oesophagitis", "chapter": "XI Diseases of the digestive system" },
+    { "code": "G43.9", "display": "Migraine, unspecified", "chapter": "VI Diseases of the nervous system" },
+    { "code": "S93.4", "display": "Sprain of ankle", "chapter": "XIX Injury and poisoning" },
+    { "code": "Z34.0", "display": "Supervision of normal first pregnancy", "chapter": "XXI Factors influencing health status" }
+  ]
+}

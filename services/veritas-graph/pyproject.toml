@@ -1,0 +1,16 @@
+[project]
+name = "veritas-graph"
+version = "0.1.0"
+description = "Veritas-Medica knowledge graph: Neo4j client, NPHIES ontology ingestion, necessity queries"
+requires-python = ">=3.11"
+dependencies = [
+    "neo4j>=5.20",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "ontology": "SFDA",
+    "description": "Medication nodes (Saudi Food and Drug Authority drug list, keyed here by ATC code for the dev subset). Illustrative only. Production loads the licensed SFDA registry.",
+    "licensed": false
+  },
+  "nodes": [
+    { "code": "N02BA01", "display": "Aspirin", "form": "tablet", "atc": "N02BA01" },
+    { "code": "A10BA02", "display": "Metformin", "form": "tablet", "atc": "A10BA02" },
+    { "code": "A10BJ02", "display": "Liraglutide", "form": "solution for injection", "atc": "A10BJ02" },
+    { "code": "C09AA05", "display": "Ramipril", "form": "capsule", "atc": "C09AA05" },
+    { "code": "C07AB02", "display": "Metoprolol", "form": "tablet", "atc": "C07AB02" },
+    { "code": "C10AA01", "display": "Simvastatin", "form": "tablet", "atc": "C10AA01" },
+    { "code": "R03BA02", "display": "Budesonide inhaler", "form": "inhalation powder", "atc": "R03BA02" },
+    { "code": "R03AC02", "display": "Salbutamol inhaler", "form": "inhalation aerosol", "atc": "R03AC02" },
+    { "code": "A02BC01", "display": "Omeprazole", "form": "capsule", "atc": "A02BC01" },
+    { "code": "H03AA01", "display": "Levothyroxine", "form": "tablet", "atc": "H03AA01" },
+    { "code": "N02CC01", "display": "Sumatriptan", "form": "tablet", "atc": "N02CC01" },
+    { "code": "N02BE01", "display": "Paracetamol", "form": "tablet", "atc": "N02BE01" },
+    { "code": "M01AE01", "display": "Ibuprofen", "form": "tablet", "atc": "M01AE01" },
+    { "code": "B03BB01", "display": "Folic acid", "form": "tablet", "atc": "B03BB01" }
+  ]
+}
