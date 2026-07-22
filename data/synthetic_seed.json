@@ -1,0 +1,167 @@
+{
+  "_meta": {
+    "description": "Synthetic, fully anonymized test data for Veritas-Medica. No real patient information. Names are fictional; national IDs, MRNs, and coverage numbers are randomly generated and non-resolvable.",
+    "generated_for": "Sprint 1 — DeepSeek integration & synthetic data pipeline",
+    "encounter_count": 10,
+    "phi": false
+  },
+  "encounters": [
+    {
+      "encounter_id": "ENC-0001",
+      "patient": { "mrn": "SYN-1001", "display_name": "Test Patient Alpha", "sex": "male", "date_of_birth": "1968-03-12" },
+      "ambient_transcript": "Patient is a 57-year-old man presenting with intermittent chest tightness on exertion for two weeks. Denies pain at rest. Blood pressure 148 over 92, heart rate 78, oxygen saturation 98 percent. Heart sounds normal, no murmurs. Lungs clear. Known hypertension and type 2 diabetes. Plan to obtain an ECG and start low-dose aspirin, review lipid profile results, follow up in one week.",
+      "conditions": [
+        { "code": "I10", "system": "ICD-10-AM", "display": "Essential hypertension", "status": "active" },
+        { "code": "E11.9", "system": "ICD-10-AM", "display": "Type 2 diabetes mellitus without complications", "status": "active" },
+        { "code": "R07.4", "system": "ICD-10-AM", "display": "Chest pain, unspecified", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "2093-3", "name": "Total cholesterol", "value": 5.9, "unit": "mmol/L", "reference_range": "<5.2", "effective_at": "2026-07-18" },
+        { "code": "4548-4", "name": "HbA1c", "value": 7.8, "unit": "%", "reference_range": "4.0-5.6", "effective_at": "2026-07-18" }
+      ],
+      "prescriptions": [
+        { "code": "N02BA01", "name": "Aspirin", "dose": "75 mg", "route": "oral", "frequency": "once daily" },
+        { "code": "A10BA02", "name": "Metformin", "dose": "1000 mg", "route": "oral", "frequency": "twice daily" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-A", "policy_number": "POL-88001", "coverage_status": "active", "nphies_status": "green" }
+    },
+    {
+      "encounter_id": "ENC-0002",
+      "patient": { "mrn": "SYN-1002", "display_name": "Test Patient Bravo", "sex": "female", "date_of_birth": "1990-11-02" },
+      "ambient_transcript": "Thirty-five-year-old woman with a three-day history of productive cough, low-grade fever, and sore throat. Temperature 38 point 1, respiratory rate 18, oxygen saturation 97 percent. Throat mildly erythematous, chest clear on auscultation. No known drug allergies. Impression consistent with an upper respiratory tract infection. Advised rest, fluids, paracetamol as needed, and a chest x-ray if symptoms persist beyond five days.",
+      "conditions": [
+        { "code": "J06.9", "system": "ICD-10-AM", "display": "Acute upper respiratory infection, unspecified", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "6690-2", "name": "White cell count", "value": 11.2, "unit": "10^9/L", "reference_range": "4.0-11.0", "effective_at": "2026-07-19" }
+      ],
+      "prescriptions": [
+        { "code": "N02BE01", "name": "Paracetamol", "dose": "1000 mg", "route": "oral", "frequency": "every 6 hours as needed" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-B", "policy_number": "POL-88002", "coverage_status": "active", "nphies_status": "yellow" }
+    },
+    {
+      "encounter_id": "ENC-0003",
+      "patient": { "mrn": "SYN-1003", "display_name": "Test Patient Charlie", "sex": "male", "date_of_birth": "1955-06-25" },
+      "ambient_transcript": "Seventy-one-year-old man, known chronic kidney disease stage three, here for routine review. Reports mild ankle swelling. Blood pressure 138 over 84. Creatinine trending as per lab. Continue current medications, restrict dietary salt, recheck renal profile in four weeks.",
+      "conditions": [
+        { "code": "N18.3", "system": "ICD-10-AM", "display": "Chronic kidney disease, stage 3", "status": "active" },
+        { "code": "I10", "system": "ICD-10-AM", "display": "Essential hypertension", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "2160-0", "name": "Creatinine", "value": 168, "unit": "umol/L", "reference_range": "60-110", "effective_at": "2026-07-15" },
+        { "code": "2823-3", "name": "Potassium", "value": 4.9, "unit": "mmol/L", "reference_range": "3.5-5.1", "effective_at": "2026-07-15" }
+      ],
+      "prescriptions": [
+        { "code": "C09AA05", "name": "Ramipril", "dose": "5 mg", "route": "oral", "frequency": "once daily" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-A", "policy_number": "POL-88003", "coverage_status": "active", "nphies_status": "green" }
+    },
+    {
+      "encounter_id": "ENC-0004",
+      "patient": { "mrn": "SYN-1004", "display_name": "Test Patient Delta", "sex": "female", "date_of_birth": "1983-01-18" },
+      "ambient_transcript": "Forty-three-year-old woman with known asthma presents with increased wheeze and nocturnal cough over the past week. Peak flow reduced from personal best. Chest with scattered wheeze bilaterally. Oxygen saturation 96 percent. Step up inhaled corticosteroid, review inhaler technique, provide a written asthma action plan, spirometry to be arranged.",
+      "conditions": [
+        { "code": "J45.9", "system": "ICD-10-AM", "display": "Asthma, unspecified", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "33452-4", "name": "Peak expiratory flow", "value": 320, "unit": "L/min", "reference_range": "400-550", "effective_at": "2026-07-17" }
+      ],
+      "prescriptions": [
+        { "code": "R03BA02", "name": "Budesonide inhaler", "dose": "200 mcg", "route": "inhaled", "frequency": "twice daily" },
+        { "code": "R03AC02", "name": "Salbutamol inhaler", "dose": "100 mcg", "route": "inhaled", "frequency": "as needed" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-C", "policy_number": "POL-88004", "coverage_status": "active", "nphies_status": "green" }
+    },
+    {
+      "encounter_id": "ENC-0005",
+      "patient": { "mrn": "SYN-1005", "display_name": "Test Patient Echo", "sex": "male", "date_of_birth": "1971-09-30" },
+      "ambient_transcript": "Fifty-four-year-old man with epigastric burning pain after meals for one month, worse when lying down. No weight loss, no black stools. Abdomen soft, mild epigastric tenderness. Likely gastro-oesophageal reflux. Start a proton pump inhibitor, advise dietary modification, arrange an ultrasound of the abdomen if no improvement.",
+      "conditions": [
+        { "code": "K21.9", "system": "ICD-10-AM", "display": "Gastro-oesophageal reflux disease without oesophagitis", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "1742-6", "name": "Alanine aminotransferase", "value": 28, "unit": "U/L", "reference_range": "0-41", "effective_at": "2026-07-16" }
+      ],
+      "prescriptions": [
+        { "code": "A02BC01", "name": "Omeprazole", "dose": "20 mg", "route": "oral", "frequency": "once daily before breakfast" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-B", "policy_number": "POL-88005", "coverage_status": "pending", "nphies_status": "red" }
+    },
+    {
+      "encounter_id": "ENC-0006",
+      "patient": { "mrn": "SYN-1006", "display_name": "Test Patient Foxtrot", "sex": "female", "date_of_birth": "1996-04-08" },
+      "ambient_transcript": "Twenty-nine-year-old woman, twelve weeks pregnant, presents for routine antenatal review. Feels well. Blood pressure 112 over 70. No proteinuria on dipstick. Fetal heart heard. Continue prenatal vitamins, arrange routine antenatal bloods and dating ultrasound.",
+      "conditions": [
+        { "code": "Z34.0", "system": "ICD-10-AM", "display": "Supervision of normal first pregnancy", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "718-7", "name": "Haemoglobin", "value": 118, "unit": "g/L", "reference_range": "115-165", "effective_at": "2026-07-20" }
+      ],
+      "prescriptions": [
+        { "code": "B03BB01", "name": "Folic acid", "dose": "400 mcg", "route": "oral", "frequency": "once daily" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-A", "policy_number": "POL-88006", "coverage_status": "active", "nphies_status": "green" }
+    },
+    {
+      "encounter_id": "ENC-0007",
+      "patient": { "mrn": "SYN-1007", "display_name": "Test Patient Golf", "sex": "male", "date_of_birth": "1962-12-14" },
+      "ambient_transcript": "Sixty-three-year-old man with known type 2 diabetes reports numbness and tingling in both feet for several months. Monofilament sensation reduced bilaterally. Blood pressure 134 over 80. Reinforce foot care, optimise glycaemic control, refer to podiatry, check HbA1c and renal profile.",
+      "conditions": [
+        { "code": "E11.4", "system": "ICD-10-AM", "display": "Type 2 diabetes mellitus with neurological complications", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "4548-4", "name": "HbA1c", "value": 8.9, "unit": "%", "reference_range": "4.0-5.6", "effective_at": "2026-07-14" }
+      ],
+      "prescriptions": [
+        { "code": "A10BA02", "name": "Metformin", "dose": "1000 mg", "route": "oral", "frequency": "twice daily" },
+        { "code": "A10BJ02", "name": "Liraglutide", "dose": "1.2 mg", "route": "subcutaneous", "frequency": "once daily" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-C", "policy_number": "POL-88007", "coverage_status": "active", "nphies_status": "yellow" }
+    },
+    {
+      "encounter_id": "ENC-0008",
+      "patient": { "mrn": "SYN-1008", "display_name": "Test Patient Hotel", "sex": "female", "date_of_birth": "1978-07-21" },
+      "ambient_transcript": "Forty-seven-year-old woman with recurrent migraines, three episodes this month with visual aura, each lasting several hours. Neurological examination normal. Discussed trigger avoidance, start prophylactic therapy, provide acute treatment, keep a headache diary, review in six weeks.",
+      "conditions": [
+        { "code": "G43.9", "system": "ICD-10-AM", "display": "Migraine, unspecified", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "718-7", "name": "Haemoglobin", "value": 131, "unit": "g/L", "reference_range": "115-165", "effective_at": "2026-07-12" }
+      ],
+      "prescriptions": [
+        { "code": "C07AB02", "name": "Metoprolol", "dose": "50 mg", "route": "oral", "frequency": "once daily" },
+        { "code": "N02CC01", "name": "Sumatriptan", "dose": "50 mg", "route": "oral", "frequency": "as needed for acute migraine" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-B", "policy_number": "POL-88008", "coverage_status": "active", "nphies_status": "green" }
+    },
+    {
+      "encounter_id": "ENC-0009",
+      "patient": { "mrn": "SYN-1009", "display_name": "Test Patient India", "sex": "male", "date_of_birth": "2001-02-05" },
+      "ambient_transcript": "Twenty-four-year-old man presents after twisting his right ankle playing football yesterday. Swelling and tenderness over the lateral malleolus, able to bear weight with discomfort. No bony tenderness on palpation of the malleolar tip. Likely a lateral ligament sprain. Advised rest, ice, compression, elevation, simple analgesia, and an x-ray if unable to weight-bear.",
+      "conditions": [
+        { "code": "S93.4", "system": "ICD-10-AM", "display": "Sprain of ankle", "status": "active" }
+      ],
+      "lab_results": [],
+      "prescriptions": [
+        { "code": "M01AE01", "name": "Ibuprofen", "dose": "400 mg", "route": "oral", "frequency": "every 8 hours as needed with food" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-A", "policy_number": "POL-88009", "coverage_status": "active", "nphies_status": "green" }
+    },
+    {
+      "encounter_id": "ENC-0010",
+      "patient": { "mrn": "SYN-1010", "display_name": "Test Patient Juliet", "sex": "female", "date_of_birth": "1959-10-11" },
+      "ambient_transcript": "Sixty-six-year-old woman with known hypothyroidism for routine review, feels well on current replacement. No cold intolerance or fatigue. Pulse 72, weight stable. Recent thyroid function within target. Continue levothyroxine at the same dose, recheck thyroid function in twelve months.",
+      "conditions": [
+        { "code": "E03.9", "system": "ICD-10-AM", "display": "Hypothyroidism, unspecified", "status": "active" }
+      ],
+      "lab_results": [
+        { "code": "3016-3", "name": "Thyroid stimulating hormone", "value": 2.1, "unit": "mIU/L", "reference_range": "0.4-4.0", "effective_at": "2026-07-10" }
+      ],
+      "prescriptions": [
+        { "code": "H03AA01", "name": "Levothyroxine", "dose": "100 mcg", "route": "oral", "frequency": "once daily" }
+      ],
+      "insurance": { "payer": "SYN-PAYER-C", "policy_number": "POL-88010", "coverage_status": "active", "nphies_status": "green" }
+    }
+  ]
+}
