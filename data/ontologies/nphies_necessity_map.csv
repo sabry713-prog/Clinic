@@ -1,0 +1,42 @@
+diagnosis_code,target_code,target_type,rule_id,source,note
+I10,11700-00-10,service,NEC-0001,dev-illustrative,Hypertension justifies ECG
+I10,66500-00-10,service,NEC-0002,dev-illustrative,Hypertension justifies renal profile
+I10,66536-00-10,service,NEC-0003,dev-illustrative,Hypertension justifies lipid profile
+I10,C09AA05,medication,NEC-0004,dev-illustrative,Hypertension justifies ramipril
+I10,C07AB02,medication,NEC-0005,dev-illustrative,Hypertension justifies metoprolol
+E11.9,66551-00-10,service,NEC-0006,dev-illustrative,Type 2 diabetes justifies HbA1c
+E11.9,66819-00-10,service,NEC-0007,dev-illustrative,Type 2 diabetes justifies urinalysis
+E11.9,A10BA02,medication,NEC-0008,dev-illustrative,Type 2 diabetes justifies metformin
+E11.4,66551-00-10,service,NEC-0009,dev-illustrative,Diabetes with complications justifies HbA1c
+E11.4,A10BJ02,medication,NEC-0010,dev-illustrative,Diabetes with complications justifies liraglutide
+E11.4,A10BA02,medication,NEC-0011,dev-illustrative,Diabetes with complications justifies metformin
+E78.0,66536-00-10,service,NEC-0012,dev-illustrative,Hypercholesterolaemia justifies lipid profile
+E78.0,C10AA01,medication,NEC-0013,dev-illustrative,Hypercholesterolaemia justifies simvastatin
+E03.9,66716-00-10,service,NEC-0014,dev-illustrative,Hypothyroidism justifies TSH
+E03.9,H03AA01,medication,NEC-0015,dev-illustrative,Hypothyroidism justifies levothyroxine
+N18.2,66500-00-10,service,NEC-0016,dev-illustrative,CKD stage 2 justifies renal profile
+N18.2,66819-00-10,service,NEC-0017,dev-illustrative,CKD stage 2 justifies urinalysis
+N18.3,66500-00-10,service,NEC-0018,dev-illustrative,CKD stage 3 justifies renal profile
+N18.3,66819-00-10,service,NEC-0019,dev-illustrative,CKD stage 3 justifies urinalysis
+N18.3,C09AA05,medication,NEC-0020,dev-illustrative,CKD stage 3 justifies ramipril
+J45.9,11506-00-10,service,NEC-0021,dev-illustrative,Asthma justifies spirometry
+J45.9,R03BA02,medication,NEC-0022,dev-illustrative,Asthma justifies budesonide inhaler
+J45.9,R03AC02,medication,NEC-0023,dev-illustrative,Asthma justifies salbutamol inhaler
+J06.9,13706-00-10,service,NEC-0024,dev-illustrative,URTI justifies full blood count
+J06.9,N02BE01,medication,NEC-0025,dev-illustrative,URTI justifies paracetamol
+R07.4,11700-00-10,service,NEC-0026,dev-illustrative,Chest pain justifies ECG
+R07.4,58500-00-10,service,NEC-0027,dev-illustrative,Chest pain justifies chest X-ray
+R06.0,58500-00-10,service,NEC-0028,dev-illustrative,Dyspnoea justifies chest X-ray
+R06.0,11506-00-10,service,NEC-0029,dev-illustrative,Dyspnoea justifies spirometry
+R10.4,55036-00-10,service,NEC-0030,dev-illustrative,Abdominal pain justifies abdominal ultrasound
+R51,11000-00-10,service,NEC-0031,dev-illustrative,Headache justifies EEG
+R35,66551-00-10,service,NEC-0032,dev-illustrative,Polyuria justifies HbA1c
+K21.9,55036-00-10,service,NEC-0033,dev-illustrative,GORD justifies abdominal ultrasound
+K21.9,A02BC01,medication,NEC-0034,dev-illustrative,GORD justifies omeprazole
+G43.9,C07AB02,medication,NEC-0035,dev-illustrative,Migraine justifies metoprolol prophylaxis
+G43.9,N02CC01,medication,NEC-0036,dev-illustrative,Migraine justifies sumatriptan
+S93.4,65060-00-10,service,NEC-0037,dev-illustrative,Ankle sprain justifies ankle X-ray
+S93.4,M01AE01,medication,NEC-0038,dev-illustrative,Ankle sprain justifies ibuprofen
+Z34.0,16400-00-10,service,NEC-0039,dev-illustrative,Normal first pregnancy justifies dating ultrasound
+Z34.0,13706-00-10,service,NEC-0040,dev-illustrative,Normal first pregnancy justifies full blood count
+Z34.0,B03BB01,medication,NEC-0041,dev-illustrative,Normal first pregnancy justifies folic acid
