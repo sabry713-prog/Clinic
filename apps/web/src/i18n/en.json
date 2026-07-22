@@ -105,6 +105,7 @@
       "interpreter": "Medical Interpreter",
       "ambient": "Scribe"
     },
-    "nphiesAnalytics": "NPHIES analytics"
+    "nphiesAnalytics": "NPHIES analytics",
+    "encounter": "Encounter"
   }
 }
