@@ -105,6 +105,7 @@
       "interpreter": "المترجم الطبي",
       "ambient": "الكاتب الطبي"
     },
-    "nphiesAnalytics": "تحليلات نفيس"
+    "nphiesAnalytics": "تحليلات نفيس",
+    "encounter": "الزيارة"
   }
 }
