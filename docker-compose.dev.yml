@@ -89,7 +89,30 @@ services:
       timeout: 5s
       retries: 10
 
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: cc-neo4j
+    environment:
+      # Matches NEO4J_AUTH in .env ("<user>/<password>", the Neo4j convention)
+      NEO4J_AUTH: neo4j/veritas-dev-password
+      NEO4J_server_memory_heap_max__size: 512M
+    ports:
+      - "7474:7474"  # HTTP browser
+      - "7687:7687"  # Bolt
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      # cypher-shell ships in the image; a trivial query proves bolt is serving
+      test:
+        - CMD-SHELL
+        - cypher-shell -u neo4j -p veritas-dev-password "RETURN 1" || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 30s
+
 volumes:
   postgres_data:
   minio_data:
   keycloak_data:
+  neo4j_data:
