@@ -1,0 +1,17 @@
+{
+  "id": "chest-pain-01",
+  "title": "Exertional chest tightness — cardiology follow-up",
+  "language": "en",
+  "synthetic": true,
+  "expected_symptoms": ["chest pain", "shortness of breath"],
+  "chunks": [
+    { "at_ms": 0,     "speaker": "clinician", "text": "Good morning, what brings you in today?" },
+    { "at_ms": 3200,  "speaker": "patient",   "text": "I've been getting chest pain when I climb the stairs, for about two weeks now." },
+    { "at_ms": 9500,  "speaker": "clinician", "text": "Any pain when you're resting?" },
+    { "at_ms": 12400, "speaker": "patient",   "text": "No, only when I exert myself. Sometimes I get a little shortness of breath with it." },
+    { "at_ms": 19000, "speaker": "clinician", "text": "Blood pressure is 148 over 92, heart rate 78, oxygen saturation 98 percent." },
+    { "at_ms": 27500, "speaker": "clinician", "text": "Heart sounds are normal, no murmurs. Chest is clear on auscultation." },
+    { "at_ms": 35000, "speaker": "clinician", "text": "You have known hypertension and type 2 diabetes on the record." },
+    { "at_ms": 41200, "speaker": "clinician", "text": "Let's get an ECG and review your lipid profile, then follow up in one week." }
+  ]
+}

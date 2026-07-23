@@ -1,0 +1,16 @@
+{
+  "id": "fever-cough-02",
+  "title": "Fever and productive cough — general clinic",
+  "language": "en",
+  "synthetic": true,
+  "expected_symptoms": ["fever", "cough", "fatigue"],
+  "chunks": [
+    { "at_ms": 0,     "speaker": "clinician", "text": "What's been going on this week?" },
+    { "at_ms": 2800,  "speaker": "patient",   "text": "I've had a fever for three days and a cough that brings up phlegm." },
+    { "at_ms": 9000,  "speaker": "patient",   "text": "I feel a lot of fatigue as well, hard to get through the day." },
+    { "at_ms": 15000, "speaker": "clinician", "text": "Temperature today is 38.1, respiratory rate 18, saturation 97 percent." },
+    { "at_ms": 23000, "speaker": "clinician", "text": "Throat is mildly red, chest is clear on examination." },
+    { "at_ms": 30000, "speaker": "clinician", "text": "No known drug allergies documented." },
+    { "at_ms": 34500, "speaker": "clinician", "text": "Rest, fluids, paracetamol as needed, and a chest x-ray if it goes past five days." }
+  ]
+}

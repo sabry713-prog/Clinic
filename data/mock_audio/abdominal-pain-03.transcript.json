@@ -1,0 +1,15 @@
+{
+  "id": "abdominal-pain-03",
+  "title": "Epigastric abdominal pain — internal medicine",
+  "language": "en",
+  "synthetic": true,
+  "expected_symptoms": ["abdominal pain", "nausea"],
+  "chunks": [
+    { "at_ms": 0,     "speaker": "clinician", "text": "Tell me about the pain." },
+    { "at_ms": 2400,  "speaker": "patient",   "text": "Burning abdominal pain after meals, worse when I lie down, about a month." },
+    { "at_ms": 10000, "speaker": "patient",   "text": "I get nausea with it sometimes, but no vomiting." },
+    { "at_ms": 16000, "speaker": "clinician", "text": "No weight loss and no black stools reported." },
+    { "at_ms": 22000, "speaker": "clinician", "text": "Abdomen is soft with mild epigastric tenderness on palpation." },
+    { "at_ms": 30000, "speaker": "clinician", "text": "Start a proton pump inhibitor, adjust diet, ultrasound if no improvement." }
+  ]
+}

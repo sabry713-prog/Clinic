@@ -14,7 +14,7 @@
  */
 
 import { SullyProvider } from "./SullyContext";
-import AmbientScribePane from "./panes/AmbientScribePane";
+import LiveScribePane from "../scribe/LiveScribePane";
 import TimelinePane from "./panes/TimelinePane";
 import AiTeamDrawer from "./panes/AiTeamDrawer";
 import { useSully } from "./SullyContext";
@@ -33,7 +33,7 @@ function ShellLayout({ patientName }: { readonly patientName?: string | undefine
     <div className="flex h-[calc(100vh-3.5rem)] w-full overflow-hidden rounded-xl border border-slate-800">
       {/* Left — ambient scribe */}
       <div className="hidden w-[340px] shrink-0 border-e border-slate-800 lg:block">
-        <AmbientScribePane />
+        <LiveScribePane patientNames={patientName ? [patientName] : []} />
       </div>
 
       {/* Center — timeline + orders */}

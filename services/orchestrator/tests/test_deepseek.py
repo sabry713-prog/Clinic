@@ -179,8 +179,22 @@ def test_extract_json_object_tolerates_prose_wrapper():
 
 @pytest.mark.asyncio
 async def test_missing_api_key_raises(monkeypatch):
-    # Unset the key and hit the real _chat_completion path (which checks it
-    # before any network I/O).
+    # Point at an in-Kingdom endpoint so the PHI egress guard passes through
+    # and we actually reach the API-key check (the guard runs first and would
+    # otherwise block an external URL before the key is ever read).
+    monkeypatch.setenv("DEEPSEEK_BASE_URL", "http://127.0.0.1:1234")
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     with pytest.raises(DeepSeekError):
         await deepseek_client._chat_completion("sys", "user")
+
+
+@pytest.mark.asyncio
+async def test_guard_blocks_external_endpoint_before_api_key_is_read(monkeypatch):
+    """Egress policy is evaluated ahead of everything else, so a missing key
+    can never be the reason PHI does or does not leave."""
+    from phi_guard import PhiEgressBlocked
+
+    monkeypatch.setenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    with pytest.raises(PhiEgressBlocked):
+        await deepseek_client._chat_completion("sys", "patient record text")

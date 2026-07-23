@@ -17,11 +17,16 @@ Configuration comes from the environment:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from typing import Any, Optional
 
 import httpx
+
+from phi_guard import PhiEgressBlocked, guard_outbound
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_BASE_URL = "https://api.deepseek.com"
 DEFAULT_MODEL = "deepseek-chat"
@@ -57,11 +62,13 @@ class DeepSeekError(RuntimeError):
 
 
 def _api_key() -> str:
-    key = os.environ.get("DEEPSEEK_API_KEY")
+    # DEEPSEEK_API_KEY is the module's own name; MODEL_API_KEY is the shared
+    # one the rest of the services already use for the same endpoint.
+    key = os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("MODEL_API_KEY")
     if not key:
         raise DeepSeekError(
-            "DEEPSEEK_API_KEY is not set. Export it before calling the "
-            "DeepSeek client."
+            "No API key configured. Set DEEPSEEK_API_KEY (or the shared "
+            "MODEL_API_KEY) before calling the DeepSeek client."
         )
     return key
 
@@ -73,13 +80,23 @@ async def _chat_completion(
     temperature: float = 0.0,
     response_format: Optional[dict[str, str]] = None,
     client: Optional[httpx.AsyncClient] = None,
+    contains_phi: bool = True,
+    patient_names: Optional[list[str]] = None,
 ) -> str:
     """POST to DeepSeek's OpenAI-compatible /chat/completions and return the
     assistant message content. This is the single network boundary and the
     seam that tests patch.
     """
-    base_url = os.environ.get("DEEPSEEK_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
-    model = os.environ.get("DEEPSEEK_MODEL", DEFAULT_MODEL)
+    base_url = (
+        os.environ.get("DEEPSEEK_BASE_URL")
+        or os.environ.get("MODEL_ENDPOINT_URL")
+        or DEFAULT_BASE_URL
+    ).rstrip("/")
+    model = (
+        os.environ.get("DEEPSEEK_MODEL")
+        or os.environ.get("MODEL_NAME")
+        or DEFAULT_MODEL
+    )
     timeout = float(os.environ.get("DEEPSEEK_TIMEOUT_S", DEFAULT_TIMEOUT_S))
 
     payload: dict[str, Any] = {
@@ -93,6 +110,31 @@ async def _chat_completion(
     }
     if response_format is not None:
         payload["response_format"] = response_format
+
+    # PHI residency gate (packages/phi-guard). A consultation transcript and
+    # retrieved graph facts are PHI; api.deepseek.com is outside the Kingdom.
+    # Policy decides: block (default), de-identify, or acknowledged allow.
+    decision = guard_outbound(
+        endpoint_url=base_url,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        contains_phi=contains_phi,
+        patient_names=patient_names or [],
+    )
+    if decision.redaction_count:
+        # Observability parity with the qa service. Counts only — never values.
+        logger.info(
+            "phi_deidentified_before_egress",
+            extra={
+                "redactions": decision.redaction_count,
+                "residency": decision.residency.value,
+            },
+        )
+
+    payload["messages"] = [
+        {"role": "system", "content": decision.system_prompt},
+        {"role": "user", "content": decision.user_prompt},
+    ]
 
     headers = {
         "Authorization": f"Bearer {_api_key()}",
@@ -114,9 +156,11 @@ async def _chat_completion(
             await client.aclose()
 
     try:
-        return str(data["choices"][0]["message"]["content"])
+        raw = str(data["choices"][0]["message"]["content"])
     except (KeyError, IndexError, TypeError) as exc:
         raise DeepSeekError(f"Unexpected DeepSeek response shape: {data!r}") from exc
+    # Put real identifiers back before the clinician sees the text.
+    return decision.restore(raw)
 
 
 def _extract_json_object(text: str) -> dict[str, Any]:
@@ -145,6 +189,7 @@ async def generate_soap_note(
     transcript: str,
     *,
     client: Optional[httpx.AsyncClient] = None,
+    patient_names: Optional[list[str]] = None,
 ) -> dict[str, str]:
     """Structure an ambient consultation transcript into a SOAP note.
 
@@ -161,6 +206,7 @@ async def generate_soap_note(
         temperature=0.0,
         response_format={"type": "json_object"},
         client=client,
+        patient_names=patient_names,
     )
     obj = _extract_json_object(raw)
     # Normalise: guarantee all four keys as strings, ignore any extras.
@@ -172,6 +218,7 @@ async def format_agent_prose(
     agent_role: str,
     *,
     client: Optional[httpx.AsyncClient] = None,
+    patient_names: Optional[list[str]] = None,
 ) -> str:
     """Turn structured graph facts into a conversational message for the AI
     Team drawer (Scribe / Consultant / Pharmacist / NPHIES).
@@ -192,5 +239,6 @@ async def format_agent_prose(
         user_prompt,
         temperature=0.2,
         client=client,
+        patient_names=patient_names,
     )
     return raw.strip()

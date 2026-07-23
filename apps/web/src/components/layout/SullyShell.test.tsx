@@ -30,12 +30,19 @@ describe("SullyShell — 3-pane layout", () => {
 });
 
 describe("Ambient scribe pane", () => {
-  it("starts not recording and toggles on click", () => {
+  // Sprint 4 replaced the mock pane with the live scribe (real capture +
+  // orchestrator). Recording is now async and requires audio permission, so
+  // the toggle is exercised in LiveScribePane.test.tsx with those mocked.
+  // Here we only assert the shell composes the pane and its controls.
+  it("renders the recording control, not yet recording", () => {
     renderShell();
     const btn = screen.getByRole("button", { name: /record/i });
     expect(btn).toHaveAttribute("aria-pressed", "false");
-    fireEvent.click(btn);
-    expect(screen.getByRole("button", { name: /stop/i })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("offers sample replay so the pane works without a microphone", () => {
+    renderShell();
+    expect(screen.getByRole("button", { name: /replay sample/i })).toBeInTheDocument();
   });
 
   it("renders all four SOAP fields as editable textareas", () => {
@@ -52,12 +59,11 @@ describe("Ambient scribe pane", () => {
     expect(subjective.value).toBe("Patient reports chest tightness.");
   });
 
-  it("toggles smart checklist items", () => {
+  // The checklist is now driven by symptoms actually spoken in the
+  // transcript, so it starts empty rather than pre-populated.
+  it("starts with an empty smart checklist", () => {
     renderShell();
-    const item = screen.getByLabelText("Order ECG") as HTMLInputElement;
-    expect(item.checked).toBe(false);
-    fireEvent.click(item);
-    expect(item.checked).toBe(true);
+    expect(screen.getByText(/appear here when a symptom is mentioned/i)).toBeInTheDocument();
   });
 });
 
