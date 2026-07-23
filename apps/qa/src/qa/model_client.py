@@ -454,8 +454,13 @@ class LocalModelProvider:
         return decision.restore(raw)
 
 
-def get_model() -> ModelProvider:
-    """Select the synthesis model provider from settings (stub | local)."""
+def get_model(patient_names: list[str] | None = None) -> ModelProvider:
+    """Select the synthesis model provider from settings (stub | local).
+
+    `patient_names` are handed to the PHI egress guard so it can redact names
+    before an external call — regexes cannot detect names, so the caller must
+    supply the ones it knows for the patient in context.
+    """
     from .config import settings
 
     if settings.qa_model_provider.lower() in ("local", "deepseek") and settings.model_name:
@@ -464,5 +469,6 @@ def get_model() -> ModelProvider:
             model_name=settings.model_name,
             api_key=settings.model_api_key,
             timeout_s=settings.model_timeout_s,
+            patient_names=patient_names,
         )
     return StubModelProvider()

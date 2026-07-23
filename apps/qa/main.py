@@ -297,12 +297,64 @@ async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
     return chunks
 
 
+async def _fetch_patient_names(patient_id: str) -> list[str]:
+    """Names for the PHI egress guard to redact before any external call.
+
+    Regexes cannot detect personal names, so the guard is given the ones on
+    record for this patient (full name plus its parts, so a partial mention
+    in free text is caught too).
+    """
+    if _db_pool is None:
+        return []
+    async with _db_pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """SELECT display_name, given_name, family_name
+               FROM hospital.patient WHERE id = $1""",
+            patient_id,
+        )
+    if not row:
+        return []
+    names: list[str] = []
+    for value in (row["display_name"], row["given_name"], row["family_name"]):
+        if value and str(value).strip():
+            names.extend(_name_variants(str(value).strip()))
+    # Longest first so "Ahmad Al-Bishi" is redacted before its parts.
+    unique = list(dict.fromkeys(names))
+    unique.sort(key=len, reverse=True)
+    return unique
+
+
+def _name_variants(name: str) -> list[str]:
+    """Expand a name into the forms that may appear in free text.
+
+    A note may use the full name, a single token, or part of a hyphenated
+    surname ("Al-Bishi" from "Ahmad Fakename-Al-Bishi"), so each of those has
+    to be redactable on its own.
+    """
+    variants: list[str] = [name]
+    for token in name.split():
+        if len(token) > 2:
+            variants.append(token)
+        if "-" in token:
+            parts = token.split("-")
+            # Hyphen-joined suffixes: Fakename-Al-Bishi -> Al-Bishi -> Bishi
+            for i in range(1, len(parts)):
+                suffix = "-".join(parts[i:])
+                if len(suffix) > 2:
+                    variants.append(suffix)
+            for part in parts:
+                if len(part) > 2:
+                    variants.append(part)
+    return variants
+
+
 @app.post("/qa/answer", response_class=JSONResponse)
 async def ask(body: AskRequest) -> dict:
     """Classify and answer a factual question about a patient."""
     try:
         # In stub/dev mode: fetch patient facts directly from DB as context chunks
         chunks = await _fetch_patient_chunks(body.patient_id)
+        patient_names = await _fetch_patient_names(body.patient_id)
 
         result = await qa_answer(
             patient_id=body.patient_id,
@@ -311,7 +363,8 @@ async def ask(body: AskRequest) -> dict:
             conversation_id=body.conversation_id,
             pool=None,    # vector retrieval disabled in stub mode
             embedder=None,
-            model=get_model(),  # stub, or on-prem local provider when configured
+            # names handed to the PHI egress guard for redaction
+            model=get_model(patient_names=patient_names),
             classifier_model=get_classifier_model(),
             _override_chunks=chunks,  # pass DB facts directly
         )
