@@ -163,3 +163,33 @@ def test_wrong_acknowledgement_string_still_blocks(monkeypatch):
     monkeypatch.setenv("PHI_EGRESS_ALLOW_ACK", "sure whatever")
     with pytest.raises(PhiEgressBlocked):
         guard_outbound("https://api.deepseek.com/v1", "sys", RECORD_PROMPT)
+
+
+# ---------------------------------------------------------------- name redaction
+# Regression: names cannot be found by regex, so the caller must supply them.
+# An earlier wiring passed none, and the patient's name went out in the clear.
+def test_supplied_names_are_redacted(monkeypatch):
+    monkeypatch.setenv("PHI_EGRESS_POLICY", "deidentify")
+    d = guard_outbound(
+        "https://api.deepseek.com/v1", "sys",
+        "Patient Ahmad Fakename-Al-Bishi attended. Al-Bishi reports chest pain.",
+        patient_names=["Ahmad Fakename-Al-Bishi", "Al-Bishi", "Ahmad"],
+    )
+    assert "Ahmad" not in d.user_prompt
+    assert "Al-Bishi" not in d.user_prompt
+
+
+def test_longest_name_variant_wins():
+    """Full name must be redacted as one unit, not split across placeholders."""
+    deid = Deidentifier(extra_names=["Ahmad", "Ahmad Fakename-Al-Bishi"])
+    res = deid.scrub("Patient Ahmad Fakename-Al-Bishi attended.")
+    assert res.text == "Patient [[NAME_1]] attended."
+
+
+def test_no_names_supplied_means_names_are_not_redacted():
+    """Documents the limitation explicitly: regexes cannot detect names, so a
+    caller that supplies none leaves them in the payload."""
+    deid = Deidentifier()
+    res = deid.scrub("Patient Ahmad Fakename-Al-Bishi, MRN-010.")
+    assert "Ahmad" in res.text          # not detected
+    assert "MRN-010" not in res.text    # pattern-based identifier still caught
