@@ -1,5 +1,21 @@
 from __future__ import annotations
 
+# --- workspace package resolution -------------------------------------------
+# The uv editable installs (.pth files under site-packages pointing at each
+# package's src/) are present and the packages are installed, but in this
+# environment those paths are intermittently never applied to sys.path — at
+# which point blocklist / classifier / retrieval / phi_guard all disappear and
+# the service cannot start. Resolve them explicitly so startup does not depend
+# on that. Harmless when the venv is healthy (paths already present are skipped).
+import sys as _sys
+from pathlib import Path as _Path
+
+_REPO_ROOT = _Path(__file__).resolve().parents[2]
+for _p in (_Path(__file__).resolve().parent, *( _d / "src" for _d in (_REPO_ROOT / "packages").iterdir() if (_d / "src").is_dir())):
+    if str(_p) not in _sys.path:
+        _sys.path.insert(0, str(_p))
+# ----------------------------------------------------------------------------
+
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from datetime import date, datetime
@@ -16,6 +32,7 @@ from src.qa.config import settings
 from src.qa.grpc_server import create_grpc_server
 from src.qa.logging_config import configure_logging
 from src.qa.model_client import get_model
+from src.qa.synthesis import BlocklistUnavailableError
 from src.qa.model_classifier import get_classifier_model
 from src.qa.qa_service import answer as qa_answer
 from src.qa.tracing import configure_tracing
@@ -73,6 +90,8 @@ class AskRequest(BaseModel):
 @app.get("/health", response_class=JSONResponse)
 async def health() -> dict[str, str]:
     """HTTP health endpoint for Docker / k8s liveness probes."""
+
+
     return {
         "status": "ok",
         "service": settings.otel_service_name,
@@ -369,6 +388,12 @@ async def ask(body: AskRequest) -> dict:
             _override_chunks=chunks,  # pass DB facts directly
         )
         return asdict(result)
+    except BlocklistUnavailableError as exc:
+        # Safety control missing — surface it as a distinct, unmistakable
+        # failure rather than a generic 500, so a broken deployment is
+        # obvious instead of looking like a transient model error.
+        logger.error("qa_blocklist_unavailable", error=str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
         logger.error("qa_answer_error", error=str(exc))
         raise HTTPException(status_code=500, detail=str(exc)) from exc

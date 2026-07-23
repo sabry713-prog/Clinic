@@ -282,3 +282,35 @@ async def test_arabic_refused():
     )
     assert result.classification == "REFUSED"
     assert result.language == "ar"
+
+
+# ---------------------------------------------------------------------------
+# Blocklist availability — the gate must fail CLOSED.
+# Regression: a broken virtualenv dropped the shared packages off sys.path,
+# the ImportError was swallowed, and Q&A kept answering with the blocklist
+# disabled and no error surfaced anywhere.
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_synthesize_raises_when_blocklist_cannot_be_imported(monkeypatch):
+    """No blocklist => no generated text. Never fall through unscreened."""
+    import sys
+    from src.qa.synthesis import BlocklistUnavailableError, synthesize
+
+    class _Model:
+        def version(self) -> str:
+            return "test"
+
+        async def complete(self, s, u, p):  # pragma: no cover - must not run
+            raise AssertionError("model must not be called without the blocklist")
+
+    # Simulate the package being absent from the environment.
+    monkeypatch.setitem(sys.modules, "blocklist", None)
+
+    with pytest.raises(BlocklistUnavailableError):
+        await synthesize(
+            question="what are his medications",
+            chunks=[{"content_text": "Medication: Warfarin 5 mg", "source_id": "x"}],
+            language="en",
+            patient_id="p1",
+            model=_Model(),
+        )
