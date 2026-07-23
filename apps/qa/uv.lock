@@ -823,6 +823,15 @@ wheels = [
 ]
 
 [[package]]
+name = "phi-guard"
+version = "0.1.0"
+source = { editable = "../../packages/phi-guard" }
+
+[package.metadata]
+requires-dist = [{ name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" }]
+provides-extras = ["dev"]
+
+[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1060,6 +1069,7 @@ dependencies = [
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-sdk" },
+    { name = "phi-guard" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "retrieval" },
@@ -1094,6 +1104,7 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.24.0" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24.0" },
+    { name = "phi-guard", editable = "../../packages/phi-guard" },
     { name = "pydantic", specifier = ">=2.7.1" },
     { name = "pydantic-settings", specifier = ">=2.2.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },

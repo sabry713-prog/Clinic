@@ -19,6 +19,15 @@ logger = structlog.get_logger()
 
 PROMPT_TEMPLATE_VERSION = "qa-answer-v1.0"
 
+
+class BlocklistUnavailableError(RuntimeError):
+    """Raised when the blocklist gate cannot be loaded.
+
+    Generated text must never reach a clinician unscreened, so a missing
+    blocklist is a hard failure, not a degraded mode.
+    """
+
+
 QA_SYSTEM_PROMPT = """\
 You are a factual lookup assistant integrated into a hospital information system. Your function is to answer factual questions about a specific patient's record by restating facts retrieved from that record.
 
@@ -170,13 +179,24 @@ async def synthesize(
     Returns:
         (answer_text, sources, blocklist_triggered)
     """
-    # Import blocklist at call time — not available in all test environments
+    # The blocklist is the mandatory final gate before any generated text is
+    # displayed. If it cannot be loaded we must NOT fall through and return
+    # unfiltered model output — that would silently remove the control that
+    # keeps generated text non-interpretive. Fail closed and loudly.
+    #
+    # This previously degraded silently: a broken virtualenv dropped the
+    # shared packages off sys.path, the ImportError was swallowed, and Q&A
+    # kept answering with the gate disabled and no error anywhere.
     try:
         from blocklist import scan  # type: ignore[import-untyped]
-        has_blocklist = True
-    except ImportError:
-        has_blocklist = False
-        scan = None  # type: ignore[assignment]
+    except ImportError as exc:
+        logger.error("qa_blocklist_unavailable", error=str(exc))
+        raise BlocklistUnavailableError(
+            "The interpretive-language blocklist could not be loaded, so "
+            "generated text cannot be screened before display. Refusing to "
+            "synthesize an answer. Check that the 'blocklist' package is "
+            "installed in this environment."
+        ) from exc
 
     blocklist_triggered = False
 
@@ -202,19 +222,18 @@ async def synthesize(
             if not raw.strip():
                 continue
 
-        if has_blocklist and scan is not None:
-            scan_result = scan(raw, language=language)
-            if not scan_result.passed:
-                blocklist_triggered = True
-                logger.warning(
-                    "qa_blocklist_triggered",
-                    attempt=attempt,
-                    num_matches=len(scan_result.matches),
-                    # Do not log question or answer — PHI-adjacent
-                )
-                continue  # retry with stricter prompt
+        scan_result = scan(raw, language=language)
+        if not scan_result.passed:
+            blocklist_triggered = True
+            logger.warning(
+                "qa_blocklist_triggered",
+                attempt=attempt,
+                num_matches=len(scan_result.matches),
+                # Do not log question or answer — PHI-adjacent
+            )
+            continue  # retry with stricter prompt
 
-        # Passed blocklist (or blocklist not available)
+        # Passed the blocklist gate
         sources = extract_sources(raw, chunks)
         return raw, sources, blocklist_triggered
 
