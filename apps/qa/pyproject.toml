@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2.7.1",
     "pydantic-settings>=2.2.1",
     "structlog>=24.1.0",
+    "phi-guard",
     "asyncpg>=0.29.0",
     "blocklist",
     "retrieval",
@@ -27,6 +28,7 @@ dependencies = [
 blocklist = { path = "../../packages/blocklist", editable = true }
 retrieval = { path = "../../packages/retrieval", editable = true }
 classifier = { path = "../../packages/classifier", editable = true }
+phi-guard = { path = "../../packages/phi-guard", editable = true }
 
 [project.optional-dependencies]
 dev = [

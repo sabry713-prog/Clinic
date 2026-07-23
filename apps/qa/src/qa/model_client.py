@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from typing import Optional, Protocol, runtime_checkable
 
 import httpx
+import structlog
+
+
+logger = structlog.get_logger()
 
 
 @dataclass
@@ -371,10 +375,14 @@ class LocalModelProvider:
     """
     Model provider calling an OpenAI-compatible /chat/completions endpoint.
 
-    Originally on-prem only. As of the CTO-approved DeepSeek swap this same
-    client is also used against the DeepSeek public-cloud API
-    (https://api.deepseek.com). NOTE: that routes PHI out-of-Kingdom and is a
-    deliberate deviation from CLAUDE.md §7 — see docs/architecture/on-prem-model.md.
+    Used for on-prem endpoints and, when configured, external ones such as
+    the DeepSeek public-cloud API.
+
+    Every call passes through phi_guard.guard_outbound() first. In-Kingdom
+    endpoints are unaffected; external endpoints are governed by
+    PHI_EGRESS_POLICY, which defaults to "block" so patient data cannot leave
+    the Kingdom without a deliberate, acknowledged configuration change
+    (CLAUDE.md §7 / PDPL).
     """
 
     def __init__(
@@ -383,11 +391,14 @@ class LocalModelProvider:
         model_name: str,
         api_key: str = "EMPTY",
         timeout_s: float = 30.0,
+        patient_names: list[str] | None = None,
     ) -> None:
         self._url = endpoint_url.rstrip("/") + "/chat/completions"
         self._model = model_name
         self._api_key = api_key
         self._timeout = timeout_s
+        # Names cannot be found by regex; the caller supplies them when known.
+        self._patient_names = patient_names or []
 
     def version(self) -> str:
         return f"local:{self._model}"
@@ -398,11 +409,33 @@ class LocalModelProvider:
         user_prompt: str,
         params: ModelParams,
     ) -> str:
+        # DATA-RESIDENCY GATE (CLAUDE.md §7 / PDPL).
+        # The Q&A user prompt carries retrieved record facts, so it is treated
+        # as PHI-bearing. For an in-Kingdom endpoint this is a pass-through;
+        # for an external one the policy decides: block (default), de-identify,
+        # or explicitly acknowledged allow. Raises PhiEgressBlocked otherwise.
+        from phi_guard import guard_outbound  # type: ignore[import-untyped]
+
+        decision = guard_outbound(
+            endpoint_url=self._url,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            contains_phi=True,
+            patient_names=self._patient_names,
+        )
+        if decision.redaction_count:
+            logger.info(
+                "phi_deidentified_before_egress",
+                redactions=decision.redaction_count,
+                residency=decision.residency.value,
+                # never log the values themselves
+            )
+
         payload = {
             "model": self._model,
             "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {"role": "system", "content": decision.system_prompt},
+                {"role": "user", "content": decision.user_prompt},
             ],
             "temperature": params.temperature,
             "top_p": params.top_p,
@@ -416,7 +449,9 @@ class LocalModelProvider:
             resp = await client.post(self._url, json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
-        return str(data["choices"][0]["message"]["content"]).strip()
+        raw = str(data["choices"][0]["message"]["content"]).strip()
+        # Put real identifiers back for the clinician (no-op unless scrubbed).
+        return decision.restore(raw)
 
 
 def get_model() -> ModelProvider:
