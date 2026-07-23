@@ -11,8 +11,9 @@ import { api, type PatientDetail, ApiError } from "../../lib/api";
 import { useCopilot } from "../../context/CopilotContext";
 import PatientWorkspace from "./PatientWorkspace";
 import PatientFilePage from "./PatientFilePage";
+import SullyShell from "../../components/layout/SullyShell";
 
-type ViewId = "workspace" | "chart";
+type ViewId = "workspace" | "chart" | "encounter";
 type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter" | "ambient";
 const CARD_IDS: readonly CardId[] = ["qa", "diagnosis", "narrative", "handoff", "draft", "orders", "claims", "search", "interpreter", "ambient"];
 
@@ -27,7 +28,9 @@ export default function PatientDetailPage(): JSX.Element {
   const [patientError, setPatientError] = useState<{ code: string; message: string } | null>(null);
 
   const patientId = id ?? "";
-  const view: ViewId = searchParams.get("view") === "chart" ? "chart" : "workspace";
+  const viewParam = searchParams.get("view");
+  const view: ViewId =
+    viewParam === "chart" ? "chart" : viewParam === "encounter" ? "encounter" : "workspace";
   const openParam = searchParams.get("open");
   const initialOpen: readonly CardId[] = openParam && (CARD_IDS as readonly string[]).includes(openParam)
     ? [openParam as CardId]
@@ -99,15 +102,17 @@ export default function PatientDetailPage(): JSX.Element {
           ← Patients
         </button>
 
-        {view === "workspace" ? (
+        {view === "workspace" && (
           <PatientWorkspace
             patient={patient}
             initialOpen={initialOpen}
             openRequest={openParam && (CARD_IDS as readonly string[]).includes(openParam) ? (openParam as CardId) : null}
             onDiagnosisAdded={refreshPatient}
           />
-        ) : (
-          <PatientFilePage patient={patient} />
+        )}
+        {view === "chart" && <PatientFilePage patient={patient} />}
+        {view === "encounter" && (
+          <SullyShell patientName={patient.display_name ?? patient.mrn ?? undefined} />
         )}
       </div>
     </div>

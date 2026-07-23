@@ -58,3 +58,6 @@ coverage/
 
 # Claude Code — personal/local overrides (not shared with the team)
 .claude/settings.local.json
+
+# Storybook build output
+storybook-static/
