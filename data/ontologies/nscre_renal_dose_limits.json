@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "ontology": "NSCRE Renal Dose-Safety Rules",
+    "description": "Reference eGFR-based dose-safety thresholds for the Sprint 7 NSCRE Module B (organ function / dose safety evaluator). Illustrative dev subset -- real, well-established prescribing facts (not model-generated), keyed to Medication.key values confirmed to exist in the live PSKG graph from the synthetic seed data. Production would load licensed renal-dosing guidance (e.g. a formulary's renal impairment adjustment table), not this hand-curated subset.",
+    "licensed": false
+  },
+  "rules": [
+    {
+      "drug_key": "metformin",
+      "egfr_threshold": 30.0,
+      "max_dose": "Contraindicated below eGFR 30 mL/min/1.73m2",
+      "flag": "CRITICAL_OVERRIDE",
+      "rationale": "Metformin is contraindicated below eGFR 30 due to accumulation risk and lactic acidosis."
+    }
+  ]
+}

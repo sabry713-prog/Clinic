@@ -131,7 +131,7 @@ SET r.dose = $dose, r.route = $route, r.frequency = $frequency
 
 MERGE_LABRESULT = """
 MERGE (l:LabResult {id: $id})
-SET l.test_name = $test_name, l.value = $value, l.unit = $unit, l.flag = $flag
+SET l.test_name = $test_name, l.value = $value, l.unit = $unit, l.flag = $flag, l.effective_at = $effective_at
 """
 
 LINK_LAB_TO_ENCOUNTER = """
@@ -386,6 +386,7 @@ async def ingest_patient(
     for lab in lab_results:
         flag = _lab_flag(lab.get("value_numeric"), lab.get("ref_range_low"), lab.get("ref_range_high"))
         value = lab.get("value_numeric") if lab.get("value_numeric") is not None else lab.get("value_text")
+        lab_effective_at = lab.get("effective_at")
         await graph.run(
             MERGE_LABRESULT,
             id=str(lab["id"]),
@@ -393,6 +394,7 @@ async def ingest_patient(
             value=value,
             unit=lab.get("unit"),
             flag=flag,
+            effective_at=lab_effective_at.isoformat() if lab_effective_at else None,
         )
         encounter_id = lab.get("encounter_id") or _nearest_encounter_id(encounters, lab.get("effective_at"))
         if encounter_id:

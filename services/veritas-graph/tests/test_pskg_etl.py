@@ -225,6 +225,7 @@ async def test_full_patient_produces_expected_nodes_and_edges_no_orphans():
     assert graph.prescribed_edges[("encounter", "enc-1", "SFDA-1234")]["dose"] == "5mg"
 
     assert graph.lab_results["lab-1"]["flag"] == "high"
+    assert graph.lab_results["lab-1"]["effective_at"] == "2026-01-10T00:00:00+00:00"
     assert graph.has_lab_edges == {("encounter", "enc-1", "lab-1")}
 
     # No orphaned nodes -- every non-Patient/Encounter node has exactly the
