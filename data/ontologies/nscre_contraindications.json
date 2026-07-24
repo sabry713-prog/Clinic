@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "ontology": "NSCRE Drug-Drug Contraindications",
+    "description": "Reference contraindication pairs for the Sprint 7 NSCRE Module A (drug-drug interaction check). Illustrative dev subset -- real, well-established prescribing facts (not model-generated), keyed to Medication.key values confirmed to exist in the live PSKG graph (services/veritas-graph/etl_pskg.py) from the synthetic seed data. Production would load a licensed interaction database (e.g. a drug compendium's DDI table), not this hand-curated subset.",
+    "licensed": false
+  },
+  "pairs": [
+    {
+      "drug_a_key": "warfarin",
+      "drug_b_key": "ibuprofen",
+      "severity": "severe",
+      "rationale": "Concurrent NSAID use increases warfarin's anticoagulant effect and GI bleeding risk (displaces warfarin from plasma protein binding, impairs platelet function)."
+    },
+    {
+      "drug_a_key": "warfarin",
+      "drug_b_key": "naproxen sodium",
+      "severity": "severe",
+      "rationale": "Concurrent NSAID use increases warfarin's anticoagulant effect and GI bleeding risk (displaces warfarin from plasma protein binding, impairs platelet function)."
+    },
+    {
+      "drug_a_key": "warfarin",
+      "drug_b_key": "meloxicam 15 mg oral tablet",
+      "severity": "severe",
+      "rationale": "Concurrent NSAID use increases warfarin's anticoagulant effect and GI bleeding risk (displaces warfarin from plasma protein binding, impairs platelet function)."
+    },
+    {
+      "drug_a_key": "warfarin",
+      "drug_b_key": "diclofenac 1 percent gel",
+      "severity": "moderate",
+      "rationale": "Topical NSAID has lower systemic absorption than oral NSAIDs but still carries some bleeding-risk interaction with warfarin; monitor INR."
+    }
+  ]
+}
