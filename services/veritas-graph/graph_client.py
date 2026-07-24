@@ -113,6 +113,83 @@ class GraphClient:
         return applied
 
 
+class AsyncGraphClient:
+    """Async counterpart to GraphClient, for the async ETL pipelines
+    (services/veritas-graph/etl_pskg.py). Same lazy-driver-import and
+    fake-client-friendly shape as GraphClient -- only the transport differs.
+    """
+
+    def __init__(
+        self,
+        uri: Optional[str] = None,
+        auth: Optional[str] = None,
+        database: Optional[str] = None,
+    ) -> None:
+        self._uri = uri or os.environ.get("NEO4J_URI", DEFAULT_URI)
+        self._auth_raw = auth if auth is not None else os.environ.get("NEO4J_AUTH")
+        self._database = database or os.environ.get("NEO4J_DATABASE", DEFAULT_DATABASE)
+        self._driver: Any = None
+
+    async def connect(self) -> Any:
+        if self._driver is not None:
+            return self._driver
+        try:
+            from neo4j import AsyncGraphDatabase  # imported lazily on purpose
+        except ImportError as exc:  # pragma: no cover - env-dependent
+            raise GraphError(
+                "The 'neo4j' package is required to connect. Install it with "
+                "`uv pip install neo4j`."
+            ) from exc
+        user, password = parse_auth(self._auth_raw)
+        try:
+            self._driver = AsyncGraphDatabase.driver(self._uri, auth=(user, password))
+        except Exception as exc:  # pragma: no cover - env-dependent
+            raise GraphError(f"Could not open Neo4j driver for {self._uri}: {exc}") from exc
+        return self._driver
+
+    async def close(self) -> None:
+        if self._driver is not None:
+            await self._driver.close()
+            self._driver = None
+
+    async def __aenter__(self) -> "AsyncGraphClient":
+        await self.connect()
+        return self
+
+    async def __aexit__(self, *exc_info: Any) -> None:
+        await self.close()
+
+    async def run(self, cypher: str, **params: Any) -> list[dict[str, Any]]:
+        """Execute a Cypher statement and return records as plain dicts."""
+        driver = await self.connect()
+        try:
+            async with driver.session(database=self._database) as session:
+                result = await session.run(cypher, **params)
+                return [dict(record) async for record in result]
+        except GraphError:
+            raise
+        except Exception as exc:
+            raise GraphError(f"Cypher execution failed: {exc}") from exc
+
+    async def write_many(self, cypher: str, rows: Iterable[dict[str, Any]]) -> int:
+        """Run a write statement once per row; returns the number applied."""
+        driver = await self.connect()
+        applied = 0
+        try:
+            async with driver.session(database=self._database) as session:
+                for row in rows:
+                    await session.run(cypher, **row)
+                    applied += 1
+        except Exception as exc:
+            raise GraphError(f"Cypher write failed: {exc}") from exc
+        return applied
+
+
 def get_client() -> GraphClient:
     """Build a GraphClient from the environment."""
     return GraphClient()
+
+
+def get_async_client() -> AsyncGraphClient:
+    """Build an AsyncGraphClient from the environment."""
+    return AsyncGraphClient()
