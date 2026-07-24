@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "ontology": "NPHIES Drug (SFDA)",
+    "description": "NphiesDrug nodes for the Sprint 6 pre-authorization necessity graph. Illustrative dev subset. Distinct from the Sprint 2 ontology graph's :Medication nodes.",
+    "licensed": false
+  },
+  "nodes": [
+    { "sfda_code": "SFDA-C09AA05", "scientific_name": "Ramipril", "brand_name": "Tritace" },
+    { "sfda_code": "SFDA-A10BA02", "scientific_name": "Metformin", "brand_name": "Glucophage" },
+    { "sfda_code": "SFDA-R03AC02", "scientific_name": "Salbutamol", "brand_name": "Ventolin" }
+  ]
+}

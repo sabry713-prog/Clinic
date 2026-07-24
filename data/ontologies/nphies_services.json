@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "ontology": "NPHIES Service (SBS / ACHI)",
+    "description": "NphiesService nodes for the Sprint 6 pre-authorization necessity graph. Illustrative dev subset -- achi_code is simplified here as the sbs_code's item+block root (dropping the SBS-specific suffix), not the licensed ACHI mapping. Distinct from the Sprint 2 ontology graph's :Service nodes.",
+    "licensed": false
+  },
+  "nodes": [
+    { "sbs_code": "56241-00-10", "achi_code": "56241-00", "description": "Magnetic resonance imaging of lumbar spine", "category": "diagnostic_imaging" },
+    { "sbs_code": "11700-00-10", "achi_code": "11700-00", "description": "Electrocardiogram (ECG), 12 lead", "category": "diagnostic_cardiology" },
+    { "sbs_code": "66551-00-10", "achi_code": "66551-00", "description": "Glycated haemoglobin (HbA1c)", "category": "pathology" },
+    { "sbs_code": "11506-00-10", "achi_code": "11506-00", "description": "Spirometry / respiratory function test", "category": "diagnostic_respiratory" },
+    { "sbs_code": "65060-00-10", "achi_code": "65060-00", "description": "X-ray of ankle", "category": "diagnostic_imaging" }
+  ]
+}
