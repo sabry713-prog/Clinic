@@ -1,0 +1,9 @@
+diagnosis_icd10,target_code,target_type,pre_auth_required,rule_id,source,note
+M54.3,56241-00-10,service,true,PA-0001,dev-illustrative-CCHI,Sciatica justifies lumbar MRI -- advanced imaging requires pre-authorization
+I10,11700-00-10,service,false,PA-0002,dev-illustrative-CCHI,Hypertension justifies ECG
+I10,SFDA-C09AA05,drug,false,PA-0003,dev-illustrative-CCHI,Hypertension justifies ramipril
+E11.9,66551-00-10,service,false,PA-0004,dev-illustrative-CCHI,Type 2 diabetes justifies HbA1c
+E11.9,SFDA-A10BA02,drug,false,PA-0005,dev-illustrative-CCHI,Type 2 diabetes justifies metformin
+J45.9,11506-00-10,service,false,PA-0006,dev-illustrative-CCHI,Asthma justifies spirometry
+J45.9,SFDA-R03AC02,drug,false,PA-0007,dev-illustrative-CCHI,Asthma justifies salbutamol
+S93.4,65060-00-10,service,false,PA-0008,dev-illustrative-CCHI,Ankle sprain justifies ankle X-ray

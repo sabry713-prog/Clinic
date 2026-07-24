@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "ontology": "NPHIES Diagnosis (ICD-10)",
+    "description": "NphiesDiagnosis nodes for the Sprint 6 pre-authorization necessity graph. Illustrative dev subset, distinct from the Sprint 2 ontology graph's :Diagnosis nodes (services/veritas-graph/ingest_ontologies.py) -- see the Sprint 6 plan for why these are kept separate.",
+    "licensed": false
+  },
+  "nodes": [
+    { "icd10": "M54.3", "description": "Sciatica" },
+    { "icd10": "I10",   "description": "Essential (primary) hypertension" },
+    { "icd10": "E11.9", "description": "Type 2 diabetes mellitus without complications" },
+    { "icd10": "J45.9", "description": "Asthma, unspecified" },
+    { "icd10": "S93.4", "description": "Sprain and strain of ankle" },
+    { "icd10": "R51",   "description": "Headache" }
+  ]
+}
