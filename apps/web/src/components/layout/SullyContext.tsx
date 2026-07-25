@@ -21,6 +21,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useAgentOrchestrator, type EvidenceChain } from "../../hooks/useAgentOrchestrator";
 
 // ---------------------------------------------------------------- types
 export type NphiesStatus = "green" | "yellow" | "red";
@@ -62,6 +63,10 @@ export interface OrderLine {
   readonly nphiesDetail: string;
   /** Suggested replacement codes when the status is red. */
   readonly suggestedCodes?: readonly string[];
+  /** NSCRE's own graph traversal for this status, when available (Sprint 8) — the
+   * "View Evidence Chain" trigger only appears when this is set; mock order lines
+   * (no live patient wired to this shell yet) simply don't have one. */
+  readonly evidenceChain?: EvidenceChain;
 }
 
 export interface TimelineEntry {
@@ -83,6 +88,10 @@ export interface AgentMessage {
   readonly from: AgentId;
   readonly text: string;
   readonly at: string;
+  /** NSCRE's own graph traversal behind this message, when it came from a live
+   * agent result (Sprint 8) — the "Show Reasoning" trigger only appears when
+   * this is set. When multiple findings back one message, this is the first. */
+  readonly evidenceChain?: EvidenceChain;
 }
 
 interface SullyState {
@@ -263,10 +272,18 @@ const STREAM_INTERVAL_MS = 1800;
 export function SullyProvider({
   children,
   autoStream = true,
+  patientId = null,
 }: {
   readonly children: ReactNode;
   /** Disable the timer in tests/stories that drive state manually. */
   readonly autoStream?: boolean;
+  /** Real patient to ground the AI Team agents in via NSCRE (Sprint 8).
+   * Omitted/null keeps this shell in its existing demo/mock mode -- no page
+   * in this app passes a real one yet (SullyShell has no patientId prop
+   * either); wiring that into patient routing is a separate later step.
+   * Live results only ever ADD to the mock activity stream below, never
+   * replace it, so nothing here regresses when no patient is wired in. */
+  readonly patientId?: string | null;
 }): JSX.Element {
   const [recording, setRecording] = useState(false);
   const [lineCount, setLineCount] = useState(0);
@@ -277,6 +294,57 @@ export function SullyProvider({
   const [messages, setMessages] = useState<readonly AgentMessage[]>(INITIAL_MESSAGES);
   const [drawerOpen, setDrawerOpen] = useState(true);
   const messageSeq = useRef(0);
+
+  const { pharmacist, consultant, nphies } = useAgentOrchestrator(patientId);
+
+  // Live agent results append to the activity stream as they arrive -- the
+  // mock INITIAL_MESSAGES stay in place either way (see patientId's doc
+  // comment above). Each hook result is a fresh object only when a new SSE
+  // event actually lands, so these effects fire once per real update.
+  useEffect(() => {
+    if (!pharmacist) return;
+    messageSeq.current += 1;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `m-live-pharmacist-${messageSeq.current}`,
+        from: "pharmacist",
+        text: pharmacist.prose || "No drug-interaction or dose-safety findings.",
+        at: "now",
+        ...(pharmacist.evidence_chains[0] ? { evidenceChain: pharmacist.evidence_chains[0] } : {}),
+      },
+    ]);
+  }, [pharmacist]);
+
+  useEffect(() => {
+    if (!consultant) return;
+    messageSeq.current += 1;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `m-live-consultant-${messageSeq.current}`,
+        from: "consultant",
+        text: consultant.prose || "No additional clinical considerations.",
+        at: "now",
+        ...(consultant.evidence_chains[0] ? { evidenceChain: consultant.evidence_chains[0] } : {}),
+      },
+    ]);
+  }, [consultant]);
+
+  useEffect(() => {
+    if (!nphies) return;
+    messageSeq.current += 1;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `m-live-nphies-${messageSeq.current}`,
+        from: "nphies",
+        text: nphies.prose || "No NPHIES necessity findings for current orders.",
+        at: "now",
+        ...(nphies.evidence_chains[0] ? { evidenceChain: nphies.evidence_chains[0] } : {}),
+      },
+    ]);
+  }, [nphies]);
 
   // Stream mock transcript lines while recording is active.
   useEffect(() => {

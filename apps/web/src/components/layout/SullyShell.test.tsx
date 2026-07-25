@@ -163,4 +163,30 @@ describe("NphiesBadge", () => {
     fireEvent.click(screen.getByRole("button", { name: "Submit Pre-Auth" }));
     expect(fired).toBe(true);
   });
+
+  it("omits the evidence-chain trigger when no evidenceChain is given", () => {
+    render(<NphiesBadge status="green" detail="Approved / covered." />);
+    fireEvent.click(screen.getByLabelText("NPHIES status: Approved"));
+    expect(screen.queryByRole("button", { name: "View Evidence Chain" })).not.toBeInTheDocument();
+  });
+
+  it("shows a 'View Evidence Chain' trigger when a live evidenceChain is present", () => {
+    render(
+      <NphiesBadge
+        status="yellow"
+        detail="Pre-authorisation required by the payer."
+        evidenceChain={{
+          steps: [
+            { node_type: "Patient", properties: { id: "p-1" } },
+            { node_type: "NphiesRule", properties: { pre_auth_required: true } },
+          ],
+          rendered: "Patient(id=p-1) -> NphiesRule(pre_auth_required=true)",
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByLabelText("NPHIES status: Pre-auth required"));
+    const trigger = screen.getByRole("button", { name: "View Evidence Chain" });
+    fireEvent.click(trigger);
+    expect(screen.getByRole("dialog", { name: "Evidence chain" })).toBeInTheDocument();
+  });
 });

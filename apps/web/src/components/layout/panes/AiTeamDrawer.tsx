@@ -15,6 +15,7 @@ import {
 import {
   useSully, agentActions, AGENT_IDS, AGENT_LABELS, type AgentId,
 } from "../SullyContext";
+import EvidenceChainPopover from "../../ai-team/EvidenceChainPopover";
 
 /** Short tab labels so five agents fit without wrapping. */
 const TAB_LABELS: Record<AgentId, string> = {
@@ -138,6 +139,11 @@ export default function AiTeamDrawer(): JSX.Element {
                 <span className="font-mono text-[10px] text-slate-600">{msg.at}</span>
               </div>
               <p className="mt-0.5 text-[11px] leading-relaxed text-slate-300">{msg.text}</p>
+              {msg.evidenceChain && (
+                <div className="mt-1.5">
+                  <EvidenceChainPopover evidenceChain={msg.evidenceChain} />
+                </div>
+              )}
             </div>
           ))}
         </div>

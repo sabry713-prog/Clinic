@@ -22,6 +22,7 @@ import { ServiceRequestModule } from "./service-request/service-request.module";
 import { NphiesModule } from "./nphies/nphies.module";
 import { InterpreterModule } from "./interpreter/interpreter.module";
 import { AmbientModule } from "./ambient/ambient.module";
+import { AiTeamModule } from "./ai-team/ai-team.module";
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { AmbientModule } from "./ambient/ambient.module";
     NphiesModule,
     InterpreterModule,
     AmbientModule,
+    AiTeamModule,
     DsrModule,
     MetricsModule,
     FeatureFlagsModule,

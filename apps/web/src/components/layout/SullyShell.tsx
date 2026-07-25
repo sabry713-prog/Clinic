@@ -21,6 +21,10 @@ import { useSully } from "./SullyContext";
 
 interface SullyShellProps {
   readonly patientName?: string | undefined;
+  /** Real patient ID to ground the AI Team agents in via NSCRE (Sprint 8).
+   * Omitted keeps the shell in its existing demo/mock mode -- see
+   * SullyProvider's patientId doc comment. */
+  readonly patientId?: string | null | undefined;
   /** Disable the simulated transcript timer (tests / stories). */
   readonly autoStream?: boolean;
 }
