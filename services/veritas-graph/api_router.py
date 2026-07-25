@@ -22,7 +22,11 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from graph_client import GraphError, get_client  # noqa: E402
-from nscre_engine import check_order, evaluate_encounter  # noqa: E402
+from nscre_engine import (  # noqa: E402
+    check_order,
+    evaluate_encounter,
+    screen_alternative_candidates,
+)
 
 structlog.configure(processors=[structlog.processors.JSONRenderer()])
 logger = structlog.get_logger()
@@ -32,6 +36,12 @@ app = FastAPI(title="Veritas-Medica NSCRE", version="0.1.0")
 
 class EvaluateEncounterRequest(BaseModel):
     patient_id: str
+
+
+class AlternativeCandidatesRequest(BaseModel):
+    patient_id: str
+    flagged_drug_key: str
+    limit: int = 5
 
 
 class CheckOrderRequest(BaseModel):
@@ -87,6 +97,31 @@ async def check_order_route(body: CheckOrderRequest) -> dict[str, Any]:
         interaction_count=len(result["drug_interactions"]),
         dose_safety_count=len(result["dose_safety"]),
         necessity_checked=result["necessity"] is not None,
+    )
+    return result
+
+
+@app.post("/api/v1/nscre/alternative-candidates", response_class=JSONResponse)
+async def alternative_candidates_route(body: AlternativeCandidatesRequest) -> dict[str, Any]:
+    """Deterministic screening of possible alternatives to a flagged drug.
+
+    Returns candidates that PASSED graph screening -- not a recommendation to
+    substitute. See screen_alternative_candidates() for the boundary.
+    """
+    graph = get_client()
+    try:
+        result = screen_alternative_candidates(
+            body.patient_id, body.flagged_drug_key, limit=body.limit, client=graph
+        )
+    except GraphError as exc:
+        logger.error("nscre_alternative_candidates_failed", error=str(exc))
+        raise HTTPException(status_code=503, detail="Graph query failed") from exc
+    finally:
+        graph.close()
+    logger.info(
+        "nscre_alternative_candidates",
+        screened_count=len(result["screened_candidates"]),
+        rejected_count=len(result["rejected_candidates"]),
     )
     return result
 

@@ -10,12 +10,13 @@
 
 import { useEffect, useRef } from "react";
 import {
-  PanelRightClose, PanelRightOpen, Bot, Play,
+  PanelRightClose, PanelRightOpen, Bot, Play, ArrowRight,
 } from "lucide-react";
 import {
   useSully, agentActions, AGENT_IDS, AGENT_LABELS, type AgentId,
 } from "../SullyContext";
 import EvidenceChainPopover from "../../ai-team/EvidenceChainPopover";
+import ReceptionistTab from "../../ai-team/ReceptionistTab";
 
 /** Short tab labels so five agents fit without wrapping. */
 const TAB_LABELS: Record<AgentId, string> = {
@@ -27,7 +28,7 @@ const TAB_LABELS: Record<AgentId, string> = {
 };
 
 export default function AiTeamDrawer(): JSX.Element {
-  const { activeAgent, messages, drawerOpen, setActiveAgent, toggleDrawer, runAgentAction } = useSully();
+  const { activeAgent, messages, drawerOpen, postCare, setActiveAgent, toggleDrawer, runAgentAction } = useSully();
   const streamRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,6 +110,25 @@ export default function AiTeamDrawer(): JSX.Element {
         <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           {AGENT_LABELS[activeAgent]} actions
         </h3>
+        {activeAgent === "receptionist" ? (
+          <ReceptionistTab
+            postCare={postCare}
+            onBookSlot={async (slot) => {
+              runAgentAction({
+                id: `book-${slot.starts_at}`,
+                label: "Book follow-up",
+                description: slot.starts_at,
+              });
+            }}
+            onDispatch={async (payload) => {
+              runAgentAction({
+                id: `dispatch-${payload.kind}`,
+                label: `Dispatch ${payload.channel}`,
+                description: payload.kind,
+              });
+            }}
+          />
+        ) : (
         <div className="space-y-2">
           {actions.map((action) => (
             <div key={action.id} className="rounded-lg border border-slate-800 bg-slate-950 p-2.5">
@@ -124,6 +144,7 @@ export default function AiTeamDrawer(): JSX.Element {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Activity stream */}
@@ -133,9 +154,25 @@ export default function AiTeamDrawer(): JSX.Element {
         </h3>
         <div ref={streamRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto pe-1">
           {messages.map((msg) => (
-            <div key={msg.id} className="rounded-md bg-slate-950 px-2.5 py-2">
+            <div
+              key={msg.id}
+              className={`rounded-md px-2.5 py-2 ${
+                msg.handoff ? "border-s-2 border-violet-500/60 bg-violet-500/5" : "bg-slate-950"
+              }`}
+            >
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[11px] font-medium text-blue-300">{AGENT_LABELS[msg.from]}</span>
+                {msg.handoff ? (
+                  <span
+                    data-testid="handoff-chain"
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-violet-300"
+                  >
+                    {msg.handoff.sourceAgent}
+                    <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                    {msg.handoff.targetAgent}
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-medium text-blue-300">{AGENT_LABELS[msg.from]}</span>
+                )}
                 <span className="font-mono text-[10px] text-slate-600">{msg.at}</span>
               </div>
               <p className="mt-0.5 text-[11px] leading-relaxed text-slate-300">{msg.text}</p>

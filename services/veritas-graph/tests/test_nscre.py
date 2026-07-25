@@ -27,6 +27,9 @@ from nscre_engine import (  # noqa: E402
     MOST_RECENT_EGFR_CYPHER,
     PROPOSED_DRUG_INTERACTIONS_CYPHER,
     PROPOSED_MEDICATION_NAME_CYPHER,
+    SCREENABLE_MEDICATIONS_CYPHER,
+    PATIENT_CONFLICTING_DRUGS_CYPHER,
+    screen_alternative_candidates,
     check_dose_safety,
     check_drug_interactions,
     check_necessity,
@@ -77,6 +80,12 @@ class FakeGraph:
             "patient-uncoded-condition": [
                 {"key": "metformin", "name": "Metformin", "sfda_code": "SFDA-A10BA02"},
             ],
+            # Sprint 10: low eGFR but NOT on metformin, so alternative screening
+            # must reject metformin on renal grounds rather than skip it as
+            # "already prescribed".
+            "patient-low-egfr-no-metformin": [
+                {"key": "lisinopril", "name": "Lisinopril", "sfda_code": None},
+            ],
         }
 
         # Symmetric -- stored once per unordered pair.
@@ -106,6 +115,9 @@ class FakeGraph:
             ],
             "patient-necessity-green": [
                 {"value": 90.0, "effective_at": "2026-01-01T00:00:00+00:00", "test_name": "eGFR"},
+            ],
+            "patient-low-egfr-no-metformin": [
+                {"value": 22.0, "effective_at": "2026-03-01T00:00:00+00:00", "test_name": "eGFR"},
             ],
         }
 
@@ -137,6 +149,27 @@ class FakeGraph:
                         out.append({"name1": m1["name"], "name2": m2["name"], **rule})
                     elif rule:
                         out.append({"name1": m2["name"], "name2": m1["name"], **rule})
+            return out
+
+        if cypher == SCREENABLE_MEDICATIONS_CYPHER:
+            # Every drug the reference graph has safety data for, minus the flagged one.
+            names = {"warfarin": "Warfarin", "ibuprofen": "Ibuprofen",
+                     "metformin": "Metformin", "lisinopril": "Lisinopril"}
+            screenable = set()
+            for pair in self.contraindications:
+                screenable |= set(pair)
+            screenable |= set(self.dose_rules)
+            return [{"key": k, "name": names.get(k, k.title())}
+                    for k in sorted(screenable) if k != params["flagged_key"]]
+
+        if cypher == PATIENT_CONFLICTING_DRUGS_CYPHER:
+            meds = self.patient_medications.get(params["patient_id"], [])
+            out = []
+            for m in meds:
+                for pair, _rule in self.contraindications.items():
+                    if m["key"] in pair:
+                        other = next(k for k in pair if k != m["key"])
+                        out.append({"key": other, "conflicts_with": m["name"]})
             return out
 
         if cypher == PROPOSED_DRUG_INTERACTIONS_CYPHER:
@@ -404,3 +437,71 @@ def test_check_order_endpoint(api_client):
     body = resp.json()
     assert len(body["dose_safety"]) == 1
     assert body["dose_safety"][0]["flag"] == "CRITICAL_OVERRIDE"
+
+
+# ---------------------------------------------------------------- Module D: alternative screening (Sprint 10)
+def test_screening_excludes_drugs_conflicting_with_current_medications():
+    """A candidate that clashes with something the patient is already on must
+    never be offered as an alternative."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-on-warfarin", "metformin", client=graph)
+
+    screened = {c["medication"] for c in result["screened_candidates"]}
+    assert "Ibuprofen" not in screened  # contraindicated with the patient's warfarin
+    rejected = {r["medication"]: r for r in result["rejected_candidates"]}
+    assert rejected["Ibuprofen"]["reason"] == "contraindicated_with_current_medication"
+
+
+def test_screening_excludes_drugs_violating_renal_dose_limit():
+    """eGFR 28 must knock metformin out of the candidate list."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-low-egfr-no-metformin", "warfarin", client=graph)
+
+    screened = {c["medication"] for c in result["screened_candidates"]}
+    assert "Metformin" not in screened
+    reasons = {r["reason"] for r in result["rejected_candidates"]}
+    assert "renal_dose_limit" in reasons
+
+
+def test_screening_never_offers_a_drug_the_patient_already_takes():
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-warfarin-nsaid", "metformin", client=graph)
+    screened = {c["medication"] for c in result["screened_candidates"]}
+    assert "Warfarin" not in screened and "Ibuprofen" not in screened
+
+
+def test_every_screened_candidate_carries_an_evidence_chain():
+    """No candidate may reach the caller without the graph traversal that
+    justified it -- same invariant as every other NSCRE finding."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "warfarin", client=graph)
+    assert result["screened_candidates"], "expected at least one candidate to pass"
+    for cand in result["screened_candidates"]:
+        assert cand["evidence_chain"]["steps"]
+        assert "CandidateMedication" in cand["evidence_chain"]["rendered"]
+
+
+def test_screen_result_is_phrased_as_screening_not_recommendation():
+    """Guards the wording boundary: passing screening is not an endorsement."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "warfarin", client=graph)
+    for cand in result["screened_candidates"]:
+        assert cand["screen_result"] == "no_contraindication_found"
+        assert "recommend" not in cand["screen_result"]
+    assert "not a therapeutic substitution recommendation" in result["disclaimer"]
+
+
+def test_screening_respects_the_limit():
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-no-egfr-unknown", "warfarin", limit=1, client=graph)
+    assert len(result["screened_candidates"]) <= 1
+
+
+def test_screening_declares_its_limitations_in_the_payload():
+    """A caller must not be able to render this list without the caveats:
+    no therapeutic-class filtering, and no candidate-vs-candidate screening."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "warfarin", client=graph)
+    joined = " ".join(result["limitations"]).lower()
+    assert "therapeutic class" in joined
+    assert "not screened" in joined and "against each other" in joined

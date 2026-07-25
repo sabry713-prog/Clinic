@@ -24,6 +24,7 @@ import {
 import { useAgentOrchestrator, type EvidenceChain } from "../../hooks/useAgentOrchestrator";
 import { useNphiesStatus } from "../../hooks/useNphiesStatus";
 import { api } from "../../lib/api";
+import type { PostCarePackage } from "../ai-team/ReceptionistTab";
 
 // ---------------------------------------------------------------- types
 /** `blue` = pended: submitted to the payer, no decision yet (Sprint 9). */
@@ -103,6 +104,14 @@ export interface AgentMessage {
    * agent result (Sprint 8) — the "Show Reasoning" trigger only appears when
    * this is set. When multiple findings back one message, this is the first. */
   readonly evidenceChain?: EvidenceChain;
+  /** Set when this message is an inter-agent handoff rather than a single
+   * agent's own output (Sprint 10) -- rendered with the source -> target
+   * chain so the clinician can see who passed what to whom. */
+  readonly handoff?: {
+    readonly sourceAgent: string;
+    readonly targetAgent: string;
+    readonly correlationId: string;
+  };
 }
 
 interface SullyState {
@@ -116,6 +125,8 @@ interface SullyState {
   readonly activeAgent: AgentId;
   readonly messages: readonly AgentMessage[];
   readonly drawerOpen: boolean;
+  /** Post-care drafts from the AI Receptionist (Sprint 10). */
+  readonly postCare: PostCarePackage | null;
   toggleRecording: () => void;
   updateSoap: (field: SoapField, value: string) => void;
   toggleChecklistItem: (id: string) => void;
@@ -239,6 +250,50 @@ const MOCK_ORDERS: readonly OrderLine[] = [
   },
 ];
 
+/** Post-care package the AI Receptionist drafts once a discharge order is
+ * finalised (Sprint 10). Mock, like the rest of this provider's data --
+ * shaped exactly like services/orchestrator/receptionist_agent.py's output so
+ * wiring it to the live endpoint is a swap, not a rewrite. */
+const MOCK_POST_CARE: PostCarePackage = {
+  followup_slots: [
+    { starts_at: "2026-08-03T09:00:00Z", department: "Cardiology", appointment_type: "follow-up", status: "draft" },
+    { starts_at: "2026-08-03T11:00:00Z", department: "Cardiology", appointment_type: "follow-up", status: "draft" },
+    { starts_at: "2026-08-03T14:00:00Z", department: "Cardiology", appointment_type: "follow-up", status: "draft" },
+  ],
+  lab_prep_reminders: [
+    {
+      lab: "Lipid profile",
+      instruction: "Do not eat or drink anything except water for 9-12 hours before this test.",
+      source: "static_reference_table",
+    },
+  ],
+  care_instructions: {
+    text:
+      "You were seen today for chest tightness on exertion. Your blood pressure was 148/92. " +
+      "Please keep taking Atorvastatin 20 mg as prescribed, have your lipid profile done before " +
+      "your next visit, and come back in one week.",
+    requires_clinician_review: true,
+  },
+  dispatch_payloads: [
+    {
+      patient_id: "mock-patient",
+      channel: "whatsapp",
+      kind: "care_instructions",
+      body:
+        "You were seen today for chest tightness on exertion. Please keep taking Atorvastatin 20 mg " +
+        "as prescribed and come back in one week.",
+      status: "draft",
+    },
+    {
+      patient_id: "mock-patient",
+      channel: "sms",
+      kind: "lab_prep",
+      body: "Lipid profile: Do not eat or drink anything except water for 9-12 hours before this test.",
+      status: "draft",
+    },
+  ],
+};
+
 const AGENT_ACTIONS: Record<AgentId, readonly AgentAction[]> = {
   scribe: [
     { id: "a-scribe-1", label: "Regenerate SOAP note", description: "Re-structure the current transcript into SOAP sections." },
@@ -266,6 +321,36 @@ const INITIAL_MESSAGES: readonly AgentMessage[] = [
   { id: "m1", from: "scribe", text: "Draft SOAP note updated from the live transcript.", at: "09:06" },
   { id: "m2", from: "nphies", text: "2 order lines need pre-authorisation; 1 has a code mismatch.", at: "09:08" },
   { id: "m3", from: "pharmacist", text: "Atorvastatin is a tier 2 formulary item for this payer.", at: "09:09" },
+  // Sprint 10: an inter-agent handoff chain, rendered distinctly from an
+  // agent's own output. Mock, matching agent_bus.py's event shape.
+  {
+    id: "m4",
+    from: "consultant",
+    text: "Escalating a critical dose-safety finding on Metformin to Pharmacy.",
+    at: "09:10",
+    handoff: { sourceAgent: "consultant", targetAgent: "pharmacist", correlationId: "chain-1" },
+  },
+  {
+    id: "m5",
+    from: "pharmacist",
+    text: "1 candidate passed screening (no contraindication found). Not a substitution recommendation.",
+    at: "09:10",
+    handoff: { sourceAgent: "pharmacist", targetAgent: "nphies", correlationId: "chain-1" },
+  },
+  {
+    id: "m6",
+    from: "nphies",
+    text: "Coverage re-verified for the screened candidate.",
+    at: "09:11",
+    handoff: { sourceAgent: "nphies", targetAgent: "scribe", correlationId: "chain-1" },
+  },
+  {
+    id: "m7",
+    from: "scribe",
+    text: "Drafted a Plan-section update for your review — not applied automatically.",
+    at: "09:11",
+    handoff: { sourceAgent: "scribe", targetAgent: "clinician", correlationId: "chain-1" },
+  },
 ];
 
 export const AGENT_LABELS: Record<AgentId, string> = {
@@ -509,6 +594,7 @@ export function SullyProvider({
       activeAgent,
       messages,
       drawerOpen,
+      postCare: MOCK_POST_CARE,
       toggleRecording,
       updateSoap,
       toggleChecklistItem,
