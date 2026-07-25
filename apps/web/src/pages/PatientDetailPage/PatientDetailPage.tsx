@@ -112,7 +112,10 @@ export default function PatientDetailPage(): JSX.Element {
         )}
         {view === "chart" && <PatientFilePage patient={patient} />}
         {view === "encounter" && (
-          <SullyShell patientName={patient.display_name ?? patient.mrn ?? undefined} />
+          <SullyShell
+            patientName={patient.display_name ?? patient.mrn ?? undefined}
+            patientId={patientId}
+          />
         )}
       </div>
     </div>
