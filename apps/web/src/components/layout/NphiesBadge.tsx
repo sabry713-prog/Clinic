@@ -1,16 +1,21 @@
 /**
  * NphiesBadge — status pill shown next to an order line.
  *
- *   green  — Approved / covered (NPHIES code matched)
+ *   green  — Approved / covered (NPHIES code matched, or payer authorised)
  *   yellow — Pre-authorisation required (1-click action)
+ *   blue   — Pended: submitted, payer has not decided yet (Sprint 9)
  *   red    — Code mismatch / rejection risk (suggested codes)
+ *
+ * A pending payer response is deliberately its own state rather than being
+ * folded into green — "submitted" is not "approved", and rendering an
+ * undecided claim as approved would misrepresent the payer.
  *
  * The colour reflects BILLING / claim-paperwork state only. It is not a
  * clinical severity indicator and carries no clinical meaning.
  */
 
 import { useState } from "react";
-import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, XCircle, Clock, Loader2 } from "lucide-react";
 import type { NphiesStatus } from "./SullyContext";
 import EvidenceChainPopover from "../ai-team/EvidenceChainPopover";
 import type { EvidenceChain } from "../../hooks/useAgentOrchestrator";
@@ -26,6 +31,11 @@ const STYLES: Record<NphiesStatus, { pill: string; dot: string; label: string }>
     dot: "text-amber-400",
     label: "Pre-auth required",
   },
+  blue: {
+    pill: "bg-sky-500/10 text-sky-300 border-sky-500/30",
+    dot: "text-sky-400",
+    label: "Pended (under review)",
+  },
   red: {
     pill: "bg-rose-500/10 text-rose-300 border-rose-500/30",
     dot: "text-rose-400",
@@ -36,6 +46,7 @@ const STYLES: Record<NphiesStatus, { pill: string; dot: string; label: string }>
 const ICONS: Record<NphiesStatus, typeof CheckCircle2> = {
   green: CheckCircle2,
   yellow: AlertTriangle,
+  blue: Clock,
   red: XCircle,
 };
 
@@ -50,6 +61,13 @@ interface NphiesBadgeProps {
    * NPHIES agent result (Sprint 8) -- the "View Evidence Chain" trigger only
    * appears when this is set. */
   readonly evidenceChain?: EvidenceChain | null | undefined;
+  /** Payer authorization reference, shown on the pill once approved (Sprint 9).
+   * Read from the payer response — never generated client-side. */
+  readonly authorizationNumber?: string | null | undefined;
+  /** A submission is in flight: shows a spinner in place of the status icon. */
+  readonly submitting?: boolean | undefined;
+  /** Clicking the pill itself opens the pre-auth flow (yellow badges). */
+  readonly onBadgeClick?: (() => void) | undefined;
 }
 
 export default function NphiesBadge({
@@ -59,26 +77,43 @@ export default function NphiesBadge({
   actionLabel,
   onAction,
   evidenceChain,
+  authorizationNumber,
+  submitting,
+  onBadgeClick,
 }: NphiesBadgeProps): JSX.Element {
   const [open, setOpen] = useState(false);
   const style = STYLES[status];
   const Glyph = ICONS[status];
 
+  // "Approved" alone is ambiguous once a payer is involved; showing the
+  // authorization reference on the pill makes it verifiable at a glance.
+  const label =
+    status === "green" && authorizationNumber
+      ? `Approved · ${authorizationNumber}`
+      : style.label;
+
   return (
     <span className="relative inline-flex">
       <button
         type="button"
-        aria-label={`NPHIES status: ${style.label}`}
+        aria-label={`NPHIES status: ${label}`}
         title={detail}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${style.pill}`}
+        onClick={() => (onBadgeClick ? onBadgeClick() : setOpen((o) => !o))}
+        disabled={submitting}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${style.pill} ${
+          onBadgeClick && !submitting ? "cursor-pointer hover:brightness-125" : ""
+        }`}
       >
-        <Glyph className={`h-3.5 w-3.5 ${style.dot}`} aria-hidden="true" />
-        {style.label}
+        {submitting ? (
+          <Loader2 className={`h-3.5 w-3.5 animate-spin ${style.dot}`} aria-hidden="true" />
+        ) : (
+          <Glyph className={`h-3.5 w-3.5 ${style.dot}`} aria-hidden="true" />
+        )}
+        {submitting ? "Submitting…" : label}
       </button>
 
       {open && (

@@ -25,6 +25,10 @@ interface SullyShellProps {
    * Omitted keeps the shell in its existing demo/mock mode -- see
    * SullyProvider's patientId doc comment. */
   readonly patientId?: string | null | undefined;
+  /** Real encounter to submit NPHIES pre-authorizations against (Sprint 9).
+   * Without it the pre-auth modal explains that the shell is in demo mode
+   * rather than fabricating a payer response. */
+  readonly encounterId?: string | null | undefined;
   /** Disable the simulated transcript timer (tests / stories). */
   readonly autoStream?: boolean;
 }
@@ -64,9 +68,14 @@ function ShellLayout({ patientName }: { readonly patientName?: string | undefine
   );
 }
 
-export default function SullyShell({ patientName, autoStream = true }: SullyShellProps): JSX.Element {
+export default function SullyShell({
+  patientName,
+  patientId = null,
+  encounterId = null,
+  autoStream = true,
+}: SullyShellProps): JSX.Element {
   return (
-    <SullyProvider autoStream={autoStream}>
+    <SullyProvider autoStream={autoStream} patientId={patientId} encounterId={encounterId}>
       <ShellLayout patientName={patientName} />
     </SullyProvider>
   );

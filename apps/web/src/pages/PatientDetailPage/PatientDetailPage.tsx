@@ -24,6 +24,10 @@ export default function PatientDetailPage(): JSX.Element {
   const [searchParams] = useSearchParams();
 
   const [patient, setPatientData] = useState<PatientDetail | null>(null);
+  // Encounter the NPHIES pre-auth flow submits against (Sprint 9). Taken from
+  // the patient's own encounter list -- never fabricated, because this value
+  // becomes the Encounter identifier inside a real FHIR Claim bundle.
+  const [activeEncounterId, setActiveEncounterId] = useState<string | null>(null);
   const [isLoadingPatient, setIsLoadingPatient] = useState(true);
   const [patientError, setPatientError] = useState<{ code: string; message: string } | null>(null);
 
@@ -55,6 +59,28 @@ export default function PatientDetailPage(): JSX.Element {
       })
       .finally(() => setIsLoadingPatient(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId]);
+
+  // Resolve the encounter the pre-auth flow submits against. Prefers an
+  // in-progress encounter, else the most recent one. Stays null when the
+  // patient has none -- the pre-auth modal then explains that rather than
+  // inventing an encounter identifier for a claim bundle.
+  useEffect(() => {
+    if (!patientId) return;
+    let cancelled = false;
+    api.patients
+      .encounters(patientId)
+      .then(({ data }) => {
+        if (cancelled) return;
+        const active = data.find((e) => e.status === "in-progress");
+        setActiveEncounterId(active?.id ?? data[0]?.id ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setActiveEncounterId(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [patientId]);
 
   const refreshPatient = (): void => {
@@ -115,6 +141,7 @@ export default function PatientDetailPage(): JSX.Element {
           <SullyShell
             patientName={patient.display_name ?? patient.mrn ?? undefined}
             patientId={patientId}
+            encounterId={activeEncounterId}
           />
         )}
       </div>

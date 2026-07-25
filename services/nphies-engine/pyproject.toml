@@ -1,0 +1,40 @@
+[project]
+name = "nphies-engine"
+version = "0.1.0"
+description = "Veritas-Medica NPHIES FHIR client: eligibility, prior authorization, and async status events"
+# 3.12 to match packages/phi-guard, which this service depends on for the
+# outbound data-residency check.
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "structlog>=24.1",
+    # Real FHIR R4 schema validation -- bundle structures are validated against
+    # the spec rather than hand-asserted (see tests/test_nphies_fhir.py).
+    "fhir.resources>=8.0",
+    # Data-residency guard. A prior-auth bundle carries the SOAP note, so the
+    # outbound endpoint is checked against the same fail-closed policy that
+    # governs model calls (CLAUDE.md sec 7 / PDPL).
+    "phi-guard",
+]
+
+[tool.uv.sources]
+phi-guard = { path = "../../packages/phi-guard", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

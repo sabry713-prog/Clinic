@@ -22,9 +22,12 @@ import {
   type ReactNode,
 } from "react";
 import { useAgentOrchestrator, type EvidenceChain } from "../../hooks/useAgentOrchestrator";
+import { useNphiesStatus } from "../../hooks/useNphiesStatus";
+import { api } from "../../lib/api";
 
 // ---------------------------------------------------------------- types
-export type NphiesStatus = "green" | "yellow" | "red";
+/** `blue` = pended: submitted to the payer, no decision yet (Sprint 9). */
+export type NphiesStatus = "green" | "yellow" | "blue" | "red";
 
 export type AgentId = "scribe" | "consultant" | "pharmacist" | "nphies" | "receptionist";
 
@@ -67,6 +70,14 @@ export interface OrderLine {
    * "View Evidence Chain" trigger only appears when this is set; mock order lines
    * (no live patient wired to this shell yet) simply don't have one. */
   readonly evidenceChain?: EvidenceChain;
+  /** Payer authorization reference once approved (Sprint 9). Read from the
+   * NPHIES response, never generated locally. */
+  readonly authorizationNumber?: string | null;
+  /** A pre-auth submission for this order is in flight. */
+  readonly submitting?: boolean;
+  /** Confirmed codes carried into the FHIR bundle verbatim (Sprint 9). */
+  readonly icd10Code?: string;
+  readonly icd10Display?: string;
 }
 
 export interface TimelineEntry {
@@ -111,6 +122,10 @@ interface SullyState {
   setActiveAgent: (agent: AgentId) => void;
   toggleDrawer: () => void;
   runAgentAction: (action: AgentAction) => void;
+  /** Submit a prior-authorization for one order (Sprint 9). Resolves once the
+   * transaction is queued; the payer outcome arrives over SSE and updates the
+   * badge. Rejects if no real patient/encounter is wired into this shell. */
+  submitPreAuth: (orderId: string) => Promise<void>;
 }
 
 // ---------------------------------------------------------------- mock data
@@ -197,6 +212,8 @@ const MOCK_ORDERS: readonly OrderLine[] = [
     codeSystem: "SBS",
     nphiesStatus: "yellow",
     nphiesDetail: "Pre-authorisation required by the payer before this service can be claimed.",
+    icd10Code: "I10",
+    icd10Display: "Essential (primary) hypertension",
   },
   {
     id: "o4",
@@ -206,6 +223,8 @@ const MOCK_ORDERS: readonly OrderLine[] = [
     codeSystem: "SFDA",
     nphiesStatus: "yellow",
     nphiesDetail: "Pre-authorisation required — formulary tier 2 medication.",
+    icd10Code: "E78.0",
+    icd10Display: "Pure hypercholesterolaemia",
   },
   {
     id: "o5",
@@ -273,6 +292,7 @@ export function SullyProvider({
   children,
   autoStream = true,
   patientId = null,
+  encounterId = null,
 }: {
   readonly children: ReactNode;
   /** Disable the timer in tests/stories that drive state manually. */
@@ -284,6 +304,10 @@ export function SullyProvider({
    * Live results only ever ADD to the mock activity stream below, never
    * replace it, so nothing here regresses when no patient is wired in. */
   readonly patientId?: string | null;
+  /** Real encounter to submit pre-authorizations against (Sprint 9). Without
+   * both this and patientId the shell stays in demo mode and the pre-auth modal
+   * explains why submission is unavailable rather than silently failing. */
+  readonly encounterId?: string | null;
 }): JSX.Element {
   const [recording, setRecording] = useState(false);
   const [lineCount, setLineCount] = useState(0);
@@ -293,9 +317,11 @@ export function SullyProvider({
   const [activeAgent, setActiveAgentState] = useState<AgentId>("scribe");
   const [messages, setMessages] = useState<readonly AgentMessage[]>(INITIAL_MESSAGES);
   const [drawerOpen, setDrawerOpen] = useState(true);
+  const [orders, setOrders] = useState<readonly OrderLine[]>(MOCK_ORDERS);
   const messageSeq = useRef(0);
 
   const { pharmacist, consultant, nphies } = useAgentOrchestrator(patientId);
+  const { byOrder: nphiesByOrder, markQueued } = useNphiesStatus(patientId, encounterId);
 
   // Live agent results append to the activity stream as they arrive -- the
   // mock INITIAL_MESSAGES stay in place either way (see patientId's doc
@@ -346,6 +372,47 @@ export function SullyProvider({
     ]);
   }, [nphies]);
 
+  // Apply live NPHIES badge transitions as payer outcomes arrive over SSE.
+  // Only `approved` turns a badge green, and only with the authorization
+  // reference the payer actually returned -- `pended` stays visibly undecided.
+  useEffect(() => {
+    if (Object.keys(nphiesByOrder).length === 0) return;
+    setOrders((prev) =>
+      prev.map((order) => {
+        const event = nphiesByOrder[order.id];
+        if (!event) return order;
+        if (event.status === "queued") return { ...order, submitting: true };
+        if (event.status === "approved") {
+          return {
+            ...order,
+            submitting: false,
+            nphiesStatus: "green",
+            authorizationNumber: event.authorization_number ?? null,
+            nphiesDetail:
+              event.disposition ?? "Pre-authorisation approved by the payer.",
+          };
+        }
+        if (event.status === "pended") {
+          return {
+            ...order,
+            submitting: false,
+            nphiesStatus: "blue",
+            nphiesDetail:
+              event.disposition ?? "Submitted — the payer has not returned a decision yet.",
+          };
+        }
+        if (event.status === "error") {
+          return {
+            ...order,
+            submitting: false,
+            nphiesDetail: event.detail ?? "NPHIES submission failed.",
+          };
+        }
+        return order;
+      }),
+    );
+  }, [nphiesByOrder]);
+
   // Stream mock transcript lines while recording is active.
   useEffect(() => {
     if (!autoStream || !recording) return;
@@ -363,6 +430,41 @@ export function SullyProvider({
     const stage = SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
     return { ...stage, ...soapOverride };
   }, [lineCount, soapOverride]);
+
+  const submitPreAuth = useCallback(
+    async (orderId: string) => {
+      const order = orders.find((o) => o.id === orderId);
+      if (!order) throw new Error("Unknown order.");
+      if (!patientId || !encounterId) {
+        // Refuse rather than fake it: with no real patient/encounter there is
+        // nothing to send, and a simulated "approval" would be a fabricated
+        // payer decision.
+        throw new Error(
+          "This shell is running in demo mode with no patient encounter wired in, so there is nothing to submit to NPHIES.",
+        );
+      }
+      if (!order.icd10Code) {
+        throw new Error("This order has no confirmed ICD-10-AM diagnosis code to justify it.");
+      }
+      markQueued(orderId);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, submitting: true } : o)));
+      try {
+        await api.patients.submitPreAuth(patientId, {
+          encounter_id: encounterId,
+          order_id: orderId,
+          icd10_code: order.icd10Code,
+          sbs_code: order.code,
+          clinical_document: `${soap.subjective}\n\n${soap.objective}\n\n${soap.assessment}\n\n${soap.plan}`.trim(),
+          ...(order.icd10Display ? { icd10_display: order.icd10Display } : {}),
+          sbs_display: order.display,
+        });
+      } catch (err) {
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, submitting: false } : o)));
+        throw err;
+      }
+    },
+    [orders, patientId, encounterId, markQueued, soap],
+  );
 
   const toggleRecording = useCallback(() => setRecording((r) => !r), []);
 
@@ -403,7 +505,7 @@ export function SullyProvider({
       soap,
       checklist,
       timeline: MOCK_TIMELINE,
-      orders: MOCK_ORDERS,
+      orders,
       activeAgent,
       messages,
       drawerOpen,
@@ -413,11 +515,12 @@ export function SullyProvider({
       setActiveAgent,
       toggleDrawer,
       runAgentAction,
+      submitPreAuth,
     }),
     [
-      recording, elapsedSeconds, transcript, soap, checklist, activeAgent,
+      recording, elapsedSeconds, transcript, soap, checklist, orders, activeAgent,
       messages, drawerOpen, toggleRecording, updateSoap, toggleChecklistItem,
-      setActiveAgent, toggleDrawer, runAgentAction,
+      setActiveAgent, toggleDrawer, runAgentAction, submitPreAuth,
     ],
   );
 

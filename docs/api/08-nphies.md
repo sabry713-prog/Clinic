@@ -192,6 +192,74 @@ known-valid pairing, ~55% otherwise) — so the two checks are internally
 consistent and both have real signal to show, instead of being
 independent noise.
 
+## Prior authorization (Sprint 9)
+
+The FHIR transaction layer lives in `services/nphies-engine` (port 5006):
+`fhir_client.py` builds and sends the bundles, `tasks.py` runs them off the
+request path and fans status changes out to the UI.
+
+### Endpoints (via apps/core)
+
+- `POST /api/v1/patients/:id/nphies/pre-auth` (`service_request:write`) —
+  queues a prior-authorization submission. Returns `{status: "queued"}`
+  **immediately**; the payer round-trip happens in the background so the UI
+  never blocks. Audit: `NPHIES_PRE_AUTH_SUBMITTED` (codes and identifiers only
+  — the attached SOAP note is never written to audit metadata).
+- `GET /api/v1/patients/:id/nphies/pre-auth/stream?encounter_id=…`
+  (`patient:read`, SSE) — `nphies_status_updated` events as outcomes arrive.
+  Audit: `NPHIES_PRE_AUTH_STREAM_OPENED`.
+
+### Badge states
+
+| event `status` | badge | meaning |
+|---|---|---|
+| `queued` | 🟡 + spinner | submitted, in flight |
+| `approved` | 🟢 | payer approved; the pill shows the authorization reference **read from the response** |
+| `pended` | 🔵 | submitted, payer has not decided |
+| `error` | unchanged + detail | transport/config failure |
+
+Only a FHIR `outcome` of `complete` maps to `approved`. `queued`/`partial` and
+**any unrecognised outcome** map to `pended` — an undecided or unparseable payer
+response must never render as approved. In stub mode the authorization
+reference is prefixed `STUB-NOT-A-REAL-AUTH-` so canned development data cannot
+be mistaken for a payer decision in the UI or the audit trail.
+
+### Two constraints worth knowing before going live
+
+1. **Profile conformance is unverified.** All NPHIES canonical URLs, code
+   systems, and extensions live in
+   `services/nphies-engine/config/nphies_profiles.json`, not in source, and the
+   shipped values are **placeholders that were never checked against the
+   official CCHI Implementation Guide** (no copy exists in this repo, and there
+   is no onboarding to validate against). A wrong profile URL is a leading cause
+   of NPHIES rejection. Replace them from the IG and set
+   `verified_against_official_ig: true`; `/health` reports the current state.
+   Generic FHIR R4 structural validity *is* verified — every bundle is checked
+   against `fhir.resources` in `tests/test_nphies_fhir.py`.
+2. **PHI egress fails closed.** A prior-auth bundle carries the clinical note,
+   so `packages/phi-guard` refuses to send it to any endpoint not certified
+   in-Kingdom. NPHIES is in-Kingdom in reality, but must be declared:
+   `PHI_INKINGDOM_HOSTS=sandbox.nphies.sa` (CLAUDE.md §7 / PDPL).
+
+### Queue and transport choices
+
+`FastAPI BackgroundTasks`, not Celery — no broker or worker process exists in
+this environment, and the workload is a few in-flight HTTP calls per encounter.
+The trade-off is real: in-process tasks do not survive a restart and do not
+distribute across replicas, so a lost prior-auth is possible. Promote to Celery
+or a Postgres-backed outbox when submissions must be durable.
+
+Status events use **SSE**, matching the AI Team stream, rather than WebSockets:
+`apps/core` has no WebSocket infrastructure, and this flow is server-push only.
+The event name (`nphies_status_updated`) and payload are as specified.
+
 ## Roadmap (not yet implemented)
 
-1. **Live NPHIES connector**: CCHI onboarding, sandbox credentials, certificates; real eligibility/claim/rejection exchange. Once live, rejection-analytics numbers reflect real payer responses instead of the seeded/stub history.
+1. **CCHI onboarding**: real sandbox credentials, certificates, and the official
+   Implementation Guide — the two constraints above close out at this point.
+   Once live, rejection-analytics numbers reflect real payer responses instead
+   of the seeded/stub history.
+2. **Automatic eligibility trigger wiring**: `POST /api/v1/nphies/encounter-activity`
+   exists on the engine and `PreAuthService.notifyEncounterActivity()` calls it,
+   but no `apps/core` write path invokes it yet — adding an order or diagnosis
+   does not currently fire an eligibility check on its own.

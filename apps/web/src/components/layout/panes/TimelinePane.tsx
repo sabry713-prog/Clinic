@@ -11,8 +11,10 @@ import {
   Stethoscope, FlaskConical, FileText, Pill, ScanLine,
   Beaker, Syringe, Scissors, Plus,
 } from "lucide-react";
-import { useSully, type OrderCategory, type TimelineEntry } from "../SullyContext";
+import { useState } from "react";
+import { useSully, type OrderCategory, type OrderLine, type TimelineEntry } from "../SullyContext";
 import NphiesBadge from "../NphiesBadge";
+import PreAuthModal, { type PreAuthFields } from "../../timeline/PreAuthModal";
 
 const TIMELINE_ICONS: Record<TimelineEntry["kind"], typeof Stethoscope> = {
   encounter: Stethoscope,
@@ -37,7 +39,26 @@ const CATEGORY_ICONS: Record<OrderCategory, typeof Beaker> = {
 };
 
 export default function TimelinePane(): JSX.Element {
-  const { timeline, orders, runAgentAction } = useSully();
+  const { timeline, orders, soap, runAgentAction, submitPreAuth } = useSully();
+  const [preAuthOrder, setPreAuthOrder] = useState<OrderLine | null>(null);
+
+  const preAuthFields: PreAuthFields | null = preAuthOrder
+    ? {
+        orderId: preAuthOrder.id,
+        // Displayed for transparency; the real encounter id is supplied by the
+        // provider at submit time (the shell may be in demo mode).
+        encounterId: "current encounter",
+        orderDisplay: preAuthOrder.display,
+        sbsCode: preAuthOrder.code,
+        sbsDisplay: preAuthOrder.display,
+        icd10Code: preAuthOrder.icd10Code ?? "—",
+        icd10Display: preAuthOrder.icd10Display,
+        clinicalDocument:
+          [soap.subjective, soap.objective, soap.assessment, soap.plan]
+            .filter(Boolean)
+            .join("\n\n") || "No SOAP content captured for this encounter yet.",
+      }
+    : null;
 
   return (
     <section className="flex h-full flex-col overflow-y-auto bg-slate-950" aria-label="Patient timeline and orders">
@@ -114,11 +135,20 @@ export default function TimelinePane(): JSX.Element {
                   detail={order.nphiesDetail}
                   suggestedCodes={order.suggestedCodes}
                   evidenceChain={order.evidenceChain}
+                  authorizationNumber={order.authorizationNumber}
+                  submitting={order.submitting}
+                  // Clicking a yellow badge opens the pre-auth flow directly --
+                  // the "1-click" path in the spec.
+                  onBadgeClick={
+                    order.nphiesStatus === "yellow" ? () => setPreAuthOrder(order) : undefined
+                  }
                   actionLabel={needsAction ? actionLabel : undefined}
                   onAction={
-                    needsAction
-                      ? () => runAgentAction({ id: `order-${order.id}`, label: actionLabel, description: order.display })
-                      : undefined
+                    order.nphiesStatus === "yellow"
+                      ? () => setPreAuthOrder(order)
+                      : needsAction
+                        ? () => runAgentAction({ id: `order-${order.id}`, label: actionLabel, description: order.display })
+                        : undefined
                   }
                 />
               </li>
@@ -126,6 +156,16 @@ export default function TimelinePane(): JSX.Element {
           })}
         </ul>
       </div>
+
+      {preAuthFields && (
+        <PreAuthModal
+          fields={preAuthFields}
+          onClose={() => setPreAuthOrder(null)}
+          onSubmit={async (f) => {
+            await submitPreAuth(f.orderId);
+          }}
+        />
+      )}
     </section>
   );
 }
