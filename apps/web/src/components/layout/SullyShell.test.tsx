@@ -190,3 +190,39 @@ describe("NphiesBadge", () => {
     expect(screen.getByRole("dialog", { name: "Evidence chain" })).toBeInTheDocument();
   });
 });
+
+describe("Inter-agent handoffs (Sprint 10)", () => {
+  it("renders handoff messages with their source -> target chain", () => {
+    renderShell();
+    const handoffs = screen.getAllByTestId("handoff-chain");
+    expect(handoffs.length).toBeGreaterThanOrEqual(4);
+    expect(handoffs[0]).toHaveTextContent("consultant");
+    expect(handoffs[0]).toHaveTextContent("pharmacist");
+  });
+
+  it("distinguishes handoffs from an agent's own output", () => {
+    renderShell();
+    // A plain agent message keeps the agent label and carries no chain.
+    const plain = screen.getByText("Draft SOAP note updated from the live transcript.")
+      .parentElement as HTMLElement;
+    expect(within(plain).queryByTestId("handoff-chain")).not.toBeInTheDocument();
+
+    // A handoff message carries the chain instead.
+    const chained = screen.getByText(
+      "Escalating a critical dose-safety finding on Metformin to Pharmacy.",
+    ).parentElement as HTMLElement;
+    expect(within(chained).getByTestId("handoff-chain")).toBeInTheDocument();
+  });
+
+  it("frames screened candidates as screening, not a recommendation", () => {
+    renderShell();
+    expect(screen.getByText(/Not a substitution recommendation/i)).toBeInTheDocument();
+  });
+
+  it("shows the Receptionist post-care drafts in its own tab", () => {
+    renderShell();
+    fireEvent.click(screen.getByRole("tab", { name: "Receptionist" }));
+    expect(screen.getByText(/nothing below has been booked or sent/i)).toBeInTheDocument();
+    expect(screen.getByTestId("care-instructions")).toBeInTheDocument();
+  });
+});

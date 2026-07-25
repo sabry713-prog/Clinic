@@ -118,6 +118,29 @@ RETURN m.name AS name
 LIMIT 1
 """
 
+# Candidate pool for alternative screening (Sprint 10). Deliberately limited to
+# medications the NSCRE reference graph actually holds safety data for -- a drug
+# with no contraindication or dose-rule edges cannot be screened, and returning
+# an unscreenable drug as a "safe alternative" would be an assertion the graph
+# cannot support. Better to offer fewer candidates than unverifiable ones.
+SCREENABLE_MEDICATIONS_CYPHER = """
+MATCH (m:Medication)
+WHERE m.key <> $flagged_key AND m.name IS NOT NULL
+  AND (
+    EXISTS { MATCH (m)-[:CONTRAINDICATED_WITH]-() }
+    OR EXISTS { MATCH (m)-[:RENAL_DOSE_LIMIT]->() }
+  )
+RETURN DISTINCT m.key AS key, m.name AS name
+ORDER BY key
+"""
+
+# Every medication that conflicts with something this patient is already on.
+PATIENT_CONFLICTING_DRUGS_CYPHER = """
+MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[:PRESCRIBED]->(cur:Medication)
+MATCH (cur)-[:CONTRAINDICATED_WITH]-(other:Medication)
+RETURN DISTINCT other.key AS key, cur.name AS conflicts_with
+"""
+
 _STATUS_RANK = {"GREEN": 0, "YELLOW": 1, "RED": 2}
 
 
@@ -310,6 +333,137 @@ def evaluate_encounter(patient_id: str, *, client: Optional[GraphClient] = None)
         "drug_interactions": check_drug_interactions(patient_id, client=graph),
         "dose_safety": check_dose_safety(patient_id, client=graph),
         "necessity": check_necessity(patient_id, client=graph),
+    }
+
+
+def screen_alternative_candidates(
+    patient_id: str,
+    flagged_drug_key: str,
+    *,
+    limit: int = 5,
+    client: Optional[GraphClient] = None,
+) -> dict[str, Any]:
+    """Module D (Sprint 10) -- deterministic screening of possible alternatives
+    to a flagged medication.
+
+    *** This does NOT recommend a substitution. *** It returns medications that
+    the graph can affirmatively screen and that PASSED every check it can run:
+    no CONTRAINDICATED_WITH edge against anything the patient is currently
+    prescribed, and no RENAL_DOSE_LIMIT violated by their most recent eGFR.
+    "Nothing contradicts this" is a graph fact; "you should switch to this" is a
+    prescribing decision, and this engine does not make it. The caller is
+    responsible for presenting these as candidates for a clinician to consider,
+    never as a recommendation.
+
+    Candidates come only from medications the reference graph holds safety data
+    for (see SCREENABLE_MEDICATIONS_CYPHER) -- a drug we cannot screen is never
+    offered as one that passed screening.
+
+    TWO LIMITATIONS, returned in the payload so callers cannot omit them:
+
+    1. No therapeutic-class filtering. The graph holds no ATC/class data, so
+       screening a flagged antidiabetic can return an anticoagulant -- safe for
+       that patient by every rule the graph knows, and clinically unrelated to
+       what was flagged. This surfaced on real seed data during Sprint 10 live
+       verification and is a property of the data, not a bug in this function.
+       Restricting by class requires class data the graph does not yet have.
+    2. Candidates are screened individually against the patient's CURRENT
+       medications, not against one another. Two candidates that are each safe
+       to add alone may be contraindicated together.
+    """
+    graph = client or get_client()
+
+    candidates = graph.run(SCREENABLE_MEDICATIONS_CYPHER, flagged_key=flagged_drug_key)
+    conflicts = graph.run(PATIENT_CONFLICTING_DRUGS_CYPHER, patient_id=patient_id)
+    conflict_keys = {row["key"]: row["conflicts_with"] for row in conflicts}
+
+    # Never offer something the patient is already taking as an "alternative".
+    current_keys = {m["key"] for m in _active_medications(patient_id, graph)}
+    egfr = _most_recent_egfr(patient_id, graph)
+
+    screened: list[dict[str, Any]] = []
+    rejected: list[dict[str, Any]] = []
+
+    for cand in candidates:
+        key, name = cand["key"], cand["name"]
+        if key in current_keys:
+            continue
+
+        if key in conflict_keys:
+            rejected.append(
+                {
+                    "medication": name,
+                    "reason": "contraindicated_with_current_medication",
+                    "detail": f"Contraindicated with {conflict_keys[key]}, which this patient is currently prescribed.",
+                }
+            )
+            continue
+
+        if egfr is not None:
+            violation = _dose_safety_for_medication(key, name, egfr, patient_id, graph)
+            if violation:
+                rejected.append(
+                    {
+                        "medication": name,
+                        "reason": "renal_dose_limit",
+                        "detail": violation.get("rationale"),
+                    }
+                )
+                continue
+
+        steps = [
+            EvidenceStep("Patient", {"id": patient_id}),
+            EvidenceStep("FlaggedMedication", {"key": flagged_drug_key}),
+            EvidenceStep("CandidateMedication", {"name": name}),
+        ]
+        if egfr is not None:
+            steps.append(
+                EvidenceStep(
+                    "LabResult",
+                    {"test": egfr.get("test_name", "eGFR"), "value": egfr["value"]},
+                )
+            )
+        steps.append(
+            EvidenceStep(
+                "ScreenResult",
+                {"contraindications": 0, "renal_dose_violations": 0},
+            )
+        )
+        screened.append(
+            {
+                "medication": name,
+                "medication_key": key,
+                # Named to resist being read as an endorsement.
+                "screen_result": "no_contraindication_found",
+                "evidence_chain": build_evidence_chain(steps),
+            }
+        )
+        if len(screened) >= limit:
+            break
+
+    return {
+        "patient_id": patient_id,
+        "flagged_drug_key": flagged_drug_key,
+        "screened_candidates": screened,
+        "rejected_candidates": rejected,
+        "disclaimer": (
+            "Candidates passed deterministic graph screening only (no contraindication edge "
+            "against current medications, no renal dose rule violated). This is not a "
+            "therapeutic substitution recommendation."
+        ),
+        # Stated in the payload, not just in a docstring, because a caller that
+        # renders this list without these caveats will mislead a clinician.
+        "limitations": [
+            # Found during live verification: screening Metformin returned Warfarin and
+            # several NSAIDs -- individually safe for that patient, pharmacologically
+            # unrelated to the flagged drug. The graph holds no ATC/therapeutic-class
+            # data, so it cannot restrict candidates to the flagged drug's class.
+            "NOT filtered by therapeutic class -- the graph holds no drug-class data, so "
+            "candidates may be pharmacologically unrelated to the flagged medication.",
+            # Each candidate is screened as a single addition to the current regimen.
+            "Screened INDIVIDUALLY against current medications. Candidates are not screened "
+            "against each other, so selecting two from this list is not covered by this check.",
+        ],
     }
 
 

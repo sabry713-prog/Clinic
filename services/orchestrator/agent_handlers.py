@@ -222,6 +222,38 @@ async def agents_stream(patient_id: str) -> StreamingResponse:
     return StreamingResponse(_agent_stream(patient_id), media_type="text/event-stream")
 
 
+# -- Sprint 10: inter-agent handoffs + post-care ------------------------------
+
+
+@app.post("/api/v1/agents/handoff-chain", response_class=JSONResponse)
+async def handoff_chain(body: dict[str, Any]) -> dict[str, Any]:
+    """Run the NSCRE-critical-finding handoff chain and return every hop.
+
+    Returns an empty list when the graph reports no critical finding -- agents
+    are never invited to manufacture an escalation.
+    """
+    from agent_bus import run_critical_finding_chain  # local import: optional dep path
+
+    patient_id = str(body.get("patient_id", ""))
+    if not patient_id:
+        return {"patient_id": "", "handoffs": []}
+    handoffs = await run_critical_finding_chain(patient_id)
+    return {"patient_id": patient_id, "handoffs": handoffs}
+
+
+@app.post("/api/v1/agents/post-care", response_class=JSONResponse)
+async def post_care(body: dict[str, Any]) -> dict[str, Any]:
+    """Draft the post-encounter package for a finalized discharge order.
+
+    Everything returned is a draft: nothing is booked and nothing is sent.
+    """
+    from receptionist_agent import run_post_care_workflow
+
+    patient_id = str(body.get("patient_id", ""))
+    discharge_order = body.get("discharge_order") or {}
+    return await run_post_care_workflow(patient_id, discharge_order)
+
+
 def main() -> None:
     import uvicorn
 
