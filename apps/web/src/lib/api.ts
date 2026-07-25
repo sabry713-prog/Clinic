@@ -262,6 +262,28 @@ export interface ClaimRecord {
   readonly item_count: number;
 }
 
+/** Body for a 1-click prior-authorization submission (Sprint 9). Codes are the
+ * clinician-confirmed ones already held by the caller -- nothing is inferred. */
+export interface PreAuthRequest {
+  readonly encounter_id: string;
+  readonly order_id: string;
+  readonly icd10_code: string;
+  readonly sbs_code: string;
+  /** Draft SOAP note attached to the claim as clinical justification. */
+  readonly clinical_document: string;
+  readonly patient_civil_id?: string;
+  readonly payer_id?: string;
+  readonly icd10_display?: string;
+  readonly sbs_display?: string;
+}
+
+/** Acknowledgement that the transaction was queued -- NOT a payer decision. */
+export interface PreAuthQueued {
+  readonly status: string;
+  readonly encounter_id: string;
+  readonly order_id?: string;
+}
+
 export interface PatientBrief {
   readonly documented_conditions: readonly {
     readonly code: string | null;
@@ -901,6 +923,15 @@ export const api = {
 
     listClaims: (patientId: string) =>
       request<{ data: ClaimRecord[] }>(`/api/v1/patients/${patientId}/nphies/claims`),
+
+    /** Queue a prior-authorization submission (Sprint 9). Resolves as soon as
+     * the transaction is QUEUED -- the payer outcome arrives separately on the
+     * pre-auth SSE stream (see useNphiesStatus), so the UI never blocks. */
+    submitPreAuth: (patientId: string, body: PreAuthRequest) =>
+      request<PreAuthQueued>(`/api/v1/patients/${patientId}/nphies/pre-auth`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   },
 
   drafts: {

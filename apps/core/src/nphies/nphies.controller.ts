@@ -5,7 +5,9 @@
  * Deterministic administrative validation only (see ClaimReadinessService).
  */
 
-import { Controller, Delete, Get, Inject, Param, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Req, Sse, UseGuards } from "@nestjs/common";
+import type { MessageEvent } from "@nestjs/common";
+import type { Observable } from "rxjs";
 import type { Request } from "express";
 import { ApiCookieAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { v4 as uuidv4 } from "uuid";
@@ -20,6 +22,9 @@ import { SbsCodingService } from "./sbs-coding.service";
 import { LinkageService } from "./linkage.service";
 import { NphiesConnectorService } from "./connector.service";
 import { RejectionRiskService } from "./rejection-risk.service";
+import { PatientScopeService } from "../patient/patient-scope.service";
+import { PreAuthService } from "./preauth.service";
+import { SubmitPreAuthDto } from "./preauth.dto";
 
 function uid(req: Request): string {
   const u = req.authenticatedUserId;
@@ -39,6 +44,8 @@ export class NphiesController {
     private readonly linkage: LinkageService,
     private readonly connector: NphiesConnectorService,
     private readonly rejectionRisk: RejectionRiskService,
+    private readonly preAuth: PreAuthService,
+    private readonly scope: PatientScopeService,
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
@@ -261,6 +268,51 @@ export class NphiesController {
     });
 
     return result;
+  }
+
+  @Post("patients/:id/nphies/pre-auth")
+  @RequirePermission("service_request:write")
+  @ApiOperation({
+    summary:
+      "Submit a prior-authorization request to NPHIES (services/nphies-engine). Returns as soon as " +
+      "the transaction is QUEUED -- the payer outcome arrives on the pre-auth SSE stream.",
+  })
+  async submitPreAuth(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+    @Body() body: SubmitPreAuthDto,
+  ) {
+    // Scope is enforced by the same service every other patient route uses.
+    await this.scope.assertPatientInScope(uid(req), patientId);
+    const result = await this.preAuth.submitPreAuth(body);
+
+    // Codes and identifiers only -- the clinical_document (SOAP note) is never
+    // written to the audit metadata (PHI).
+    await this.audit(req, "NPHIES_PRE_AUTH_SUBMITTED", patientId, {
+      encounter_id: body.encounter_id,
+      order_id: body.order_id,
+      icd10_code: body.icd10_code,
+      sbs_code: body.sbs_code,
+      queued_status: result.status,
+    });
+    return result;
+  }
+
+  @Sse("patients/:id/nphies/pre-auth/stream")
+  @RequirePermission("patient:read")
+  @ApiOperation({
+    summary: "Stream nphies_status_updated events for one encounter (badge state changes)",
+  })
+  async streamPreAuthStatus(
+    @Req() req: Request,
+    @Param("id") patientId: string,
+  ): Promise<Observable<MessageEvent>> {
+    await this.scope.assertPatientInScope(uid(req), patientId);
+    const encounterId = String(req.query["encounter_id"] ?? "");
+    await this.audit(req, "NPHIES_PRE_AUTH_STREAM_OPENED", patientId, {
+      encounter_id: encounterId,
+    });
+    return this.preAuth.streamStatus(encounterId);
   }
 
   @Get("patients/:id/nphies/rejection-risk")

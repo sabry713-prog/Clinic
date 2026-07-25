@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "purpose": "NPHIES / CCHI FHIR conformance layer -- every Saudi-specific canonical URL, code system, and extension used when building outbound bundles lives HERE, not in Python source.",
+    "verified_against_official_ig": false,
+    "warning": "THE VALUES BELOW ARE UNVERIFIED PLACEHOLDERS. They were NOT taken from the official NPHIES Implementation Guide -- no copy of it exists in this repository and this environment has no CCHI onboarding, sandbox credentials, or certificates to validate against. They are structurally plausible and let the pipeline run end-to-end, but they MUST be replaced with the exact canonical URLs from the NPHIES IG that ships with your CCHI onboarding pack before any transaction is sent to a real payer. A wrong profile URL is one of the most common causes of NPHIES claim rejection -- which is precisely what this product exists to prevent, so do not ship these as-is.",
+    "how_to_replace": "Overwrite the values in `profiles`, `code_systems`, `identifier_systems`, and `extensions` with the canonical URLs from the official IG. No Python change is required; fhir_client.py reads this file at import time. Set verified_against_official_ig to true once a CCHI-provided IG has been used, so the runtime warning stops firing.",
+    "fhir_version": "4.0.1",
+    "last_reviewed": "2026-07-25"
+  },
+
+  "profiles": {
+    "bundle": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/bundle",
+    "coverage_eligibility_request": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/eligibility-request",
+    "coverage_eligibility_response": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/eligibility-response",
+    "claim_prior_auth": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/priorauth-institutional",
+    "claim_response": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/priorauth-response",
+    "patient": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/patient",
+    "coverage": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/coverage",
+    "organization": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/provider-organization",
+    "encounter": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/encounter"
+  },
+
+  "code_systems": {
+    "icd10_am": "http://hl7.org/fhir/sid/icd-10-am",
+    "sbs": "http://nphies.sa/terminology/CodeSystem/procedures",
+    "sfda_drug": "http://nphies.sa/terminology/CodeSystem/scientific-codes",
+    "claim_type": "http://terminology.hl7.org/CodeSystem/claim-type",
+    "claim_subtype": "http://nphies.sa/terminology/CodeSystem/claim-subtype",
+    "eligibility_purpose": "http://hl7.org/fhir/eligibilityrequest-purpose",
+    "processing_outcome": "http://nphies.sa/terminology/CodeSystem/processing-outcome",
+    "coverage_type": "http://nphies.sa/terminology/CodeSystem/coverage-type"
+  },
+
+  "identifier_systems": {
+    "national_id": "http://nphies.sa/identifier/nationalid",
+    "iqama": "http://nphies.sa/identifier/iqama",
+    "provider_license": "http://nphies.sa/license/provider-license",
+    "payer_license": "http://nphies.sa/license/payer-license",
+    "claim": "http://nphies.sa/identifier/claim",
+    "eligibility_request": "http://nphies.sa/identifier/eligibilityrequest",
+    "bundle": "http://nphies.sa/identifier/bundle",
+    "encounter": "http://nphies.sa/identifier/encounter"
+  },
+
+  "extensions": {
+    "provider_type": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-provider-type",
+    "encounter_class": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-encounter-class",
+    "package": "http://nphies.sa/fhir/ksa/nphies-fs/StructureDefinition/extension-package"
+  },
+
+  "defaults": {
+    "claim_type_code": "institutional",
+    "claim_use": "preauthorization",
+    "eligibility_purpose_code": "benefits",
+    "attachment_content_type": "application/pdf",
+    "attachment_title": "Clinical justification (draft SOAP note)",
+    "currency": "SAR"
+  },
+
+  "response_status_map": {
+    "_comment": "Maps a ClaimResponse.outcome (FHIR R4 remittance-outcome) onto the UI badge state. 'queued' and 'partial' are treated as PENDED rather than approved -- an undecided payer response must never render as approved.",
+    "complete": "approved",
+    "partial": "pended",
+    "queued": "pended",
+    "error": "error"
+  }
+}

@@ -15,6 +15,8 @@ vi.mock("../../lib/api", () => ({
       brief: vi.fn(),
       sinceLastVisit: vi.fn(),
       serviceRequests: vi.fn(),
+      // Resolves the encounter the NPHIES pre-auth flow submits against (Sprint 9).
+      encounters: vi.fn(),
     },
     handoff: {
       generatePatient: vi.fn(),
@@ -34,6 +36,7 @@ const mockRecon = api.patients.medicationReconciliation as ReturnType<typeof vi.
 const mockBrief = api.patients.brief as ReturnType<typeof vi.fn>;
 const mockSinceLastVisit = api.patients.sinceLastVisit as ReturnType<typeof vi.fn>;
 const mockServiceRequests = api.patients.serviceRequests as ReturnType<typeof vi.fn>;
+const mockEncounters = api.patients.encounters as ReturnType<typeof vi.fn>;
 
 function renderWithRoute(patientId = "patient-001", search = ""): ReturnType<typeof render> {
   return render(
@@ -53,6 +56,7 @@ describe("PatientDetailPage", () => {
     mockObs.mockResolvedValue({ data: [], next_cursor: null, total: null });
     mockMeds.mockResolvedValue({ data: [], next_cursor: null, total: null });
     mockRecon.mockResolvedValue(null);
+    mockEncounters.mockResolvedValue({ data: [], next_cursor: null, total: null });
     // Keep the auxiliary panels in their loading state — these specs cover
     // the page shell, header, and lab panel only.
     mockBrief.mockReturnValue(new Promise(() => {}));
