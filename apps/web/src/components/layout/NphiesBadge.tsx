@@ -12,6 +12,8 @@
 import { useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import type { NphiesStatus } from "./SullyContext";
+import EvidenceChainPopover from "../ai-team/EvidenceChainPopover";
+import type { EvidenceChain } from "../../hooks/useAgentOrchestrator";
 
 const STYLES: Record<NphiesStatus, { pill: string; dot: string; label: string }> = {
   green: {
@@ -44,6 +46,10 @@ interface NphiesBadgeProps {
   /** Label for the 1-click action offered on yellow/red. */
   readonly actionLabel?: string | undefined;
   readonly onAction?: (() => void) | undefined;
+  /** NSCRE's own graph traversal behind this status, when it came from a live
+   * NPHIES agent result (Sprint 8) -- the "View Evidence Chain" trigger only
+   * appears when this is set. */
+  readonly evidenceChain?: EvidenceChain | null | undefined;
 }
 
 export default function NphiesBadge({
@@ -52,6 +58,7 @@ export default function NphiesBadge({
   suggestedCodes,
   actionLabel,
   onAction,
+  evidenceChain,
 }: NphiesBadgeProps): JSX.Element {
   const [open, setOpen] = useState(false);
   const style = STYLES[status];
@@ -94,6 +101,12 @@ export default function NphiesBadge({
                   </code>
                 ))}
               </span>
+            </span>
+          )}
+
+          {evidenceChain && (
+            <span className="mt-2 block">
+              <EvidenceChainPopover evidenceChain={evidenceChain} triggerLabel="View Evidence Chain" />
             </span>
           )}
 

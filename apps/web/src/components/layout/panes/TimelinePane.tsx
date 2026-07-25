@@ -113,6 +113,7 @@ export default function TimelinePane(): JSX.Element {
                   status={order.nphiesStatus}
                   detail={order.nphiesDetail}
                   suggestedCodes={order.suggestedCodes}
+                  evidenceChain={order.evidenceChain}
                   actionLabel={needsAction ? actionLabel : undefined}
                   onAction={
                     needsAction
