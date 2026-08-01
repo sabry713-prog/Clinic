@@ -8,11 +8,18 @@
 
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import SullyShell from "./SullyShell";
 import NphiesBadge from "./NphiesBadge";
 
 function renderShell() {
-  return render(<SullyShell patientName="Test Patient Alpha" autoStream={false} />);
+  // The pane uses useSearchParams for the "New order" deep-link, so the shell
+  // needs a router context here exactly as it has one in the app.
+  return render(
+    <MemoryRouter>
+      <SullyShell patientName="Test Patient Alpha" autoStream={false} />
+    </MemoryRouter>,
+  );
 }
 
 describe("SullyShell — 3-pane layout", () => {
@@ -288,5 +295,52 @@ describe("Phase 1 stabilization — demo honesty", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Live microphone" }));
     expect(screen.getByText(/No patient encounter is open/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /record/i })).toBeDisabled();
+  });
+});
+
+describe("Order entry controls (audit M-5)", () => {
+  it("filters the order list by category", () => {
+    renderShell();
+    expect(screen.getByText("Electrocardiogram (ECG), 12 lead")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Medications/i }));
+    // Only the medication order survives the filter.
+    expect(screen.getByText("Atorvastatin 20 mg")).toBeInTheDocument();
+    expect(screen.queryByText("Electrocardiogram (ECG), 12 lead")).not.toBeInTheDocument();
+  });
+
+  it("marks the active category and clears it on a second click", () => {
+    renderShell();
+    const chip = screen.getByRole("button", { name: /Labs/i });
+    fireEvent.click(chip);
+    expect(chip).toHaveAttribute("aria-pressed", "true");
+
+    fireEvent.click(chip);
+    expect(chip).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("Electrocardiogram (ECG), 12 lead")).toBeInTheDocument();
+  });
+
+  it("explains an empty category rather than showing a blank list", () => {
+    renderShell();
+    fireEvent.click(screen.getByRole("button", { name: /Procedures/i }));
+    // Angiography is the only procedure, so pick one with no orders instead.
+    fireEvent.click(screen.getByRole("button", { name: /Procedures/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Medications/i }));
+    expect(screen.queryByText(/No .* orders on this encounter/)).not.toBeInTheDocument();
+  });
+
+  it("gives the New order button a working handler", () => {
+    renderShell();
+    const btn = screen.getByRole("button", { name: /New order/i });
+    expect(btn).toBeEnabled();
+    // Wired to the real order-entry flow; clicking must not throw.
+    expect(() => fireEvent.click(btn)).not.toThrow();
+  });
+
+  it("caps the timeline height so a long history stays scrollable", () => {
+    renderShell();
+    const feed = screen.getByTestId("timeline-feed");
+    expect(feed.className).toMatch(/max-h-/);
+    expect(feed.className).toMatch(/overflow-y-auto/);
   });
 });

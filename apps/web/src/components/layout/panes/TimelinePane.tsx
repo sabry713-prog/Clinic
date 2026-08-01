@@ -11,7 +11,8 @@ import {
   Stethoscope, FlaskConical, FileText, Pill, ScanLine,
   Beaker, Syringe, Scissors, Plus,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useSully, type OrderCategory, type OrderLine, type TimelineEntry } from "../SullyContext";
 import NphiesBadge from "../NphiesBadge";
 import PreAuthModal, { type PreAuthFields } from "../../timeline/PreAuthModal";
@@ -41,6 +42,20 @@ const CATEGORY_ICONS: Record<OrderCategory, typeof Beaker> = {
 export default function TimelinePane(): JSX.Element {
   const { timeline, timelineLoading, timelineError, orders, soap, runAgentAction, submitPreAuth } = useSully();
   const [preAuthOrder, setPreAuthOrder] = useState<OrderLine | null>(null);
+  const [, setSearchParams] = useSearchParams();
+
+  // Category chips filter the order list (audit M-5 -- they previously had no
+  // handler at all). Clicking an active chip clears the filter.
+  const [categoryFilter, setCategoryFilter] = useState<OrderCategory | null>(null);
+  const visibleOrders = useMemo(
+    () => (categoryFilter ? orders.filter((o) => o.category === categoryFilter) : orders),
+    [orders, categoryFilter],
+  );
+
+  /** "New order" opens the real order-entry flow (ServiceRequestPanel) in the
+   * workspace view rather than duplicating it here -- that panel already owns
+   * candidate lookup, SBS coding and the confirm step. */
+  const openOrderEntry = (): void => setSearchParams({ view: "workspace", open: "orders" });
 
   const preAuthFields: PreAuthFields | null = preAuthOrder
     ? {
@@ -75,7 +90,10 @@ export default function TimelinePane(): JSX.Element {
             {timelineError}
           </p>
         )}
-        <ol className="relative space-y-3 border-s border-slate-800 ps-5">
+        <ol
+          data-testid="timeline-feed"
+          className="relative max-h-[22rem] space-y-3 overflow-y-auto border-s border-slate-800 ps-5 pe-1"
+        >
           {timeline.map((entry) => {
             const Icon = TIMELINE_ICONS[entry.kind];
             return (
@@ -102,6 +120,8 @@ export default function TimelinePane(): JSX.Element {
           <h2 className="text-sm font-semibold text-white">Clinical order entry</h2>
           <button
             type="button"
+            onClick={openOrderEntry}
+            title="Opens the full order-entry panel in the workspace view"
             className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
           >
             <Plus className="h-3.5 w-3.5" /> New order
@@ -110,20 +130,29 @@ export default function TimelinePane(): JSX.Element {
 
         {/* Category selector */}
         <div className="mb-3 flex flex-wrap gap-2">
-          {ORDER_CATEGORIES.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:border-slate-600 hover:text-white"
-            >
-              <Icon className="h-3.5 w-3.5" /> {label}
-            </button>
-          ))}
+          {ORDER_CATEGORIES.map(({ id, label, icon: Icon }) => {
+            const active = categoryFilter === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setCategoryFilter(active ? null : id)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
+                  active
+                    ? "border-blue-500 bg-blue-600/20 text-white"
+                    : "border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-600 hover:text-white"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" /> {label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Order lines */}
         <ul className="space-y-2">
-          {orders.map((order) => {
+          {visibleOrders.map((order) => {
             const Icon = CATEGORY_ICONS[order.category];
             const needsAction = order.nphiesStatus !== "green";
             const actionLabel =
@@ -164,6 +193,11 @@ export default function TimelinePane(): JSX.Element {
               </li>
             );
           })}
+          {visibleOrders.length === 0 && (
+            <li className="rounded-lg border border-dashed border-slate-800 px-3 py-4 text-center text-xs text-slate-500">
+              No {categoryFilter} orders on this encounter.
+            </li>
+          )}
         </ul>
       </div>
 
