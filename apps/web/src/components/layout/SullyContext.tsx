@@ -114,10 +114,28 @@ export interface AgentMessage {
   };
 }
 
+/** `live` uses the microphone + on-prem transcription service; `demo` replays
+ * the canned transcript. Audit H-3: the pane used to be demo-only with no way
+ * to reach the real pipeline. */
+export type DictationMode = "live" | "demo";
+
 interface SullyState {
   readonly recording: boolean;
   readonly elapsedSeconds: number;
   readonly transcript: readonly TranscriptLine[];
+  /** Which capture path the scribe pane is using. */
+  readonly dictationMode: DictationMode;
+  /** Null in demo mode -- real dictation needs a patient to post audio against. */
+  readonly patientId: string | null;
+  /** True while audio is being transcribed server-side. */
+  readonly transcribing: boolean;
+  /** Surfaces mic/transcription failures instead of failing silently. */
+  readonly dictationError: string | null;
+  setDictationMode: (mode: DictationMode) => void;
+  /** Append a real transcribed utterance to the live transcript. */
+  appendTranscriptLine: (text: string) => void;
+  setTranscribing: (value: boolean) => void;
+  setDictationError: (message: string | null) => void;
   readonly soap: SoapNote;
   readonly checklist: readonly ChecklistItem[];
   readonly timeline: readonly TimelineEntry[];
@@ -196,6 +214,56 @@ const MOCK_TIMELINE: readonly TimelineEntry[] = [
   { id: "e7", kind: "encounter", title: "Emergency department visit", detail: "Presented with palpitations, discharged same day", at: "2026-04-03" },
 ];
 
+/** Evidence chains for the mock data (audit H-4).
+ *
+ * Before this, `evidenceChain` was only ever set inside the live
+ * `useAgentOrchestrator` effects, so the "Show Reasoning" / "View Evidence
+ * Chain" trigger rendered NOWHERE without a live NSCRE and a routed patientId
+ * -- the product's central explainability feature was invisible in the demo
+ * path most people see.
+ *
+ * These are shaped exactly like `build_evidence_chain()`'s real output
+ * (services/veritas-graph/evidence_chain.py) so swapping them for live chains
+ * changes nothing downstream. Each one is attached only where it is
+ * CLINICALLY COHERENT for that row -- a renal-dose chain hanging off an
+ * echocardiogram order would be visible nonsense to any clinician watching,
+ * which is worse than showing no chain at all.
+ */
+const METFORMIN_RENAL_CHAIN: EvidenceChain = {
+  steps: [
+    { node_type: "Patient", properties: { MRN: "102" } },
+    { node_type: "LabResult", properties: { eGFR: 28 } },
+    { node_type: "Contraindication", properties: { medication: "Metformin", threshold: "eGFR < 30" } },
+    { node_type: "Rule", properties: { flag: "CRITICAL_OVERRIDE" } },
+  ],
+  rendered:
+    'Patient(MRN=102) -> LabResult(eGFR=28) -> Contraindication(Metformin, "eGFR < 30") -> Rule(CRITICAL_OVERRIDE)',
+};
+
+/** NPHIES necessity traversal behind the echocardiogram's pre-auth badge. */
+const ECHO_PREAUTH_CHAIN: EvidenceChain = {
+  steps: [
+    { node_type: "Patient", properties: { MRN: "102" } },
+    { node_type: "Condition", properties: { icd10: "I10", display: "Essential (primary) hypertension" } },
+    { node_type: "NphiesService", properties: { sbs_code: "11712-00-10" } },
+    { node_type: "NphiesRule", properties: { status: "YELLOW", pre_auth_required: true } },
+  ],
+  rendered:
+    "Patient(MRN=102) -> Condition(icd10=I10) -> NphiesService(sbs_code=11712-00-10) -> NphiesRule(status=YELLOW, pre_auth_required=true)",
+};
+
+/** Why the angiography order has no necessity rule to stand on. */
+const ANGIOGRAPHY_MISMATCH_CHAIN: EvidenceChain = {
+  steps: [
+    { node_type: "Patient", properties: { MRN: "102" } },
+    { node_type: "Condition", properties: { icd10: "I25.1" } },
+    { node_type: "NphiesService", properties: { sbs_code: "38306-00-99" } },
+    { node_type: "NphiesRule", properties: { status: "RED", matched: false } },
+  ],
+  rendered:
+    "Patient(MRN=102) -> Condition(icd10=I25.1) -> NphiesService(sbs_code=38306-00-99) -> NphiesRule(status=RED, matched=false)",
+};
+
 const MOCK_ORDERS: readonly OrderLine[] = [
   {
     id: "o1",
@@ -225,6 +293,7 @@ const MOCK_ORDERS: readonly OrderLine[] = [
     nphiesDetail: "Pre-authorisation required by the payer before this service can be claimed.",
     icd10Code: "I10",
     icd10Display: "Essential (primary) hypertension",
+    evidenceChain: ECHO_PREAUTH_CHAIN,
   },
   {
     id: "o4",
@@ -247,6 +316,11 @@ const MOCK_ORDERS: readonly OrderLine[] = [
     nphiesDetail:
       "Code mismatch — no recorded necessity rule links this procedure to the documented diagnoses. High rejection risk.",
     suggestedCodes: ["38300-00-10", "38306-00-10"],
+    // Audit L-4: without a confirmed diagnosis code this order could never be
+    // submitted once the red-badge path is wired to real coding.
+    icd10Code: "I25.1",
+    icd10Display: "Atherosclerotic heart disease of native coronary artery",
+    evidenceChain: ANGIOGRAPHY_MISMATCH_CHAIN,
   },
 ];
 
@@ -329,6 +403,7 @@ const INITIAL_MESSAGES: readonly AgentMessage[] = [
     text: "Escalating a critical dose-safety finding on Metformin to Pharmacy.",
     at: "09:10",
     handoff: { sourceAgent: "consultant", targetAgent: "pharmacist", correlationId: "chain-1" },
+    evidenceChain: METFORMIN_RENAL_CHAIN,
   },
   {
     id: "m5",
@@ -336,6 +411,7 @@ const INITIAL_MESSAGES: readonly AgentMessage[] = [
     text: "1 candidate passed screening (no contraindication found). Not a substitution recommendation.",
     at: "09:10",
     handoff: { sourceAgent: "pharmacist", targetAgent: "nphies", correlationId: "chain-1" },
+    evidenceChain: METFORMIN_RENAL_CHAIN,
   },
   {
     id: "m6",
@@ -350,6 +426,7 @@ const INITIAL_MESSAGES: readonly AgentMessage[] = [
     text: "Drafted a Plan-section update for your review — not applied automatically.",
     at: "09:11",
     handoff: { sourceAgent: "scribe", targetAgent: "clinician", correlationId: "chain-1" },
+    evidenceChain: METFORMIN_RENAL_CHAIN,
   },
 ];
 
@@ -404,6 +481,34 @@ export function SullyProvider({
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [orders, setOrders] = useState<readonly OrderLine[]>(MOCK_ORDERS);
   const messageSeq = useRef(0);
+
+  // Audit H-3: real dictation when a patient is routed in, canned playback
+  // otherwise. Defaulting to `demo` without a patientId keeps the offline
+  // demo working exactly as before rather than showing a mic that cannot work.
+  const [dictationMode, setDictationMode] = useState<DictationMode>(patientId ? "live" : "demo");
+  const [liveTranscript, setLiveTranscript] = useState<readonly TranscriptLine[]>([]);
+  const [transcribing, setTranscribing] = useState(false);
+  const [dictationError, setDictationError] = useState<string | null>(null);
+  const transcriptSeq = useRef(0);
+
+  const appendTranscriptLine = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    transcriptSeq.current += 1;
+    setLiveTranscript((prev) => [
+      ...prev,
+      {
+        id: `live-${transcriptSeq.current}`,
+        // The transcription service returns one utterance without speaker
+        // attribution -- labelling it "clinician" would be an invented fact,
+        // so dictated lines are attributed to the person holding the mic only
+        // because that is who pressed record.
+        speaker: "clinician",
+        text: trimmed,
+        at: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+  }, []);
 
   const { pharmacist, consultant, nphies } = useAgentOrchestrator(patientId);
   const { byOrder: nphiesByOrder, markQueued } = useNphiesStatus(patientId, encounterId);
@@ -500,15 +605,18 @@ export function SullyProvider({
 
   // Stream mock transcript lines while recording is active.
   useEffect(() => {
-    if (!autoStream || !recording) return;
+    if (!autoStream || !recording || dictationMode !== "demo") return;
     const timer = setInterval(() => {
       setLineCount((n) => (n >= MOCK_TRANSCRIPT.length ? n : n + 1));
       setElapsedSeconds((s) => s + STREAM_INTERVAL_MS / 1000);
     }, STREAM_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [recording, autoStream]);
+  }, [recording, autoStream, dictationMode]);
 
-  const transcript = useMemo(() => MOCK_TRANSCRIPT.slice(0, lineCount), [lineCount]);
+  const transcript = useMemo(
+    () => (dictationMode === "demo" ? MOCK_TRANSCRIPT.slice(0, lineCount) : liveTranscript),
+    [dictationMode, lineCount, liveTranscript],
+  );
 
   // SOAP follows transcript progress, then any manual edits win.
   const soap = useMemo<SoapNote>(() => {
@@ -595,6 +703,14 @@ export function SullyProvider({
       messages,
       drawerOpen,
       postCare: MOCK_POST_CARE,
+      dictationMode,
+      patientId: patientId ?? null,
+      transcribing,
+      dictationError,
+      setDictationMode,
+      appendTranscriptLine,
+      setTranscribing,
+      setDictationError,
       toggleRecording,
       updateSoap,
       toggleChecklistItem,
@@ -607,6 +723,7 @@ export function SullyProvider({
       recording, elapsedSeconds, transcript, soap, checklist, orders, activeAgent,
       messages, drawerOpen, toggleRecording, updateSoap, toggleChecklistItem,
       setActiveAgent, toggleDrawer, runAgentAction, submitPreAuth,
+      dictationMode, patientId, transcribing, dictationError, appendTranscriptLine,
     ],
   );
 

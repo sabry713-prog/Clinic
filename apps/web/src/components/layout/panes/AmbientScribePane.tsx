@@ -8,9 +8,10 @@
  * areas and nothing is written to the record from here.
  */
 
-import { useEffect, useRef } from "react";
-import { Mic, Square, ListChecks, FileText } from "lucide-react";
+import { useCallback, useEffect, useRef } from "react";
+import { Mic, Square, ListChecks, FileText, Loader2, AlertTriangle } from "lucide-react";
 import { useSully, type SoapField } from "../SullyContext";
+import { useDictation, type DictationResult } from "../../../hooks/useDictation";
 
 const SOAP_SECTIONS: readonly { field: SoapField; label: string }[] = [
   { field: "subjective", label: "Subjective" },
@@ -42,8 +43,42 @@ function Waveform({ active }: { readonly active: boolean }): JSX.Element {
 }
 
 export default function AmbientScribePane(): JSX.Element {
-  const { recording, elapsedSeconds, transcript, soap, checklist, toggleRecording, updateSoap, toggleChecklistItem } = useSully();
+  const {
+    recording, elapsedSeconds, transcript, soap, checklist,
+    toggleRecording, updateSoap, toggleChecklistItem,
+    dictationMode, patientId, transcribing, dictationError,
+    setDictationMode, appendTranscriptLine, setTranscribing, setDictationError,
+  } = useSully();
   const feedRef = useRef<HTMLDivElement>(null);
+
+  // Audit H-3: real microphone capture + the on-prem transcription service,
+  // replacing the setInterval animation that previously stood in for it. The
+  // canned playback is kept as an explicit `demo` mode for offline use and
+  // for tests, rather than being deleted.
+  const onResult = useCallback(
+    (result: DictationResult) => appendTranscriptLine(result.text),
+    [appendTranscriptLine],
+  );
+  const dictation = useDictation(patientId ?? "", "en", onResult);
+
+  // Mirror the hook's transient state into the shared store so the header can
+  // render it without the pane owning transcript state itself.
+  useEffect(() => setTranscribing(dictation.transcribing), [dictation.transcribing, setTranscribing]);
+  useEffect(() => setDictationError(dictation.error), [dictation.error, setDictationError]);
+
+  const liveMode = dictationMode === "live";
+  // Live capture is only offered when there is a patient to post audio against.
+  const canRecordLive = liveMode && Boolean(patientId);
+  const isRecording = liveMode ? dictation.recording : recording;
+
+  const handleRecordClick = useCallback(() => {
+    if (!liveMode) {
+      toggleRecording();
+      return;
+    }
+    if (dictation.recording) dictation.stop();
+    else void dictation.start();
+  }, [liveMode, toggleRecording, dictation]);
 
   // Keep the newest transcript line in view as it streams.
   useEffect(() => {
@@ -62,27 +97,90 @@ export default function AmbientScribePane(): JSX.Element {
   return (
     <section className="flex h-full flex-col overflow-hidden bg-slate-900" aria-label="Ambient scribe">
       {/* Recording status bar */}
-      <header className="flex items-center gap-3 border-b border-slate-800 px-4 py-3">
-        <button
-          type="button"
-          onClick={toggleRecording}
-          aria-pressed={recording}
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-            recording
-              ? "bg-rose-600 text-white hover:bg-rose-500"
-              : "bg-blue-600 text-white hover:bg-blue-500"
-          }`}
+      <header className="border-b border-slate-800 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleRecordClick}
+            aria-pressed={isRecording}
+            disabled={liveMode && !canRecordLive}
+            title={
+              liveMode && !canRecordLive
+                ? "Live dictation needs an open patient encounter. Switch to Demo playback to preview the scribe."
+                : undefined
+            }
+            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+              isRecording
+                ? "bg-rose-600 text-white hover:bg-rose-500"
+                : "bg-blue-600 text-white hover:bg-blue-500"
+            }`}
+          >
+            {isRecording ? <Square className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+            {isRecording ? "Stop" : "Record"}
+          </button>
+
+          <Waveform active={isRecording} />
+
+          <span className="ms-auto flex items-center gap-2 text-xs text-slate-400">
+            {isRecording && <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" />}
+            <span className="font-mono">{formatElapsed(elapsedSeconds)}</span>
+          </span>
+        </div>
+
+        {/* Capture-source toggle. Explicit rather than implicit, so nobody
+            mistakes canned playback for a live recording. */}
+        <div
+          role="radiogroup"
+          aria-label="Dictation source"
+          className="mt-2.5 flex items-center gap-1 text-[11px]"
         >
-          {recording ? <Square className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-          {recording ? "Stop" : "Record"}
-        </button>
+          {(["live", "demo"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-checked={dictationMode === mode}
+              aria-label={mode === "live" ? "Live microphone" : "Demo playback"}
+              onClick={() => setDictationMode(mode)}
+              className={`rounded-full px-2.5 py-1 font-medium transition-colors ${
+                dictationMode === mode
+                  ? "bg-slate-700 text-white"
+                  : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              {mode === "live" ? "Live microphone" : "Demo playback"}
+            </button>
+          ))}
+          {dictationMode === "demo" && (
+            <span className="ms-1 text-[10px] italic text-amber-300/80">
+              scripted sample — not a recording
+            </span>
+          )}
+        </div>
 
-        <Waveform active={recording} />
+        {liveMode && !patientId && (
+          <p className="mt-2 text-[11px] leading-relaxed text-amber-300/90">
+            No patient encounter is open, so audio has nowhere to be transcribed against.
+            Switch to Demo playback to preview the scribe.
+          </p>
+        )}
 
-        <span className="ms-auto flex items-center gap-2 text-xs text-slate-400">
-          {recording && <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" />}
-          <span className="font-mono">{formatElapsed(elapsedSeconds)}</span>
-        </span>
+        {transcribing && (
+          <p className="mt-2 flex items-center gap-1.5 text-[11px] text-slate-400">
+            <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+            Transcribing…
+          </p>
+        )}
+
+        {dictationError && (
+          <p
+            role="alert"
+            className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-rose-300"
+          >
+            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+            {dictationError}
+          </p>
+        )}
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -94,7 +192,7 @@ export default function AmbientScribePane(): JSX.Element {
           <div ref={feedRef} className="max-h-44 space-y-2 overflow-y-auto pe-1">
             {transcript.length === 0 ? (
               <p className="text-xs text-slate-500">
-                {recording ? "Listening…" : "Press Record to start the ambient transcript."}
+                {isRecording ? "Listening…" : "Press Record to start the ambient transcript."}
               </p>
             ) : (
               transcript.map((line) => (

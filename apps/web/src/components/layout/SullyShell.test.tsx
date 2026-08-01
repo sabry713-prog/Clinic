@@ -226,3 +226,67 @@ describe("Inter-agent handoffs (Sprint 10)", () => {
     expect(screen.getByTestId("care-instructions")).toBeInTheDocument();
   });
 });
+
+describe("Phase 1 stabilization — demo honesty", () => {
+  // Audit H-4: the popover trigger used to render nowhere without a live
+  // backend, hiding the product's central explainability feature.
+  it("shows an evidence-chain trigger on NPHIES badges in demo mode", () => {
+    renderShell();
+    // The red angiography badge toggles its tooltip on click (yellow badges go
+    // straight to the pre-auth modal instead, per Sprint 9).
+    fireEvent.click(screen.getByLabelText("NPHIES status: Code mismatch"));
+    expect(screen.getByRole("button", { name: "View Evidence Chain" })).toBeInTheDocument();
+  });
+
+  it("renders the graph traversal when the badge popover is opened", () => {
+    renderShell();
+    fireEvent.click(screen.getByLabelText("NPHIES status: Code mismatch"));
+    fireEvent.click(screen.getByRole("button", { name: "View Evidence Chain" }));
+    const dialog = screen.getByRole("dialog", { name: "Evidence chain" });
+    expect(within(dialog).getByTestId("evidence-chain-steps")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        "Patient(MRN=102) -> Condition(icd10=I25.1) -> NphiesService(sbs_code=38306-00-99) -> NphiesRule(status=RED, matched=false)",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows Show Reasoning on agent messages in demo mode", () => {
+    renderShell();
+    expect(screen.getAllByRole("button", { name: "Show Reasoning" }).length).toBeGreaterThan(0);
+  });
+
+  it("renders the captured Metformin renal chain verbatim", () => {
+    renderShell();
+    fireEvent.click(screen.getAllByRole("button", { name: "Show Reasoning" })[0]!);
+    const dialog = screen.getByRole("dialog", { name: "Evidence chain" });
+    expect(
+      within(dialog).getByText(
+        'Patient(MRN=102) -> LabResult(eGFR=28) -> Contraindication(Metformin, "eGFR < 30") -> Rule(CRITICAL_OVERRIDE)',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  // Audit H-3: capture source must be explicit, never implied.
+  it("offers an explicit live/demo dictation toggle", () => {
+    renderShell();
+    expect(screen.getByRole("radio", { name: "Live microphone" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Demo playback" })).toBeInTheDocument();
+  });
+
+  it("defaults to demo playback with no patient and labels it as scripted", () => {
+    renderShell();
+    expect(screen.getByRole("radio", { name: "Demo playback" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(screen.getByText(/scripted sample — not a recording/i)).toBeInTheDocument();
+  });
+
+  it("explains why live capture is unavailable without an encounter", () => {
+    renderShell();
+    fireEvent.click(screen.getByRole("radio", { name: "Live microphone" }));
+    expect(screen.getByText(/No patient encounter is open/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /record/i })).toBeDisabled();
+  });
+});
