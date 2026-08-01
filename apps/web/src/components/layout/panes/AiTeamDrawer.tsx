@@ -28,7 +28,10 @@ const TAB_LABELS: Record<AgentId, string> = {
 };
 
 export default function AiTeamDrawer(): JSX.Element {
-  const { activeAgent, messages, drawerOpen, postCare, setActiveAgent, toggleDrawer, runAgentAction } = useSully();
+  const {
+    activeAgent, messages, drawerOpen, postCare, postCareLoading, postCarePendingIntegration,
+    setActiveAgent, toggleDrawer, runAgentAction,
+  } = useSully();
   const streamRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,6 +116,8 @@ export default function AiTeamDrawer(): JSX.Element {
         {activeAgent === "receptionist" ? (
           <ReceptionistTab
             postCare={postCare}
+            loading={postCareLoading}
+            pendingIntegration={postCarePendingIntegration}
             onBookSlot={async (slot) => {
               runAgentAction({
                 id: `book-${slot.starts_at}`,

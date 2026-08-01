@@ -70,6 +70,8 @@ interface ReceptionistTabProps {
    * integration" chip instead of a success badge for work that never left the
    * browser. Callers that ARE wired to a backend pass `false`. */
   readonly pendingIntegration?: boolean;
+  /** True while the package is being drafted server-side (Phase 2). */
+  readonly loading?: boolean;
 }
 
 function formatSlot(iso: string): string {
@@ -173,7 +175,17 @@ export default function ReceptionistTab({
   onBookSlot,
   onDispatch,
   pendingIntegration = true,
+  loading = false,
 }: ReceptionistTabProps): JSX.Element {
+  if (loading && !postCare) {
+    return (
+      <p className="flex items-center gap-1.5 text-[11px] text-slate-400">
+        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+        Drafting the post-care package…
+      </p>
+    );
+  }
+
   if (!postCare) {
     return (
       <p className="text-[11px] leading-relaxed text-slate-500">

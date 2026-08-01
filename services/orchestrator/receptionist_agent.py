@@ -168,14 +168,25 @@ async def generate_care_instructions(
     }
     has_content = any(v for v in source_facts.values())
     text = ""
+    generation_error: Optional[str] = None
     if has_content:
-        text = await format_agent_prose(source_facts, agent_role="Receptionist", client=client)
+        try:
+            text = await format_agent_prose(source_facts, agent_role="Receptionist", client=client)
+        except Exception as exc:  # noqa: BLE001
+            # The prose is the ONLY part of the post-care package that needs a
+            # model. Follow-up slots and lab-prep reminders are computed
+            # deterministically, so an unavailable or misconfigured DeepSeek
+            # must degrade this one field rather than fail the whole workflow
+            # and leave the clinician with nothing.
+            logger.error("care_instructions_generation_failed", error=str(exc))
+            generation_error = "Care instructions could not be drafted; the rest of the package is unaffected."
 
     return {
         "text": text,
         "source_facts": source_facts,
         # Model-written clinical text: a clinician signs off before it can be sent.
         "requires_clinician_review": True,
+        "generation_error": generation_error,
     }
 
 

@@ -39,7 +39,7 @@ const CATEGORY_ICONS: Record<OrderCategory, typeof Beaker> = {
 };
 
 export default function TimelinePane(): JSX.Element {
-  const { timeline, orders, soap, runAgentAction, submitPreAuth } = useSully();
+  const { timeline, timelineLoading, timelineError, orders, soap, runAgentAction, submitPreAuth } = useSully();
   const [preAuthOrder, setPreAuthOrder] = useState<OrderLine | null>(null);
 
   const preAuthFields: PreAuthFields | null = preAuthOrder
@@ -64,7 +64,17 @@ export default function TimelinePane(): JSX.Element {
     <section className="flex h-full flex-col overflow-y-auto bg-slate-950" aria-label="Patient timeline and orders">
       {/* Master timeline */}
       <div className="border-b border-slate-800 p-5">
-        <h2 className="mb-3 text-sm font-semibold text-white">Patient master timeline</h2>
+        <div className="mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-white">Patient master timeline</h2>
+          {timelineLoading && (
+            <span className="text-[11px] text-slate-500">loading…</span>
+          )}
+        </div>
+        {timelineError && (
+          <p role="status" className="mb-2 text-[11px] leading-relaxed text-amber-300/90">
+            {timelineError}
+          </p>
+        )}
         <ol className="relative space-y-3 border-s border-slate-800 ps-5">
           {timeline.map((entry) => {
             const Icon = TIMELINE_ICONS[entry.kind];

@@ -153,3 +153,31 @@ async def test_empty_discharge_order_produces_no_outreach():
     assert result["followup_slots"] == []
     assert result["lab_prep_reminders"] == []
     assert result["dispatch_payloads"] == []
+
+
+# ---------------------------------------------------------------- LLM outage
+async def test_care_instructions_degrade_when_the_model_is_unavailable(monkeypatch):
+    """A missing DEEPSEEK_API_KEY must not blank the whole package."""
+    async def boom(facts, agent_role, **kwargs):
+        raise RuntimeError("DEEPSEEK_API_KEY is not set.")
+
+    monkeypatch.setattr(receptionist_agent, "format_agent_prose", boom)
+    result = await generate_care_instructions(DISCHARGE_ORDER)
+    assert result["text"] == ""
+    assert result["generation_error"]
+    # Source facts still travel, so a reviewer can write the text by hand.
+    assert result["source_facts"]["diagnosis"] == "Essential (primary) hypertension"
+
+
+async def test_workflow_still_returns_slots_and_lab_prep_without_the_model(monkeypatch):
+    """The deterministic half of the package survives an LLM outage."""
+    async def boom(facts, agent_role, **kwargs):
+        raise RuntimeError("DEEPSEEK_API_KEY is not set.")
+
+    monkeypatch.setattr(receptionist_agent, "format_agent_prose", boom)
+    result = await run_post_care_workflow("pat-1", DISCHARGE_ORDER, now=NOW)
+
+    assert len(result["followup_slots"]) == 3
+    assert len(result["lab_prep_reminders"]) == 2
+    # Only the care-instruction message is lost; lab-prep messages remain.
+    assert all(p["kind"] == "lab_prep" for p in result["dispatch_payloads"])
