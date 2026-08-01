@@ -711,6 +711,64 @@ export interface QAInteractionSummary {
 
 // ─── API client ───────────────────────────────────────────────────────────────
 
+/** One hop of the Sprint 10 inter-agent handoff chain. */
+export interface AgentHandoff {
+  readonly event: string;
+  readonly event_type: string;
+  readonly patient_id: string;
+  readonly source_agent: string;
+  readonly target_agent: string;
+  readonly correlation_id: string;
+  readonly sequence: number;
+  readonly at: string;
+  readonly payload: Record<string, unknown>;
+}
+
+export interface AgentHandoffChainResult {
+  readonly patient_id: string;
+  readonly handoffs: readonly AgentHandoff[];
+}
+
+/** Discharge order the receptionist agent drafts a post-care package from.
+ * Every field is optional -- an absent follow-up interval means no slots are
+ * drafted rather than a default interval being invented. */
+export interface DischargeOrderInput {
+  readonly diagnosis_display?: string;
+  readonly medications?: readonly { readonly display: string }[];
+  readonly labs?: readonly { readonly display: string }[];
+  readonly follow_up_interval_days?: number;
+  readonly follow_up_department?: string;
+  readonly activity_restrictions?: string;
+}
+
+export interface PostCarePackageResult {
+  readonly patient_id: string;
+  readonly followup_slots: readonly {
+    readonly starts_at: string;
+    readonly department: string | null;
+    readonly appointment_type: string;
+    readonly status: string;
+  }[];
+  readonly lab_prep_reminders: readonly {
+    readonly lab: string;
+    readonly instruction: string;
+    readonly source: string;
+  }[];
+  readonly care_instructions: {
+    readonly text: string;
+    readonly requires_clinician_review: boolean;
+  } | null;
+  readonly dispatch_payloads: readonly {
+    readonly patient_id: string;
+    readonly channel: "sms" | "whatsapp";
+    readonly kind: string;
+    readonly body: string;
+    readonly status: string;
+  }[];
+  readonly requires_clinician_review: boolean;
+  readonly disclaimer: string;
+}
+
 export const api = {
   patients: {
     list: (params?: {
@@ -931,6 +989,25 @@ export const api = {
       request<PreAuthQueued>(`/api/v1/patients/${patientId}/nphies/pre-auth`, {
         method: "POST",
         body: JSON.stringify(body),
+      }),
+  },
+
+  /** Sprint 10 agent bus + post-care, proxied through core (Phase 2 wiring). */
+  aiTeam: {
+    /** Run the inter-agent handoff chain. `handoffs` is empty when NSCRE
+     * reports no critical finding -- that is a valid result, not a failure. */
+    runHandoffChain: (patientId: string) =>
+      request<AgentHandoffChainResult>(`/api/v1/patients/${patientId}/ai-team/handoff-chain`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+
+    /** Draft the post-encounter package. Everything returned is a draft:
+     * nothing is booked and no message is sent. */
+    postCare: (patientId: string, dischargeOrder: DischargeOrderInput) =>
+      request<PostCarePackageResult>(`/api/v1/patients/${patientId}/ai-team/post-care`, {
+        method: "POST",
+        body: JSON.stringify({ discharge_order: dischargeOrder }),
       }),
   },
 

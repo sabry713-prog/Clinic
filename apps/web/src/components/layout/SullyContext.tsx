@@ -23,8 +23,10 @@ import {
 } from "react";
 import { useAgentOrchestrator, type EvidenceChain } from "../../hooks/useAgentOrchestrator";
 import { useNphiesStatus } from "../../hooks/useNphiesStatus";
+import { usePatientTimeline } from "../../hooks/usePatientTimeline";
 import { api } from "../../lib/api";
 import type { PostCarePackage } from "../ai-team/ReceptionistTab";
+import type { AgentHandoff } from "../../lib/api";
 
 // ---------------------------------------------------------------- types
 /** `blue` = pended: submitted to the payer, no decision yet (Sprint 9). */
@@ -139,12 +141,24 @@ interface SullyState {
   readonly soap: SoapNote;
   readonly checklist: readonly ChecklistItem[];
   readonly timeline: readonly TimelineEntry[];
+  /** True while the real timeline is loading (Phase 2 / audit M-4). */
+  readonly timelineLoading: boolean;
+  /** Set when one of the three timeline sources failed; the rest still show. */
+  readonly timelineError: string | null;
   readonly orders: readonly OrderLine[];
   readonly activeAgent: AgentId;
   readonly messages: readonly AgentMessage[];
   readonly drawerOpen: boolean;
-  /** Post-care drafts from the AI Receptionist (Sprint 10). */
+  /** Post-care drafts from the AI Receptionist (Sprint 10). Live when a
+   * patient is routed in, mock otherwise. */
   readonly postCare: PostCarePackage | null;
+  /** True while the post-care package is being drafted server-side. */
+  readonly postCareLoading: boolean;
+  /** Set when booking/dispatch handlers still have no backend behind them --
+   * drives ReceptionistTab's "Pending integration" chip (audit M-2). */
+  readonly postCarePendingIntegration: boolean;
+  /** Re-run the post-care draft on demand. */
+  refreshPostCare: () => Promise<void>;
   toggleRecording: () => void;
   updateSoap: (field: SoapField, value: string) => void;
   toggleChecklistItem: (id: string) => void;
@@ -444,6 +458,58 @@ export function agentActions(agent: AgentId): readonly AgentAction[] {
   return AGENT_ACTIONS[agent];
 }
 
+/** NSCRE necessity verdicts -> badge colours. Anything unrecognised maps to
+ * nothing at all, so an unexpected value leaves the badge untouched instead of
+ * defaulting to a colour the graph never asserted. */
+const NSCRE_STATUS_TO_BADGE: Record<string, NphiesStatus | undefined> = {
+  GREEN: "green",
+  YELLOW: "yellow",
+  RED: "red",
+};
+
+/** Maps agent_bus.py's agent names onto the drawer's tab ids. */
+const AGENT_ID_BY_NAME: Record<string, AgentId> = {
+  nscre: "consultant",
+  consultant: "consultant",
+  pharmacist: "pharmacist",
+  nphies: "nphies",
+  scribe: "scribe",
+  clinician: "scribe",
+};
+
+/** One-line summary of a handoff hop for the activity stream.
+ *
+ * Deliberately describes only what the payload states -- counts and the
+ * medication name -- and never re-words a clinical finding. Anything richer
+ * belongs in the evidence chain, which is attached verbatim alongside. */
+function describeHandoff(h: AgentHandoff): string {
+  const p = h.payload as {
+    finding?: { medication?: string; kind?: string };
+    screened_candidates?: unknown[];
+    coverage?: unknown[];
+    draft_text?: string;
+    error?: string;
+  };
+  switch (h.event_type) {
+    case "nscre.critical_finding":
+      return `Critical ${p.finding?.kind ?? "finding"} detected on ${p.finding?.medication ?? "a medication"}.`;
+    case "consultant.escalation":
+      return `Escalating a critical finding on ${p.finding?.medication ?? "a medication"} to Pharmacy.`;
+    case "pharmacist.alternatives_screened": {
+      const n = p.screened_candidates?.length ?? 0;
+      return `${n} candidate${n === 1 ? "" : "s"} passed screening (no contraindication found). Not a substitution recommendation.`;
+    }
+    case "nphies.coverage_verified":
+      return `Coverage re-verified for ${p.coverage?.length ?? 0} screened candidate(s).`;
+    case "scribe.plan_updated":
+      return p.draft_text
+        ? `Drafted a Plan-section update for your review — not applied automatically.`
+        : "Plan-section update drafted for review.";
+    default:
+      return p.error ? `Handoff failed: ${p.error}` : h.event_type;
+  }
+}
+
 // ---------------------------------------------------------------- context
 const SullyCtx = createContext<SullyState | null>(null);
 
@@ -491,6 +557,38 @@ export function SullyProvider({
   const [dictationError, setDictationError] = useState<string | null>(null);
   const transcriptSeq = useRef(0);
 
+  // Phase 2: the Sprint 10 agent bus and receptionist engine, now reachable
+  // through core. Both stay null in demo mode -- there is no patient to run a
+  // chain for, and inventing one would defeat the point.
+  const [livePostCare, setLivePostCare] = useState<PostCarePackage | null>(null);
+  const [postCareLoading, setPostCareLoading] = useState(false);
+  const [liveHandoffs, setLiveHandoffs] = useState<readonly AgentHandoff[]>([]);
+  const seenHandoffs = useRef<Set<string>>(new Set());
+  const soapRef = useRef<SoapNote>(EMPTY_SOAP);
+  const ordersRef = useRef<readonly OrderLine[]>(MOCK_ORDERS);
+
+  /** Draft the post-encounter package for the routed patient. */
+  const refreshPostCare = useCallback(async () => {
+    if (!patientId) return;
+    setPostCareLoading(true);
+    try {
+      const result = await api.aiTeam.postCare(patientId, {
+        // Derived from what the clinician has actually documented in this
+        // encounter -- never a fabricated discharge order.
+        ...(soapRef.current.assessment ? { diagnosis_display: soapRef.current.assessment } : {}),
+        medications: ordersRef.current
+          .filter((o) => o.category === "medication")
+          .map((o) => ({ display: o.display })),
+        labs: ordersRef.current.filter((o) => o.category === "lab").map((o) => ({ display: o.display })),
+      });
+      setLivePostCare(result);
+    } catch {
+      // Leave the previous package in place; the drawer keeps working.
+    } finally {
+      setPostCareLoading(false);
+    }
+  }, [patientId]);
+
   const appendTranscriptLine = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -512,6 +610,12 @@ export function SullyProvider({
 
   const { pharmacist, consultant, nphies } = useAgentOrchestrator(patientId);
   const { byOrder: nphiesByOrder, markQueued } = useNphiesStatus(patientId, encounterId);
+  // Audit M-4: real observations/medications/encounters, mock only in demo mode.
+  const {
+    entries: liveTimeline,
+    loading: timelineLoading,
+    partialError: timelineError,
+  } = usePatientTimeline(patientId);
 
   // Live agent results append to the activity stream as they arrive -- the
   // mock INITIAL_MESSAGES stay in place either way (see patientId's doc
@@ -560,6 +664,44 @@ export function SullyProvider({
         ...(nphies.evidence_chains[0] ? { evidenceChain: nphies.evidence_chains[0] } : {}),
       },
     ]);
+  }, [nphies]);
+
+  // Phase 2: NSCRE necessity findings drive the badges too.
+  //
+  // The NPHIES agent's cards come from deterministic graph queries
+  // (services/veritas-graph, Module C) and arrive over the AI Team SSE stream.
+  // They were previously rendered only as chat text, so a GREEN/YELLOW/RED
+  // verdict the graph had already computed never reached the order it was
+  // about. Matching is by medication name against the order display, and a
+  // card that matches nothing is ignored rather than guessed onto an order.
+  //
+  // Payer outcomes (the effect below) are applied AFTER this one, so a real
+  // NPHIES decision always wins over a graph prediction.
+  useEffect(() => {
+    const cards = nphies?.cards ?? [];
+    if (cards.length === 0) return;
+    setOrders((prev) =>
+      prev.map((order) => {
+        const card = cards.find(
+          (c) =>
+            c.medication &&
+            order.display.toLowerCase().includes(c.medication.toLowerCase()),
+        );
+        if (!card) return order;
+        // Never downgrade an order the payer has already ruled on.
+        if (order.authorizationNumber || order.nphiesStatus === "blue") return order;
+        const status = NSCRE_STATUS_TO_BADGE[card.status];
+        if (!status) return order;
+        return {
+          ...order,
+          nphiesStatus: status,
+          nphiesDetail: card.pre_auth_required
+            ? "Pre-authorisation required — NSCRE necessity rule matched with pre-auth flag."
+            : "Necessity confirmed against the documented diagnosis by NSCRE.",
+          ...(card.evidence_chain ? { evidenceChain: card.evidence_chain } : {}),
+        };
+      }),
+    );
   }, [nphies]);
 
   // Apply live NPHIES badge transitions as payer outcomes arrive over SSE.
@@ -623,6 +765,72 @@ export function SullyProvider({
     const stage = SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
     return { ...stage, ...soapOverride };
   }, [lineCount, soapOverride]);
+
+  // Phase 2: run the handoff chain and re-draft post-care when the clinical
+  // picture changes -- order set or the SOAP assessment. Debounced so typing
+  // in the note does not fire a request per keystroke, and skipped entirely in
+  // demo mode where there is no patient to reason about.
+  const soapAssessment = soap.assessment;
+  const orderSignature = useMemo(
+    () => orders.map((o) => `${o.id}:${o.nphiesStatus}`).join("|"),
+    [orders],
+  );
+
+  useEffect(() => {
+    if (!patientId) return;
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          const { handoffs } = await api.aiTeam.runHandoffChain(patientId);
+          if (handoffs.length === 0) return; // no critical finding: nothing to show
+          setLiveHandoffs(handoffs);
+        } catch {
+          // A failed chain must not break the drawer; the mock stream stays.
+        }
+      })();
+      void refreshPostCare();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [patientId, orderSignature, soapAssessment, refreshPostCare]);
+
+  // Render each new handoff hop as an activity-stream message. Deduplicated by
+  // correlation id + sequence so a re-run of the same chain does not duplicate
+  // the conversation.
+  useEffect(() => {
+    if (liveHandoffs.length === 0) return;
+    const fresh = liveHandoffs.filter(
+      (h) => !seenHandoffs.current.has(`${h.correlation_id}:${h.sequence}`),
+    );
+    if (fresh.length === 0) return;
+    for (const h of fresh) seenHandoffs.current.add(`${h.correlation_id}:${h.sequence}`);
+
+    setMessages((prev) => [
+      ...prev,
+      ...fresh.map((h) => {
+        messageSeq.current += 1;
+        const chain = (h.payload as { evidence_chain?: EvidenceChain }).evidence_chain;
+        return {
+          id: `m-handoff-${h.correlation_id}-${h.sequence}`,
+          from: AGENT_ID_BY_NAME[h.source_agent] ?? "consultant",
+          text: describeHandoff(h),
+          at: "now",
+          handoff: {
+            sourceAgent: h.source_agent,
+            targetAgent: h.target_agent,
+            correlationId: h.correlation_id,
+          },
+          ...(chain ? { evidenceChain: chain } : {}),
+        } satisfies AgentMessage;
+      }),
+    ]);
+  }, [liveHandoffs]);
+
+  useEffect(() => {
+    soapRef.current = soap;
+  }, [soap]);
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
 
   const submitPreAuth = useCallback(
     async (orderId: string) => {
@@ -697,12 +905,20 @@ export function SullyProvider({
       transcript,
       soap,
       checklist,
-      timeline: MOCK_TIMELINE,
+      timeline: patientId && liveTimeline.length > 0 ? liveTimeline : MOCK_TIMELINE,
+      timelineLoading,
+      timelineError,
       orders,
       activeAgent,
       messages,
       drawerOpen,
-      postCare: MOCK_POST_CARE,
+      // Live package when a patient is routed in; the mock keeps the offline
+      // demo intact (audit H-4/M-3 posture).
+      postCare: patientId ? livePostCare : MOCK_POST_CARE,
+      postCareLoading,
+      // Booking/dispatch still have no backend behind them (audit M-2).
+      postCarePendingIntegration: true,
+      refreshPostCare,
       dictationMode,
       patientId: patientId ?? null,
       transcribing,
@@ -724,6 +940,8 @@ export function SullyProvider({
       messages, drawerOpen, toggleRecording, updateSoap, toggleChecklistItem,
       setActiveAgent, toggleDrawer, runAgentAction, submitPreAuth,
       dictationMode, patientId, transcribing, dictationError, appendTranscriptLine,
+      livePostCare, postCareLoading, refreshPostCare,
+      liveTimeline, timelineLoading, timelineError,
     ],
   );
 

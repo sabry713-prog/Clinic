@@ -37,12 +37,14 @@ Phase 1 landed on `fix/phase-1-demo-and-ui-stabilization`:
 | ID | Status |
 |---|---|
 | H-1 | **Deferred by decision** — DeepSeek is approved for the prototype phase on synthetic data, so no de-identification wrapper was added. Re-open before any real patient data reaches the platform. |
-| H-2 | Open — Phase 3 |
+| H-2 | **Fixed** — core routes + web client + drawer invocation wired |
 | H-3 | **Fixed** — real `useDictation` capture with an explicit Live/Demo toggle |
 | H-4 | **Fixed** — evidence chains attached to mock orders and messages |
 | M-1 | Open — Phase 4 |
 | M-2 | **Fixed** — false success badges replaced with "Pending integration" |
-| M-3 – M-7 | Open — Phases 2-5 |
+| M-3 | **Fixed** — post-care drafted live via the new endpoint |
+| M-4 | **Fixed** — timeline reads real observations/medications/encounters |
+| M-1, M-5 – M-7 | Open — Phases 4-5 |
 | L-1 – L-3 | Open — Phase 5 |
 | L-4 | **Fixed** — `I25.1` added to mock order `o5` |
 
@@ -110,6 +112,15 @@ tests, and `agent_handlers.py` exposes `POST /api/v1/agents/handoff-chain` and
 **Impact:** the entire Sprint 10 deliverable is dead code from the user's
 perspective. Handoffs shown in the drawer are the four hardcoded `INITIAL_MESSAGES`
 entries, not real routing.
+
+> **Status: fixed (Phase 2).** `POST patients/:id/ai-team/handoff-chain` and
+> `POST patients/:id/ai-team/post-care` added to `ai-team.controller.ts` with
+> the same scope check, RBAC guard and audit events as the SSE route;
+> `api.aiTeam.*` added to the web client; `SullyContext` invokes both on a
+> debounced order/assessment change and renders each hop into the activity
+> stream. Mounted under the patient path rather than the spec's bare
+> `/api/v1/ai-team/...` so the scope check cannot be bypassed via a body
+> parameter.
 
 ---
 
@@ -199,6 +210,13 @@ should be treated as a correctness bug, not just missing wiring.
 `timeline: MOCK_TIMELINE` — seven hardcoded entries. The data exists
 (`GET /api/v1/patients/:id/observations`, `/medications`, `/encounters` are all
 implemented in `patient.controller.ts`) but the centre pane never requests it.
+
+> **Status: fixed (Phase 2).** New `usePatientTimeline` hook fetches all three
+> in parallel via `Promise.allSettled`, merges them reverse-chronologically and
+> renders lab values with the source's own reference range only -- no
+> high/low flagging, no ordering by clinical importance. A single failing
+> source degrades that section and surfaces a notice rather than blanking the
+> timeline. Mock remains the demo-mode fallback.
 
 ### M-5 — "New order" and category filters have no handlers
 
@@ -315,13 +333,13 @@ Ordered by dependency, not just severity — items near the top unblock others.
 
 ### Phase 3 — Close the Sprint 10 loop
 
-- [ ] **H-2a** Add `POST patients/:id/ai-team/handoff-chain` and
+- [x] **H-2a** Add `POST patients/:id/ai-team/handoff-chain` and
       `POST patients/:id/ai-team/post-care` to `ai-team.controller.ts`, with the
       same `RequirePermission` + patient-scope + audit treatment as the existing
       SSE route.
-- [ ] **H-2b** Add `api.aiTeam.runHandoffChain()` and `api.aiTeam.postCare()`
+- [x] **H-2b** Add `api.aiTeam.runHandoffChain()` and `api.aiTeam.postCare()`
       to `apps/web/src/lib/api.ts`.
-- [ ] **M-3** Replace `MOCK_POST_CARE` with a fetch from the new endpoint,
+- [x] **M-3** Replace `MOCK_POST_CARE` with a fetch from the new endpoint,
       keeping the mock as the demo-mode fallback.
 - [ ] **M-2b** Point "Book" at the existing appointment API
       (`apps/core/src/patient-engagement/appointment.service.ts`) and "Dispatch"
@@ -331,7 +349,7 @@ Ordered by dependency, not just severity — items near the top unblock others.
 
 - [ ] **M-1** Give each agent action card a real handler, or mark unimplemented
       ones visibly as coming soon.
-- [ ] **M-4** Fetch the timeline from `/observations`, `/medications` and
+- [x] **M-4** Fetch the timeline from `/observations`, `/medications` and
       `/encounters`, falling back to `MOCK_TIMELINE` in demo mode.
 - [ ] **M-7** Persist checklist state.
 
