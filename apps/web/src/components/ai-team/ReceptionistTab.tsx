@@ -21,6 +21,7 @@ import {
   FlaskConical,
   Send,
   Check,
+  Clock,
   Loader2,
   AlertTriangle,
 } from "lucide-react";
@@ -64,6 +65,11 @@ interface ReceptionistTabProps {
   readonly onBookSlot?: ((slot: FollowupSlot) => Promise<void>) | undefined;
   /** Dispatch one drafted message. Resolves when the send is accepted. */
   readonly onDispatch?: ((payload: DispatchPayload) => Promise<void>) | undefined;
+  /** Audit M-2: set while the handlers above do not yet reach a real booking
+   * or messaging endpoint. Buttons then render an explicit "Pending
+   * integration" chip instead of a success badge for work that never left the
+   * browser. Callers that ARE wired to a backend pass `false`. */
+  readonly pendingIntegration?: boolean;
 }
 
 function formatSlot(iso: string): string {
@@ -95,17 +101,41 @@ function SectionHeading({
   );
 }
 
-/** Button that shows a spinner while its action runs, then a done state. */
+/** Button that shows a spinner while its action runs, then a done state.
+ *
+ * Audit M-2: this previously rendered a green "Dispatched" / "Booked"
+ * confirmation as soon as its handler resolved -- and the only handler wired
+ * to it appended a line to the activity stream without sending anything. A
+ * success badge for a message that was never sent is worse than a disabled
+ * button, so `pendingIntegration` now short-circuits to an explicit
+ * "Pending integration" state and no success is ever claimed until a real
+ * endpoint is wired in (Phase 2).
+ */
 function ActionButton({
   label,
   doneLabel,
   onRun,
+  pendingIntegration,
 }: {
   readonly label: string;
   readonly doneLabel: string;
   readonly onRun: () => Promise<void>;
+  readonly pendingIntegration: boolean;
 }): JSX.Element {
   const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+
+  if (pendingIntegration) {
+    return (
+      <span
+        data-testid="pending-integration"
+        title={`${label} is not connected to a backend yet — nothing will be sent.`}
+        className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/60 px-2 py-1 text-[11px] font-medium text-slate-400"
+      >
+        <Clock className="h-3 w-3" aria-hidden="true" />
+        Pending integration
+      </span>
+    );
+  }
 
   if (state === "done") {
     return (
@@ -142,6 +172,7 @@ export default function ReceptionistTab({
   postCare,
   onBookSlot,
   onDispatch,
+  pendingIntegration = true,
 }: ReceptionistTabProps): JSX.Element {
   if (!postCare) {
     return (
@@ -159,7 +190,7 @@ export default function ReceptionistTab({
     <div className="space-y-4">
       <p className="flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] leading-relaxed text-amber-300">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        Drafts for review — nothing below has been booked or sent yet.
+        Drafts for review — nothing below has been booked or sent yet. Booking and dispatch are not connected to a backend yet.
       </p>
 
       {slots.length > 0 && (
@@ -183,6 +214,7 @@ export default function ReceptionistTab({
                   <ActionButton
                     label="Book"
                     doneLabel="Booked"
+                    pendingIntegration={pendingIntegration}
                     onRun={() => onBookSlot(slot)}
                   />
                 )}
@@ -245,6 +277,7 @@ export default function ReceptionistTab({
                   <ActionButton
                     label="Dispatch"
                     doneLabel="Dispatched"
+                    pendingIntegration={pendingIntegration}
                     onRun={() => onDispatch(payload)}
                   />
                 )}
