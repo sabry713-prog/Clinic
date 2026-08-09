@@ -103,9 +103,16 @@
       "orders": "طلبات الخدمة",
       "claims": "المُرمِّز الطبي",
       "interpreter": "المترجم الطبي",
-      "ambient": "الكاتب الطبي"
+      "ambient": "الكاتب الطبي",
+      "appointments": "المواعيد",
+      "intake": "الاستقبال"
     },
     "nphiesAnalytics": "تحليلات نفيس",
-    "encounter": "الزيارة"
+    "encounter": "الزيارة",
+    "pharmacyQueue": "طابور إعادة الصرف",
+    "frontDeskQueue": "طابور المواعيد",
+    "providerAvailability": "أوقات توفر مقدمي الخدمة",
+    "more": "المزيد",
+    "aiReceptionist": "موظف الاستقبال الذكي"
   }
 }

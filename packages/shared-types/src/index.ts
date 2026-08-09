@@ -41,6 +41,13 @@ export type Permission =
   | "handoff:generate"
   | "condition:write"
   | "service_request:write"
+  | "refill_request:write"
+  | "refill_request:fulfill"
+  | "his_transmission:write"
+  | "appointment:write"
+  | "intake:write"
+  | "reminder:send"
+  | "provider_availability:manage"
   | "audit:read"
   | "user:manage";
 
@@ -50,11 +57,30 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     // service_request:write — physician confirms a service request that was
     // extracted from their own documented order (AI extracts, doctor confirms;
     // AI never decides which service to order).
-    physician: ["patient:read", "narrative:generate", "qa:ask", "handoff:generate", "condition:write", "service_request:write"],
-    pharmacist: ["patient:read", "qa:ask"],
-    nurse: ["patient:read", "handoff:generate", "qa:ask"],
-    hospital_admin: ["audit:read", "user:manage"],
-    sysadmin: ["audit:read", "user:manage"],
+    // refill_request:write — request/cancel a refill for an already-active,
+    // already-documented medication (administrative routing only).
+    // his_transmission:write — send a clinician-confirmed order/refill to the
+    // hospital's HIS for the RECEIVING system's own safety validation; Cortex.ai
+    // performs no interaction/allergy/dose checking itself (CLAUDE.md §2).
+    physician: ["patient:read", "narrative:generate", "qa:ask", "handoff:generate", "condition:write", "service_request:write", "refill_request:write", "his_transmission:write"],
+    // refill_request:fulfill — route/fill/deny a refill request (status only,
+    // never a dose/interaction decision). Separation of duties: pharmacists
+    // never create their own refill requests.
+    pharmacist: ["patient:read", "qa:ask", "refill_request:fulfill"],
+    // appointment:write / reminder:send — schedule/manage appointments and send
+    // (dummy/stub) reminders, both purely administrative. intake:write — capture
+    // staff-assisted check-in intake (contact confirmation + verbatim
+    // reason-for-visit text, never interpreted). No dedicated front-desk role
+    // exists yet, so nurse (front-line) gets all three; hospital_admin (back-office
+    // queue operations) gets appointment:write + reminder:send but not
+    // intake:write, since check-in capture is a bedside/desk task.
+    nurse: ["patient:read", "handoff:generate", "qa:ask", "refill_request:write", "his_transmission:write", "appointment:write", "intake:write", "reminder:send"],
+    // provider_availability:manage — configure the recurring weekly slot
+    // windows that back the AI Receptionist's patient self-service booking
+    // (docs/architecture/ai-receptionist.md). Admin/back-office only, same
+    // as user:manage/audit:read.
+    hospital_admin: ["audit:read", "user:manage", "appointment:write", "reminder:send", "provider_availability:manage"],
+    sysadmin: ["audit:read", "user:manage", "provider_availability:manage"],
   };
 
 // Auth user shape returned by /api/v1/auth/me
