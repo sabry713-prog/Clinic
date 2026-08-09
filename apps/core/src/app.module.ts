@@ -22,6 +22,10 @@ import { ServiceRequestModule } from "./service-request/service-request.module";
 import { NphiesModule } from "./nphies/nphies.module";
 import { InterpreterModule } from "./interpreter/interpreter.module";
 import { AmbientModule } from "./ambient/ambient.module";
+import { RefillRequestModule } from "./refill-request/refill-request.module";
+import { HisConnectorModule } from "./his-connector/his-connector.module";
+import { PatientEngagementModule } from "./patient-engagement/patient-engagement.module";
+import { AiReceptionistModule } from "./ai-receptionist/ai-receptionist.module";
 import { AiTeamModule } from "./ai-team/ai-team.module";
 
 @Module({
@@ -80,6 +84,10 @@ import { AiTeamModule } from "./ai-team/ai-team.module";
     NphiesModule,
     InterpreterModule,
     AmbientModule,
+    RefillRequestModule,
+    HisConnectorModule,
+    PatientEngagementModule,
+    AiReceptionistModule,
     AiTeamModule,
     DsrModule,
     MetricsModule,
