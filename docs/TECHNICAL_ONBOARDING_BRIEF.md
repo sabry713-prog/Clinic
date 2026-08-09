@@ -4,7 +4,7 @@
 **Prepared by:** Saeed (CTO / Founder)
 **Date:** 2026-08-09
 **Repository:** https://github.com/sabry713-prog/Clinic (private — access needed)
-**Working branch:** `fix/phase-2-endpoint-wiring` (7 commits ahead of `main`)
+**Working branch:** `fix/phase-2-endpoint-wiring` (14 commits ahead of `main`)
 
 This document exists so you can form your own judgement without reading 120
 commits. It covers what the product is, how it is built, what genuinely works,
@@ -278,7 +278,7 @@ one engineer if that labelling runs in parallel.
 ```bash
 git clone https://github.com/sabry713-prog/Clinic.git
 cd Clinic
-git checkout fix/phase-2-endpoint-wiring   # not main — main is 7 commits behind
+git checkout fix/phase-2-endpoint-wiring   # not main — main is 14 commits behind
 cp .env.example .env                       # then fill in secrets
 pnpm install
 docker compose -f docker-compose.dev.yml up -d
