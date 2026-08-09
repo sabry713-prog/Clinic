@@ -44,3 +44,31 @@ Wired end-to-end: `apps/core`'s `InterpreterController` (`POST /api/v1/patients/
 ## Known limitation
 
 The blocklist scanner (`packages/blocklist`) only has compiled pattern sets for `en` and `ar`; other target languages fall back to the English pattern set (existing `scan()` behavior, not specific to this feature). Initial language selector in `InterpreterPanel` is scoped to English, Arabic, Urdu, Tagalog, and Hindi — the languages most relevant to KSA hospital staff and patient populations — rather than claiming the "80+ languages" breadth cited for competitors, since blocklist coverage for languages beyond en/ar has not been verified.
+
+## Ambient Scribe call site
+
+A second call site reuses this exact pipeline (same model, same blocklist gate, same prompt) from the
+ambient Scribe flow (`docs/prompts/ambient-segmentation-prompt.md`,
+`docs/prompts/ambient-condensation-prompt.md`): after an Arabic dictation is structured into note
+sections, every section is automatically translated to English for the clinician to review alongside the
+original, and the two non-judgment sections (Chief Complaint/History) can be submitted as English instead
+of Arabic in the resulting `encounter_note` draft.
+
+**Worth stating plainly:** this prompt was scoped and reviewed above as *"a communication aid, not a
+record summarizer... the model never reads the patient record, only the message text supplied"* — for
+short bedside communication. Using it to translate substantial dictated clinical narrative into the
+permanent record is a real expansion of that original use case, even though the mechanism (translate,
+preserve clinical terms verbatim, blocklist-gate the output) is fully reusable as-is. This call site ships
+under the same CLAUDE.md §6 gate #4 pending-sign-off posture as the rest of the ambient Scribe feature —
+not approved for real-patient use.
+
+**Safety design specific to this call site:** since translation has no automated fidelity check (unlike
+condensation's word-containment check — a different language entirely admits no such comparison), the
+server (`apps/core/src/draft/draft.service.ts`) **never trusts client-submitted translated text**. It
+independently re-translates the section's own already-verified source text (already passed
+`isClinicianAuthoredOnly` or condensation validation) via this same `/narrative/interpret` endpoint, always
+as the last transform applied to already-validated content — never a check against arbitrary client input.
+A failed/unavailable translation silently keeps the original-language text rather than blocking draft
+creation. Assessment/Plan are excluded from ever being submitted as a translation (server-side
+`TRANSLATABLE_SECTIONS` constant, mirrors `CONDENSABLE_SECTIONS`) — they still get a read-only preview for
+reference, but can never become the stored section text via this path.

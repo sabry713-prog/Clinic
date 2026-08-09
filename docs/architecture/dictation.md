@@ -19,6 +19,41 @@ is retained.
 > background capture, and still no AI-authored clinical content (segmentation
 > only relocates the speaker's own verbatim words; CLAUDE.md §2 still applies in
 > full). This dictation flow is unchanged.
+>
+> **Further update:** a second, separate mechanism now exists for the two
+> non-judgment ambient sections (Chief Complaint/History) — see
+> [`docs/prompts/ambient-condensation-prompt.md`](../prompts/ambient-condensation-prompt.md).
+> Unlike segmentation's verbatim-substring check, condensation genuinely
+> paraphrases text, gated by a **blocklist scan + content-word containment
+> check** instead (every word in the condensed output must already appear in
+> the source). Assessment/Plan are permanently excluded from this path and
+> remain verbatim-only, enforced in three independent places. Pending the same
+> sign-off gate as segmentation.
+>
+> **Third update:** an Arabic dictation now also auto-triggers an English
+> translation preview for every section, reusing the already-built Medical
+> Interpreter pipeline — see
+> [`docs/prompts/interpreter-prompt.md`](../prompts/interpreter-prompt.md#ambient-scribe-call-site).
+> Translation has no automated fidelity check the way condensation's
+> word-containment does (different language entirely), so the server **never
+> trusts client-submitted translated text** — it always re-derives its own
+> translation, server-side, from text that already passed the verbatim/
+> condensation check. Chief Complaint/History can be submitted as English;
+> Assessment/Plan get a read-only preview only, never a submittable
+> translation. Pending the same sign-off gate as segmentation and
+> condensation.
+>
+> **Fourth update:** the raw transcript now also gets an automatic, read-only
+> "medical terms mentioned" reference glossary shown alongside it — see
+> [`docs/prompts/ambient-term-extraction-prompt.md`](../prompts/ambient-term-extraction-prompt.md).
+> Every term is server-side verbatim-verified the same way segmentation
+> verifies section text, but unlike segmentation/condensation/translation this
+> output is never submitted into a draft or re-verified at draft-creation time
+> — it never becomes part of the record. Terms are shown without their
+> negation/duration qualifiers by design (e.g. "no fever" surfaces as
+> "fever"), so the glossary is explicitly labeled reference-only and always
+> shown next to the full transcript, never as a standalone symptom list.
+> Pending the same sign-off gate as the rest of ambient capture.
 
 ## Flow
 
