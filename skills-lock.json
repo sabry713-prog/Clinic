@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "gtm-strategy": {
+      "source": "phuryn/pm-skills",
+      "sourceType": "github",
+      "skillPath": "pm-go-to-market/skills/gtm-strategy/SKILL.md",
+      "computedHash": "4eef1d029ae0a22117f705a32286f46ea044964f6af96bd063bdb491873995cd"
+    },
+    "roadmap-planning": {
+      "source": "deanpeters/product-manager-skills",
+      "sourceType": "github",
+      "skillPath": "skills/roadmap-planning/SKILL.md",
+      "computedHash": "fb3f415d0f1da519695ae8eba9adaf47f799cec1f6bd62d6b4ff1f74f744e762"
+    }
+  }
+}
