@@ -53,6 +53,30 @@ class CreateDraftDto {
   @ValidateNested({ each: true })
   @Type(() => PrefillSectionDto)
   prefill_sections?: PrefillSectionDto[];
+
+  // Ambient condensation (docs/prompts/ambient-condensation-prompt.md): which
+  // prefill_sections keys were lightly condensed rather than verbatim-relocated.
+  // Only honored server-side for keys in DraftService's CONDENSABLE_SECTIONS
+  // (never assessment/plan) -- see DraftService.generate()'s doc comment.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
+  condensed_keys?: string[];
+
+  // Ambient auto-translation (docs/prompts/interpreter-prompt.md): which
+  // prefill_sections keys should use an English translation instead of the
+  // original-language text. The client's own translated text is never
+  // trusted -- only honored server-side for keys in DraftService's
+  // TRANSLATABLE_SECTIONS (never assessment/plan); the server re-translates
+  // itself. See DraftService.generate()'s doc comment.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
+  translated_keys?: string[];
 }
 
 class TranscribeDto {
@@ -113,7 +137,12 @@ export class DraftController {
   @ApiOperation({ summary: "Generate a grounded document draft (unsigned)" })
   async create(@Req() req: Request, @Param("id") id: string, @Body() body: CreateDraftDto) {
     const prefill = body.prefill_sections?.length && body.transcript
-      ? { transcript: body.transcript, sections: Object.fromEntries(body.prefill_sections.map((s) => [s.key, s.text])) }
+      ? {
+          transcript: body.transcript,
+          sections: Object.fromEntries(body.prefill_sections.map((s) => [s.key, s.text])),
+          condensedKeys: body.condensed_keys,
+          translatedKeys: body.translated_keys,
+        }
       : undefined;
     const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en", body.specialty ?? "general", prefill);
     await this.audit(req, "DRAFT_GENERATED", draft.id, {

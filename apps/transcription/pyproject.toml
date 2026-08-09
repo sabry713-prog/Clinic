@@ -10,7 +10,11 @@ dependencies = [
     "pydantic-settings>=2.2.1",
     "structlog>=24.1.0",
     "httpx>=0.28.1",
+    "blocklist",
 ]
+
+[tool.uv.sources]
+blocklist = { path = "../../packages/blocklist", editable = true }
 
 # faster-whisper is OPTIONAL — installed only on the on-prem GPU host running
 # the real engine. The service runs in stub mode without it.

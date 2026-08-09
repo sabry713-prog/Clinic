@@ -4,7 +4,7 @@ import {
 import type { Request } from "express";
 import { ApiTags, ApiCookieAuth, ApiOperation } from "@nestjs/swagger";
 import { v4 as uuidv4 } from "uuid";
-import { IsArray } from "class-validator";
+import { IsArray, IsOptional, IsString } from "class-validator";
 import { RbacGuard, RequirePermission } from "../rbac/rbac.guard";
 import { writeAuditEvent } from "@clinical-copilot/audit";
 import { PG_POOL } from "../database/database.module";
@@ -13,10 +13,23 @@ import type { UserId, UserRole, RequestId } from "@clinical-copilot/shared-types
 import { ServiceRequestService, type ServiceCandidate } from "./service-request.service";
 
 class ConfirmDto {
-  // Items are clinician-confirmed candidates returned by the /candidates
-  // endpoint (verbatim extractions); each is re-inserted as an order.
+  // Items are clinician-confirmed candidates returned by the /candidates or
+  // /quick-entry endpoints (verbatim extractions); each is re-inserted as an
+  // order.
   @IsArray()
   items!: ServiceCandidate[];
+
+  // Present when one or more confirmed items came from the quick-entry box —
+  // lets the server re-derive those candidates the same safe way as
+  // document-sourced ones, instead of trusting the client-sent excerpt/code.
+  @IsOptional()
+  @IsString()
+  adHocText?: string;
+}
+
+class QuickEntryDto {
+  @IsString()
+  text!: string;
 }
 
 function uid(req: Request): string {
@@ -57,12 +70,24 @@ export class ServiceRequestController {
     return { data };
   }
 
+  @Post("patients/:id/service-requests/quick-entry")
+  @RequirePermission("service_request:write")
+  @ApiOperation({
+    summary:
+      "Match a typed or dictated order phrase against the deterministic catalog (nothing created)",
+  })
+  async quickEntry(@Req() req: Request, @Param("id") id: string, @Body() body: QuickEntryDto) {
+    const data = await this.svc.extractFromAdHocText(uid(req), id, body.text);
+    await this.audit(req, "SERVICE_REQUEST_QUICK_ENTRY_MATCH", id, { count: data.length });
+    return { data };
+  }
+
   @Post("patients/:id/service-requests")
   @HttpCode(201)
   @RequirePermission("service_request:write")
   @ApiOperation({ summary: "Create service requests from clinician-confirmed candidates" })
   async create(@Req() req: Request, @Param("id") id: string, @Body() body: ConfirmDto) {
-    const created = await this.svc.confirmAndCreate(uid(req), id, body.items as ServiceCandidate[]);
+    const created = await this.svc.confirmAndCreate(uid(req), id, body.items as ServiceCandidate[], body.adHocText);
     await this.audit(req, "SERVICE_REQUEST_CREATED", id, {
       count: created.length,
       codes: created.map((c) => c.code_display),
