@@ -103,6 +103,24 @@
         "hospital_admin"
       ],
       "id": "00000000-0000-0000-0000-000000000012"
+    },
+    {
+      "username": "pharmacist1",
+      "email": "pharmacist1@dev.local",
+      "firstName": "Huda",
+      "lastName": "Al-Qahtani",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Test1234!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "pharmacist"
+      ],
+      "id": "8836c614-61d7-4a91-9f7b-a51955162aa8"
     }
   ],
   "roles": {
