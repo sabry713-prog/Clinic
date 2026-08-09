@@ -117,10 +117,21 @@ seed of 50 patients):
 | NSCRE graph reasoning (DDI, renal dose) with evidence chain | Working — best thing to demo |
 | Ambient dictation capture | Real transcription; **SOAP note still canned** (§5) |
 | Medical interpreter mode, specialty draft templates, patient recap | Working |
+| AI receptionist (booking sessions, provider availability, NLU) | Working; **OTP delivery is a stub** — code is logged, no SMS provider |
+| Patient engagement (appointments, intake, reminder connector) | Working; outbound reminder delivery is a stub connector |
+| Pharmacy refill queue · HIS order transmission | Working; HIS connector runs in stub mode with a `live` switch and no real hospital-sys endpoint yet |
+| CMEK encryption service (local + customer key providers) | Working; local key provider only in dev |
 
-**Tests:** ~515 passing. Classifier 73/73; blocklist 107/107 (100 % block, 0
-false positives); core 72/72; qa 48/48; narrative 33/33; web 43/43.
-Classifier EN/AR holdout sensitivity & specificity 1.00/1.00.
+**Tests, measured 2026-08-09 on the current HEAD:** core 168/168 (22 suites);
+web 173/173 (20 files); classifier 73/73; blocklist 107/107 (100 % block, 0
+false positives); transcription 39/39; qa 48/48; narrative 33/33. Full
+workspace typecheck clean. Classifier EN/AR holdout sensitivity & specificity
+1.00/1.00.
+
+The last six rows of the table above landed in six commits on 2026-08-09 and
+are newer than `PROTOTYPE_EVALUATION.md` (2026-08-03) — that document does not
+assess them. It also refers to `apps/core/src/security/` as existing, which was
+true on disk but uncommitted at the time; it is committed now.
 
 ---
 
@@ -283,13 +294,14 @@ Set `QA_MODEL_PROVIDER=stub` for a no-key run. The dev seed is deterministic
 (mulberry32) — identical data on every machine, 50 patients, 791 retrieval
 chunks, 60 historical NPHIES claims.
 
-**Two things to know before you clone:**
+**One thing to know before you clone:** `main` is behind. The working branch is
+`fix/phase-2-endpoint-wiring`, pushed and in sync with origin. Everything
+described in this document is committed — the tree is clean as of 2026-08-09.
 
-1. `main` is behind. The working branch is `fix/phase-2-endpoint-wiring`, pushed
-   and in sync with origin.
-2. My working tree currently has ~73 uncommitted files (ambient, draft,
-   service-request, transcription, web). I will commit and push before you
-   start, or hand them over as a patch — tell me which you prefer.
+The six most recent commits are the phase-3 module block (shared contracts →
+backend modules and migrations → app wiring → web surfaces → docs). They were
+verified green together, but were not individually built, so `git bisect` across
+that range will not be reliable.
 
 ---
 
