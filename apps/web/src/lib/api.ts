@@ -131,7 +131,7 @@ export interface ServiceRequestItem {
 export interface ReadinessCheck {
   readonly id: string;
   readonly label: string;
-  readonly status: "pass" | "warning" | "fail";
+  readonly status: "pass" | "warning" | "fail" | "not_applicable";
   readonly detail: string;
 }
 
@@ -376,6 +376,125 @@ export interface MedicationItem {
   readonly ended_at: string | null;
 }
 
+export type RefillStatus = "requested" | "routed" | "filled" | "denied" | "cancelled";
+
+export interface RefillRequest {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly medication_request_id: string;
+  readonly medication_display: string;
+  readonly status: RefillStatus;
+  readonly requested_by: string;
+  readonly requested_at: string;
+  readonly pharmacy_note: string | null;
+  readonly updated_at: string;
+}
+
+export interface RefillQueueItem extends RefillRequest {
+  readonly patient_mrn: string | null;
+  readonly patient_display_name: string | null;
+}
+
+export type HisTransmissionSourceType = "service_request" | "refill_request";
+export type HisTransmissionStatus = "pending" | "accepted" | "rejected" | "failed";
+
+export interface HisTransmission {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly source_type: HisTransmissionSourceType;
+  readonly source_id: string;
+  readonly message_type: string;
+  readonly status: HisTransmissionStatus;
+  readonly backend_reason_code: string | null;
+  readonly backend_reason_text: string | null;
+  readonly mode: string;
+  readonly transmitted_at: string;
+  readonly updated_at: string;
+}
+
+export type AppointmentStatus = "scheduled" | "completed" | "cancelled" | "no_show";
+
+export interface Appointment {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly scheduled_at: string;
+  readonly appointment_type: string;
+  readonly status: AppointmentStatus;
+  readonly department_display: string | null;
+  readonly clinician_display: string | null;
+  readonly created_by: string | null;
+  readonly updated_at: string;
+}
+
+export interface AppointmentQueueItem extends Appointment {
+  readonly patient_mrn: string | null;
+  readonly patient_display_name: string | null;
+}
+
+export interface BookingSlot {
+  readonly start: string;
+  readonly departmentDisplay: string;
+  readonly clinicianDisplay: string | null;
+}
+
+export interface NluMatchResult {
+  readonly departmentDisplay: string | null;
+  readonly appointmentType: string | null;
+  readonly confident: boolean;
+}
+
+export interface ProviderAvailability {
+  readonly id: string;
+  readonly department_display: string;
+  readonly clinician_display: string | null;
+  readonly day_of_week: number;
+  readonly start_time: string;
+  readonly end_time: string;
+  readonly slot_duration_minutes: number;
+  readonly active: boolean;
+  readonly created_by: string;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface PatientContact {
+  readonly patient_id: string;
+  readonly phone: string | null;
+  readonly email: string | null;
+  readonly preferred_channel: string | null;
+  readonly confirmed_at: string;
+}
+
+export interface IntakeRecord {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly appointment_id: string | null;
+  readonly contact_confirmed: boolean;
+  readonly contact_phone: string | null;
+  readonly contact_email: string | null;
+  readonly preferred_channel: string | null;
+  readonly reason_for_visit_text: string | null;
+  readonly captured_by: string;
+  readonly captured_at: string;
+}
+
+export type ReminderChannel = "sms" | "email" | "whatsapp";
+export type ReminderStatus = "pending" | "delivered" | "failed";
+
+export interface ReminderSend {
+  readonly id: string;
+  readonly patient_id: string;
+  readonly appointment_id: string;
+  readonly channel: ReminderChannel;
+  readonly status: ReminderStatus;
+  readonly mode: string;
+  readonly template_used: string;
+  readonly rendered_message: string;
+  readonly simulated_outcome_detail: string | null;
+  readonly sent_at: string;
+  readonly updated_at: string;
+}
+
 export interface ReconciliationEntry {
   readonly source: string;
   readonly source_id: string;
@@ -444,6 +563,22 @@ export interface SectionSpec {
 export interface SegmentResult {
   readonly sections: ReadonlyArray<{ key: string; text: string }>;
   readonly unclassified_text: string;
+  readonly retries: number;
+}
+
+export interface CondenseResult {
+  readonly text: string;
+  readonly condensed: boolean;
+  readonly retries: number;
+}
+
+export interface ExtractedTerm {
+  readonly term: string;
+  readonly category: string;
+}
+
+export interface ExtractTermsResult {
+  readonly terms: ReadonlyArray<ExtractedTerm>;
   readonly retries: number;
 }
 
@@ -844,7 +979,12 @@ export const api = {
       documentType: DraftDocumentType,
       language: string,
       specialty: DraftSpecialty = "general",
-      prefill?: { transcript: string; sections: readonly PrefillSection[] },
+      prefill?: {
+        transcript: string;
+        sections: readonly PrefillSection[];
+        condensedKeys?: readonly string[];
+        translatedKeys?: readonly string[];
+      },
     ) =>
       request<DocumentDraft>(`/api/v1/patients/${id}/drafts`, {
         method: "POST",
@@ -852,7 +992,14 @@ export const api = {
           document_type: documentType,
           language,
           specialty,
-          ...(prefill ? { transcript: prefill.transcript, prefill_sections: prefill.sections } : {}),
+          ...(prefill
+            ? {
+                transcript: prefill.transcript,
+                prefill_sections: prefill.sections,
+                condensed_keys: prefill.condensedKeys,
+                translated_keys: prefill.translatedKeys,
+              }
+            : {}),
         }),
       }),
 
@@ -904,16 +1051,98 @@ export const api = {
         `/api/v1/patients/${patientId}/service-requests/candidates`,
       ),
 
-    createServiceRequests: (patientId: string, items: ServiceCandidate[]) =>
+    matchQuickEntry: (patientId: string, text: string) =>
+      request<{ data: ServiceCandidate[] }>(
+        `/api/v1/patients/${patientId}/service-requests/quick-entry`,
+        { method: "POST", body: JSON.stringify({ text }) },
+      ),
+
+    createServiceRequests: (patientId: string, items: ServiceCandidate[], adHocText?: string) =>
       request<{ data: ServiceRequestItem[] }>(
         `/api/v1/patients/${patientId}/service-requests`,
-        { method: "POST", body: JSON.stringify({ items }) },
+        { method: "POST", body: JSON.stringify({ items, adHocText }) },
       ),
 
     serviceRequests: (patientId: string) =>
       request<{ data: ServiceRequestItem[] }>(
         `/api/v1/patients/${patientId}/service-requests`,
       ),
+
+    createRefillRequest: (patientId: string, medicationRequestId: string) =>
+      request<RefillRequest>(
+        `/api/v1/patients/${patientId}/refill-requests`,
+        { method: "POST", body: JSON.stringify({ medicationRequestId }) },
+      ),
+
+    refillRequests: (patientId: string) =>
+      request<{ data: RefillRequest[] }>(`/api/v1/patients/${patientId}/refill-requests`),
+
+    cancelRefillRequest: (patientId: string, refillId: string) =>
+      request<RefillRequest>(
+        `/api/v1/patients/${patientId}/refill-requests/${refillId}`,
+        { method: "DELETE" },
+      ),
+
+    transmitToHis: (patientId: string, sourceType: HisTransmissionSourceType, sourceId: string) =>
+      request<HisTransmission>(
+        `/api/v1/patients/${patientId}/his-connector/transmit`,
+        { method: "POST", body: JSON.stringify({ sourceType, sourceId }) },
+      ),
+
+    hisTransmissions: (patientId: string) =>
+      request<{ data: HisTransmission[] }>(`/api/v1/patients/${patientId}/his-connector/transmissions`),
+
+    listAppointments: (patientId: string) =>
+      request<{ data: Appointment[] }>(`/api/v1/patients/${patientId}/appointments`),
+
+    createAppointment: (
+      patientId: string,
+      scheduledAt: string,
+      appointmentType: string,
+      departmentDisplay?: string,
+      clinicianDisplay?: string,
+    ) =>
+      request<Appointment>(
+        `/api/v1/patients/${patientId}/appointments`,
+        { method: "POST", body: JSON.stringify({ scheduledAt, appointmentType, departmentDisplay, clinicianDisplay }) },
+      ),
+
+    updateAppointmentStatus: (patientId: string, appointmentId: string, status: AppointmentStatus) =>
+      request<Appointment>(
+        `/api/v1/patients/${patientId}/appointments/${appointmentId}`,
+        { method: "PATCH", body: JSON.stringify({ status }) },
+      ),
+
+    getContact: (patientId: string) =>
+      request<{ data: PatientContact | null }>(`/api/v1/patients/${patientId}/contact`),
+
+    createIntakeRecord: (
+      patientId: string,
+      payload: {
+        appointmentId?: string | undefined;
+        contactConfirmed: boolean;
+        contactPhone?: string | undefined;
+        contactEmail?: string | undefined;
+        preferredChannel?: string | undefined;
+        reasonForVisitText?: string | undefined;
+      },
+    ) =>
+      request<IntakeRecord>(
+        `/api/v1/patients/${patientId}/intake`,
+        { method: "POST", body: JSON.stringify(payload) },
+      ),
+
+    listIntakeRecords: (patientId: string) =>
+      request<{ data: IntakeRecord[] }>(`/api/v1/patients/${patientId}/intake`),
+
+    sendReminder: (patientId: string, appointmentId: string, channel: ReminderChannel) =>
+      request<ReminderSend>(
+        `/api/v1/patients/${patientId}/reminders`,
+        { method: "POST", body: JSON.stringify({ appointmentId, channel }) },
+      ),
+
+    listReminders: (patientId: string) =>
+      request<{ data: ReminderSend[] }>(`/api/v1/patients/${patientId}/reminders`),
 
     claimReadiness: (patientId: string) =>
       request<ClaimReadiness>(
@@ -1074,6 +1303,18 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ text, sections, language }),
       }),
+
+    condense: (patientId: string, sectionKey: string, text: string, language: string) =>
+      request<CondenseResult>(`/api/v1/patients/${patientId}/ambient/condense`, {
+        method: "POST",
+        body: JSON.stringify({ sectionKey, text, language }),
+      }),
+
+    extractTerms: (patientId: string, text: string, language: string) =>
+      request<ExtractTermsResult>(`/api/v1/patients/${patientId}/ambient/extract-terms`, {
+        method: "POST",
+        body: JSON.stringify({ text, language }),
+      }),
   },
 
   quarantine: {
@@ -1129,6 +1370,92 @@ export const api = {
       request<WardHandoffOutput>(`/api/v1/wards/${wardId}/handoff`, {
         method: "POST",
         body: JSON.stringify(params),
+      }),
+  },
+
+  pharmacy: {
+    refillQueue: () => request<{ data: RefillQueueItem[] }>("/api/v1/pharmacy/refill-queue"),
+
+    updateRefillStatus: (refillId: string, status: RefillStatus, pharmacyNote?: string) =>
+      request<RefillRequest>(`/api/v1/pharmacy/refill-requests/${refillId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status, pharmacyNote }),
+      }),
+  },
+
+  frontDesk: {
+    appointmentsQueue: (date?: string) =>
+      request<{ data: AppointmentQueueItem[] }>(
+        `/api/v1/front-desk/appointments${date ? `?date=${encodeURIComponent(date)}` : ""}`,
+      ),
+
+    updateAppointmentStatus: (appointmentId: string, status: AppointmentStatus) =>
+      request<Appointment>(`/api/v1/front-desk/appointments/${appointmentId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+  },
+
+  // AI Receptionist patient self-service booking -- deliberately separate
+  // from api.patients.*: none of these take a patientId param, it's implicit
+  // via the patient_booking_session cookie set after OTP verification.
+  booking: {
+    requestOtp: (phone: string) =>
+      request<void>("/api/v1/booking/otp/request", { method: "POST", body: JSON.stringify({ phone }) }),
+
+    verifyOtp: (phone: string, code: string) =>
+      request<{ verified: true }>("/api/v1/booking/otp/verify", {
+        method: "POST",
+        body: JSON.stringify({ phone, code }),
+      }),
+
+    matchIntent: (text: string) =>
+      request<NluMatchResult>(`/api/v1/booking/nlu-match?q=${encodeURIComponent(text)}`),
+
+    availability: (departmentDisplay: string, clinicianDisplay: string | null, dateFrom: string, dateTo: string) =>
+      request<{ data: BookingSlot[] }>(
+        `/api/v1/booking/availability?departmentDisplay=${encodeURIComponent(departmentDisplay)}` +
+          (clinicianDisplay ? `&clinicianDisplay=${encodeURIComponent(clinicianDisplay)}` : "") +
+          `&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`,
+      ),
+
+    bookAppointment: (
+      departmentDisplay: string,
+      appointmentType: string,
+      clinicianDisplay: string | null,
+      slotStart: string,
+    ) =>
+      request<Appointment>("/api/v1/booking/appointments", {
+        method: "POST",
+        body: JSON.stringify({ departmentDisplay, appointmentType, clinicianDisplay, slotStart }),
+      }),
+
+    myAppointments: () => request<{ data: Appointment[] }>("/api/v1/booking/appointments"),
+
+    cancelAppointment: (id: string) =>
+      request<Appointment>(`/api/v1/booking/appointments/${id}/cancel`, { method: "PATCH" }),
+  },
+
+  providerAvailability: {
+    list: () => request<{ data: ProviderAvailability[] }>("/api/v1/admin/provider-availability"),
+
+    create: (
+      departmentDisplay: string,
+      clinicianDisplay: string | null,
+      dayOfWeek: number,
+      startTime: string,
+      endTime: string,
+      slotDurationMinutes: number,
+    ) =>
+      request<ProviderAvailability>("/api/v1/admin/provider-availability", {
+        method: "POST",
+        body: JSON.stringify({ departmentDisplay, clinicianDisplay, dayOfWeek, startTime, endTime, slotDurationMinutes }),
+      }),
+
+    setActive: (id: string, active: boolean) =>
+      request<ProviderAvailability>(`/api/v1/admin/provider-availability/${id}/active`, {
+        method: "PATCH",
+        body: JSON.stringify({ active }),
       }),
   },
 

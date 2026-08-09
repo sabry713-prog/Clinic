@@ -103,9 +103,16 @@
       "orders": "Service requests",
       "claims": "Coder",
       "interpreter": "Medical Interpreter",
-      "ambient": "Scribe"
+      "ambient": "Scribe",
+      "appointments": "Appointments",
+      "intake": "Intake"
     },
     "nphiesAnalytics": "NPHIES analytics",
-    "encounter": "Encounter"
+    "encounter": "Encounter",
+    "pharmacyQueue": "Refill queue",
+    "frontDeskQueue": "Appointments queue",
+    "providerAvailability": "Provider availability",
+    "more": "More",
+    "aiReceptionist": "AI Receptionist"
   }
 }
