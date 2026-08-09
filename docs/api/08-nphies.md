@@ -26,8 +26,10 @@ Permission: `patient:read` + patient scope. Access is audit-logged as
 | `icd10am_mapping` | SNOMED→ICD-10-AM mapping configured | warning (until mapping ships) |
 | `orders_present` / `orders_coded` | active service requests exist / carry codes (SBS) | warning |
 | `order_diagnosis_linkage` | claim items reference a diagnosis | warning (linkage capture not yet built) |
+| `diagnosis_procedure_pairing` | linked diagnosis+procedure appears in `app.nphies_clinical_mapping` | warning |
 | `medications_coded` | active medications carry codes | warning |
 | `eligibility_checked` | NPHIES eligibility verified | warning (connector not configured) |
+| `mds_evidence_complete:<order id>` | structured MDS evidence (vitals / note type) required by the mapping is present for the order's encounter | warning, or `not_applicable` if the order isn't linked to a saved encounter document |
 
 ### Response
 
@@ -169,7 +171,7 @@ interprets clinical data, suggests a diagnosis, or judges medical
 necessity (CLAUDE.md §2):
 
 1. **Pairing compatibility** — set-membership lookup against
-   `app.diagnosis_procedure_compat` (payer-published pairing rules in
+   `app.nphies_clinical_mapping` (payer-published pairing rules in
    production; illustrative dev rows seeded by migration
    `1719200000000`, drawn from the existing ICD-10-AM/SBS vocabulary).
    "Is this combination in the known-valid table?" is a lookup, not a
@@ -191,6 +193,27 @@ table, and biases rejection likelihood accordingly (~12% for a
 known-valid pairing, ~55% otherwise) — so the two checks are internally
 consistent and both have real signal to show, instead of being
 independent noise.
+
+## Clinical mapping table (`app.nphies_clinical_mapping`)
+
+Renamed/enriched from `app.diagnosis_procedure_compat` by migration
+`1719400000000` — same primary key (`icd10am_code, sbs_code`), plus:
+
+| column | meaning |
+|---|---|
+| `achi_code` | ACHI procedure code (illustrative dev rows reuse the SBS code; production loads the real ACHI catalog) |
+| `nphies_service_type` | one of `institutional \| professional \| pharmacy \| oral \| vision` |
+| `allowed_secondary_icd10am` | optional array of additional acceptable secondary diagnosis codes |
+| `requires_vitals` | boolean — does this order need a vital-signs observation documented for its encounter |
+| `requires_note_types` | optional array of `hospital.document_reference.type` values, one of which must exist for the order's encounter |
+| `notes` | free text, reference-data annotation only (not shown to end users) |
+
+The MDS columns drive the `mds_evidence_complete` readiness check (below).
+They are **presence flags checked against structured fields only** — no
+free-text note content is ever read or interpreted to decide whether
+"evidence" exists (CLAUDE.md §2). An order whose source document isn't a
+saved `hospital.document_reference` (e.g. it came from an unsaved draft)
+reports `not_applicable` rather than guessing.
 
 ## Prior authorization (Sprint 9)
 
