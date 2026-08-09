@@ -30,8 +30,11 @@ import ServiceRequestPanel from "../../components/ServiceRequestPanel/ServiceReq
 import ClaimReadinessPanel from "../../components/ClaimReadinessPanel/ClaimReadinessPanel";
 import InterpreterPanel from "../../components/InterpreterPanel/InterpreterPanel";
 import AmbientPanel from "../../components/AmbientPanel/AmbientPanel";
+import RefillPanel from "../../components/RefillPanel/RefillPanel";
+import AppointmentPanel from "../../components/AppointmentPanel/AppointmentPanel";
+import IntakePanel from "../../components/IntakePanel/IntakePanel";
 
-type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter" | "ambient";
+type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter" | "ambient" | "refills" | "appointments" | "intake";
 
 interface ChipDef {
   readonly id: CardId;
@@ -50,6 +53,12 @@ const CHIPS: readonly ChipDef[] = [
   { id: "search", label: "Search", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
   { id: "interpreter", label: "Interpreter", icon: "M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" },
   { id: "ambient", label: "Scribe", icon: "M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" },
+  { id: "refills", label: "Refills", icon: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" },
+  // Appointments and intake are deliberately NOT in this composer chip row —
+  // they're used far less often by physicians day-to-day than by front-desk/
+  // nursing staff, so they're reachable from the sidebar (AppShell) via
+  // ?open= deep-link instead of cluttering the doctor's frequent chip row.
+  // The cards themselves (below) still render normally when opened that way.
 ];
 
 const CARD_LABEL: Record<CardId, string> = {
@@ -63,6 +72,9 @@ const CARD_LABEL: Record<CardId, string> = {
   search: "Search this patient's records",
   interpreter: "Medical Interpreter",
   ambient: "Scribe — Encounter Recording",
+  refills: "Refill requests",
+  appointments: "Appointments",
+  intake: "Check-in intake",
 };
 
 function Icon({ path, className = "w-4 h-4" }: { readonly path: string; readonly className?: string }): JSX.Element {
@@ -266,6 +278,9 @@ export default function PatientWorkspace({ patient, initialOpen, openRequest, on
                 {id === "ambient" && (
                   <AmbientPanel patientId={patientId} onDraftCreated={() => openCard("draft")} />
                 )}
+                {id === "refills" && <RefillPanel patientId={patientId} />}
+                {id === "appointments" && <AppointmentPanel patientId={patientId} />}
+                {id === "intake" && <IntakePanel patientId={patientId} />}
               </div>
             </div>
           ))}

@@ -13,6 +13,10 @@ const QuarantinePage = lazy(() => import("./pages/admin/QuarantinePage/Quarantin
 const AuditPage = lazy(() => import("./pages/admin/AuditPage/AuditPage"));
 const UserManagementPage = lazy(() => import("./pages/admin/UserManagementPage/UserManagementPage"));
 const NphiesAnalyticsPage = lazy(() => import("./pages/admin/NphiesAnalyticsPage/NphiesAnalyticsPage"));
+const PharmacyQueuePage = lazy(() => import("./pages/PharmacyQueuePage/PharmacyQueuePage"));
+const FrontDeskQueuePage = lazy(() => import("./pages/FrontDeskQueuePage/FrontDeskQueuePage"));
+const AiReceptionistPage = lazy(() => import("./pages/AiReceptionistPage/AiReceptionistPage"));
+const ProviderAvailabilityPage = lazy(() => import("./pages/admin/ProviderAvailabilityPage/ProviderAvailabilityPage"));
 
 function AppRoutes(): JSX.Element {
   const { user, loading } = useAuth();
@@ -32,6 +36,8 @@ function AppRoutes(): JSX.Element {
         path="/login"
         element={user != null ? <Navigate to="/" replace /> : <LoginPage />}
       />
+      {/* Public, unauthenticated -- no staff session dependency, reachable with no login */}
+      <Route path="/receptionist" element={<AiReceptionistPage />} />
       <Route element={user != null ? <AppShell /> : <Navigate to="/login" replace />}>
         <Route path="/" element={<Navigate to="/patients" replace />} />
         <Route path="/patients" element={<PatientListPage />} />
@@ -40,6 +46,9 @@ function AppRoutes(): JSX.Element {
         <Route path="/admin/audit" element={<AuditPage />} />
         <Route path="/admin/users" element={<UserManagementPage />} />
         <Route path="/admin/nphies" element={<NphiesAnalyticsPage />} />
+        <Route path="/admin/provider-availability" element={<ProviderAvailabilityPage />} />
+        <Route path="/pharmacy/queue" element={<PharmacyQueuePage />} />
+        <Route path="/front-desk/appointments" element={<FrontDeskQueuePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

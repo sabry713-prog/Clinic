@@ -9,38 +9,8 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { api, type DocumentDraft, type DraftDocumentType, type DraftSpecialty, type DraftSummary, ApiError } from "../../lib/api";
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(",")[1] ?? "");
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-// Blank clinician-authored placeholders the draft inserts (EN + AR).
-const PLACEHOLDER_RE = /\((?:Dictate or type [^)]*?here\.|أمل[ِi]? أو اكتب [^)]*?هنا\.)\)/g;
-
-// Place dictated/typed text into the draft. If the cursor sits inside a blank
-// "(Dictate or type … here.)" placeholder, that placeholder is replaced; else
-// the first remaining placeholder is filled (so dictation lands in the section
-// the clinician is authoring, not at the end). With no placeholders left, the
-// text is inserted at the cursor.
-function placeDictation(prev: string, insert: string, caret: number): { text: string; caret: number } {
-  const placeholders = [...prev.matchAll(PLACEHOLDER_RE)];
-  const here = placeholders.find((m) => caret >= m.index! && caret <= m.index! + m[0].length);
-  const target = here ?? placeholders[0];
-  if (target) {
-    const start = target.index!;
-    const text = prev.slice(0, start) + insert + prev.slice(start + target[0].length);
-    return { text, caret: start + insert.length };
-  }
-  const at = Math.min(Math.max(caret, 0), prev.length);
-  const needsNl = at > 0 && prev[at - 1] !== "\n";
-  const text = prev.slice(0, at) + (needsNl ? "\n" : "") + insert + prev.slice(at);
-  return { text, caret: at + insert.length + (needsNl ? 1 : 0) };
-}
+import { placeDictation } from "../../lib/dictation";
+import { useDictation, type DictationResult } from "../../hooks/useDictation";
 
 const DOC_TYPES: { value: DraftDocumentType; label: string }[] = [
   { value: "discharge_summary", label: "Discharge summary" },
@@ -76,12 +46,9 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
   const [editText, setEditText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recording, setRecording] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
+  const [reformatting, setReformatting] = useState(false);
   const [rawTranscript, setRawTranscript] = useState<string | null>(null);
   const [showRaw, setShowRaw] = useState(false);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   // Last known caret position in the editor, so dictation fills the section the
   // clinician is in (the Dictate button blurs the textarea, losing live focus).
@@ -103,71 +70,37 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
 
   // Dictation: record → on-prem transcribe (+ light reformat) → insert the
   // clinician's words into the editable draft. The model authors nothing here.
-  const startDictation = useCallback(async () => {
-    setError(null);
-    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setError("This browser does not support audio recording. Use Chrome on desktop.");
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Pick a mime type the browser actually supports (Safari lacks webm).
-      const mime = ["audio/webm", "audio/mp4", "audio/ogg"].find(
-        (m) => MediaRecorder.isTypeSupported(m),
-      );
-      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-      chunksRef.current = [];
-      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      rec.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        setTranscribing(true);
-        try {
-          if (chunksRef.current.length === 0) {
-            setError("No audio was captured. Check the microphone and try again.");
-            return;
-          }
-          const blob = new Blob(chunksRef.current, { type: mime ?? "audio/webm" });
-          const b64 = await blobToBase64(blob);
-          const { text, raw_text, reformat } = await api.patients.transcribe(patientId, b64, language);
-          if (text) {
-            // Fill the section the clinician is in (replace its blank
-            // placeholder) instead of appending at the end of the document.
-            setEditText((prev) => {
-              const { text: next, caret } = placeDictation(prev, text, caretRef.current);
-              caretRef.current = caret;
-              requestAnimationFrame(() => {
-                const el = textareaRef.current;
-                if (el) { el.focus(); el.setSelectionRange(caret, caret); }
-              });
-              return next;
-            });
-            // If the on-prem LLM polished the dictation, keep the raw transcript
-            // so the clinician can confirm fidelity before signing.
-            setRawTranscript(reformat === "llm" && raw_text !== text ? raw_text : null);
-            setShowRaw(false);
-          } else setError("Transcription returned no text.");
-        } catch (e) {
-          setError(e instanceof ApiError ? e.message : "Transcription failed");
-        } finally { setTranscribing(false); }
-      };
-      recorderRef.current = rec;
-      rec.start(1000); // emit data every 1s so short clips still capture audio
-      setRecording(true);
-    } catch {
-      setError("Microphone access denied or unavailable.");
-    }
-  }, [patientId, language]);
-
-  const stopDictation = useCallback(() => {
-    recorderRef.current?.stop();
-    setRecording(false);
+  const onDictationResult = useCallback((result: DictationResult) => {
+    // Fill the section the clinician is in (replace its blank placeholder)
+    // instead of appending at the end of the document.
+    setEditText((prev) => {
+      const { text: next, caret } = placeDictation(prev, result.text, caretRef.current);
+      caretRef.current = caret;
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (el) { el.focus(); el.setSelectionRange(caret, caret); }
+      });
+      return next;
+    });
+    // If the on-prem LLM polished the dictation, keep the raw transcript so
+    // the clinician can confirm fidelity before signing.
+    setRawTranscript(result.reformat === "llm" && result.raw_text !== result.text ? result.raw_text : null);
+    setShowRaw(false);
   }, []);
+  const dictation = useDictation(patientId, language, onDictationResult);
+  const recording = dictation.recording;
+  const transcribing = dictation.transcribing || reformatting;
+
+  const startDictation = useCallback(() => {
+    setError(null);
+    void dictation.start();
+  }, [dictation]);
 
   // Typed-text path: faithfully polish what the clinician WROTE (same on-prem
   // reformat as dictation — no new content). Keeps the original for fidelity.
   const makeProfessional = useCallback(async () => {
     if (!editText.trim()) return;
-    setError(null); setTranscribing(true);
+    setError(null); setReformatting(true);
     try {
       const original = editText;
       const { text, reformat } = await api.patients.reformat(patientId, original, language);
@@ -176,7 +109,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
       setShowRaw(false);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Reformat failed");
-    } finally { setTranscribing(false); }
+    } finally { setReformatting(false); }
   }, [patientId, language, editText]);
 
   const run = useCallback(async (fn: () => Promise<DocumentDraft>) => {
@@ -248,7 +181,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
         </div>
       </div>
 
-      {error && <p className="text-sm text-slate-400">{error}</p>}
+      {(error ?? dictation.error) && <p className="text-sm text-slate-400">{error ?? dictation.error}</p>}
 
       {/* This patient's drafts & signed documents */}
       {list.length > 0 && (
@@ -325,7 +258,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
             {!isSigned ? (
               <>
                 <button
-                  onClick={() => (recording ? stopDictation() : void startDictation())}
+                  onClick={() => (recording ? dictation.stop() : startDictation())}
                   disabled={busy || transcribing}
                   className={`text-sm px-3 py-1 rounded text-white disabled:opacity-50 ${
                     recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-slate-700 hover:bg-slate-600"

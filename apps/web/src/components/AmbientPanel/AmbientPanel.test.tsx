@@ -25,6 +25,11 @@ vi.mock("../../lib/api", () => ({
     },
     ambient: {
       segment: vi.fn(),
+      condense: vi.fn(),
+      extractTerms: vi.fn(),
+    },
+    interpreter: {
+      translate: vi.fn(),
     },
   },
   ApiError: class ApiError extends Error {
@@ -41,6 +46,9 @@ vi.mock("../../lib/api", () => ({
 const mockTranscribe = vi.mocked(api.patients.transcribe);
 const mockCreateDraft = vi.mocked(api.patients.createDraft);
 const mockSegment = vi.mocked(api.ambient.segment);
+const mockCondense = vi.mocked(api.ambient.condense);
+const mockTranslate = vi.mocked(api.interpreter.translate);
+const mockExtractTerms = vi.mocked(api.ambient.extractTerms);
 
 const TRANSCRIPT = "Patient reports a cough for three days. I think this is bronchitis. Start amoxicillin.";
 
@@ -69,6 +77,10 @@ class FakeMediaRecorder {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Fires automatically after every transcription (onDictationResult) --
+  // default to an empty glossary so existing tests that don't care about term
+  // extraction aren't affected by an unresolved mock.
+  mockExtractTerms.mockResolvedValue({ terms: [], retries: 0 });
   Object.defineProperty(window, "MediaRecorder", { value: FakeMediaRecorder, writable: true });
   Object.defineProperty(navigator, "mediaDevices", {
     value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [] }) },
@@ -154,5 +166,148 @@ describe("AmbientPanel", () => {
     expect(mockSegment).not.toHaveBeenCalled();
     expect(mockCreateDraft).not.toHaveBeenCalled();
     expect(screen.queryByTestId("raw-transcript")).not.toBeInTheDocument();
+  });
+
+  it("offers a Condense button only for chief_complaint/history, never assessment/plan", async () => {
+    mockTranscribe.mockResolvedValueOnce({ text: TRANSCRIPT, raw_text: TRANSCRIPT, engine: "stub", reformat: "light" });
+    mockSegment.mockResolvedValueOnce(SEGMENT_RESULT);
+    render(<AmbientPanel patientId="patient-001" onDraftCreated={vi.fn()} />);
+    await recordAndTranscribe();
+    await userEvent.click(screen.getByTestId("structure-note-btn"));
+    await waitFor(() => expect(screen.getByTestId("section-chief_complaint")).toBeInTheDocument());
+
+    expect(screen.getByTestId("condense-btn-chief_complaint")).toBeInTheDocument();
+    expect(screen.getByTestId("condense-btn-history")).toBeInTheDocument();
+    expect(screen.queryByTestId("condense-btn-assessment")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("condense-btn-plan")).not.toBeInTheDocument();
+  });
+
+  it("accepting a condensed suggestion replaces the section text and is passed to createDraft", async () => {
+    mockTranscribe.mockResolvedValueOnce({ text: TRANSCRIPT, raw_text: TRANSCRIPT, engine: "stub", reformat: "light" });
+    mockSegment.mockResolvedValueOnce(SEGMENT_RESULT);
+    mockCondense.mockResolvedValueOnce({ text: "3-day cough.", condensed: true, retries: 0 });
+    mockCreateDraft.mockResolvedValueOnce({ id: "draft-1" } as unknown as DocumentDraft);
+    render(<AmbientPanel patientId="patient-001" onDraftCreated={vi.fn()} />);
+    await recordAndTranscribe();
+    await userEvent.click(screen.getByTestId("structure-note-btn"));
+    await waitFor(() => expect(screen.getByTestId("section-chief_complaint")).toBeInTheDocument());
+
+    await userEvent.click(screen.getByTestId("condense-btn-chief_complaint"));
+    await waitFor(() => expect(screen.getByTestId("condense-suggestion-chief_complaint")).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("button", { name: /use condensed version/i }));
+
+    expect((screen.getByTestId("section-chief_complaint") as HTMLTextAreaElement).value).toBe("3-day cough.");
+
+    await userEvent.click(screen.getByTestId("create-draft-btn"));
+    await waitFor(() =>
+      expect(mockCreateDraft).toHaveBeenCalledWith(
+        "patient-001",
+        "encounter_note",
+        "en",
+        "general",
+        expect.objectContaining({ condensedKeys: ["chief_complaint"] }),
+      ),
+    );
+  });
+
+  it("discarding a condensed suggestion leaves the original section text untouched", async () => {
+    mockTranscribe.mockResolvedValueOnce({ text: TRANSCRIPT, raw_text: TRANSCRIPT, engine: "stub", reformat: "light" });
+    mockSegment.mockResolvedValueOnce(SEGMENT_RESULT);
+    mockCondense.mockResolvedValueOnce({ text: "3-day cough.", condensed: true, retries: 0 });
+    render(<AmbientPanel patientId="patient-001" onDraftCreated={vi.fn()} />);
+    await recordAndTranscribe();
+    await userEvent.click(screen.getByTestId("structure-note-btn"));
+    await waitFor(() => expect(screen.getByTestId("section-chief_complaint")).toBeInTheDocument());
+
+    await userEvent.click(screen.getByTestId("condense-btn-chief_complaint"));
+    await waitFor(() => expect(screen.getByTestId("condense-suggestion-chief_complaint")).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("button", { name: /keep original/i }));
+
+    expect((screen.getByTestId("section-chief_complaint") as HTMLTextAreaElement).value).toBe(
+      "Patient reports a cough for three days.",
+    );
+    expect(screen.queryByTestId("condense-suggestion-chief_complaint")).not.toBeInTheDocument();
+  });
+
+  it("auto-translates every section after structuring an Arabic transcript, and passes accepted translations to createDraft", async () => {
+    mockTranscribe.mockResolvedValueOnce({ text: TRANSCRIPT, raw_text: TRANSCRIPT, engine: "stub", reformat: "light" });
+    mockSegment.mockResolvedValueOnce(SEGMENT_RESULT);
+    mockTranslate.mockResolvedValue({
+      text: "English version.",
+      fallback_message: null,
+      prompt_template_version: "v1",
+      blocklist_triggered: false,
+      disclaimer: "Machine translation for bedside communication.",
+    });
+    mockCreateDraft.mockResolvedValueOnce({ id: "draft-1" } as unknown as DocumentDraft);
+    render(<AmbientPanel patientId="patient-001" onDraftCreated={vi.fn()} />);
+
+    await userEvent.selectOptions(screen.getByLabelText("Language"), "ar");
+    await recordAndTranscribe();
+    await userEvent.click(screen.getByTestId("structure-note-btn"));
+    await waitFor(() => expect(screen.getByTestId("section-chief_complaint")).toBeInTheDocument());
+
+    // Fires automatically -- no button click -- for every non-empty section.
+    await waitFor(() => expect(mockTranslate).toHaveBeenCalledTimes(3));
+    expect(mockTranslate).toHaveBeenCalledWith("patient-001", {
+      text: "Patient reports a cough for three days.",
+      sourceLanguage: "ar",
+      targetLanguage: "en",
+    });
+
+    await waitFor(() => expect(screen.getByTestId("translation-preview-chief_complaint")).toBeInTheDocument());
+    expect(screen.getByTestId("translation-preview-assessment")).toBeInTheDocument();
+    // Assessment/Plan get a read-only preview, never an accept control.
+    expect(screen.queryByTestId("use-translation-btn-assessment")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("use-translation-btn-plan")).not.toBeInTheDocument();
+
+    // Accepting the translation never touches the editable textarea -- it
+    // keeps showing the original-language text.
+    await userEvent.click(screen.getByTestId("use-translation-btn-chief_complaint"));
+    expect((screen.getByTestId("section-chief_complaint") as HTMLTextAreaElement).value).toBe(
+      "Patient reports a cough for three days.",
+    );
+
+    await userEvent.click(screen.getByTestId("create-draft-btn"));
+    await waitFor(() =>
+      expect(mockCreateDraft).toHaveBeenCalledWith(
+        "patient-001",
+        "encounter_note",
+        "ar",
+        "general",
+        expect.objectContaining({ translatedKeys: ["chief_complaint"] }),
+      ),
+    );
+  });
+
+  it("shows a read-only medical-terms glossary after transcription, alongside the raw transcript", async () => {
+    mockTranscribe.mockResolvedValueOnce({ text: TRANSCRIPT, raw_text: TRANSCRIPT, engine: "stub", reformat: "light" });
+    mockExtractTerms.mockResolvedValueOnce({
+      terms: [
+        { term: "cough", category: "symptom" },
+        { term: "amoxicillin", category: "medication" },
+      ],
+      retries: 0,
+    });
+    render(<AmbientPanel patientId="patient-001" onDraftCreated={vi.fn()} />);
+    await recordAndTranscribe();
+
+    expect(mockExtractTerms).toHaveBeenCalledWith("patient-001", TRANSCRIPT, "en");
+    await waitFor(() => expect(screen.getByTestId("medical-terms-glossary")).toBeInTheDocument());
+    expect(screen.getByText("cough")).toBeInTheDocument();
+    expect(screen.getByText("amoxicillin")).toBeInTheDocument();
+
+    // Purely additive -- never touches the editable transcript/section flow.
+    expect(screen.getByTestId("raw-transcript").textContent).toBe(TRANSCRIPT);
+  });
+
+  it("renders nothing when no medical terms are found", async () => {
+    mockTranscribe.mockResolvedValueOnce({ text: TRANSCRIPT, raw_text: TRANSCRIPT, engine: "stub", reformat: "light" });
+    mockExtractTerms.mockResolvedValueOnce({ terms: [], retries: 0 });
+    render(<AmbientPanel patientId="patient-001" onDraftCreated={vi.fn()} />);
+    await recordAndTranscribe();
+
+    await waitFor(() => expect(mockExtractTerms).toHaveBeenCalled());
+    expect(screen.queryByTestId("medical-terms-glossary")).not.toBeInTheDocument();
   });
 });

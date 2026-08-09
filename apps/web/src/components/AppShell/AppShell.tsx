@@ -31,8 +31,13 @@ const ICONS: Record<string, string> = {
   users: "M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z",
   analytics: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z",
   logout: "M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9",
+  refills: "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99",
+  calendar: "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5",
   collapse: "M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5",
   encounter: "M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z",
+  chevronDown: "M19.5 8.25l-7.5 7.5-7.5-7.5",
+  intake: "M9 12h3.75M9 15h3.75M9 18h3.75M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5h-6.75L12 3H3.75A1.5 1.5 0 002.25 4.5v15A1.5 1.5 0 003.75 21z",
+  receptionist: "M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155",
 };
 
 function Icon({ name, className = "w-5 h-5" }: { readonly name: string; readonly className?: string }): JSX.Element {
@@ -80,10 +85,22 @@ export default function AppShell(): JSX.Element {
 
   const [collapsed, setCollapsed] = useState<boolean>(() => localStorage.getItem("shell.collapsed") === "1");
   const [cmdOpen, setCmdOpen] = useState(false);
+  // Infrequently-used items (front-desk appointments, provider availability
+  // config) live behind this collapsed-by-default "More" group instead of
+  // the primary nav, so day-to-day staff aren't scrolling past tools they
+  // rarely touch.
+  const [moreOpen, setMoreOpen] = useState<boolean>(() => localStorage.getItem("shell.moreOpen") === "1");
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed((v) => {
       localStorage.setItem("shell.collapsed", v ? "0" : "1");
+      return !v;
+    });
+  }, []);
+
+  const toggleMore = useCallback(() => {
+    setMoreOpen((v) => {
+      localStorage.setItem("shell.moreOpen", v ? "0" : "1");
       return !v;
     });
   }, []);
@@ -101,6 +118,7 @@ export default function AppShell(): JSX.Element {
 
   const onPatientPage = activePatientId !== null && location.pathname === `/patients/${activePatientId}`;
   const currentView = onPatientPage ? (searchParams.get("view") === "chart" ? "chart" : "workspace") : null;
+  const openCardParam = onPatientPage ? searchParams.get("open") : null;
 
   const goToView = useCallback(
     (view: string): void => {
@@ -110,7 +128,21 @@ export default function AppShell(): JSX.Element {
     [activePatientId, navigate],
   );
 
+  // Deep-links directly into a specific PatientWorkspace card (see the
+  // ?open= handling documented in PatientWorkspace.tsx) -- used for cards
+  // that are reachable from the sidebar rather than the composer's frequent
+  // chip row (appointments, intake).
+  const goToCard = useCallback(
+    (cardId: string): void => {
+      if (!activePatientId) return;
+      void navigate(`/patients/${activePatientId}?view=workspace&open=${cardId}`);
+    },
+    [activePatientId, navigate],
+  );
+
   const isAdmin = user?.roles.some((r) => r === "hospital_admin" || r === "sysadmin") ?? false;
+  const isPharmacist = user?.roles.includes("pharmacist") ?? false;
+  const isNurse = user?.roles.includes("nurse") ?? false;
 
   return (
     <div className="flex min-h-screen bg-slate-950">
@@ -124,7 +156,7 @@ export default function AppShell(): JSX.Element {
       >
         {/* Brand */}
         <div className={`flex items-center gap-2 px-4 h-14 border-b border-slate-800 ${collapsed ? "justify-center px-0" : ""}`}>
-          <Icon name="copilot" className="w-6 h-6 text-blue-400" />
+          <img src="/logo-icon.png" alt="" className="w-7 h-7 shrink-0" />
           {!collapsed && (
             <span className="text-sm font-semibold text-white truncate">{t("shell.brand")}</span>
           )}
@@ -143,6 +175,12 @@ export default function AppShell(): JSX.Element {
             label={t("shell.commandBar")}
             collapsed={collapsed}
             onClick={() => setCmdOpen(true)}
+          />
+          <NavItem
+            icon="receptionist"
+            label={t("shell.aiReceptionist")}
+            collapsed={collapsed}
+            onClick={() => window.open("/receptionist", "_blank", "noopener,noreferrer")}
           />
 
           {activePatientId && (
@@ -172,7 +210,96 @@ export default function AppShell(): JSX.Element {
                   onClick={() => goToView(view)}
                 />
               ))}
+              {/* Gated to match backend RBAC exactly (appointment:write /
+                  intake:write, packages/shared-types) -- a role that can only
+                  view (patient:read) but not create would otherwise see a
+                  working nav item that 403s on every actual action. */}
+              {(isNurse || isAdmin) && (
+                <NavItem
+                  icon="calendar"
+                  label={t("shell.cards.appointments")}
+                  active={openCardParam === "appointments"}
+                  collapsed={collapsed}
+                  onClick={() => goToCard("appointments")}
+                />
+              )}
+              {isNurse && (
+                <NavItem
+                  icon="intake"
+                  label={t("shell.cards.intake")}
+                  active={openCardParam === "intake"}
+                  collapsed={collapsed}
+                  onClick={() => goToCard("intake")}
+                />
+              )}
             </>
+          )}
+
+          {isPharmacist && (
+            <NavItem
+              icon="refills"
+              label={t("shell.pharmacyQueue")}
+              active={location.pathname === "/pharmacy/queue"}
+              collapsed={collapsed}
+              onClick={() => void navigate("/pharmacy/queue")}
+            />
+          )}
+
+          {(isNurse || isAdmin) && (
+            collapsed ? (
+              <>
+                <NavItem
+                  icon="calendar"
+                  label={t("shell.frontDeskQueue")}
+                  active={location.pathname === "/front-desk/appointments"}
+                  collapsed={collapsed}
+                  onClick={() => void navigate("/front-desk/appointments")}
+                />
+                {isAdmin && (
+                  <NavItem
+                    icon="calendar"
+                    label={t("shell.providerAvailability")}
+                    active={location.pathname === "/admin/provider-availability"}
+                    collapsed={collapsed}
+                    onClick={() => void navigate("/admin/provider-availability")}
+                  />
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={toggleMore}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                  aria-expanded={moreOpen}
+                >
+                  <span className="flex items-center gap-3">
+                    <Icon name="calendar" />
+                    <span className="truncate">{t("shell.more")}</span>
+                  </span>
+                  <Icon name="chevronDown" className={`w-4 h-4 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+                </button>
+                {moreOpen && (
+                  <div className="ps-2 space-y-1">
+                    <NavItem
+                      icon="calendar"
+                      label={t("shell.frontDeskQueue")}
+                      active={location.pathname === "/front-desk/appointments"}
+                      collapsed={false}
+                      onClick={() => void navigate("/front-desk/appointments")}
+                    />
+                    {isAdmin && (
+                      <NavItem
+                        icon="calendar"
+                        label={t("shell.providerAvailability")}
+                        active={location.pathname === "/admin/provider-availability"}
+                        collapsed={false}
+                        onClick={() => void navigate("/admin/provider-availability")}
+                      />
+                    )}
+                  </div>
+                )}
+              </>
+            )
           )}
 
           {isAdmin && (
