@@ -20,7 +20,8 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { api, type DraftSpecialty, ApiError } from "../../lib/api";
+import { api, type DraftSpecialty, type ExtractedTerm, ApiError } from "../../lib/api";
+import { useDictation, type DictationResult } from "../../hooks/useDictation";
 
 const SECTION_SPECS = [
   { key: "chief_complaint", title: "Chief Complaint" },
@@ -28,6 +29,32 @@ const SECTION_SPECS = [
   { key: "assessment", title: "Assessment" },
   { key: "plan", title: "Plan" },
 ] as const;
+
+// Non-judgment sections eligible for light AI condensation
+// (docs/prompts/ambient-condensation-prompt.md) -- Assessment/Plan are never
+// offered a Condense button; this mirrors CONDENSABLE_SECTIONS enforced
+// server-side in draft.service.ts/condense.py, which is the real gate --
+// this constant only controls whether the button is shown.
+const CONDENSABLE_KEYS = new Set(["chief_complaint", "history"]);
+
+// Sections eligible to use an English translation as the draft text
+// (docs/prompts/interpreter-prompt.md's ambient-Scribe call site) -- mirrors
+// TRANSLATABLE_SECTIONS in draft.service.ts, which is the real gate. All
+// sections still get an English preview for reading/reference when the
+// dictation language is Arabic; only these two can actually be SUBMITTED as
+// English.
+const TRANSLATABLE_KEYS = new Set(["chief_complaint", "history"]);
+
+// Purely nominal/lexical labels for the reference glossary's tooltip -- what
+// KIND of word each term is, never a severity/judgment label (docs/prompts/
+// ambient-term-extraction-prompt.md).
+const CATEGORY_LABELS: Record<string, string> = {
+  medication: "Medication",
+  symptom: "Symptom",
+  diagnosis_or_condition: "Diagnosis / condition",
+  test_or_procedure: "Test / procedure",
+  other: "Other clinical term",
+};
 
 const SPECIALTIES: { value: DraftSpecialty; label: string }[] = [
   { value: "general", label: "General" },
@@ -44,15 +71,6 @@ function formatDuration(seconds: number): string {
   return `${m}:${s}`;
 }
 
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(",")[1] ?? "");
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
 interface AmbientPanelProps {
   readonly patientId: string;
   /** Called after a draft is successfully created, so the workspace can open
@@ -64,9 +82,7 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
   const [language, setLanguage] = useState<"en" | "ar">("en");
   const [specialty, setSpecialty] = useState<DraftSpecialty>("general");
   const [consentAcknowledged, setConsentAcknowledged] = useState(false);
-  const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [transcribing, setTranscribing] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
   const [segmenting, setSegmenting] = useState(false);
   const [sections, setSections] = useState<Record<string, string> | null>(null);
@@ -74,11 +90,68 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
   const [creatingDraft, setCreatingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  // Ambient condensation (docs/prompts/ambient-condensation-prompt.md):
+  // condensedKeys tracks which sections currently hold clinician-ACCEPTED
+  // condensed text (sent to createDraft so the server applies the relaxed
+  // re-validation path instead of the strict verbatim-substring check).
+  // suggestions holds a pending proposal awaiting explicit accept/discard --
+  // never applied automatically.
+  const [condensedKeys, setCondensedKeys] = useState<Set<string>>(new Set());
+  const [condensingKey, setCondensingKey] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Record<string, { text: string; condensed: boolean }>>({});
+
+  // Ambient auto-translation (docs/prompts/interpreter-prompt.md): fired
+  // automatically after structuring an Arabic transcript. `translations`
+  // holds a READ-ONLY English preview per section -- the section's own
+  // textarea always keeps editing the ORIGINAL-language text, never the
+  // translation, because the server always re-derives its own translation
+  // from that original-language text (verified against the original-language
+  // transcript) and never trusts client-submitted translated text.
+  // `translatedKeys` is purely a per-section flag ("use English for this
+  // section at draft-creation time"), independent of what the textarea shows.
+  const [translations, setTranslations] = useState<Record<string, string | null>>({});
+  const [translatingKeys, setTranslatingKeys] = useState<Set<string>>(new Set());
+  const [translatedKeys, setTranslatedKeys] = useState<Set<string>>(new Set());
+
+  // Medical-terms reference glossary (docs/prompts/ambient-term-extraction-prompt.md):
+  // fires automatically as soon as a raw transcript is captured. Read-only and
+  // reference-only -- shown alongside the transcript for the clinician to read
+  // in context (a term like "fever" may have appeared as "no fever" in the
+  // actual transcript above it), never touches `sections`/createDraft.
+  const [terms, setTerms] = useState<ExtractedTerm[] | null>(null);
+  const [extractingTerms, setExtractingTerms] = useState(false);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  const onDictationResult = useCallback(
+    (result: DictationResult) => {
+      setTranscript(result.text || null);
+      if (result.text.trim()) {
+        setExtractingTerms(true);
+        api.ambient
+          .extractTerms(patientId, result.text, language)
+          .then((res) => setTerms([...res.terms]))
+          .catch(() => setTerms(null))
+          .finally(() => setExtractingTerms(false));
+      }
+    },
+    [patientId, language],
+  );
+  const dictation = useDictation(patientId, language, onDictationResult);
+  const recording = dictation.recording;
+  const transcribing = dictation.transcribing;
+
+  // Recording duration display — ticks while the shared hook is recording,
+  // stops (and is cleared) the moment it isn't, including on unmount.
+  useEffect(() => {
+    if (recording) {
+      setSeconds(0);
+      timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+    }
+    return () => {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    };
+  }, [recording]);
 
   const reset = useCallback(() => {
     setTranscript(null);
@@ -86,54 +159,50 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
     setUnclassified("");
     setSeconds(0);
     setError(null);
+    setCondensedKeys(new Set());
+    setCondensingKey(null);
+    setSuggestions({});
+    setTranslations({});
+    setTranslatingKeys(new Set());
+    setTranslatedKeys(new Set());
+    setTerms(null);
+    setExtractingTerms(false);
   }, []);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(() => {
     setError(null);
-    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setError("This browser does not support audio recording. Use Chrome on desktop.");
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mime = ["audio/webm", "audio/mp4", "audio/ogg"].find((m) => MediaRecorder.isTypeSupported(m));
-      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-      chunksRef.current = [];
-      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      rec.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        setTranscribing(true);
-        try {
-          if (chunksRef.current.length === 0) {
-            setError("No audio was captured. Check the microphone and try again.");
-            return;
-          }
-          const blob = new Blob(chunksRef.current, { type: mime ?? "audio/webm" });
-          const b64 = await blobToBase64(blob);
-          const { text } = await api.patients.transcribe(patientId, b64, language);
-          setTranscript(text || null);
-          if (!text) setError("Transcription returned no text.");
-        } catch (e) {
-          setError(e instanceof ApiError ? e.message : "Transcription failed");
-        } finally {
-          setTranscribing(false);
-        }
-      };
-      recorderRef.current = rec;
-      rec.start(1000);
-      setRecording(true);
-      setSeconds(0);
-      timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
-    } catch {
-      setError("Microphone access denied or unavailable.");
-    }
-  }, [patientId, language]);
+    void dictation.start();
+  }, [dictation]);
 
   const stopRecording = useCallback(() => {
-    recorderRef.current?.stop();
-    setRecording(false);
-  }, []);
+    dictation.stop();
+  }, [dictation]);
+
+  // Auto-fires a read-only English preview for every non-empty section right
+  // after an Arabic transcript is structured -- reuses the existing Medical
+  // Interpreter endpoint as-is (docs/prompts/interpreter-prompt.md). This is
+  // ONLY a preview for the clinician's convenience; it never becomes the
+  // submitted section text directly -- see translatedKeys above.
+  const translateSections = useCallback(
+    (sectionsMap: Record<string, string>) => {
+      for (const [key, text] of Object.entries(sectionsMap)) {
+        if (!text.trim()) continue;
+        setTranslatingKeys((prev) => new Set(prev).add(key));
+        api.interpreter
+          .translate(patientId, { text, sourceLanguage: "ar", targetLanguage: "en" })
+          .then((result) => setTranslations((prev) => ({ ...prev, [key]: result.text })))
+          .catch(() => setTranslations((prev) => ({ ...prev, [key]: null })))
+          .finally(() =>
+            setTranslatingKeys((prev) => {
+              const n = new Set(prev);
+              n.delete(key);
+              return n;
+            }),
+          );
+      }
+    },
+    [patientId],
+  );
 
   const structureNote = useCallback(() => {
     if (!transcript) return;
@@ -146,10 +215,57 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
         for (const s of result.sections) map[s.key] = s.text;
         setSections(map);
         setUnclassified(result.unclassified_text);
+        if (language === "ar") translateSections(map);
       })
       .catch((e: unknown) => setError(e instanceof ApiError ? e.message : "Structuring failed"))
       .finally(() => setSegmenting(false));
-  }, [patientId, transcript, language]);
+  }, [patientId, transcript, language, translateSections]);
+
+  const condenseSection = useCallback(
+    (key: string) => {
+      if (!sections) return;
+      const text = sections[key];
+      if (!text || !text.trim()) return;
+      setCondensingKey(key);
+      setError(null);
+      api.ambient
+        .condense(patientId, key, text, language)
+        .then((result) => setSuggestions((prev) => ({ ...prev, [key]: result })))
+        .catch((e: unknown) => setError(e instanceof ApiError ? e.message : "Condensing failed"))
+        .finally(() => setCondensingKey(null));
+    },
+    [patientId, sections, language],
+  );
+
+  const acceptCondensed = useCallback((key: string) => {
+    setSuggestions((prev) => {
+      const suggestion = prev[key];
+      if (suggestion) {
+        setSections((s) => ({ ...(s ?? {}), [key]: suggestion.text }));
+        setCondensedKeys((keys) => new Set(keys).add(key));
+      }
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
+  const discardSuggestion = useCallback((key: string) => {
+    setSuggestions((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
+  const toggleUseTranslation = useCallback((key: string, use: boolean) => {
+    setTranslatedKeys((keys) => {
+      const next = new Set(keys);
+      if (use) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
 
   const createDraft = useCallback(() => {
     if (!transcript || !sections) return;
@@ -159,7 +275,12 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
       .filter(([, text]) => text.trim())
       .map(([key, text]) => ({ key, text }));
     api.patients
-      .createDraft(patientId, "encounter_note", language, specialty, { transcript, sections: prefillSections })
+      .createDraft(patientId, "encounter_note", language, specialty, {
+        transcript,
+        sections: prefillSections,
+        condensedKeys: Array.from(condensedKeys),
+        translatedKeys: Array.from(translatedKeys),
+      })
       .then(() => {
         onDraftCreated();
         reset();
@@ -173,7 +294,7 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
         );
       })
       .finally(() => setCreatingDraft(false));
-  }, [patientId, transcript, sections, language, specialty, onDraftCreated, reset]);
+  }, [patientId, transcript, sections, language, specialty, onDraftCreated, reset, condensedKeys, translatedKeys]);
 
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 space-y-4" data-testid="ambient-panel">
@@ -238,9 +359,9 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
 
       {transcribing && <p className="text-sm text-slate-400">Transcribing…</p>}
 
-      {error && (
+      {(error ?? dictation.error) && (
         <div className="text-slate-400 text-sm bg-slate-800 rounded p-3" data-testid="ambient-error">
-          {error}
+          {error ?? dictation.error}
         </div>
       )}
 
@@ -250,6 +371,29 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
           <div className="bg-slate-950 border border-slate-700 rounded p-3 text-sm text-slate-200 whitespace-pre-line max-h-48 overflow-y-auto" dir="auto" data-testid="raw-transcript">
             {transcript}
           </div>
+          {extractingTerms && (
+            <p className="text-xs text-slate-500">Finding medical terms…</p>
+          )}
+          {!extractingTerms && terms && terms.length > 0 && (
+            <div className="space-y-1" data-testid="medical-terms-glossary">
+              <p className="text-xs text-slate-400">
+                Medical terms mentioned (reference only — read alongside the transcript above, not a
+                clinical summary):
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {terms.map((t, i) => (
+                  <span
+                    key={`${t.term}-${i}`}
+                    className="text-xs px-2 py-0.5 rounded-full border border-slate-600 text-slate-300 bg-slate-800/60"
+                    data-testid={`term-chip-${i}`}
+                    title={CATEGORY_LABELS[t.category] ?? t.category}
+                  >
+                    {t.term}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex gap-2">
             <button
               onClick={structureNote}
@@ -268,19 +412,118 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
 
       {sections && (
         <div className="space-y-3">
-          {SECTION_SPECS.map((spec) => (
-            <div key={spec.key}>
-              <label className="text-xs text-slate-400">{spec.title}</label>
-              <textarea
-                value={sections[spec.key] ?? ""}
-                onChange={(e) => setSections((prev) => ({ ...(prev ?? {}), [spec.key]: e.target.value }))}
-                rows={2}
-                dir="auto"
-                className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-sm text-slate-200 mt-1"
-                data-testid={`section-${spec.key}`}
-              />
-            </div>
-          ))}
+          {SECTION_SPECS.map((spec) => {
+            const isCondensable = CONDENSABLE_KEYS.has(spec.key);
+            const isTranslatable = TRANSLATABLE_KEYS.has(spec.key);
+            const suggestion = suggestions[spec.key];
+            const translation = translations[spec.key];
+            const isTranslating = translatingKeys.has(spec.key);
+            const isUsingTranslation = translatedKeys.has(spec.key);
+            return (
+              <div key={spec.key}>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-slate-400">{spec.title}</label>
+                  {isCondensable && (
+                    <button
+                      type="button"
+                      onClick={() => condenseSection(spec.key)}
+                      disabled={condensingKey === spec.key || !(sections[spec.key] ?? "").trim()}
+                      className="text-xs text-slate-500 hover:text-slate-300 underline disabled:opacity-50"
+                      data-testid={`condense-btn-${spec.key}`}
+                    >
+                      {condensingKey === spec.key ? "Condensing…" : "Condense"}
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={sections[spec.key] ?? ""}
+                  onChange={(e) => setSections((prev) => ({ ...(prev ?? {}), [spec.key]: e.target.value }))}
+                  rows={2}
+                  dir="auto"
+                  className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-sm text-slate-200 mt-1"
+                  data-testid={`section-${spec.key}`}
+                />
+                {suggestion && (
+                  <div className="mt-1.5 p-2.5 rounded border border-slate-700 bg-slate-800/60 space-y-1.5" data-testid={`condense-suggestion-${spec.key}`}>
+                    {suggestion.condensed ? (
+                      <>
+                        <p className="text-xs text-slate-400">Suggested condensed version — only words from your own text:</p>
+                        <p className="text-sm text-slate-200" dir="auto">{suggestion.text}</p>
+                        <div className="flex gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => acceptCondensed(spec.key)}
+                            className="text-xs px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white"
+                          >
+                            Use condensed version
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => discardSuggestion(spec.key)}
+                            className="text-xs px-2.5 py-1 rounded border border-slate-600 text-slate-300 hover:text-white"
+                          >
+                            Keep original
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-slate-500">No safe condensation found — your original text was kept.</p>
+                        <button
+                          type="button"
+                          onClick={() => discardSuggestion(spec.key)}
+                          className="text-xs text-slate-500 hover:text-slate-300 underline shrink-0"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {isTranslating && (
+                  <p className="text-xs text-slate-500 mt-1.5">Translating…</p>
+                )}
+                {!isTranslating && translation !== undefined && (
+                  <div className="mt-1.5 p-2.5 rounded border border-slate-700 bg-slate-800/40 space-y-1.5" data-testid={`translation-preview-${spec.key}`}>
+                    {translation ? (
+                      <>
+                        <p className="text-xs text-slate-400">English translation (reference — clinical terms kept as stated):</p>
+                        <p className="text-sm text-slate-200" dir="ltr">{translation}</p>
+                        {isTranslatable && (
+                          <div className="flex gap-2 pt-1">
+                            {!isUsingTranslation ? (
+                              <button
+                                type="button"
+                                onClick={() => toggleUseTranslation(spec.key, true)}
+                                className="text-xs px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white"
+                                data-testid={`use-translation-btn-${spec.key}`}
+                              >
+                                Use English version
+                              </button>
+                            ) : (
+                              <>
+                                <span className="text-xs text-blue-300 px-1 py-1">Will use English version</span>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleUseTranslation(spec.key, false)}
+                                  className="text-xs px-2.5 py-1 rounded border border-slate-600 text-slate-300 hover:text-white"
+                                  data-testid={`keep-arabic-btn-${spec.key}`}
+                                >
+                                  Keep original
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-slate-500">Translation unavailable — original text kept.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {unclassified && (
             <div>
               <label className="text-xs text-slate-400">Unsorted (not confidently classified)</label>

@@ -12,6 +12,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api, type ServiceCandidate, type ServiceRequestItem, ApiError } from "../../lib/api";
+import { placeDictation } from "../../lib/dictation";
+import { useDictation, type DictationResult } from "../../hooks/useDictation";
+import HisTransmitControl from "../HisTransmitControl/HisTransmitControl";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -39,6 +42,68 @@ function CategoryIcon({ category }: { readonly category: string }): JSX.Element 
         <path strokeLinecap="round" strokeLinejoin="round" d={d} />
       </svg>
     </div>
+  );
+}
+
+// One candidate card — shared by the note-extraction queue and the
+// quick-entry match list below. Same review-then-confirm/dismiss pattern
+// either way; only where the candidate came from differs.
+function ServiceCandidateCard({
+  candidate,
+  isConfirming,
+  isExpanded,
+  onToggleExpanded,
+  onDismiss,
+  onConfirm,
+}: {
+  readonly candidate: ServiceCandidate;
+  readonly isConfirming: boolean;
+  readonly isExpanded: boolean;
+  readonly onToggleExpanded: () => void;
+  readonly onDismiss: () => void;
+  readonly onConfirm: () => void;
+}): JSX.Element {
+  const c = candidate;
+  return (
+    <li className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3">
+      <div className="flex items-center gap-3">
+        <CategoryIcon category={c.category} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-white truncate" dir="ltr">
+            <span className="text-slate-400">Create</span>{" "}
+            <span className="font-medium bg-slate-800 rounded px-1.5 py-0.5">{c.code_display}</span>{" "}
+            <span className="text-slate-400">order</span>{" "}
+            <span className="text-xs text-slate-500">({c.category})</span>
+          </p>
+          <button type="button" onClick={onToggleExpanded} className="text-xs text-slate-500 hover:text-slate-300 mt-0.5">
+            {isExpanded ? "Hide source" : "Review source"}
+          </button>
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onDismiss}
+            disabled={isConfirming}
+            className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 disabled:opacity-50"
+          >
+            Dismiss
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isConfirming}
+            className="text-xs px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+          >
+            {isConfirming ? "Creating…" : "Confirm"}
+          </button>
+        </div>
+      </div>
+      {isExpanded && (
+        <p className="mt-2 ms-12 text-xs text-slate-400 border-s-2 border-slate-700 ps-3" dir="auto">
+          {c.source_type === "dictated_quick_entry" ? "You entered" : "Documented"}: “{c.source_excerpt}”
+        </p>
+      )}
+    </li>
   );
 }
 
@@ -112,6 +177,67 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
 
   const visible = candidates?.filter((c) => !dismissed.has(keyOf(c))) ?? null;
 
+  // Quick order entry — type or dictate a short phrase, matched against the
+  // exact same deterministic catalog as note extraction above (no ORDER_
+  // CONTEXT wording required here; the box itself is the ordering context).
+  const [quickLanguage, setQuickLanguage] = useState<"en" | "ar">("en");
+  const [quickText, setQuickText] = useState("");
+  const [quickMatches, setQuickMatches] = useState<ServiceCandidate[] | null>(null);
+  const [quickDismissed, setQuickDismissed] = useState<Set<string>>(new Set());
+  const [quickExpanded, setQuickExpanded] = useState<Set<string>>(new Set());
+  const [quickConfirming, setQuickConfirming] = useState<Set<string>>(new Set());
+  const [quickBusy, setQuickBusy] = useState(false);
+  const [quickError, setQuickError] = useState<string | null>(null);
+
+  const onQuickDictationResult = useCallback((result: DictationResult) => {
+    setQuickText((prev) => placeDictation(prev, result.text, prev.length).text);
+  }, []);
+  const quickDictation = useDictation(patientId, quickLanguage, onQuickDictationResult);
+
+  const matchQuickEntry = useCallback(async () => {
+    if (!quickText.trim()) return;
+    setQuickBusy(true); setQuickError(null);
+    try {
+      const { data } = await api.patients.matchQuickEntry(patientId, quickText);
+      setQuickMatches(data);
+      setQuickDismissed(new Set());
+      setQuickExpanded(new Set());
+      if (data.length === 0) setQuickError("No matching services recognized in that phrase.");
+    } catch (e) {
+      setQuickError(e instanceof ApiError ? e.message : "Failed to match order text");
+    } finally { setQuickBusy(false); }
+  }, [patientId, quickText]);
+
+  const confirmQuickOne = useCallback(async (c: ServiceCandidate) => {
+    const k = keyOf(c);
+    setQuickConfirming((prev) => new Set(prev).add(k));
+    setQuickError(null);
+    try {
+      await api.patients.createServiceRequests(patientId, [c], quickText);
+      setQuickMatches((prev) => prev?.filter((x) => keyOf(x) !== k) ?? null);
+      refresh();
+    } catch (e) {
+      setQuickError(e instanceof ApiError ? e.message : "Failed to create service request");
+    } finally {
+      setQuickConfirming((prev) => { const n = new Set(prev); n.delete(k); return n; });
+    }
+  }, [patientId, quickText, refresh]);
+
+  const dismissQuickOne = (k: string): void => {
+    setQuickDismissed((prev) => new Set(prev).add(k));
+  };
+
+  const toggleQuickExpanded = (k: string): void => {
+    setQuickExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      return next;
+    });
+  };
+
+  const quickVisible = quickMatches?.filter((c) => !quickDismissed.has(keyOf(c))) ?? null;
+  const quickBusyOrRecording = quickBusy || quickDictation.recording || quickDictation.transcribing;
+
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -127,12 +253,13 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
         {existing.length === 0 ? (
           <p className="text-sm text-slate-500">None yet</p>
         ) : (
-          <ul className="space-y-1">
+          <ul className="space-y-1.5">
             {existing.map((s) => (
-              <li key={s.id} className="text-sm text-white" dir="ltr">
-                <span className="inline-block rounded bg-slate-700 text-slate-200 text-xs px-1.5 py-0.5 mr-2">{s.category}</span>
+              <li key={s.id} className="text-sm text-white flex items-center gap-2 flex-wrap" dir="ltr">
+                <span className="inline-block rounded bg-slate-700 text-slate-200 text-xs px-1.5 py-0.5">{s.category}</span>
                 {s.code_display}
-                <span className="text-slate-500 ml-2">({s.status}, {formatDate(s.requested_at)})</span>
+                <span className="text-slate-500">({s.status}, {formatDate(s.requested_at)})</span>
+                <HisTransmitControl patientId={patientId} sourceType="service_request" sourceId={s.id} />
               </li>
             ))}
           </ul>
@@ -174,52 +301,16 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
           <ul className="space-y-2">
             {visible?.map((c) => {
               const k = keyOf(c);
-              const isConfirming = confirming.has(k);
-              const isExpanded = expanded.has(k);
               return (
-                <li key={k} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <CategoryIcon category={c.category} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-white truncate" dir="ltr">
-                        <span className="text-slate-400">Create</span>{" "}
-                        <span className="font-medium bg-slate-800 rounded px-1.5 py-0.5">{c.code_display}</span>{" "}
-                        <span className="text-slate-400">order</span>{" "}
-                        <span className="text-xs text-slate-500">({c.category})</span>
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => toggleExpanded(k)}
-                        className="text-xs text-slate-500 hover:text-slate-300 mt-0.5"
-                      >
-                        {isExpanded ? "Hide source" : "Review source"}
-                      </button>
-                    </div>
-                    <div className="shrink-0 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => dismissOne(k)}
-                        disabled={isConfirming}
-                        className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 disabled:opacity-50"
-                      >
-                        Dismiss
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void confirmOne(c)}
-                        disabled={isConfirming}
-                        className="text-xs px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
-                      >
-                        {isConfirming ? "Creating…" : "Confirm"}
-                      </button>
-                    </div>
-                  </div>
-                  {isExpanded && (
-                    <p className="mt-2 ms-12 text-xs text-slate-400 border-s-2 border-slate-700 ps-3" dir="auto">
-                      Documented: “{c.source_excerpt}”
-                    </p>
-                  )}
-                </li>
+                <ServiceCandidateCard
+                  key={k}
+                  candidate={c}
+                  isConfirming={confirming.has(k)}
+                  isExpanded={expanded.has(k)}
+                  onToggleExpanded={() => toggleExpanded(k)}
+                  onDismiss={() => dismissOne(k)}
+                  onConfirm={() => void confirmOne(c)}
+                />
               );
             })}
           </ul>
@@ -243,6 +334,83 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
           </div>
         </div>
       )}
+
+      <hr className="border-slate-800" />
+
+      {/* Quick order entry — type or dictate; matched against the same
+          deterministic catalog used for note extraction above. */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-slate-300">Quick order entry</h3>
+          <select
+            value={quickLanguage}
+            disabled={quickBusyOrRecording}
+            onChange={(e) => setQuickLanguage(e.target.value as "en" | "ar")}
+            className="bg-slate-800 text-slate-300 text-xs border border-slate-600 rounded px-2 py-1"
+            aria-label="Dictation language"
+          >
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+          </select>
+        </div>
+        <p className="text-xs text-slate-400">
+          Type or dictate a short order phrase (e.g. “chest x-ray and CBC”) — matched the same way as
+          documented orders above. Nothing is created until you confirm.
+        </p>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={quickText}
+            onChange={(e) => setQuickText(e.target.value)}
+            disabled={quickBusyOrRecording}
+            placeholder="e.g. chest x-ray and CBC"
+            dir="auto"
+            className="flex-1 bg-slate-800 border border-slate-600 rounded px-2.5 py-1.5 text-sm text-slate-200 disabled:opacity-50"
+          />
+          <button
+            type="button"
+            onClick={() => (quickDictation.recording ? quickDictation.stop() : void quickDictation.start())}
+            disabled={quickBusy || quickDictation.transcribing}
+            className={`text-xs px-2.5 py-1.5 rounded-lg text-white disabled:opacity-50 ${
+              quickDictation.recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-slate-700 hover:bg-slate-600"
+            }`}
+            title="Dictate — speech is transcribed on-prem and inserted as text"
+          >
+            {quickDictation.transcribing ? "…" : quickDictation.recording ? "■ Stop" : "🎙"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void matchQuickEntry()}
+            disabled={quickBusyOrRecording || !quickText.trim()}
+            className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+          >
+            {quickBusy ? "Matching…" : "Match"}
+          </button>
+        </div>
+
+        {(quickError ?? quickDictation.error) && (
+          <p className="text-sm text-slate-400">{quickError ?? quickDictation.error}</p>
+        )}
+
+        {quickVisible !== null && quickVisible.length > 0 && (
+          <ul className="space-y-2">
+            {quickVisible.map((c) => {
+              const k = keyOf(c);
+              return (
+                <ServiceCandidateCard
+                  key={k}
+                  candidate={c}
+                  isConfirming={quickConfirming.has(k)}
+                  isExpanded={quickExpanded.has(k)}
+                  onToggleExpanded={() => toggleQuickExpanded(k)}
+                  onDismiss={() => dismissQuickOne(k)}
+                  onConfirm={() => void confirmQuickOne(c)}
+                />
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
