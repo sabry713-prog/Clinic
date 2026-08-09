@@ -12,6 +12,7 @@ import { Injectable, Inject } from "@nestjs/common";
 import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { PatientScopeService } from "../patient/patient-scope.service";
+import { EncryptionService } from "../security/encryption.service";
 
 export interface ServiceCandidate {
   readonly category: string;
@@ -81,11 +82,42 @@ function splitSentences(text: string): string[] {
     .filter((s) => s.length > 0);
 }
 
+interface CatalogMatch {
+  readonly category: string;
+  readonly code_system: string;
+  readonly code: string;
+  readonly code_display: string;
+}
+
+// Matches CATALOG against one span of text (a sentence from a stored note, or
+// a short ad hoc quick-entry phrase). Pure, no I/O, no ORDER_CONTEXT check —
+// callers decide whether that filter applies to their source. De-dupes the
+// generic "X-ray" against "Chest X-ray" WITHIN this span; callers that
+// accumulate matches across multiple spans (extractCandidates) apply an
+// additional cross-span pass for the same reason.
+function matchCatalog(text: string): CatalogMatch[] {
+  const matches: CatalogMatch[] = [];
+  const displays = new Set<string>();
+  for (const item of CATALOG) {
+    if (!item.re.test(text)) continue;
+    displays.add(item.code_display);
+    if (item.code_display === "X-ray" && displays.has("Chest X-ray")) continue;
+    matches.push({
+      category: item.category,
+      code_system: item.code_system,
+      code: item.code,
+      code_display: item.code_display,
+    });
+  }
+  return matches;
+}
+
 @Injectable()
 export class ServiceRequestService {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly scope: PatientScopeService,
+    private readonly encryption: EncryptionService,
   ) {}
 
   /**
@@ -105,41 +137,66 @@ export class ServiceRequestService {
     );
     for (const n of notes.rows) sources.push({ id: n.id, type: "document_reference", text: n.content_text ?? "" });
 
-    const drafts = await this.pool.query<{ id: string; signed_text: string | null }>(
-      `SELECT id, signed_text FROM app.document_draft
+    const drafts = await this.pool.query<{ id: string; signed_text: string | null; signed_text_key_id: string | null }>(
+      `SELECT id, signed_text, signed_text_key_id FROM app.document_draft
         WHERE patient_id = $1 AND status = 'signed' AND signed_text IS NOT NULL
         ORDER BY signed_at DESC NULLS LAST LIMIT 20`,
       [patientId],
     );
-    for (const d of drafts.rows) sources.push({ id: d.id, type: "document_draft", text: d.signed_text ?? "" });
+    for (const d of drafts.rows) {
+      // signed_text_key_id set -> envelope-encrypted (customer-managed
+      // encryption keys, apps/core/src/security/); NULL -> legacy plaintext.
+      const text = d.signed_text_key_id && d.signed_text
+        ? await this.encryption.decrypt(d.signed_text, d.signed_text_key_id)
+        : (d.signed_text ?? "");
+      sources.push({ id: d.id, type: "document_draft", text });
+    }
 
     const seen = new Set<string>();
     const candidates: ServiceCandidate[] = [];
     for (const src of sources) {
       for (const sentence of splitSentences(src.text)) {
         if (!ORDER_CONTEXT.test(sentence)) continue;
-        const matchedInSentence = new Set<string>();
-        for (const item of CATALOG) {
-          if (!item.re.test(sentence)) continue;
-          matchedInSentence.add(item.code_display);
-          // De-dupe the generic "X-ray" when a "Chest X-ray" matched the same sentence.
-          if (item.code_display === "X-ray" && matchedInSentence.has("Chest X-ray")) continue;
-          const key = item.code;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          candidates.push({
-            category: item.category,
-            code_system: item.code_system,
-            code: item.code,
-            code_display: item.code_display,
-            source_type: src.type,
-            source_document_id: src.id,
-            source_excerpt: sentence,
-          });
+        for (const m of matchCatalog(sentence)) {
+          if (seen.has(m.code)) continue;
+          seen.add(m.code);
+          candidates.push({ ...m, source_type: src.type, source_document_id: src.id, source_excerpt: sentence });
         }
       }
     }
     // If a sentence yielded both "Chest X-ray" and the generic "X-ray", drop the generic.
+    if (candidates.some((c) => c.code_display === "Chest X-ray")) {
+      return candidates.filter((c) => c.code_display !== "X-ray");
+    }
+    return candidates;
+  }
+
+  /**
+   * Match candidates against a short ad hoc phrase (typed or dictated into
+   * the quick-entry box) instead of a stored document. Same deterministic
+   * CATALOG lookup as extractCandidates — no new judgment. Deliberately does
+   * NOT require ORDER_CONTEXT wording ("order", "request", …): the
+   * quick-entry box is itself an ordering context by construction, so
+   * requiring that phrasing in a two-word phrase like "chest x-ray" would
+   * make the feature unusable. Nothing is created here.
+   */
+  async extractFromAdHocText(userId: string, patientId: string, text: string): Promise<ServiceCandidate[]> {
+    await this.scope.assertPatientInScope(userId, patientId);
+    const trimmed = text.trim();
+    if (!trimmed) return [];
+
+    const seen = new Set<string>();
+    const candidates: ServiceCandidate[] = [];
+    for (const m of matchCatalog(trimmed)) {
+      if (seen.has(m.code)) continue;
+      seen.add(m.code);
+      candidates.push({
+        ...m,
+        source_type: "dictated_quick_entry",
+        source_document_id: null,
+        source_excerpt: trimmed,
+      });
+    }
     if (candidates.some((c) => c.code_display === "Chest X-ray")) {
       return candidates.filter((c) => c.code_display !== "X-ray");
     }
@@ -152,16 +209,21 @@ export class ServiceRequestService {
    * The clinician confirms by code, but the row written is the SERVER's own
    * extraction (verbatim excerpt + source), re-derived here — so a client can
    * never inject a service that is not actually documented in the record.
+   * When `adHocText` is supplied (the quick-entry box was used), it is
+   * re-matched the same safe way and merged into the lookup so those
+   * confirmations are re-derived too, never trusted from the client.
    */
   async confirmAndCreate(
     userId: string,
     patientId: string,
     confirmed: ServiceCandidate[],
+    adHocText?: string,
   ): Promise<ServiceRequestRow[]> {
     await this.scope.assertPatientInScope(userId, patientId);
 
     const extracted = await this.extractCandidates(userId, patientId);
-    const byCode = new Map(extracted.map((c) => [c.code ?? c.code_display, c]));
+    const adHoc = adHocText ? await this.extractFromAdHocText(userId, patientId, adHocText) : [];
+    const byCode = new Map([...extracted, ...adHoc].map((c) => [c.code ?? c.code_display, c]));
     const confirmedKeys = new Set(confirmed.map((c) => c.code ?? c.code_display));
     const items = [...confirmedKeys]
       .map((k) => byCode.get(k))

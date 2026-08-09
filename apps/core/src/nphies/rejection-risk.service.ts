@@ -10,7 +10,7 @@
  * suggests a diagnosis, or judges medical necessity (CLAUDE.md §2):
  *
  * 1. Pairing compatibility — set-membership lookup against
- *    app.diagnosis_procedure_compat (payer-published pairing rules in
+ *    app.nphies_clinical_mapping (payer-published pairing rules in
  *    production). "Is this combination in the known-valid table?" is a
  *    lookup, not a clinical-appropriateness judgment.
  * 2. Historical rejection frequency — a plain retrospective count: "how
@@ -84,7 +84,7 @@ export class RejectionRiskService {
        JOIN app.condition_icd_coding cc ON cc.condition_id = c.id
        JOIN app.service_request sr ON sr.id = l.service_request_id
        JOIN app.service_request_sbs_coding sc ON sc.service_request_id = sr.id
-       LEFT JOIN app.diagnosis_procedure_compat compat
+       LEFT JOIN app.nphies_clinical_mapping compat
          ON compat.icd10am_code = cc.icd10am_code AND compat.sbs_code = sc.sbs_code
        WHERE l.patient_id = $1 AND c.status = 'active' AND sr.status = 'active'`,
       [patientId],

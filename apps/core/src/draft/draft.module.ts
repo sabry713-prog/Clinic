@@ -4,9 +4,10 @@ import { DraftService } from "./draft.service";
 import { PatientModule } from "../patient/patient.module";
 import { RbacModule } from "../rbac/rbac.module";
 import { AuthModule } from "../auth/auth.module";
+import { SecurityModule } from "../security/security.module";
 
 @Module({
-  imports: [PatientModule, RbacModule, AuthModule],
+  imports: [PatientModule, RbacModule, AuthModule, SecurityModule],
   controllers: [DraftController],
   providers: [DraftService],
 })

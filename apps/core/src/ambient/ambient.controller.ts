@@ -58,6 +58,30 @@ class SegmentTranscriptDto {
   language!: string;
 }
 
+class CondenseSectionDto {
+  @IsString()
+  @MaxLength(50)
+  sectionKey!: string;
+
+  @IsString()
+  @MaxLength(5000)
+  text!: string;
+
+  @IsString()
+  @MaxLength(20)
+  language!: string;
+}
+
+class ExtractTermsDto {
+  @IsString()
+  @MaxLength(20000)
+  text!: string;
+
+  @IsString()
+  @MaxLength(20)
+  language!: string;
+}
+
 function getRequestingUserId(req: Request): string {
   const uid = req.authenticatedUserId;
   if (!uid) throw new Error("No authenticatedUserId on request");
@@ -102,6 +126,77 @@ export class AmbientController {
       metadata_json: {
         section_keys: result.sections.map((s) => s.key),
         has_unclassified: result.unclassified_text.length > 0,
+        retries: result.retries,
+      },
+      request_id: (req.headers["x-request-id"] as string | undefined ?? null) as import("@clinical-copilot/shared-types").RequestId | null,
+    });
+
+    return result;
+  }
+
+  @Post("condense")
+  @HttpCode(200)
+  @ApiOperation({
+    summary:
+      "Lightly condense a non-judgment note section (chief_complaint/history only -- gated by blocklist + " +
+      "word-containment, pending sign-off, see docs/prompts/ambient-condensation-prompt.md)",
+  })
+  async condense(
+    @Param("id") patientId: string,
+    @Body() body: CondenseSectionDto,
+    @Req() req: Request,
+  ): Promise<object> {
+    const userId = getRequestingUserId(req);
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const result = await this.ambientService.condense(body.sectionKey, body.text, body.language);
+
+    // Audit event (section text not in audit event body -- PHI-adjacent)
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as import("@clinical-copilot/shared-types").UserId,
+      actor_role: null,
+      action: "AMBIENT_SECTION_CONDENSED",
+      target_type: "patient",
+      target_id: patientId as import("@clinical-copilot/shared-types").PatientId,
+      outcome: "SUCCESS",
+      metadata_json: {
+        section_key: body.sectionKey,
+        condensed: result.condensed,
+        retries: result.retries,
+      },
+      request_id: (req.headers["x-request-id"] as string | undefined ?? null) as import("@clinical-copilot/shared-types").RequestId | null,
+    });
+
+    return result;
+  }
+
+  @Post("extract-terms")
+  @HttpCode(200)
+  @ApiOperation({
+    summary:
+      "Point out medical terminology already present in a dictation transcript -- reference-only, " +
+      "never submitted into a draft (pending sign-off, see docs/prompts/ambient-term-extraction-prompt.md)",
+  })
+  async extractTerms(
+    @Param("id") patientId: string,
+    @Body() body: ExtractTermsDto,
+    @Req() req: Request,
+  ): Promise<object> {
+    const userId = getRequestingUserId(req);
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const result = await this.ambientService.extractTerms(body.text, body.language);
+
+    // Audit event (transcript text and extracted terms not in audit event body -- PHI-adjacent)
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as import("@clinical-copilot/shared-types").UserId,
+      actor_role: null,
+      action: "AMBIENT_TERMS_EXTRACTED",
+      target_type: "patient",
+      target_id: patientId as import("@clinical-copilot/shared-types").PatientId,
+      outcome: "SUCCESS",
+      metadata_json: {
+        term_count: result.terms.length,
         retries: result.retries,
       },
       request_id: (req.headers["x-request-id"] as string | undefined ?? null) as import("@clinical-copilot/shared-types").RequestId | null,

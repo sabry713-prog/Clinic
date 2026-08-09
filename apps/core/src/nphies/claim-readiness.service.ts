@@ -19,7 +19,7 @@ import { PG_POOL } from "../database/database.module";
 import type { Pool } from "pg";
 import { PatientScopeService } from "../patient/patient-scope.service";
 
-export type CheckStatus = "pass" | "warning" | "fail";
+export type CheckStatus = "pass" | "warning" | "fail" | "not_applicable";
 
 export interface ReadinessCheck {
   readonly id: string;
@@ -212,7 +212,7 @@ export class ClaimReadinessService {
       });
 
       // R10 — pairing compatibility. Deterministic set-membership check
-      // against app.diagnosis_procedure_compat (payer-published pairing
+      // against app.nphies_clinical_mapping (payer-published pairing
       // rules): does this linked diagnosis+procedure combination appear
       // in the known-valid table? Never a judgment about whether the
       // pairing makes clinical sense — that determination belongs to the
@@ -222,7 +222,7 @@ export class ClaimReadinessService {
          FROM app.service_request_diagnosis_link l
          JOIN app.condition_icd_coding cc ON cc.condition_id = l.condition_id
          JOIN app.service_request_sbs_coding sc ON sc.service_request_id = l.service_request_id
-         LEFT JOIN app.diagnosis_procedure_compat compat
+         LEFT JOIN app.nphies_clinical_mapping compat
            ON compat.icd10am_code = cc.icd10am_code AND compat.sbs_code = sc.sbs_code
          WHERE l.patient_id = $1`,
         [patientId],
@@ -238,6 +238,86 @@ export class ClaimReadinessService {
             pairingUnknown === 0
               ? `All ${pairingTotal} coded, linked pairing(s) appear in the known-valid compatibility table.`
               : `${pairingUnknown} of ${pairingTotal} coded, linked pairing(s) are not in the known compatibility table — verify before submission (see rejection-risk check).`,
+        });
+      }
+
+      // R11 — minimum-data-set (MDS) evidence completeness. Scoped to the
+      // clinician's own CONFIRMED diagnosis→procedure pairing (same join
+      // shape as the R10 pairing check above) rather than the SBS code
+      // alone: a procedure code can appear in more than one mapping row
+      // (different diagnoses, different requirements), so matching on
+      // (icd10am_code, sbs_code) — the mapping table's primary key —
+      // guarantees exactly one requirement set per confirmed pairing
+      // instead of one spurious duplicate check per matching row.
+      //
+      // Checks whether the STRUCTURED evidence exists — a vital-signs
+      // observation and/or a document of a required type, scoped to the
+      // encounter the order was extracted from. This is a presence check
+      // only: it never reads document_reference.content_text or any
+      // observation value, and never infers what the evidence "means"
+      // (CLAUDE.md §2). Orders whose encounter can't be resolved (e.g.
+      // extracted from an unsaved draft, or the source note itself has no
+      // recorded encounter) report not_applicable rather than guessing.
+      const mds = await this.pool.query<{
+        service_request_id: string;
+        order_display: string;
+        icd10am_code: string;
+        requires_vitals: boolean;
+        requires_note_types: string[] | null;
+        encounter_id: string | null;
+        has_vitals: boolean;
+        has_note_type: boolean;
+      }>(
+        `SELECT sr.id AS service_request_id, sr.code_display AS order_display,
+                cc.icd10am_code,
+                m.requires_vitals, m.requires_note_types,
+                dr.encounter_id,
+                EXISTS (
+                  SELECT 1 FROM hospital.observation o
+                  WHERE o.encounter_id = dr.encounter_id AND o.category = 'vital-signs'
+                ) AS has_vitals,
+                EXISTS (
+                  SELECT 1 FROM hospital.document_reference dr2
+                  WHERE dr2.encounter_id = dr.encounter_id AND dr2.type = ANY(m.requires_note_types)
+                ) AS has_note_type
+         FROM app.service_request_diagnosis_link l
+         JOIN app.service_request sr ON sr.id = l.service_request_id
+         JOIN app.condition_icd_coding cc ON cc.condition_id = l.condition_id
+         JOIN app.service_request_sbs_coding sc ON sc.service_request_id = sr.id
+         JOIN app.nphies_clinical_mapping m
+           ON m.icd10am_code = cc.icd10am_code AND m.sbs_code = sc.sbs_code
+         LEFT JOIN hospital.document_reference dr
+           ON dr.id = sr.source_document_id AND sr.source_type = 'document_reference'
+         WHERE l.patient_id = $1 AND sr.status = 'active'
+           AND (m.requires_vitals OR m.requires_note_types IS NOT NULL)`,
+        [patientId],
+      );
+      for (const row of mds.rows) {
+        const checkId = `mds_evidence_complete:${row.service_request_id}:${row.icd10am_code}`;
+        const label = `MDS evidence — ${row.order_display} (${row.icd10am_code})`;
+        if (!row.encounter_id) {
+          checks.push({
+            id: checkId,
+            label,
+            status: "not_applicable",
+            detail:
+              "Cannot verify required evidence for this order — it isn't linked to a saved encounter document.",
+          });
+          continue;
+        }
+        const missing: string[] = [];
+        if (row.requires_vitals && !row.has_vitals) missing.push("vital-signs observation");
+        if (row.requires_note_types && row.requires_note_types.length > 0 && !row.has_note_type) {
+          missing.push(`a document of type ${row.requires_note_types.join(" or ")}`);
+        }
+        checks.push({
+          id: checkId,
+          label,
+          status: missing.length === 0 ? "pass" : "warning",
+          detail:
+            missing.length === 0
+              ? "Required documentation (per the NPHIES clinical mapping) is present for this order's encounter."
+              : `Not found for this order's encounter: ${missing.join(", ")}.`,
         });
       }
     }

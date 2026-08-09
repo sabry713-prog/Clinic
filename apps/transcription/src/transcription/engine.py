@@ -9,6 +9,10 @@ import os
 import tempfile
 from typing import Protocol
 
+import structlog
+
+logger = structlog.get_logger()
+
 
 class TranscriptionEngine(Protocol):
     def transcribe(self, audio: bytes, language: str) -> str: ...
@@ -69,10 +73,43 @@ class FasterWhisperEngine:
             with os.fdopen(fd, "wb") as f:
                 f.write(audio)
             assert self._model is not None
-            segments, _info = self._model.transcribe(
-                path, language=(language if language in ("en", "ar") else None)
+            segments, info = self._model.transcribe(
+                path,
+                language=(language if language in ("en", "ar") else None),
+                # Defaults (no_speech_threshold=0.6, condition_on_previous_text=True)
+                # are tuned for long-form audio and can over-reject short,
+                # quiet, or non-English dictation clips as "no speech" even
+                # when real speech is present -- a well-documented Whisper
+                # behavior, not specific to this codebase. Relaxed here for
+                # short single-utterance clinical dictation:
+                #  - no_speech_threshold lowered: less eager to discard a
+                #    segment as silence.
+                #  - condition_on_previous_text=False: a short clip has no
+                #    "previous text" to condition on productively, and this
+                #    flag is a known cause of whole-clip collapse when the
+                #    model's first guess is low-confidence.
+                no_speech_threshold=0.3,
+                condition_on_previous_text=False,
+                # Strips silence/non-speech before decoding, which reduces the
+                # model hallucinating filler phrases into quiet gaps -- most
+                # noticeable on dialectal Arabic where the model is already
+                # less confident and more prone to inventing plausible-sounding
+                # words when there's dead air.
+                vad_filter=True,
             )
-            return " ".join(seg.text.strip() for seg in segments).strip()
+            segment_list = list(segments)
+            # Numeric confidence stats only -- never audio or transcribed
+            # text (PHI, CLAUDE.md §7) -- so a future empty-result report can
+            # be triaged from logs alone without needing to reproduce audio.
+            logger.info(
+                "faster_whisper_decode",
+                language_requested=language,
+                language_detected=info.language,
+                language_probability=round(info.language_probability, 3),
+                segment_count=len(segment_list),
+                duration_s=round(info.duration, 2),
+            )
+            return " ".join(seg.text.strip() for seg in segment_list).strip()
         finally:
             try:
                 os.remove(path)

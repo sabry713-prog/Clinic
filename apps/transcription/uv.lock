@@ -62,6 +62,23 @@ wheels = [
 ]
 
 [[package]]
+name = "blocklist"
+version = "0.1.0"
+source = { editable = "../../packages/blocklist" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10.0" },
+    { name = "pydantic", specifier = ">=2.7.1" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.5" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "certifi"
 version = "2026.6.17"
 source = { registry = "https://pypi.org/simple" }
@@ -791,6 +808,7 @@ name = "transcription"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "blocklist" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pydantic" },
@@ -811,6 +829,7 @@ whisper = [
 
 [package.metadata]
 requires-dist = [
+    { name = "blocklist", editable = "../../packages/blocklist" },
     { name = "fastapi", specifier = ">=0.111.0" },
     { name = "faster-whisper", marker = "extra == 'whisper'", specifier = ">=1.0.0" },
     { name = "httpx", specifier = ">=0.28.1" },

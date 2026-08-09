@@ -30,5 +30,23 @@ class Settings(BaseSettings):
     # Reuses the same model_endpoint_url/model_name/model_api_key as reformat above.
     transcription_segmentation: str = "stub"
 
+    # Ambient condensation mode: "stub" (default — safe subtractive-only
+    # filler-strip, see condense.py) or "llm" (real paraphrase, gated by
+    # blocklist + word-containment — see docs/prompts/ambient-condensation-prompt.md).
+    # Independent toggle from transcription_segmentation on purpose — a site
+    # may want live segmentation without opting into live condensation, or
+    # vice versa. Not yet approved for real-patient use (pending CTO +
+    # Clinical Advisor + Regulatory Consultant sign-off).
+    transcription_condensation: str = "stub"
+
+    # Ambient medical-term extraction mode: "stub" (default -- always returns
+    # an empty reference list) or "llm" (on-prem term-spotting, verbatim-
+    # verified -- see docs/prompts/ambient-term-extraction-prompt.md).
+    # Independent toggle from segmentation/condensation on purpose. Reference-
+    # only output -- never submitted into a draft. Not yet approved for
+    # real-patient use (pending CTO + Clinical Advisor + Regulatory Consultant
+    # sign-off).
+    transcription_term_extraction: str = "stub"
+
 
 settings = Settings()

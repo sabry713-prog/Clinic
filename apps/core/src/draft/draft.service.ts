@@ -11,6 +11,7 @@ import { Injectable, Inject, NotFoundException, BadRequestException, ForbiddenEx
 import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { PatientScopeService } from "../patient/patient-scope.service";
+import { EncryptionService } from "../security/encryption.service";
 
 export type DocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary" | "encounter_note";
 export type Specialty = "general" | "cardiology" | "orthopedics" | "pediatrics" | "obstetrics_gynecology" | "emergency_medicine";
@@ -151,15 +152,84 @@ export function isClinicianAuthoredOnly(text: string, authoredSource: string): b
   return normalizeWs(authoredSource).includes(normalizeWs(t));
 }
 
+/**
+ * Sections eligible for the relaxed ambient-condensation validation path
+ * (docs/prompts/ambient-condensation-prompt.md). Hard, server-side constant
+ * -- a client asserting a key outside this set was "condensed" is IGNORED;
+ * that section still goes through the strict isClinicianAuthoredOnly()
+ * verbatim-substring check exactly as today. Assessment/Plan can never reach
+ * the relaxed path, full stop.
+ */
+export const CONDENSABLE_SECTIONS = new Set(["chief_complaint", "history"]);
+
+/**
+ * Sections eligible to have their draft text replaced by an English
+ * translation (docs/prompts/interpreter-prompt.md's new ambient-Scribe call
+ * site). Same members as CONDENSABLE_SECTIONS, kept as its own named
+ * constant so the Assessment/Plan exclusion is explicit at this call site
+ * too -- a client claiming a key outside this set was "translated" is
+ * IGNORED, exactly like the condensation gate.
+ */
+export const TRANSLATABLE_SECTIONS = new Set(["chief_complaint", "history"]);
+
 @Injectable()
 export class DraftService {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly scope: PatientScopeService,
+    private readonly encryption: EncryptionService,
   ) {}
 
   private blocklistHit(text: string): boolean {
     return BLOCKLIST.some((re) => re.test(text));
+  }
+
+  /**
+   * Server-side re-validation of an ambient-condensed section (never trusts
+   * a client-supplied "this passed" claim) -- calls the same
+   * validate_condensation() the transcription service used when first
+   * proposing the condensation, via its /validate-condensation route.
+   * Mirrors this file's existing transcribe()/reformat() local-fetch style
+   * rather than introducing a new cross-module service dependency.
+   */
+  private async validateCondensation(condensedText: string, sourceText: string, language: string): Promise<boolean> {
+    const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
+    const res = await fetch(`${url}/validate-condensation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ condensed_text: condensedText, source_text: sourceText, language }),
+    });
+    if (!res.ok) return false;
+    const body = (await res.json()) as { valid: boolean };
+    return body.valid;
+  }
+
+  /**
+   * Server-side re-translation of an ambient section (docs/prompts/interpreter-prompt.md's
+   * new ambient-Scribe call site) -- NEVER trusts a client-supplied "translated"
+   * string. Translation has no automated fidelity check the way condensation's
+   * word-containment check did (different language entirely), so the only
+   * safe design is to re-derive the translation ourselves, server-side, from
+   * text that has ALREADY passed isClinicianAuthoredOnly/validateCondensation
+   * -- i.e. this is always the LAST transform applied to already-verified
+   * content, never a check against arbitrary client input. Returns null on
+   * any failure/fallback so the caller keeps the original-language text
+   * rather than substituting an unreviewed/fallback string into the record.
+   */
+  private async translateSection(text: string, sourceLanguage: string): Promise<string | null> {
+    const url = process.env["NARRATIVE_SERVICE_URL"] ?? "http://localhost:5001";
+    try {
+      const res = await fetch(`${url}/narrative/interpret`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, source_language: sourceLanguage, target_language: "en" }),
+      });
+      if (!res.ok) return null;
+      const body = (await res.json()) as { text: string | null };
+      return body.text?.trim() || null;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -201,6 +271,27 @@ export class DraftService {
    *   recording, not a stored note). A section that fails this check throws,
    *   exactly like a stored-note violation does today -- the guarantee is
    *   identical regardless of where the clinician's words came from.
+   *
+   *   `condensedKeys` (docs/prompts/ambient-condensation-prompt.md): section
+   *   keys the client asserts were lightly condensed (paraphrased, not
+   *   verbatim) via the ambient-condensation flow. ONLY honored for keys
+   *   that are ALSO in the server-side CONDENSABLE_SECTIONS set (never
+   *   assessment/plan, regardless of what the client sends) -- for those,
+   *   isClinicianAuthoredOnly's strict substring check is replaced with an
+   *   independent server-side re-validation call (validateCondensation())
+   *   against the same blocklist + word-containment gate the transcription
+   *   service used when first proposing the condensation. Every other
+   *   section is completely unaffected by this parameter.
+   *
+   *   `translatedKeys` (docs/prompts/interpreter-prompt.md): section keys the
+   *   client asserts should use an English translation instead of the
+   *   original-language text. ONLY honored for keys ALSO in the server-side
+   *   TRANSLATABLE_SECTIONS set (never assessment/plan). The client's own
+   *   translated text is NEVER used -- the server independently re-translates
+   *   the already-verified (verbatim or condensed) text itself via
+   *   translateSection(), always as the LAST transform applied. A failed/
+   *   unavailable translation silently keeps the original-language text
+   *   rather than blocking draft creation.
    */
   async generate(
     userId: string,
@@ -208,7 +299,12 @@ export class DraftService {
     documentType: DocumentType,
     language: string,
     specialty: Specialty = "general",
-    prefill?: { transcript: string; sections: Record<string, string> },
+    prefill?: {
+      transcript: string;
+      sections: Record<string, string>;
+      condensedKeys?: readonly string[] | undefined;
+      translatedKeys?: readonly string[] | undefined;
+    },
   ): Promise<DraftRow> {
     await this.scope.assertPatientInScope(userId, patientId);
     const baseTemplate = TEMPLATES[documentType];
@@ -243,10 +339,31 @@ export class DraftService {
         text = await this.assembleFacts(patientId, def.key, language);
       } else if (prefillText !== undefined) {
         text = prefillText;
-        if (!isClinicianAuthoredOnly(text, prefill!.transcript)) {
+        const claimedCondensed = prefill!.condensedKeys?.includes(def.key) ?? false;
+        // Server-side CONDENSABLE_SECTIONS wins regardless of what the client
+        // claims -- a section outside this set always falls through to the
+        // strict verbatim check below, even if the client marked it condensed.
+        if (claimedCondensed && CONDENSABLE_SECTIONS.has(def.key)) {
+          const valid = await this.validateCondensation(text, prefill!.transcript, language);
+          if (!valid) {
+            throw new BadRequestException(
+              `Section '${def.key}' condensed text failed blocklist/containment re-validation`,
+            );
+          }
+        } else if (!isClinicianAuthoredOnly(text, prefill!.transcript)) {
           throw new BadRequestException(
             `Section '${def.key}' prefill is not a verbatim substring of the source transcript`,
           );
+        }
+        // Translation is always the LAST transform, applied only to text
+        // that has already passed the verbatim/condensation check above --
+        // never to arbitrary client input. Server-side TRANSLATABLE_SECTIONS
+        // wins regardless of what the client claims (same defense shape as
+        // CONDENSABLE_SECTIONS just above).
+        const claimedTranslated = prefill!.translatedKeys?.includes(def.key) ?? false;
+        if (claimedTranslated && TRANSLATABLE_SECTIONS.has(def.key) && language !== "en") {
+          const translated = await this.translateSection(text, language);
+          if (translated) text = translated;
         }
       } else if (def.prefill === false) {
         // Dictate-fresh: start empty so the clinician dictates THIS encounter's
@@ -297,11 +414,17 @@ export class DraftService {
   }
 
   async get(userId: string, draftId: string): Promise<DraftRow> {
-    const res = await this.pool.query<DraftRow>(
-      `SELECT ${DRAFT_COLS} FROM app.document_draft WHERE id = $1`, [draftId]);
+    const res = await this.pool.query<DraftRow & { signed_text_key_id: string | null }>(
+      `SELECT ${DRAFT_COLS}, signed_text_key_id FROM app.document_draft WHERE id = $1`, [draftId]);
     const row = res.rows[0];
     if (!row) throw new NotFoundException("Draft not found");
     await this.scope.assertPatientInScope(userId, row.patient_id);
+    // signed_text_key_id set -> signed_text is an envelope-encrypted blob
+    // (customer-managed encryption keys, apps/core/src/security/). NULL means
+    // a legacy/unencrypted row from before this feature — pass through as-is.
+    if (row.signed_text_key_id && row.signed_text) {
+      row.signed_text = await this.encryption.decrypt(row.signed_text, row.signed_text_key_id);
+    }
     return row;
   }
 
@@ -318,11 +441,20 @@ export class DraftService {
     const draft = await this.get(userId, draftId);
     if (draft.status === "signed") throw new BadRequestException("Draft already signed");
     const frozen = draft.edited_text ?? draft.generated_text;
+    // Envelope-encrypt the frozen, signed text at rest (customer-managed
+    // encryption keys, apps/core/src/security/) — see the ENCRYPTION_KEY_PROVIDER
+    // env var for which key wraps it.
+    const { ciphertext, keyId } = await this.encryption.encrypt(frozen);
     const res = await this.pool.query<DraftRow>(
       `UPDATE app.document_draft
-          SET status='signed', signed_by=$2, signed_at=now(), signed_text=$3, updated_at=now()
-        WHERE id=$1 RETURNING ${DRAFT_COLS}`, [draftId, userId, frozen]);
-    return res.rows[0]!;
+          SET status='signed', signed_by=$2, signed_at=now(), signed_text=$3,
+              signed_text_key_id=$4, updated_at=now()
+        WHERE id=$1 RETURNING ${DRAFT_COLS}`, [draftId, userId, ciphertext, keyId]);
+    const row = res.rows[0]!;
+    // Return the plaintext we just encrypted rather than round-tripping
+    // through decrypt() — avoids a redundant KMS call for data already in hand.
+    row.signed_text = frozen;
+    return row;
   }
 
   async export(userId: string, draftId: string): Promise<{ text: string; signed_at: string | null }> {
