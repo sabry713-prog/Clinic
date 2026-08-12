@@ -4,7 +4,7 @@
 **Prepared by:** Saeed (CTO / Founder)
 **Date:** 2026-08-09
 **Repository:** https://github.com/sabry713-prog/Clinic (private — access needed)
-**Working branch:** `fix/phase-2-endpoint-wiring` (14 commits ahead of `main`)
+**Working branch:** `fix/phase-2-endpoint-wiring` (15 commits ahead of `main`)
 
 This document exists so you can form your own judgement without reading 120
 commits. It covers what the product is, how it is built, what genuinely works,
@@ -278,7 +278,7 @@ one engineer if that labelling runs in parallel.
 ```bash
 git clone https://github.com/sabry713-prog/Clinic.git
 cd Clinic
-git checkout fix/phase-2-endpoint-wiring   # not main — main is 14 commits behind
+git checkout fix/phase-2-endpoint-wiring   # not main — main is 15 commits behind
 cp .env.example .env                       # then fill in secrets
 pnpm install
 docker compose -f docker-compose.dev.yml up -d
@@ -293,6 +293,37 @@ MinIO, Jaeger, Mailpit under compose.
 Set `QA_MODEL_PROVIDER=stub` for a no-key run. The dev seed is deterministic
 (mulberry32) — identical data on every machine, 50 patients, 791 retrieval
 chunks, 60 historical NPHIES claims.
+
+**Gap in the sequence above, found by actually running it:** `just dev` does
+not start the three services in §3's diagram (`services/veritas-graph`,
+`services/orchestrator`, `services/nphies-engine`), and `just seed` only
+populates Postgres — Neo4j stays empty. Follow with these two steps or the
+NSCRE / AI Team / pre-auth capabilities in §4 will look broken when they are
+actually just unstarted or unpopulated:
+
+```bash
+# 1. Populate the graph (PSKG + NSCRE reference data + NPHIES necessity graph)
+export NEO4J_URI=bolt://localhost:7687
+export NEO4J_AUTH=neo4j/veritas-dev-password
+(cd services/veritas-graph && uv run python etl_pskg.py)
+(cd services/veritas-graph && uv run python -c "from nscre_engine import ingest_nscre_rules; ingest_nscre_rules()")
+(cd services/veritas-graph && uv run python ingest_nphies_rules.py)
+
+# 2. Start the three graph/AI services (not part of `just dev`)
+(cd services/veritas-graph && uv run uvicorn api_router:app --port 5004) &
+(cd services/orchestrator && NSCRE_API_URL=http://localhost:5004 uv run uvicorn agent_handlers:app --port 5005) &
+(cd services/nphies-engine && NPHIES_CONNECTOR=stub uv run uvicorn api_router:app --port 5006) &
+```
+
+Verify each came up clean before trusting the UI: `curl localhost:500{4,5,6}/health`
+should all return `{"status":"ok",...}`. This is the exact trap in
+`docs/STABILIZATION_AUDIT.md` L-1 — a service that never started (or one left
+over from an older branch, serving stale routes) produces the same silent
+404s as a real bug, so check the routes match this branch:
+`curl localhost:5004/openapi.json` should list `alternative-candidates`;
+`localhost:5005/openapi.json` should list `handoff-chain` and `post-care`. If
+either is missing, kill whatever is holding the port and restart from the
+current checkout.
 
 **One thing to know before you clone:** `main` is behind. The working branch is
 `fix/phase-2-endpoint-wiring`, pushed and in sync with origin. Everything
