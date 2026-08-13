@@ -159,4 +159,18 @@ export class AiTeamService {
       discharge_order: dischargeOrder ?? {},
     });
   }
+
+  /**
+   * Generate a SOAP note (Subjective, Objective, Assessment, Plan) from the
+   * encounter transcript via the orchestrator's DeepSeek formatting engine.
+   *
+   * Formatting-only: the LLM structures the raw transcript without
+   * interpreting clinical data (Non-SaMD Health IT, SFDA MDS-G027).
+   */
+  async generateSoap(patientId: string, transcript: string): Promise<Record<string, string>> {
+    return this.postToOrchestrator("/api/v1/agents/soap", {
+      patient_id: patientId,
+      transcript,
+    });
+  }
 }

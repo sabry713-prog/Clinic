@@ -13,6 +13,7 @@ const QuarantinePage = lazy(() => import("./pages/admin/QuarantinePage/Quarantin
 const AuditPage = lazy(() => import("./pages/admin/AuditPage/AuditPage"));
 const UserManagementPage = lazy(() => import("./pages/admin/UserManagementPage/UserManagementPage"));
 const NphiesAnalyticsPage = lazy(() => import("./pages/admin/NphiesAnalyticsPage/NphiesAnalyticsPage"));
+const RejectionCostPage = lazy(() => import("./pages/admin/RejectionCostPage/RejectionCostPage"));
 const PharmacyQueuePage = lazy(() => import("./pages/PharmacyQueuePage/PharmacyQueuePage"));
 const FrontDeskQueuePage = lazy(() => import("./pages/FrontDeskQueuePage/FrontDeskQueuePage"));
 const AiReceptionistPage = lazy(() => import("./pages/AiReceptionistPage/AiReceptionistPage"));
@@ -46,6 +47,7 @@ function AppRoutes(): JSX.Element {
         <Route path="/admin/audit" element={<AuditPage />} />
         <Route path="/admin/users" element={<UserManagementPage />} />
         <Route path="/admin/nphies" element={<NphiesAnalyticsPage />} />
+        <Route path="/admin/rejection-cost" element={<RejectionCostPage />} />
         <Route path="/admin/provider-availability" element={<ProviderAvailabilityPage />} />
         <Route path="/pharmacy/queue" element={<PharmacyQueuePage />} />
         <Route path="/front-desk/appointments" element={<FrontDeskQueuePage />} />

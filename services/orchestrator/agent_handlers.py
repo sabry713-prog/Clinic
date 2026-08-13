@@ -254,6 +254,19 @@ async def post_care(body: dict[str, Any]) -> dict[str, Any]:
     return await run_post_care_workflow(patient_id, discharge_order)
 
 
+@app.post("/api/v1/agents/soap", response_class=JSONResponse)
+async def soap_endpoint(body: dict[str, Any]) -> dict[str, str]:
+    """Generate a SOAP note from the encounter transcript.
+
+    Formatting-only: DeepSeek structures the raw transcript into the four
+    SOAP sections without interpreting clinical data (Non-SaMD Health IT,
+    SFDA MDS-G027).
+    """
+    from soap_handlers import generate_soap
+
+    return await generate_soap(body)
+
+
 def main() -> None:
     import uvicorn
 

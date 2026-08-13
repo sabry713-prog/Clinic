@@ -805,6 +805,14 @@ export interface NphiesRejectionAnalytics {
   readonly generated_at: string;
 }
 
+/** SOAP note returned by the orchestrator's DeepSeek formatting engine. */
+export interface SoapNoteResponse {
+  readonly subjective: string;
+  readonly objective: string;
+  readonly assessment: string;
+  readonly plan: string;
+}
+
 export interface AuditVerifyResult {
   readonly passed: boolean;
   readonly events_verified: number;
@@ -1237,6 +1245,13 @@ export const api = {
       request<PostCarePackageResult>(`/api/v1/patients/${patientId}/ai-team/post-care`, {
         method: "POST",
         body: JSON.stringify({ discharge_order: dischargeOrder }),
+      }),
+
+    /** Generate a SOAP note from the encounter transcript via DeepSeek. */
+    generateSoap: (patientId: string, transcript: string) =>
+      request<SoapNoteResponse>(`/api/v1/patients/${patientId}/ai-team/soap`, {
+        method: "POST",
+        body: JSON.stringify({ transcript }),
       }),
   },
 
