@@ -47,7 +47,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from deepseek_client import format_agent_prose  # noqa: E402
+from model_router import format_agent_prose  # noqa: E402
 
 structlog.configure(processors=[structlog.processors.JSONRenderer()])
 logger = structlog.get_logger()
@@ -104,7 +104,7 @@ async def pharmacist_agent(
 
     prose = ""
     if interactions or dose_safety:
-        prose = await format_agent_prose(facts, agent_role="Pharmacist")
+        prose = await format_agent_prose(facts, agent_role="Pharmacist", patient_id=patient_id)
 
     return {
         "agent": "pharmacist",
@@ -133,7 +133,7 @@ async def consultant_agent(
 
     prose = ""
     if interactions or dose_safety or necessity:
-        prose = await format_agent_prose(facts, agent_role="Consultant")
+        prose = await format_agent_prose(facts, agent_role="Consultant", patient_id=patient_id)
 
     return {
         "agent": "consultant",
@@ -166,7 +166,7 @@ async def nphies_agent(
 
     prose = ""
     if necessity:
-        prose = await format_agent_prose({"necessity": necessity}, agent_role="NPHIES")
+        prose = await format_agent_prose({"necessity": necessity}, agent_role="NPHIES", patient_id=patient_id)
 
     return {
         "agent": "nphies",

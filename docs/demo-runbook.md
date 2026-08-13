@@ -36,6 +36,12 @@ Open **http://localhost:3000**, log in as **physician1 / Test1234!**.
 | MRN-008 / MRN-009 | Additional varied histories (CKD+diabetes; migraine+hypothyroid) |
 | MRN-011 (Layla) | **Out-of-scope** — used to show access denial (403) |
 
+Synthetic dictation for the scribe demo (5 in-scope patients x EN/AR/code-
+switched) lives at `apps/core/src/seed/fixtures/consultation-transcripts.jsonl`
+-- paste a line's `transcript` into the Ambient Scribe box to demo dictation
+without needing a live microphone or a DeepSeek key (see
+`services/orchestrator/model_router.py`'s stub fallback).
+
 ## 3. Scripted 15-minute flow
 
 1. **Login** → patient list shows only the 5 in-scope patients (RBAC).

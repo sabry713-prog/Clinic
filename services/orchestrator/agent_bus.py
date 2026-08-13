@@ -53,7 +53,7 @@ import structlog
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from deepseek_client import format_agent_prose  # noqa: E402
+from model_router import format_agent_prose  # noqa: E402
 
 logger = structlog.get_logger()
 
@@ -395,7 +395,7 @@ async def scribe_hop(bus: AgentBus, event: AgentEvent) -> Optional[AgentEvent]:
 
     prose = ""
     if plan_facts["flagged_medication"]:
-        prose = await format_agent_prose(plan_facts, agent_role="Scribe")
+        prose = await format_agent_prose(plan_facts, agent_role="Scribe", patient_id=event.patient_id)
 
     return AgentEvent(
         event_type=EVENT_PLAN_UPDATED,
