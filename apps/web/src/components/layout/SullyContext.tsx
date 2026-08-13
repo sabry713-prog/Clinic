@@ -95,6 +95,8 @@ export interface AgentAction {
   readonly id: string;
   readonly label: string;
   readonly description: string;
+  /** When true, the action has no backend — rendered as "Pending integration". */
+  readonly pendingIntegration?: true;
 }
 
 export interface AgentMessage {
@@ -385,23 +387,23 @@ const MOCK_POST_CARE: PostCarePackage = {
 const AGENT_ACTIONS: Record<AgentId, readonly AgentAction[]> = {
   scribe: [
     { id: "a-scribe-1", label: "Regenerate SOAP note", description: "Re-structure the current transcript into SOAP sections." },
-    { id: "a-scribe-2", label: "Insert into chart", description: "Copy the finalised note into the encounter record." },
+    { id: "a-scribe-2", label: "Insert into chart", description: "Copy the finalised note into the encounter record.", pendingIntegration: true },
   ],
   consultant: [
     { id: "a-cons-1", label: "Summarise prior encounters", description: "Condense the last five visits into a short recap." },
     { id: "a-cons-2", label: "Show related results", description: "Pull the labs and imaging referenced in this note." },
   ],
   pharmacist: [
-    { id: "a-pharm-1", label: "Adjust Dosage", description: "Open the dosage adjustment worksheet for the selected medication." },
-    { id: "a-pharm-2", label: "Check formulary tier", description: "Look up payer formulary status for the current prescriptions." },
+    { id: "a-pharm-1", label: "Adjust Dosage", description: "Open the dosage adjustment worksheet for the selected medication.", pendingIntegration: true },
+    { id: "a-pharm-2", label: "Check formulary tier", description: "Look up payer formulary status for the current prescriptions.", pendingIntegration: true },
   ],
   nphies: [
     { id: "a-nph-1", label: "Submit Pre-Auth", description: "Send a pre-authorisation request for the yellow-flagged order lines." },
-    { id: "a-nph-2", label: "Fix code mismatch", description: "Apply a suggested code to the red-flagged order line." },
+    { id: "a-nph-2", label: "Fix code mismatch", description: "Apply a suggested code to the red-flagged order line.", pendingIntegration: true },
   ],
   receptionist: [
-    { id: "a-recep-1", label: "Book follow-up", description: "Schedule the one-week follow-up appointment." },
-    { id: "a-recep-2", label: "Send visit summary", description: "Queue the patient-facing visit summary for sending." },
+    { id: "a-recep-1", label: "Book follow-up", description: "Schedule the one-week follow-up appointment.", pendingIntegration: true },
+    { id: "a-recep-2", label: "Send visit summary", description: "Queue the patient-facing visit summary for sending.", pendingIntegration: true },
   ],
 };
 
@@ -566,6 +568,11 @@ export function SullyProvider({
   const seenHandoffs = useRef<Set<string>>(new Set());
   const soapRef = useRef<SoapNote>(EMPTY_SOAP);
   const ordersRef = useRef<readonly OrderLine[]>(MOCK_ORDERS);
+
+  // Live SOAP note from the orchestrator's DeepSeek formatting engine.
+  // Null until the first successful generation. Stays null in demo mode.
+  const [liveSoap, setLiveSoap] = useState<SoapNote | null>(null);
+  const [soapLoading, setSoapLoading] = useState(false);
 
   /** Draft the post-encounter package for the routed patient. */
   const refreshPostCare = useCallback(async () => {
@@ -760,11 +767,45 @@ export function SullyProvider({
     [dictationMode, lineCount, liveTranscript],
   );
 
+  // Auto-generate live SOAP when transcript grows (debounced, live mode only).
+  // Demo mode never calls this — the canned stages handle demo playback.
+  const transcriptText = useMemo(
+    () => transcript.map((l) => l.text).join("\n"),
+    [transcript],
+  );
+
+  useEffect(() => {
+    if (dictationMode !== "live" || !patientId || transcriptText.split("\n").length < 3) return;
+    const timer = setTimeout(() => {
+      setSoapLoading(true);
+      api.aiTeam
+        .generateSoap(patientId, transcriptText)
+        .then((result) => {
+          const note: SoapNote = {
+            subjective: result.subjective ?? "",
+            objective: result.objective ?? "",
+            assessment: result.assessment ?? "",
+            plan: result.plan ?? "",
+          };
+          setLiveSoap(note);
+          soapRef.current = note;
+        })
+        .catch(() => {
+          // Silently fail — the canned fallback or manual edits still work.
+          // The user can retry via the "Regenerate SOAP note" action.
+        })
+        .finally(() => setSoapLoading(false));
+    }, 2_000);
+    return () => clearTimeout(timer);
+  }, [dictationMode, patientId, transcriptText]);
+
   // SOAP follows transcript progress, then any manual edits win.
+  // In live mode, the DeepSeek-generated SOAP note replaces the canned stages.
+  // In demo mode, the canned stages are preserved (no backend call).
   const soap = useMemo<SoapNote>(() => {
-    const stage = SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
-    return { ...stage, ...soapOverride };
-  }, [lineCount, soapOverride]);
+    const base = liveSoap ?? SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
+    return { ...base, ...soapOverride };
+  }, [liveSoap, lineCount, soapOverride]);
 
   // Phase 2: run the handoff chain and re-draft post-care when the clinical
   // picture changes -- order set or the SOAP assessment. Debounced so typing
@@ -884,18 +925,94 @@ export function SullyProvider({
 
   const runAgentAction = useCallback(
     (action: AgentAction) => {
-      messageSeq.current += 1;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `m-run-${messageSeq.current}`,
-          from: activeAgent,
-          text: `${action.label} — requested.`,
-          at: "now",
-        },
-      ]);
+      if (action.pendingIntegration) return;
+
+      const addMessage = (text: string) => {
+        messageSeq.current += 1;
+        setMessages((prev) => [
+          ...prev,
+          { id: `m-run-${messageSeq.current}`, from: activeAgent, text, at: "now" },
+        ]);
+      };
+
+      switch (action.id) {
+        case "a-scribe-1": {
+          // Regenerate SOAP note via the orchestrator.
+          if (!patientId) {
+            addMessage("SOAP regeneration requires a live patient context.");
+            return;
+          }
+          setSoapLoading(true);
+          addMessage("Regenerating SOAP note…");
+          const text = transcript.map((l) => l.text).join("\n");
+          api.aiTeam
+            .generateSoap(patientId, text)
+            .then((result) => {
+              const note: SoapNote = {
+                subjective: result.subjective ?? "",
+                objective: result.objective ?? "",
+                assessment: result.assessment ?? "",
+                plan: result.plan ?? "",
+              };
+              setLiveSoap(note);
+              soapRef.current = note;
+              addMessage("SOAP note regenerated successfully.");
+            })
+            .catch(() => addMessage("SOAP regeneration failed — the orchestrator may be unavailable."))
+            .finally(() => setSoapLoading(false));
+          break;
+        }
+
+        case "a-cons-1": {
+          // Summarise prior encounters — calls the narrative endpoint.
+          if (!patientId) {
+            addMessage("Narrative summary requires a live patient context.");
+            return;
+          }
+          addMessage("Generating encounter summary…");
+          api.narrative
+            .generate(patientId, { language: "en", scope: "encounter" })
+            .then((item) => {
+              addMessage(item.text ?? item.fallback_message ?? "No summary available.");
+            })
+            .catch(() => addMessage("Failed to generate summary."));
+          break;
+        }
+
+        case "a-cons-2": {
+          // Show related results — calls observations endpoint.
+          if (!patientId) {
+            addMessage("Results lookup requires a live patient context.");
+            return;
+          }
+          addMessage("Fetching related results…");
+          api.patients
+            .observations(patientId, { limit: 10 })
+            .then((res) => {
+              addMessage(`${res.total} observation(s) found for this patient.`);
+            })
+            .catch(() => addMessage("Failed to fetch observations."));
+          break;
+        }
+
+        case "a-nph-1": {
+          // Submit Pre-Auth — delegates to the existing submitPreAuth flow.
+          const yellowOrder = orders.find((o) => o.nphiesStatus === "yellow");
+          if (!yellowOrder) {
+            addMessage("No yellow-flagged order lines to submit for pre-authorisation.");
+            return;
+          }
+          submitPreAuth(yellowOrder.id)
+            .then(() => addMessage(`Pre-auth submitted for ${yellowOrder.display}.`))
+            .catch((err) => addMessage(`Pre-auth failed: ${err instanceof Error ? err.message : "unknown error"}`));
+          break;
+        }
+
+        default:
+          addMessage("Pending integration — no backend connected.");
+      }
     },
-    [activeAgent],
+    [activeAgent, patientId, transcript, orders, submitPreAuth],
   );
 
   const value = useMemo<SullyState>(

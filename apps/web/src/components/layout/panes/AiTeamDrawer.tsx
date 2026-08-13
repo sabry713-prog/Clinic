@@ -10,7 +10,7 @@
 
 import { useEffect, useRef } from "react";
 import {
-  PanelRightClose, PanelRightOpen, Bot, Play, ArrowRight,
+  PanelRightClose, PanelRightOpen, Bot, Play, ArrowRight, Clock,
 } from "lucide-react";
 import {
   useSully, agentActions, AGENT_IDS, AGENT_LABELS, type AgentId,
@@ -139,13 +139,24 @@ export default function AiTeamDrawer(): JSX.Element {
             <div key={action.id} className="rounded-lg border border-slate-800 bg-slate-950 p-2.5">
               <p className="text-xs font-medium text-slate-100">{action.label}</p>
               <p className="mt-0.5 text-[11px] leading-relaxed text-slate-400">{action.description}</p>
-              <button
-                type="button"
-                onClick={() => runAgentAction(action)}
-                className="mt-2 inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-blue-500"
-              >
-                <Play className="h-3 w-3" /> Run
-              </button>
+              {action.pendingIntegration ? (
+                <span
+                  data-testid="pending-integration"
+                  title={`${action.label} is not connected to a backend yet — nothing will be sent.`}
+                  className="mt-2 inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/60 px-2 py-1 text-[11px] font-medium text-slate-400"
+                >
+                  <Clock className="h-3 w-3" aria-hidden="true" />
+                  Pending integration
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => runAgentAction(action)}
+                  className="mt-2 inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-blue-500"
+                >
+                  <Play className="h-3 w-3" /> Run
+                </button>
+              )}
             </div>
           ))}
         </div>

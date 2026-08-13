@@ -108,6 +108,7 @@
       "intake": "Intake"
     },
     "nphiesAnalytics": "NPHIES analytics",
+    "rejectionCost": "Rejection cost",
     "encounter": "Encounter",
     "pharmacyQueue": "Refill queue",
     "frontDeskQueue": "Appointments queue",

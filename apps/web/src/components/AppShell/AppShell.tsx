@@ -38,6 +38,7 @@ const ICONS: Record<string, string> = {
   chevronDown: "M19.5 8.25l-7.5 7.5-7.5-7.5",
   intake: "M9 12h3.75M9 15h3.75M9 18h3.75M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5h-6.75L12 3H3.75A1.5 1.5 0 002.25 4.5v15A1.5 1.5 0 003.75 21z",
   receptionist: "M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155",
+  currency: "M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
 };
 
 function Icon({ name, className = "w-5 h-5" }: { readonly name: string; readonly className?: string }): JSX.Element {
@@ -338,6 +339,13 @@ export default function AppShell(): JSX.Element {
                 active={location.pathname === "/admin/nphies"}
                 collapsed={collapsed}
                 onClick={() => void navigate("/admin/nphies")}
+              />
+              <NavItem
+                icon="currency"
+                label={t("shell.rejectionCost")}
+                active={location.pathname === "/admin/rejection-cost"}
+                collapsed={collapsed}
+                onClick={() => void navigate("/admin/rejection-cost")}
               />
             </>
           )}

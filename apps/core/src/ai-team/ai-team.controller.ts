@@ -146,4 +146,40 @@ export class AiTeamController {
 
     return result;
   }
+
+  /**
+   * Generate a SOAP note from the encounter transcript.
+   * Formatting-only: DeepSeek structures the raw transcript into the four
+   * SOAP sections without interpreting clinical data (Non-SaMD Health IT,
+   * SFDA MDS-G027).
+   */
+  @Post("soap")
+  @ApiOperation({
+    summary:
+      "Generate a SOAP note (Subjective, Objective, Assessment, Plan) from " +
+      "the encounter transcript via the orchestrator's DeepSeek formatting engine.",
+  })
+  async generateSoap(
+    @Param("id") patientId: string,
+    @Body() body: { transcript: string },
+    @Req() req: Request,
+  ): Promise<Record<string, string>> {
+    const userId = getRequestingUserId(req);
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const result = await this.aiTeamService.generateSoap(patientId, body.transcript);
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as import("@clinical-copilot/shared-types").UserId,
+      actor_role: null,
+      action: "AI_TEAM_SOAP_GENERATED",
+      target_type: "patient",
+      target_id: patientId as import("@clinical-copilot/shared-types").PatientId,
+      outcome: "SUCCESS",
+      metadata_json: {},
+      request_id: (req.headers["x-request-id"] as string | undefined ?? null) as import("@clinical-copilot/shared-types").RequestId | null,
+    });
+
+    return result;
+  }
 }

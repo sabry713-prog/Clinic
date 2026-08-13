@@ -126,7 +126,8 @@ describe("AI Team drawer", () => {
     const panel = screen.getByLabelText("Scribe actions");
     const runBtn = within(panel).getAllByRole("button", { name: /run/i })[0];
     fireEvent.click(runBtn!);
-    expect(screen.getByText("Regenerate SOAP note — requested.")).toBeInTheDocument();
+    // a-scribe-1 without a patientId explains live context is needed
+    expect(screen.getByText("SOAP regeneration requires a live patient context.")).toBeInTheDocument();
   });
 
   it("collapses and expands, swapping to the rail", () => {

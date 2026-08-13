@@ -14,7 +14,7 @@ import { PatientScopeService } from "../patient/patient-scope.service";
 import { EncryptionService } from "../security/encryption.service";
 
 export type DocumentType = "discharge_summary" | "referral_letter" | "transfer_note" | "visit_summary" | "encounter_note";
-export type Specialty = "general" | "cardiology" | "orthopedics" | "pediatrics" | "obstetrics_gynecology" | "emergency_medicine";
+export type Specialty = "general" | "cardiology" | "orthopedics" | "pediatrics" | "obstetrics_gynecology" | "emergency_medicine" | "behavioral_health";
 type Policy = "assembled_facts" | "clinician_authored_only";
 
 // prefill (clinician-authored-only sections only):
@@ -87,6 +87,9 @@ const TITLE_AR: Record<string, string> = {
   "Allergies": "الحساسيات",
   "Chief Complaint": "الشكوى الرئيسية",
   "History": "التاريخ المرضي",
+  "Behavioral Health Problem List": "قائمة مشاكل الصحة السلوكية",
+  "Mental Status Examination": "فحص الحالة النفسية",
+  "Treatment Plan & Safety Planning": "خطة العلاج والتخطيط للسلامة",
 };
 
 // Specialty section templates (E-Backlog): per-key title overrides only — no
@@ -117,10 +120,15 @@ const SPECIALTY_TITLE_OVERRIDES: Partial<Record<Specialty, Partial<Record<string
     reason: { en: "Reason for ED Presentation", ar: "سبب زيارة الطوارئ" },
     results: { en: "ED Results", ar: "نتائج الطوارئ" },
   },
+  behavioral_health: {
+    problems: { en: "Behavioral Health Problem List", ar: "قائمة مشاكل الصحة السلوكية" },
+    assessment: { en: "Mental Status Examination", ar: "فحص الحالة النفسية" },
+    plan: { en: "Treatment Plan & Safety Planning", ar: "خطة العلاج والتخطيط للسلامة" },
+  },
 };
 
 export const SPECIALTIES: readonly Specialty[] = [
-  "general", "cardiology", "orthopedics", "pediatrics", "obstetrics_gynecology", "emergency_medicine",
+  "general", "cardiology", "orthopedics", "pediatrics", "obstetrics_gynecology", "emergency_medicine", "behavioral_health",
 ];
 
 // Defense-in-depth blocklist (mirrors handoff.service).
