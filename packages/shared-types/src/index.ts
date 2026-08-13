@@ -174,3 +174,50 @@ export interface PaginatedResponse<T> {
   readonly page: number;
   readonly per_page: number;
 }
+
+// ─── Selective simulation substrate (prototype/demo laptops) ──────────────
+//
+// See the block comment in .env.example above SIM_NPHIES_CONNECTOR for the
+// full picture. Short version: the real LLM and real local ASR run by
+// default; this only documents, in a typed way, which external-integration
+// SEAMS a given environment is running in stub mode. It does not gate any
+// existing real-integration code path by itself — each seam already has its
+// own real toggle (NPHIES_CONNECTOR, the HIS connector's mode, etc.).
+//
+// Deliberately a pure function (05-coding-standards.md "side effects at the
+// boundaries"): it takes the env map as a parameter rather than reading
+// `process.env` internally, so it is trivially unit-testable with a plain
+// object and safe to import from bundled browser code that never calls it
+// with a real value. `env` defaults to `process.env` for the ergonomic
+// zero-arg call from Node call sites (apps/core, the Python-adjacent
+// tooling scripts) — guarded so importing this module never throws in an
+// environment where the Node `process` global doesn't exist.
+export interface SimulationConfig {
+  readonly simNphiesConnector: "stub" | "live";
+  readonly simHisFeed: "stub" | "live";
+  readonly simSmsOtp: "stub" | "live";
+  readonly simDefault: boolean;
+}
+
+function parseSimBool(raw: string | undefined, fallback: boolean): boolean {
+  if (raw === undefined) return fallback;
+  return raw.trim().toLowerCase() === "true";
+}
+
+function parseSimMode(raw: string | undefined): "stub" | "live" {
+  return raw?.trim().toLowerCase() === "live" ? "live" : "stub";
+}
+
+const nodeProcessEnv: Record<string, string | undefined> =
+  typeof process !== "undefined" && typeof process.env === "object" ? process.env : {};
+
+export function getSimConfig(
+  env: Record<string, string | undefined> = nodeProcessEnv,
+): SimulationConfig {
+  return {
+    simNphiesConnector: parseSimMode(env["SIM_NPHIES_CONNECTOR"]),
+    simHisFeed: parseSimMode(env["SIM_HIS_FEED"]),
+    simSmsOtp: parseSimMode(env["SIM_SMS_OTP"]),
+    simDefault: parseSimBool(env["SIM_DEFAULT"], true),
+  };
+}

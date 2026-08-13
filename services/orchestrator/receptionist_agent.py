@@ -49,7 +49,7 @@ import structlog
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from deepseek_client import format_agent_prose  # noqa: E402
+from model_router import format_agent_prose  # noqa: E402
 
 logger = structlog.get_logger()
 
@@ -150,6 +150,7 @@ def build_lab_prep_reminders(discharge_order: dict[str, Any]) -> list[dict[str, 
 async def generate_care_instructions(
     discharge_order: dict[str, Any],
     *,
+    patient_id: Optional[str] = None,
     client: Optional[Any] = None,
 ) -> dict[str, Any]:
     """Plain-language care instructions for the patient.
@@ -171,7 +172,9 @@ async def generate_care_instructions(
     generation_error: Optional[str] = None
     if has_content:
         try:
-            text = await format_agent_prose(source_facts, agent_role="Receptionist", client=client)
+            text = await format_agent_prose(
+                source_facts, agent_role="Receptionist", patient_id=patient_id, client=client
+            )
         except Exception as exc:  # noqa: BLE001
             # The prose is the ONLY part of the post-care package that needs a
             # model. Follow-up slots and lab-prep reminders are computed
@@ -234,7 +237,7 @@ async def run_post_care_workflow(
     """
     slots = draft_followup_slots(discharge_order, now=now)
     lab_prep = build_lab_prep_reminders(discharge_order)
-    instructions = await generate_care_instructions(discharge_order, client=client)
+    instructions = await generate_care_instructions(discharge_order, patient_id=patient_id, client=client)
 
     payloads: list[dict[str, Any]] = []
     if instructions["text"]:
