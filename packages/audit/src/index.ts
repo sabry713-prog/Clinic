@@ -12,6 +12,9 @@ import type {
 export interface AuditWriteInput {
   readonly actor_id: UserId | null;
   readonly actor_role: UserRole | null;
+  // The literal union is documentation/autocomplete only — `string` absorbs
+  // it, which no-redundant-type-constituents flags; keep the intent explicit.
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   readonly action: AuditAction | string;
   readonly target_type: string | null;
   readonly target_id: string | null;

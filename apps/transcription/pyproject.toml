@@ -11,10 +11,12 @@ dependencies = [
     "structlog>=24.1.0",
     "httpx>=0.28.1",
     "blocklist",
+    "prompt_loader",
 ]
 
 [tool.uv.sources]
 blocklist = { path = "../../packages/blocklist", editable = true }
+prompt_loader = { path = "../../packages/prompt_loader", editable = true }
 
 # faster-whisper is OPTIONAL — installed only on the on-prem GPU host running
 # the real engine. The service runs in stub mode without it.

@@ -137,6 +137,72 @@ result exists within 7 days (the detail names the connector mode).
 
 Tables: migration `1719100000000`. Env: `NPHIES_CONNECTOR=stub|live`.
 
+## Claim simulator — "check before you send" (E3)
+
+Batch integrity check over the seeded claim batch (every patient with rows in
+`app.nphies_claim`). Read-only and deterministic: it re-runs the exact same
+`ClaimReadinessService.evaluate()` checks the per-patient panel uses, and
+resolves a necessity verdict for every clinician-coded, clinician-linked
+order via `validate_order_necessity` on services/veritas-graph
+(`POST /api/v1/nphies/validate-necessity`, same Cypher lookup the NSCRE
+engine uses). Nothing is submitted to any payer from this surface.
+
+Admin-only (hospital_admin / sysadmin — it aggregates across patients, same
+precedent as rejection-analytics). Audit: `NPHIES_CLAIM_SIMULATOR_RUN`
+(counts and codes only).
+
+- `GET /api/v1/admin/nphies/claim-simulator` — per-patient verdicts
+  (`send | fix_before_send | do_not_send`), per-order necessity
+  (`GREEN | YELLOW | RED | UNAVAILABLE`), and an aggregate summary including
+  an estimated-SAR-at-risk figure (flagged claims × the same illustrative
+  average claim value the rejection-cost dashboard uses — a planning aid,
+  not settlement data).
+
+Derivation is administrative only: `blocked` readiness or a RED necessity
+(no documented rule) means do-not-send-yet; warnings or a pre-auth-required
+(YELLOW) rule mean fix-before-send. If the graph service is unreachable,
+necessity reports `UNAVAILABLE` honestly (never guessed) and `graph_available`
+is false — the readiness verdicts still compute.
+
+Deterministic on seed: `just demo-setup` seeds the artifacts
+(`seed:nphies-claims` writes clinician coding confirmations, three coded +
+linked orders — two GREEN pairs and one RED pair — and `just graph-seed`
+loads the `NPHIES_JUSTIFIES` edges they resolve against).
+
+## Coder review queue (E3)
+
+Batch surface for RCM teams (the coding/linkage flow above is
+clinician-first, per patient). Items are administrative findings extracted
+from a simulation run: readiness blockers/warnings, RED (no documented
+necessity rule) and YELLOW (pre-auth required) orders. All admin-only,
+audit-logged (`NPHIES_CODER_QUEUE_SYNC | VIEW | CLAIM | RESOLVE` — the
+composite item id rides in metadata because `audit.target_id` is a UUID).
+
+- `POST /api/v1/admin/nphies/coder-queue/sync` — re-runs the simulation and
+  rebuilds the queue. Human state is preserved: an item already claimed or
+  resolved keeps its status across re-syncs; a still-pending item whose
+  finding cleared is removed; resolved items stay as session history.
+- `GET /api/v1/admin/nphies/coder-queue` — items, pending-first.
+- `POST /api/v1/admin/nphies/coder-queue/:itemId/claim` — mark in review.
+- `POST /api/v1/admin/nphies/coder-queue/:itemId/resolve` — resolve with a
+  note (what the coder did about it).
+
+**Prototype scope:** the queue is in-memory (a Map in the apps/core
+process). It is lost on restart and does not distribute across replicas.
+Promoting it to a Postgres-backed table is Phase-Cert work, not a schema
+change now.
+
+## Claim-integrity deployment profile (E3)
+
+`APP_PROFILE=claim-integrity` boots apps/core with the SaMD-free
+administrative surface only — the clinical-agent modules (ai-team
+Scribe/Consultant/Pharmacist, ambient scribe, narrative, Q&A, interpreter,
+handoff, drafts, ai-receptionist) are **not loaded**; their routes return
+404. Claim readiness, coding, rejection risk, pre-auth, the claim simulator,
+and the coder queue all remain. It is a config switch on one codebase, not a
+fork. `GET /api/v1/health` reports `profile`, `clinical_agents_loaded`, and
+the loaded `modules` list so the composition is verifiable at runtime.
+
 ## Rejection analytics (admin-only)
 
 Hospital-wide, factual dashboard over `app.nphies_claim` — counts only,

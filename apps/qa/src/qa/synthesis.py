@@ -8,6 +8,7 @@ import json
 from typing import TYPE_CHECKING, Any
 
 import structlog
+from prompt_loader import load_prompt
 
 from .model_client import ModelParams, ModelProvider
 from .types import AnswerSource
@@ -19,6 +20,10 @@ logger = structlog.get_logger()
 
 PROMPT_TEMPLATE_VERSION = "qa-answer-v1.0"
 
+QA_SYSTEM_PROMPT = load_prompt("qa-answer-prompt.md", "System prompt")
+
+QA_USER_PROMPT_TEMPLATE = load_prompt("qa-answer-prompt.md", "User prompt template")
+
 
 class BlocklistUnavailableError(RuntimeError):
     """Raised when the blocklist gate cannot be loaded.
@@ -27,45 +32,6 @@ class BlocklistUnavailableError(RuntimeError):
     blocklist is a hard failure, not a degraded mode.
     """
 
-
-QA_SYSTEM_PROMPT = """\
-You are a factual lookup assistant integrated into a hospital information system. Your function is to answer factual questions about a specific patient's record by restating facts retrieved from that record.
-
-You answer ONLY using the RETRIEVED FACTS provided. You do not add facts from outside this context. You do not infer, interpret, predict, prioritize, recommend, advise, or suggest.
-
-If the retrieved facts do not contain enough information to answer the question, respond exactly with: "No matching data found in this patient's record."
-
-You NEVER use any of these words or phrases:
-- "concerning", "concern", "noteworthy", "significant" (in clinical sense)
-- "worsening", "improving", "trending", "deteriorating"
-- "suggests", "indicates", "implies", "consistent with", "could be"
-- "consider", "should", "recommend", "advise", "rule out"
-- "watch for", "monitor for", "be aware", "alert"
-- "abnormal", "elevated" (without restating range), "low" (without restating range), "high"
-- "rising", "falling" (use values; do not characterize direction)
-- "risk", "likely", "possible diagnosis", "may be"
-
-You may state values, dates, units, source systems, and laboratory-provided reference ranges verbatim. You may chronologically list values if the question asks for them.
-
-Citations: every factual claim you make in your answer must come from one of the retrieved facts. Each sentence in your answer is implicitly linked to the source(s) cited via the application layer; you do not write citation markers.
-"""
-
-QA_USER_PROMPT_TEMPLATE = """\
-PATIENT ID: {patient_id} (do not state in answer)
-
-LANGUAGE: {language}
-
-QUESTION: {question}
-
-CLASSIFIER LABEL: ALLOWED (factual lookup)
-
-RETRIEVED FACTS (use only these to answer):
-{retrieved_chunks_json}
-
-(Each retrieved chunk has: source_type, source_id, content_text, language, effective_at)
-
-ANSWER THE QUESTION USING ONLY THE RETRIEVED FACTS. Restate values verbatim. If the question cannot be answered from the retrieved facts, respond exactly with "No matching data found in this patient's record." in the requested language.
-"""
 
 CHUNK_FALLBACK_PREFIX = {
     "en": "I cannot generate an answer for this question. The relevant documented data is:",
@@ -188,7 +154,7 @@ async def synthesize(
     # shared packages off sys.path, the ImportError was swallowed, and Q&A
     # kept answering with the gate disabled and no error anywhere.
     try:
-        from blocklist import scan  # type: ignore[import-untyped]
+        from blocklist import scan
     except ImportError as exc:
         logger.error("qa_blocklist_unavailable", error=str(exc))
         raise BlocklistUnavailableError(

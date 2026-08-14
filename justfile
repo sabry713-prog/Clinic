@@ -34,6 +34,14 @@ seed:
 seed-demo:
     pnpm --filter @app/core run seed:all
 
+# Seed the Neo4j NPHIES ontology graph (diagnoses/services/drugs + the
+# NPHIES_JUSTIFIES pre-auth necessity edges). Idempotent (MERGE-based), so it
+# is safe to rerun. Without this, validate_order_necessity has no edges to
+# look up and every claim-simulator necessity verdict is RED-by-default.
+graph-seed:
+    cd services/veritas-graph && uv run python ingest_ontologies.py
+    cd services/veritas-graph && uv run python ingest_nphies_rules.py
+
 # One-command clean bring-up for a demo: infra + migrate + full seed.
 # After this completes, run `just dev` and open http://localhost:3000.
 demo-setup:
@@ -45,6 +53,8 @@ demo-setup:
     until curl -sf http://localhost:8080/realms/dev/.well-known/openid-configuration >/dev/null 2>&1; do sleep 2; done
     just migrate
     just seed-demo
+    until docker exec cc-neo4j cypher-shell -u neo4j -p veritas-dev-password "RETURN 1" >/dev/null 2>&1; do sleep 2; done
+    just graph-seed
     echo "Demo data ready. Start services with: just dev"
 
 # Fixes the L-1 stale-process trap: rerunning `just dev` after a crash used
@@ -121,8 +131,11 @@ lint:
 # Type check everything
 typecheck:
     pnpm run typecheck
-    cd apps/narrative && uv run mypy .
-    cd apps/qa && uv run mypy .
+    # Target src/ explicitly: `mypy .` also scans the editable-install
+    # package, which makes every module appear twice (narrative.X and
+    # src.narrative.X) and fails with "Source file found twice".
+    cd apps/narrative && uv run mypy src
+    cd apps/qa && uv run mypy src
 
 # Build all
 build:

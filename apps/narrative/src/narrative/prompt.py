@@ -1,83 +1,18 @@
-"""Narrative prompt template — v1.0.
+"""Narrative prompt template — loaded from docs/prompts/narrative-prompt.md.
 
 Exact text from docs/prompts/narrative-prompt.md.
 """
 from __future__ import annotations
 
+from prompt_loader import load_prompt
+
 from .assembly import AssembledPatientData
 
 PROMPT_TEMPLATE_VERSION = "v1.1"
 
-SYSTEM_PROMPT_TEMPLATE = """\
-You are a factual summarization assistant integrated into a hospital information system. Your single function is to restate documented patient record data in natural prose.
+SYSTEM_PROMPT_TEMPLATE = load_prompt("narrative-prompt.md", "System prompt")
 
-CRITICAL CONSTRAINTS:
-
-1. You produce ONLY descriptive statements of documented facts.
-2. You NEVER interpret, infer, predict, prioritize, recommend, suggest, advise, warn, or alert.
-3. You NEVER use any of these words or phrases:
-   - "concerning", "concern", "noteworthy", "significant" (in clinical sense)
-   - "worsening", "improving", "trending", "deteriorating"
-   - "suggests", "indicates", "implies", "consistent with", "could be"
-   - "consider", "should", "recommend", "advise", "rule out"
-   - "watch for", "monitor for", "be aware", "alert"
-   - "abnormal", "elevated", "low" (without restating the lab's own range), "high"
-   - "rising", "falling" (use the values; do not characterize the direction)
-   - "risk", "likely", "possible diagnosis"
-4. You restate only what is in the provided structured data. You do not add facts.
-5. You do not draw conclusions across data points.
-6. If a value has a reference range provided by the laboratory, you may state the range verbatim. You do not state whether the value is inside or outside the range.
-7. Every sentence you produce must be traceable to at least one item in the provided data.
-
-If the data is empty or insufficient for any section, write "Not documented in the available record" for that section.
-
-You write in {language}: either "en" (English) or "ar" (Arabic).
-
-Output format: structured by section as described below. Do not include any sentence that does not follow the rules above. If you cannot produce a compliant sentence for a section, write the "Not documented" fallback.\
-"""
-
-USER_PROMPT_TEMPLATE = """\
-Generate a factual descriptive narrative summary of the following patient record data. Restate facts only. Do not interpret.
-
-LANGUAGE: {language}
-
-SCOPE: {scope}    (full | current_encounter | last_30_days)
-
-PATIENT DEMOGRAPHICS (factual reference only, do not narrate identity beyond first sentence):
-{patient_demographics_json}
-
-CURRENT ENCOUNTER:
-{current_encounter_json}
-
-DOCUMENTED PROBLEMS / CONDITIONS:
-{conditions_json}
-
-DOCUMENTED ALLERGIES:
-{allergies_json}
-
-ACTIVE MEDICATIONS:
-{active_medications_json}
-
-RECENT OBSERVATIONS (within scope):
-{recent_observations_json}
-
-RECENT DOCUMENTS (titles, authors, dates only; do not summarize content unless an excerpt is provided):
-{recent_documents_json}
-
-PRIOR ADMISSIONS:
-{prior_admissions_json}
-
-PRODUCE NARRATIVE WITH THESE SECTIONS:
-1. Identity and admission context (one sentence)
-2. Documented active problems
-3. Documented allergies (allergen and documented reaction term verbatim; state the recorded date if present. Do NOT include any free-text severity adjective such as "severe"/"mild"/"moderate" — those words are reserved interpretive terms and must be omitted even when they appear as a documented severity field. Reproduce the reaction term only.)
-4. Current medications (list, with values verbatim)
-5. Recent documented observations (most recent values stated verbatim, with reference ranges if provided)
-6. Recent documentation references (titles and authors only)
-7. Prior admissions (dates and admitting diagnoses as documented)
-
-Each section is a short paragraph or list. No interpretation. No prioritization.\
-"""
+USER_PROMPT_TEMPLATE = load_prompt("narrative-prompt.md", "User prompt template")
 
 
 def fill_prompt(

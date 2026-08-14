@@ -55,6 +55,9 @@ class FakeGraph:
             ]
         raise AssertionError(f"unexpected cypher: {cypher}")
 
+    def close(self) -> None:
+        pass  # matches GraphClient's interface; api_router.py calls this in a finally block
+
 
 @pytest.fixture
 def graph():
@@ -67,17 +70,23 @@ def graph():
 def test_sciatica_lumbar_mri_is_yellow_with_preauth_required(graph):
     # The task's own required test case.
     result = validate_order_necessity("M54.3", "56241-00-10", client=graph)
-    assert result == {"status": "YELLOW", "pre_auth_required": True, "suggested_codes": []}
+    assert result["status"] == "YELLOW"
+    assert result["pre_auth_required"] is True
+    assert result["suggested_codes"] == []
 
 
 def test_hypertension_ecg_is_green_without_preauth(graph):
     result = validate_order_necessity("I10", "11700-00-10", client=graph)
-    assert result == {"status": "GREEN", "pre_auth_required": False, "suggested_codes": []}
+    assert result["status"] == "GREEN"
+    assert result["pre_auth_required"] is False
+    assert result["suggested_codes"] == []
 
 
 def test_drug_pairing_is_green_without_preauth(graph):
     result = validate_order_necessity("E11.9", "SFDA-A10BA02", client=graph)
-    assert result == {"status": "GREEN", "pre_auth_required": False, "suggested_codes": []}
+    assert result["status"] == "GREEN"
+    assert result["pre_auth_required"] is False
+    assert result["suggested_codes"] == []
 
 
 def test_undocumented_pairing_is_red_with_suggested_diagnoses(graph):
@@ -109,13 +118,48 @@ def test_red_result_never_exceeds_three_suggestions(graph):
 def test_empty_or_missing_codes_return_safe_red_without_querying(icd10, code):
     graph = FakeGraph()
     result = validate_order_necessity(icd10, code, client=graph)
-    assert result == {"status": "RED", "pre_auth_required": True, "suggested_codes": []}
+    assert result["status"] == "RED"
+    assert result["pre_auth_required"] is True
+    assert result["suggested_codes"] == []
     assert graph.calls == []
 
 
 def test_codes_are_normalized_case_and_whitespace(graph):
     result = validate_order_necessity(" m54.3 ", " 56241-00-10 ", client=graph)
     assert result["status"] == "YELLOW"
+
+
+# -- S4.1 evidence-chain cutaway: chain fidelity ----------------------------
+# The correctness claim of the cutaway UI: the chain attached to a verdict
+# carries the verdict's own values, and the Cypher shown is the verbatim
+# module-level constant the engine executes -- never a paraphrase.
+
+
+def test_chain_carries_verdict_values_and_verbatim_cypher(graph):
+    result = validate_order_necessity("M54.3", "56241-00-10", client=graph)
+    chain = result["evidence_chain"]
+    assert [s["node_type"] for s in chain["steps"]] == [
+        "NphiesDiagnosis",
+        "NphiesService",
+        "NecessityRule",
+    ]
+    assert chain["steps"][0]["properties"] == {"icd10": "M54.3"}
+    assert chain["steps"][1]["properties"] == {"code": "56241-00-10"}
+    assert chain["steps"][2]["properties"] == {"pre_auth_required": True, "status": "YELLOW"}
+    # Object-equality with the executed query: the displayed Cypher IS the
+    # constant passed to graph.run (FakeGraph records every call).
+    assert chain["cypher"] == [NECESSITY_LOOKUP_CYPHER]
+    assert chain["rendered"] == " -> ".join(
+        f"{s['node_type']}({', '.join(f'{k}={v}' for k, v in s['properties'].items())})"
+        for s in chain["steps"]
+    )
+
+
+def test_red_chain_includes_the_suggestion_lookup_cypher(graph):
+    result = validate_order_necessity("R51", "56241-00-10", client=graph)
+    chain = result["evidence_chain"]
+    assert chain["cypher"] == [NECESSITY_LOOKUP_CYPHER, SUGGESTED_DIAGNOSES_CYPHER]
+    assert chain["steps"][-1]["properties"]["status"] == "RED"
 
 
 # -- ingestion --------------------------------------------------------------
@@ -173,3 +217,52 @@ def test_parse_auth_still_works_unmodified():
     assert parse_auth("neo4j/secret") == ("neo4j", "secret")
     with pytest.raises(GraphError):
         parse_auth(None)
+
+
+# --------------------------------------------------------------------------
+# HTTP surface (api_router) — claim-simulator necessity endpoint
+
+
+def test_validate_necessity_endpoint_green_path(monkeypatch):
+    """The /api/v1/nphies/validate-necessity route must return exactly what
+    validate_order_necessity returns — the claim simulator (apps/core) reuses
+    this instead of reimplementing the lookup."""
+    from fastapi.testclient import TestClient
+
+    import api_router
+
+    fake = FakeGraph()
+    monkeypatch.setattr(api_router, "get_client", lambda: fake)
+    with TestClient(api_router.app) as client:
+        resp = client.post(
+            "/api/v1/nphies/validate-necessity",
+            json={"icd10_code": "I10", "service_or_drug_code": "11700-00-10"},
+        )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "GREEN"
+    assert body["pre_auth_required"] is False
+    assert body["suggested_codes"] == []
+    # The chain (with its verbatim Cypher) survives the HTTP hop untouched —
+    # the claim simulator's cutaway displays exactly what the graph produced.
+    assert body["evidence_chain"]["cypher"] == [NECESSITY_LOOKUP_CYPHER]
+    assert body["evidence_chain"]["steps"][0]["properties"] == {"icd10": "I10"}
+
+
+def test_validate_necessity_endpoint_red_path(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    import api_router
+
+    fake = FakeGraph()
+    monkeypatch.setattr(api_router, "get_client", lambda: fake)
+    with TestClient(api_router.app) as client:
+        resp = client.post(
+            "/api/v1/nphies/validate-necessity",
+            json={"icd10_code": "Z00.0", "service_or_drug_code": "56241-00-10"},
+        )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "RED"
+    assert body["pre_auth_required"] is True
+    assert body["evidence_chain"]["steps"][-1]["properties"]["status"] == "RED"

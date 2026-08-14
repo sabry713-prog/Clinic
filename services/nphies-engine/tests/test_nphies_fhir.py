@@ -347,7 +347,70 @@ async def test_stub_authorization_number_cannot_pass_as_real():
         result = await client.submit_prior_auth("enc-1", "M54.3", "58721-00-10", SOAP_NOTE)
     finally:
         await client.aclose()
-    assert result["authorization_number"].startswith("STUB-NOT-A-REAL-AUTH-")
+    # Stub never approves, so no authorization number is surfaced at all; the
+    # canned identifier that DOES exist stays visibly prefixed as a stub value.
+    assert result["authorization_number"] is None
+    identifier_value = result["response"]["identifier"][0]["value"]
+    assert identifier_value.startswith("STUB-NOT-A-REAL-AUTH-")
+
+
+async def test_stub_prior_auth_never_simulates_an_approval():
+    """Across a wide sweep of submission keys, the stub must only ever produce
+    undecided outcomes -- the badge resolves to pended, never green. A green
+    badge must have a real payer `complete` outcome behind it, and there is no
+    payer in stub mode."""
+    client = NphiesFhirClient(mode="stub")
+    outcomes: set[str] = set()
+    try:
+        for i in range(40):
+            result = await client.submit_prior_auth(
+                f"enc-{i}", "M54.3", "58721-00-10", SOAP_NOTE
+            )
+            assert result["status"] == "pended"
+            assert result["authorization_number"] is None
+            outcomes.add(str(result["outcome"]))
+    finally:
+        await client.aclose()
+    # The full realistic range of undecided states is exercised, deterministically.
+    assert outcomes == {"queued", "partial", "processing"}
+    assert "complete" not in outcomes
+
+
+async def test_stub_outcome_is_deterministic_per_submission():
+    client = NphiesFhirClient(mode="stub")
+    try:
+        first = await client.submit_prior_auth("enc-det", "I10", "11700-00-10", SOAP_NOTE)
+        second = await client.submit_prior_auth("enc-det", "I10", "11700-00-10", SOAP_NOTE)
+        other = await client.submit_prior_auth("enc-other", "I10", "11700-00-10", SOAP_NOTE)
+    finally:
+        await client.aclose()
+    assert first["outcome"] == second["outcome"]
+    assert first["response"]["identifier"][0]["value"] == (
+        second["response"]["identifier"][0]["value"]
+    )
+    # Deterministic, not constant: a different submission key may map elsewhere.
+    assert first["response"]["identifier"][0]["value"] != (
+        other["response"]["identifier"][0]["value"]
+    )
+
+
+async def test_stub_eligibility_covers_pended_states_and_only_confirms_on_complete():
+    client = NphiesFhirClient(mode="stub")
+    outcomes: set[str] = set()
+    try:
+        for i in range(40):
+            result = await client.check_eligibility(f"10{i:09d}", "payer-1")
+            outcome = str(result["response"]["outcome"])
+            outcomes.add(outcome)
+            if outcome != "complete":
+                assert result["eligible"] is False
+                assert result["response"]["insurance"] == []
+            else:
+                assert result["eligible"] is True
+                assert result["response"]["insurance"] == [{"inforce": True}]
+    finally:
+        await client.aclose()
+    assert outcomes == {"complete", "queued", "partial"}
 
 
 async def test_stub_bundle_is_still_valid_fhir():
@@ -420,10 +483,29 @@ async def test_eligibility_task_publishes_eligible(monkeypatch):
     monkeypatch.setattr(tasks_mod, "broker", b)
     await b.subscribe("enc-1")
 
+    # Civil id 10000000001 deterministically maps to a `complete` stub outcome
+    # for payer PAYER-001 (see _stub_outcome), so this exercises the eligible path.
     event = await check_eligibility_task(
-        "enc-1", "1234567890", "PAYER-001", client=NphiesFhirClient(mode="stub")
+        "enc-1", "10000000001", "PAYER-001", client=NphiesFhirClient(mode="stub")
     )
     assert event["status"] == "eligible"
+
+
+async def test_eligibility_task_publishes_pended_for_undecided_outcome(monkeypatch):
+    """An eligibility response that arrives queued/partial is PENDED -- it must
+    never read as eligible, and "not eligible" would overstate what the payer
+    said (badge discipline: only a complete outcome decides)."""
+    import tasks as tasks_mod
+
+    b = StatusBroker()
+    monkeypatch.setattr(tasks_mod, "broker", b)
+    await b.subscribe("enc-pend")
+
+    # Civil id 10000000000 deterministically maps to a `queued` stub outcome.
+    event = await check_eligibility_task(
+        "enc-pend", "10000000000", "PAYER-001", client=NphiesFhirClient(mode="stub")
+    )
+    assert event["status"] == "pended"
 
 
 # ---------------------------------------------------------------- HTTP surface

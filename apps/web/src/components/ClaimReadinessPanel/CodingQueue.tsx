@@ -10,6 +10,8 @@
 
 import { useCallback, useState } from "react";
 import { api, type CodingStatus, type OrderCodingStatus, type LinkageStatus, ApiError } from "../../lib/api";
+import EvidenceChainPopover from "../ai-team/EvidenceChainPopover";
+import { icdSuggestionChain, sbsSuggestionChain } from "../../lib/evidenceProvenance";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -100,6 +102,7 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
             <ul className="space-y-2">
               {unconfirmed.map((c) => {
                 const isBusy = rowBusy.has(c.condition_id);
+                const chain = icdSuggestionChain(c);
                 return (
                   <li key={c.condition_id} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3 flex items-center gap-3">
                     <div className="min-w-0 flex-1">
@@ -124,6 +127,14 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
                         </p>
                       )}
                     </div>
+                    {chain && (
+                      <EvidenceChainPopover
+                        evidenceChain={chain}
+                        triggerLabel="Provenance"
+                        title={`Coding suggestion: ${c.condition_display ?? c.condition_id}`}
+                        queryLabel="SQL executed"
+                      />
+                    )}
                     {c.suggestion && (
                       <button
                         type="button"
@@ -179,6 +190,7 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
                 <ul className="space-y-2">
                   {unconfirmedOrders.map((o) => {
                     const isBusy = rowBusy.has(o.service_request_id);
+                    const chain = sbsSuggestionChain(o);
                     return (
                       <li key={o.service_request_id} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3 flex items-center gap-3">
                         <div className="min-w-0 flex-1">
@@ -203,6 +215,14 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
                             </p>
                           )}
                         </div>
+                        {chain && (
+                          <EvidenceChainPopover
+                            evidenceChain={chain}
+                            triggerLabel="Provenance"
+                            title={`SBS suggestion: ${o.order_display}`}
+                            queryLabel="SQL executed"
+                          />
+                        )}
                         {o.suggestion && (
                           <button
                             type="button"

@@ -28,6 +28,7 @@ export interface BookingSlot {
 
 interface AvailabilityRow {
   readonly clinician_display: string | null;
+  readonly clinician_gender: "male" | "female" | null;
   readonly day_of_week: number;
   readonly start_time: string;
   readonly end_time: string;
@@ -46,14 +47,21 @@ export class AvailabilityService {
     clinicianDisplay: string | null,
     dateFrom: string,
     dateTo: string,
+    clinicianGender?: "male" | "female" | null,
   ): Promise<BookingSlot[]> {
+    // S4.4 clinician-gender scheduling preference: filter availability rows
+    // to the requested gender when a preference is expressed. Rows with an
+    // undeclared gender are excluded under a preference — including them
+    // would silently violate it; declaring the gender on the availability
+    // row is the admin's explicit act.
     const avail = await this.pool.query<AvailabilityRow>(
-      `SELECT clinician_display, day_of_week, start_time::text AS start_time,
+      `SELECT clinician_display, clinician_gender, day_of_week, start_time::text AS start_time,
               end_time::text AS end_time, slot_duration_minutes
          FROM app.provider_availability
         WHERE active AND department_display = $1
-          AND (($2::text IS NULL AND clinician_display IS NULL) OR clinician_display = $2)`,
-      [departmentDisplay, clinicianDisplay],
+          AND (($2::text IS NULL AND clinician_display IS NULL) OR clinician_display = $2)
+          AND ($3::text IS NULL OR clinician_gender = $3::text)`,
+      [departmentDisplay, clinicianDisplay, clinicianGender ?? null],
     );
     if (avail.rows.length === 0) return [];
 

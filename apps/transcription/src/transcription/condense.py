@@ -68,22 +68,11 @@ class CondenseResult:
     retries: int
 
 
-_SYSTEM = """\
-You condense one section of a clinical encounter note into tighter, standard note-style prose.
+from prompt_loader import load_prompt
 
-ABSOLUTE RULES:
-1. Do NOT add any clinical fact, term, finding, diagnosis, severity, or instruction that is not already explicitly present in the source text.
-2. Do NOT interpret, infer, or draw any conclusion — including about severity or urgency.
-3. You MAY remove filler words and conversational padding, reorder for clarity, and use standard abbreviations for terms already stated.
-4. Preserve all clinical terms, medication names, doses, and quantities EXACTLY as given.
-5. Output ONLY the condensed section text. No commentary, no markdown, no explanation.
-"""
+_SYSTEM = load_prompt("ambient-condensation-prompt.md")
 
-_STRICTER_SUFFIX = (
-    "\n\nSTRICTER: Do not introduce any word or concept not already present in the source "
-    "text. Only remove filler, reorder for clarity, or use standard abbreviations for terms "
-    "already stated."
-)
+_STRICTER_SUFFIX = "\n\n" + load_prompt("ambient-condensation-prompt.md", "Stricter suffix")
 
 
 def _content_words(text: str) -> set[str]:

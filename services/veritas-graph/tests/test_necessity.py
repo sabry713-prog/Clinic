@@ -195,7 +195,7 @@ def test_ingest_merges_nodes_and_edges():
     assert counts["medications"] == 14
     assert counts["necessity_edges"] >= 40
     # Constraints run first, then the MERGEs.
-    assert sum("CREATE CONSTRAINT" in s for s, _ in graph.statements) == 3
+    assert sum("CREATE CONSTRAINT" in s for s, _ in graph.statements) == 4
     assert any("MERGE (d:Diagnosis" in s for s, _ in graph.statements)
     assert any("MERGE (d)-[r:JUSTIFIES]->(t)" in s for s, _ in graph.statements)
 

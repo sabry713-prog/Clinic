@@ -42,7 +42,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from evidence_chain import EvidenceStep, build_evidence_chain  # noqa: E402
 from graph_client import GraphClient, GraphError, get_client  # noqa: E402
-from nphies_queries import validate_order_necessity  # noqa: E402
+from nphies_queries import (  # noqa: E402
+    NECESSITY_LOOKUP_CYPHER,
+    SUGGESTED_DIAGNOSES_CYPHER,
+    validate_order_necessity,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ONTOLOGY_DIR = REPO_ROOT / "data" / "ontologies"
@@ -141,7 +145,68 @@ MATCH (cur)-[:CONTRAINDICATED_WITH]-(other:Medication)
 RETURN DISTINCT other.key AS key, cur.name AS conflicts_with
 """
 
+# Resolve the ATC therapeutic-subgroup class (first 3 chars) for a medication.
+ATC_CLASS_FOR_MEDICATION_CYPHER = """
+MATCH (m:Medication {key: $drug_key})-[:HAS_ATC_CLASS]->(a:AtcClass)
+RETURN a.code AS class_code
+LIMIT 1
+"""
+
+# Screenable medications filtered to a specific ATC class.
+SCREENABLE_MEDICATIONS_BY_CLASS_CYPHER = """
+MATCH (m:Medication)-[:HAS_ATC_CLASS]->(a:AtcClass {code: $class_code})
+WHERE m.key <> $flagged_key AND m.name IS NOT NULL
+  AND (
+    EXISTS { MATCH (m)-[:CONTRAINDICATED_WITH]-() }
+    OR EXISTS { MATCH (m)-[:RENAL_DOSE_LIMIT]->() }
+  )
+RETURN DISTINCT m.key AS key, m.name AS name
+ORDER BY key
+"""
+
 _STATUS_RANK = {"GREEN": 0, "YELLOW": 1, "RED": 2}
+
+# eGFR results older than this many days are flagged as stale.
+EGFR_STALENESS_THRESHOLD_DAYS = 365
+
+
+# -- Evidence-gap helpers --------------------------------------------------
+
+
+def _evidence_gap(
+    check: str,
+    gap_type: str,
+    detail: str,
+) -> dict[str, str]:
+    """Return a structured evidence-gap dict for the defer affordance.
+
+    Gap types:
+        missing_input   -- required data does not exist in the graph
+        outdated_input  -- data exists but is too old to trust
+        low_coverage    -- reference ontology lacks entries for the patient's drugs
+        ambiguous_identity -- free-text key that cannot be resolved to reference data
+    """
+    return {
+        "check": check,
+        "gap_type": gap_type,
+        "detail": detail,
+    }
+
+
+def _egfr_is_stale(egfr: dict[str, Any]) -> bool:
+    """Return True if the eGFR result is older than the staleness threshold."""
+    from datetime import datetime, timezone, timedelta
+
+    effective_at_str = egfr.get("effective_at", "")
+    try:
+        dt = datetime.fromisoformat(effective_at_str)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=EGFR_STALENESS_THRESHOLD_DAYS)
+        # Accept both naive (assume UTC) and aware datetimes.
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt < cutoff
+    except (ValueError, TypeError):
+        return False  # unparseable -- don't flag as stale, just skip
 
 
 # -- Reference-data ingestion -------------------------------------------------
@@ -224,7 +289,8 @@ def _dose_safety_for_medication(
             ),
             EvidenceStep("Medication", {"name": drug_name}),
             EvidenceStep("Rule", {"flag": r["flag"], "threshold": f"eGFR < {threshold}"}),
-        ]
+        ],
+        cypher=[MOST_RECENT_EGFR_CYPHER, DOSE_LIMIT_FOR_DRUG_CYPHER],
     )
     return {
         "medication": drug_name,
@@ -251,7 +317,8 @@ def check_drug_interactions(patient_id: str, *, client: Optional[GraphClient] = 
                 EvidenceStep("Medication", {"name": r["name1"]}),
                 EvidenceStep("Medication", {"name": r["name2"]}),
                 EvidenceStep("Contraindication", {"severity": r["severity"], "rationale": r["rationale"]}),
-            ]
+            ],
+            cypher=[DRUG_INTERACTION_CYPHER],
         )
         results.append(
             {
@@ -263,6 +330,21 @@ def check_drug_interactions(patient_id: str, *, client: Optional[GraphClient] = 
             }
         )
     return results
+
+
+def _gaps_for_drug_interactions(
+    patient_id: str, findings: list[dict[str, Any]], *, client: Optional[GraphClient] = None,
+) -> list[dict[str, str]]:
+    """Produce evidence gaps for Module A (DDI)."""
+    graph = client or get_client()
+    gaps: list[dict[str, str]] = []
+    meds = _active_medications(patient_id, graph)
+    if not meds:
+        gaps.append(_evidence_gap(
+            "drug_interactions", "missing_input",
+            "No active medications found for this patient. Drug-drug interaction check cannot be performed.",
+        ))
+    return gaps
 
 
 # -- Module B: Organ Function / Dose Safety Evaluator --------------------------
@@ -279,6 +361,28 @@ def check_dose_safety(patient_id: str, *, client: Optional[GraphClient] = None) 
         if violation:
             results.append(violation)
     return results
+
+
+def _gaps_for_dose_safety(
+    patient_id: str, findings: list[dict[str, Any]], *, client: Optional[GraphClient] = None,
+) -> list[dict[str, str]]:
+    """Produce evidence gaps for Module B (renal dose safety)."""
+    graph = client or get_client()
+    gaps: list[dict[str, str]] = []
+    egfr = _most_recent_egfr(patient_id, graph)
+    if egfr is None:
+        gaps.append(_evidence_gap(
+            "dose_safety", "missing_input",
+            "No eGFR result found for this patient. Renal dose-safety cannot be evaluated for any medication.",
+        ))
+    else:
+        if _egfr_is_stale(egfr):
+            gaps.append(_evidence_gap(
+                "dose_safety", "outdated_input",
+                f"Most recent eGFR is from {egfr['effective_at']}, which is over "
+                f"{EGFR_STALENESS_THRESHOLD_DAYS} days old. Renal function may have changed since.",
+            ))
+    return gaps
 
 
 # -- Module C: Unified NPHIES Medical Necessity & Pre-Auth Evaluator ----------
@@ -301,13 +405,19 @@ def check_necessity(patient_id: str, *, client: Optional[GraphClient] = None) ->
             if best is None or _STATUS_RANK[outcome["status"]] < _STATUS_RANK[best["status"]]:
                 best, best_condition = outcome, cond
         assert best is not None  # conditions is non-empty, loop always runs at least once
+        necessity_cypher = [NECESSITY_LOOKUP_CYPHER]
+        if best["suggested_codes"]:
+            # RED verdicts also ran the reverse lookup that produced the
+            # suggested codes -- include it when it actually executed.
+            necessity_cypher.append(SUGGESTED_DIAGNOSES_CYPHER)
         chain = build_evidence_chain(
             [
                 EvidenceStep("Patient", {"id": patient_id}),
                 EvidenceStep("Medication", {"name": med["name"], "sfda_code": med["sfda_code"]}),
                 EvidenceStep("Condition", {"icd10": best_condition["icd10"] if best_condition else None}),
                 EvidenceStep("NecessityRule", {"status": best["status"], "pre_auth_required": best["pre_auth_required"]}),
-            ]
+            ],
+            cypher=[ACTIVE_MEDICATIONS_CYPHER, CONDITIONS_CYPHER, *necessity_cypher],
         )
         results.append(
             {
@@ -323,16 +433,57 @@ def check_necessity(patient_id: str, *, client: Optional[GraphClient] = None) ->
     return results
 
 
+def _gaps_for_necessity(
+    patient_id: str, findings: list[dict[str, Any]], *, client: Optional[GraphClient] = None,
+) -> list[dict[str, str]]:
+    """Produce evidence gaps for Module C (necessity)."""
+    graph = client or get_client()
+    gaps: list[dict[str, str]] = []
+    all_meds = _active_medications(patient_id, graph)
+    coded_meds = [m for m in all_meds if m.get("sfda_code")]
+    if all_meds and not coded_meds:
+        gaps.append(_evidence_gap(
+            "necessity", "missing_input",
+            "None of this patient's active medications carry an SFDA code. NPHIES necessity validation cannot be performed.",
+        ))
+    conditions = graph.run(CONDITIONS_CYPHER, patient_id=patient_id)
+    if coded_meds and not conditions:
+        gaps.append(_evidence_gap(
+            "necessity", "missing_input",
+            "No ICD-10 coded conditions found for this patient. Necessity validation requires a diagnosis code.",
+        ))
+    return gaps
+
+
 # -- Combined evaluators --------------------------------------------------------
 
 def evaluate_encounter(patient_id: str, *, client: Optional[GraphClient] = None) -> dict[str, Any]:
-    """Runs all three modules for a patient's current graph state."""
+    """Runs all three modules for a patient's current graph state.
+
+    Returns ``overall_defer=True`` when any module reports evidence gaps
+    (missing / outdated / low-coverage inputs), signalling to the caller
+    that the results are incomplete and a human reviewer should not rely on
+    them alone.
+    """
     graph = client or get_client()
+
+    ddi = check_drug_interactions(patient_id, client=graph)
+    dose = check_dose_safety(patient_id, client=graph)
+    nec = check_necessity(patient_id, client=graph)
+
+    evidence_gaps = (
+        _gaps_for_drug_interactions(patient_id, ddi, client=graph)
+        + _gaps_for_dose_safety(patient_id, dose, client=graph)
+        + _gaps_for_necessity(patient_id, nec, client=graph)
+    )
+
     return {
         "patient_id": patient_id,
-        "drug_interactions": check_drug_interactions(patient_id, client=graph),
-        "dose_safety": check_dose_safety(patient_id, client=graph),
-        "necessity": check_necessity(patient_id, client=graph),
+        "drug_interactions": ddi,
+        "dose_safety": dose,
+        "necessity": nec,
+        "evidence_gaps": evidence_gaps,
+        "overall_defer": len(evidence_gaps) > 0,
     }
 
 
@@ -343,37 +494,44 @@ def screen_alternative_candidates(
     limit: int = 5,
     client: Optional[GraphClient] = None,
 ) -> dict[str, Any]:
-    """Module D (Sprint 10) -- deterministic screening of possible alternatives
-    to a flagged medication.
+    """Module D (Sprint 10, enhanced Sprint S2) -- deterministic screening of
+    possible alternatives to a flagged medication.
 
     *** This does NOT recommend a substitution. *** It returns medications that
     the graph can affirmatively screen and that PASSED every check it can run:
     no CONTRAINDICATED_WITH edge against anything the patient is currently
-    prescribed, and no RENAL_DOSE_LIMIT violated by their most recent eGFR.
-    "Nothing contradicts this" is a graph fact; "you should switch to this" is a
-    prescribing decision, and this engine does not make it. The caller is
-    responsible for presenting these as candidates for a clinician to consider,
-    never as a recommendation.
+    prescribed, no RENAL_DOSE_LIMIT violated by their most recent eGFR, and
+    same ATC therapeutic-subgroup class as the flagged drug. "Nothing
+    contradicts this and it is in the same drug class" is a graph fact; "you
+    should switch to this" is a prescribing decision, and this engine does
+    not make it. The caller is responsible for presenting these as candidates
+    for a clinician to consider, never as a recommendation.
 
     Candidates come only from medications the reference graph holds safety data
-    for (see SCREENABLE_MEDICATIONS_CYPHER) -- a drug we cannot screen is never
-    offered as one that passed screening.
+    for -- a drug we cannot screen is never offered as one that passed screening.
 
-    TWO LIMITATIONS, returned in the payload so callers cannot omit them:
-
-    1. No therapeutic-class filtering. The graph holds no ATC/class data, so
-       screening a flagged antidiabetic can return an anticoagulant -- safe for
-       that patient by every rule the graph knows, and clinically unrelated to
-       what was flagged. This surfaced on real seed data during Sprint 10 live
-       verification and is a property of the data, not a bug in this function.
-       Restricting by class requires class data the graph does not yet have.
-    2. Candidates are screened individually against the patient's CURRENT
-       medications, not against one another. Two candidates that are each safe
-       to add alone may be contraindicated together.
+    REMAINING LIMITATION, returned in the payload so callers cannot omit it:
+    Candidates are screened individually against the patient's CURRENT
+    medications, not against one another. Two candidates that are each safe
+    to add alone may be contraindicated together.
     """
     graph = client or get_client()
 
-    candidates = graph.run(SCREENABLE_MEDICATIONS_CYPHER, flagged_key=flagged_drug_key)
+    # Resolve the flagged drug's ATC therapeutic-subgroup class.
+    class_rows = graph.run(ATC_CLASS_FOR_MEDICATION_CYPHER, drug_key=flagged_drug_key)
+    atc_class = class_rows[0]["class_code"] if class_rows else None
+
+    if atc_class:
+        candidates = graph.run(
+            SCREENABLE_MEDICATIONS_BY_CLASS_CYPHER,
+            class_code=atc_class,
+            flagged_key=flagged_drug_key,
+        )
+    else:
+        # Fallback to unfiltered when the flagged drug has no ATC class edge
+        # (e.g. free-text medication names without a code).
+        candidates = graph.run(SCREENABLE_MEDICATIONS_CYPHER, flagged_key=flagged_drug_key)
+
     conflicts = graph.run(PATIENT_CONFLICTING_DRUGS_CYPHER, patient_id=patient_id)
     conflict_keys = {row["key"]: row["conflicts_with"] for row in conflicts}
 
@@ -414,6 +572,7 @@ def screen_alternative_candidates(
         steps = [
             EvidenceStep("Patient", {"id": patient_id}),
             EvidenceStep("FlaggedMedication", {"key": flagged_drug_key}),
+            EvidenceStep("AtcClass", {"class_code": atc_class} if atc_class else {"class_code": "unknown"}),
             EvidenceStep("CandidateMedication", {"name": name}),
         ]
         if egfr is not None:
@@ -435,36 +594,75 @@ def screen_alternative_candidates(
                 "medication_key": key,
                 # Named to resist being read as an endorsement.
                 "screen_result": "no_contraindication_found",
-                "evidence_chain": build_evidence_chain(steps),
+                "evidence_chain": build_evidence_chain(
+                    steps,
+                    cypher=[
+                        ATC_CLASS_FOR_MEDICATION_CYPHER,
+                        SCREENABLE_MEDICATIONS_BY_CLASS_CYPHER if atc_class else SCREENABLE_MEDICATIONS_CYPHER,
+                        PATIENT_CONFLICTING_DRUGS_CYPHER,
+                        DOSE_LIMIT_FOR_DRUG_CYPHER,
+                    ],
+                ),
             }
         )
         if len(screened) >= limit:
             break
 
+    evidence_gaps = _gaps_for_screening(
+        patient_id, atc_class, egfr, screened, rejected, client=graph,
+    )
     return {
         "patient_id": patient_id,
         "flagged_drug_key": flagged_drug_key,
+        "atc_class": atc_class,
         "screened_candidates": screened,
         "rejected_candidates": rejected,
         "disclaimer": (
-            "Candidates passed deterministic graph screening only (no contraindication edge "
-            "against current medications, no renal dose rule violated). This is not a "
-            "therapeutic substitution recommendation."
+            "Candidates passed deterministic graph screening only (same ATC therapeutic-subgroup "
+            "class, no contraindication edge against current medications, no renal dose rule "
+            "violated). This is not a therapeutic substitution recommendation."
         ),
         # Stated in the payload, not just in a docstring, because a caller that
         # renders this list without these caveats will mislead a clinician.
         "limitations": [
-            # Found during live verification: screening Metformin returned Warfarin and
-            # several NSAIDs -- individually safe for that patient, pharmacologically
-            # unrelated to the flagged drug. The graph holds no ATC/therapeutic-class
-            # data, so it cannot restrict candidates to the flagged drug's class.
-            "NOT filtered by therapeutic class -- the graph holds no drug-class data, so "
-            "candidates may be pharmacologically unrelated to the flagged medication.",
             # Each candidate is screened as a single addition to the current regimen.
             "Screened INDIVIDUALLY against current medications. Candidates are not screened "
             "against each other, so selecting two from this list is not covered by this check.",
         ],
+        "evidence_gaps": evidence_gaps,
+        "overall_defer": len(evidence_gaps) > 0,
     }
+
+
+def _gaps_for_screening(
+    patient_id: str,
+    atc_class: Optional[str],
+    egfr: Optional[dict[str, Any]],
+    screened: list[dict[str, Any]],
+    rejected: list[dict[str, Any]],
+    *,
+    client: Optional[GraphClient] = None,
+) -> list[dict[str, str]]:
+    """Produce evidence gaps for Module D (alternative screening)."""
+    gaps: list[dict[str, str]] = []
+    if atc_class is None:
+        gaps.append(_evidence_gap(
+            "alternative_screening", "missing_input",
+            "Flagged drug has no ATC therapeutic-subgroup class. Candidates are drawn from "
+            "all classes rather than a matched class, reducing clinical relevance.",
+        ))
+    if egfr is None:
+        gaps.append(_evidence_gap(
+            "alternative_screening", "missing_input",
+            "No eGFR on file. Renal dose-safety screening was skipped for all candidates.",
+        ))
+    if not screened and not rejected:
+        gaps.append(_evidence_gap(
+            "alternative_screening", "low_coverage",
+            "No medications in the reference graph have safety data in the same ATC class "
+            "as the flagged drug. No candidates could be screened.",
+        ))
+    return gaps
 
 
 def check_order(
@@ -487,6 +685,7 @@ def check_order(
     """
     graph = client or get_client()
     result: dict[str, Any] = {"patient_id": patient_id, "drug_interactions": [], "dose_safety": [], "necessity": None}
+    evidence_gaps: list[dict[str, str]] = []
 
     if proposed_drug_key:
         rows = graph.run(PROPOSED_DRUG_INTERACTIONS_CYPHER, patient_id=patient_id, proposed_key=proposed_drug_key)
@@ -497,7 +696,8 @@ def check_order(
                     EvidenceStep("Medication", {"name": r["existing_name"]}),
                     EvidenceStep("ProposedMedication", {"name": r["proposed_name"]}),
                     EvidenceStep("Contraindication", {"severity": r["severity"], "rationale": r["rationale"]}),
-                ]
+                ],
+                cypher=[PROPOSED_DRUG_INTERACTIONS_CYPHER],
             )
             result["drug_interactions"].append(
                 {
@@ -516,19 +716,30 @@ def check_order(
             violation = _dose_safety_for_medication(proposed_drug_key, proposed_name, egfr, patient_id, graph)
             if violation:
                 result["dose_safety"].append(violation)
+        else:
+            evidence_gaps.append(_evidence_gap(
+                "dose_safety", "missing_input",
+                "No eGFR result found for this patient. Renal dose-safety cannot be evaluated for the proposed medication.",
+            ))
 
     if necessity_code and icd10_code:
         outcome = validate_order_necessity(icd10_code, necessity_code, client=graph)
+        necessity_cypher = [NECESSITY_LOOKUP_CYPHER]
+        if outcome["suggested_codes"]:
+            necessity_cypher.append(SUGGESTED_DIAGNOSES_CYPHER)
         chain = build_evidence_chain(
             [
                 EvidenceStep("Patient", {"id": patient_id}),
                 EvidenceStep("Condition", {"icd10": icd10_code}),
                 EvidenceStep("ProposedOrder", {"code": necessity_code}),
                 EvidenceStep("NecessityRule", {"status": outcome["status"], "pre_auth_required": outcome["pre_auth_required"]}),
-            ]
+            ],
+            cypher=necessity_cypher,
         )
         result["necessity"] = {**outcome, "evidence_chain": chain}
 
+    result["evidence_gaps"] = evidence_gaps
+    result["overall_defer"] = len(evidence_gaps) > 0
     return result
 
 

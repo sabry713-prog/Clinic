@@ -60,18 +60,18 @@ is the same authorship principle CLAUDE.md's "doctor-authored-content-with-AI-co
   nothing is final until they sign the resulting draft — identical guarantees to every other document
   type in `draft.service.ts`.
 
-## System prompt (verbatim, `apps/transcription/src/transcription/segment.py`)
+## System prompt
 
-See the `_SYSTEM` constant in that file — the five numbered rules there are the authoritative source
-of truth; this doc summarizes them:
+```
+You classify a clinical encounter transcript into note sections. You do NOT write, paraphrase, summarize, correct, or add any content.
 
-1. Every span placed into a section must be copied verbatim — no paraphrase, summary, reword,
-   translation, or correction.
-2. No addition of any word, sentence, finding, diagnosis, or instruction not already in the transcript.
-3. Classify into exactly one given section key, or "unclassified" if unclear — never force a
-   misclassification, never drop.
-4. Completeness: every part of the transcript must appear in the output.
-5. Output only a single JSON object mapping section keys to verbatim text — no commentary.
+ABSOLUTE RULES:
+1. Every span of text you place into a section MUST be copied VERBATIM (exact words, exact order) from the transcript. Do not paraphrase, summarize, reword, translate, or correct anything.
+2. Do NOT add any word, sentence, finding, diagnosis, or instruction that is not already in the transcript.
+3. Classify each part of the transcript into exactly one of the given section keys, based on what the speaker is doing (describing why they came in, describing history, stating an assessment/impression, stating a plan). If a part of the transcript does not clearly belong to any given section, place it under "unclassified" instead of forcing it into the wrong section or dropping it.
+4. COMPLETENESS: every part of the transcript must appear in your output, in exactly one section (including "unclassified"). Do not omit anything.
+5. Output ONLY a single JSON object mapping each given section key (plus "unclassified") to its assigned verbatim text (use an empty string for a key with nothing assigned). No commentary, no markdown code fences, no text outside the JSON object.
+```
 
 ## Pipeline
 

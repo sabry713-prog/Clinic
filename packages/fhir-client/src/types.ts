@@ -13,7 +13,7 @@ export interface FhirBundle<T extends FhirResource = FhirResource> {
   readonly id?: string;
   readonly total?: number;
   readonly link?: readonly FhirBundleLink[];
-  readonly entry?: ReadonlyArray<FhirBundleEntry<T>>;
+  readonly entry?: readonly FhirBundleEntry<T>[];
 }
 
 export interface FhirBundleLink {
@@ -90,10 +90,10 @@ export interface FhirPatient extends FhirResource {
   readonly name?: readonly FhirHumanName[];
   readonly gender?: string;
   readonly birthDate?: string;
-  readonly communication?: ReadonlyArray<{
+  readonly communication?: readonly {
     readonly language?: FhirCodeableConcept;
     readonly preferred?: boolean;
-  }>;
+  }[];
 }
 
 export interface FhirEncounterParticipant {
@@ -165,9 +165,9 @@ export interface FhirDosageInstruction {
       readonly periodUnit?: string;
     };
   };
-  readonly doseAndRate?: ReadonlyArray<{
+  readonly doseAndRate?: readonly {
     readonly doseQuantity?: FhirQuantity;
-  }>;
+  }[];
 }
 
 export interface FhirMedicationRequest extends FhirResource {

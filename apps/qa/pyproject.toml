@@ -22,6 +22,7 @@ dependencies = [
     "retrieval",
     "classifier",
     "httpx>=0.28.1",
+    "prompt_loader",
 ]
 
 [tool.uv.sources]
@@ -29,6 +30,7 @@ blocklist = { path = "../../packages/blocklist", editable = true }
 retrieval = { path = "../../packages/retrieval", editable = true }
 classifier = { path = "../../packages/classifier", editable = true }
 phi-guard = { path = "../../packages/phi-guard", editable = true }
+prompt_loader = { path = "../../packages/prompt_loader", editable = true }
 
 [project.optional-dependencies]
 dev = [
@@ -57,6 +59,26 @@ python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+mypy_path = "src"
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = [
+  "asyncpg",
+  "grpc.*",
+  "grpc_health.*",
+  "blocklist",
+  "classifier.*",
+  "retrieval.*",
+  "phi_guard",
+]
+ignore_missing_imports = true
+
+# grpcio's HealthServicer / generated servicer bases resolve to Any without
+# stubs -- subclassing-Any is expected in the gRPC server module.
+[[tool.mypy.overrides]]
+module = "qa.grpc_server"
+disallow_subclassing_any = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -20,11 +20,15 @@ dependencies = [
     "blocklist",
     "retrieval",
     "httpx>=0.28.1",
+    "phi-guard",
+    "prompt_loader",
 ]
 
 [tool.uv.sources]
 blocklist = { path = "../../packages/blocklist", editable = true }
 retrieval = { path = "../../packages/retrieval", editable = true }
+phi-guard = { path = "../../packages/phi-guard", editable = true }
+prompt_loader = { path = "../../packages/prompt_loader", editable = true }
 
 [project.optional-dependencies]
 dev = [
@@ -53,6 +57,30 @@ python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+# src-layout: resolve modules through src/ only, so config.py isn't seen
+# twice (as narrative.config AND src.narrative.config) when running `mypy .`.
+mypy_path = "src"
+explicit_package_bases = true
+
+# Stubless/untyped deps (in-house workspace packages without py.typed markers
+# yet, and asyncpg/grpc which ship no stubs) -- type-check everything else
+# strictly; these imports stay Any rather than blocking the build.
+[[tool.mypy.overrides]]
+module = [
+  "asyncpg",
+  "grpc.*",
+  "grpc_health.*",
+  "blocklist",
+  "retrieval.*",
+  "phi_guard",
+]
+ignore_missing_imports = true
+
+# grpc_server subclasses grpcio's HealthServicer / generated servicer bases,
+# which resolve to Any without stubs -- subclassing-Any is expected there.
+[[tool.mypy.overrides]]
+module = "narrative.grpc_server"
+disallow_subclassing_any = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

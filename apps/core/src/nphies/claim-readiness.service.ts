@@ -43,8 +43,21 @@ export class ClaimReadinessService {
     private readonly scope: PatientScopeService,
   ) {}
 
-  async evaluate(userId: string, patientId: string): Promise<ClaimReadiness> {
-    await this.scope.assertPatientInScope(userId, patientId);
+  /**
+   * @param opts.assertScope Set to false ONLY from role-gated admin batch
+   *   surfaces (the claim simulator), mirroring AdminController's
+   *   rejection-analytics precedent: an admin-only aggregate across patients
+   *   does not re-assert per-patient care scope. The patient-facing route
+   *   keeps the default scope assertion.
+   */
+  async evaluate(
+    userId: string,
+    patientId: string,
+    opts: { assertScope?: boolean } = {},
+  ): Promise<ClaimReadiness> {
+    if (opts.assertScope !== false) {
+      await this.scope.assertPatientInScope(userId, patientId);
+    }
 
     const checks: ReadinessCheck[] = [];
 

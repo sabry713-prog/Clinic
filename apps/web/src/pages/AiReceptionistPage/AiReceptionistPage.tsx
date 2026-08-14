@@ -11,6 +11,8 @@
 
 import { useCallback, useState } from "react";
 import { api, type Appointment, type BookingSlot, ApiError } from "../../lib/api";
+import { formatSlotLabel } from "../../lib/dates";
+import i18n from "../../i18n";
 
 const DEPARTMENTS = [
   "Cardiology",
@@ -33,11 +35,8 @@ const LOOKAHEAD_DAYS = 14;
 
 type Step = "phone" | "otp" | "intent" | "slots" | "success" | "my-appointments";
 
-function formatSlot(iso: string): string {
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? iso
-    : d.toLocaleString("en-GB", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+function formatSlot(iso: string, language: string | undefined): string {
+  return formatSlotLabel(iso, language);
 }
 
 function todayIso(): string {
@@ -62,6 +61,9 @@ export default function AiReceptionistPage(): JSX.Element {
   const [matchConfirming, setMatchConfirming] = useState(false);
   const [departmentDisplay, setDepartmentDisplay] = useState("");
   const [appointmentType, setAppointmentType] = useState("");
+  // S4.4 — patient's scheduling preference for the clinician's gender. Empty
+  // string = no preference (all slots shown).
+  const [clinicianGender, setClinicianGender] = useState<"" | "male" | "female">("");
 
   const [slots, setSlots] = useState<BookingSlot[]>([]);
   const [bookedAppointment, setBookedAppointment] = useState<Appointment | null>(null);
@@ -122,7 +124,13 @@ export default function AiReceptionistPage(): JSX.Element {
     setBusy(true);
     setError(null);
     try {
-      const res = await api.booking.availability(departmentDisplay, null, todayIso(), addDaysIso(LOOKAHEAD_DAYS));
+      const res = await api.booking.availability(
+        departmentDisplay,
+        null,
+        todayIso(),
+        addDaysIso(LOOKAHEAD_DAYS),
+        clinicianGender === "" ? null : clinicianGender,
+      );
       setSlots(res.data);
       setStep("slots");
     } catch (e) {
@@ -130,7 +138,7 @@ export default function AiReceptionistPage(): JSX.Element {
     } finally {
       setBusy(false);
     }
-  }, [departmentDisplay, appointmentType]);
+  }, [departmentDisplay, appointmentType, clinicianGender]);
 
   const bookSlot = useCallback(
     async (slotStart: string) => {
@@ -304,6 +312,19 @@ export default function AiReceptionistPage(): JSX.Element {
                       ))}
                     </select>
                   </label>
+                  <label className="block text-xs text-slate-400">
+                    Clinician preference · تفضيل الطبيب
+                    <select
+                      value={clinicianGender}
+                  onChange={(e) => setClinicianGender(e.target.value as "" | "male" | "female")}
+                  className="mt-1 w-full bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                  aria-label="Clinician gender preference"
+                >
+                  <option value="">No preference · لا تفضيل</option>
+                  <option value="female">Female physician · طبيبة</option>
+                  <option value="male">Male physician · طبيب</option>
+                    </select>
+                  </label>
                   <button
                     type="button"
                     onClick={() => void loadSlots()}
@@ -338,7 +359,7 @@ export default function AiReceptionistPage(): JSX.Element {
                       disabled={busy}
                       className="w-full text-left px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-400 text-slate-200 text-sm disabled:opacity-50"
                     >
-                      {formatSlot(s.start)}
+                      {formatSlot(s.start, i18n.language)}
                     </button>
                   ))}
                 </div>
@@ -353,7 +374,7 @@ export default function AiReceptionistPage(): JSX.Element {
             <div className="text-center space-y-3">
               <p className="text-green-300 text-sm">Appointment booked</p>
               <p className="text-white text-sm">
-                {bookedAppointment.appointment_type} — {formatSlot(bookedAppointment.scheduled_at)}
+                {bookedAppointment.appointment_type} — {formatSlot(bookedAppointment.scheduled_at, i18n.language)}
               </p>
               <p className="text-slate-400 text-xs">{bookedAppointment.department_display}</p>
               <div className="flex gap-2 pt-2">
@@ -381,7 +402,7 @@ export default function AiReceptionistPage(): JSX.Element {
                   {myAppointments.map((a) => (
                     <li key={a.id} className="p-3 rounded-lg border border-slate-700 flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm text-white">{a.appointment_type} — {formatSlot(a.scheduled_at)}</p>
+                        <p className="text-sm text-white">{a.appointment_type} — {formatSlot(a.scheduled_at, i18n.language)}</p>
                         <p className="text-xs text-slate-500">{a.department_display} · {a.status}</p>
                       </div>
                       {a.status === "scheduled" && (

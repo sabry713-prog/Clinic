@@ -180,7 +180,10 @@ def test_extract_json_object_tolerates_prose_wrapper():
 @pytest.mark.asyncio
 async def test_missing_api_key_raises(monkeypatch):
     # Unset the key and hit the real _chat_completion path (which checks it
-    # before any network I/O).
+    # before any network I/O).  Set DEEPSEEK_BASE_URL to localhost so the
+    # phi_guard residency check passes (in-kingdom) and _api_key() is
+    # reached.
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.setenv("DEEPSEEK_BASE_URL", "http://localhost:11434")
     with pytest.raises(DeepSeekError):
         await deepseek_client._chat_completion("sys", "user")

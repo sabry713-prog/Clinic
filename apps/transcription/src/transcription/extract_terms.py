@@ -54,17 +54,9 @@ class ExtractTermsResult:
     retries: int
 
 
-_SYSTEM = """\
-You point out medical terminology already present in a clinical dictation transcript. You do NOT write, paraphrase, summarize, correct, translate, or add any content.
+from prompt_loader import load_prompt
 
-ABSOLUTE RULES:
-1. Every term you return MUST be copied VERBATIM (exact words, exact order) from the transcript. Do not paraphrase, reword, translate, correct, or normalize anything (e.g. do not expand an abbreviation or fix a misspelling).
-2. Only point out terms that are ALREADY in the transcript. Do NOT add, infer, or supply any term, finding, diagnosis, or medication name that was not actually said.
-3. Classify each term into exactly one of these categories: medication, symptom, diagnosis_or_condition, test_or_procedure, other. This is a lexical/grammatical classification of what KIND of word it is -- never a judgment about severity, urgency, or the patient's condition.
-4. Do NOT include ordinary non-medical words, filler, or the qualifiers around a term (e.g. negation words like "no"/"not", duration/time phrases, degree words) -- return only the clinical term itself, not the surrounding sentence.
-5. If nothing in the transcript is medical terminology, return an empty array.
-6. Output ONLY a single JSON array of objects shaped like {"term": "...", "category": "..."}. No commentary, no markdown code fences, no text outside the JSON array.
-"""
+_SYSTEM = load_prompt("ambient-term-extraction-prompt.md")
 
 
 def _try_parse(raw: str) -> list[object] | None:

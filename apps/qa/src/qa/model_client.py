@@ -280,10 +280,10 @@ class StubModelProvider:
                     body = _CODE_PAREN_RE.sub("", body).strip()
                     by_clinic.setdefault(clinic, []).append(f"symptom — {body}")
                 elif prefix == "medication":
-                    clinic = _clinic_of(chunk)
+                    med_clinic = _clinic_of(chunk)
                     body = _PRESCRIBED_AT_RE.sub("", body).strip()
-                    if clinic:
-                        by_clinic.setdefault(clinic, []).append(f"treatment — {body}")
+                    if med_clinic:
+                        by_clinic.setdefault(med_clinic, []).append(f"treatment — {body}")
                     else:
                         unattributed_meds.append(body)
             lines: list[str] = []
@@ -414,7 +414,7 @@ class LocalModelProvider:
         # as PHI-bearing. For an in-Kingdom endpoint this is a pass-through;
         # for an external one the policy decides: block (default), de-identify,
         # or explicitly acknowledged allow. Raises PhiEgressBlocked otherwise.
-        from phi_guard import guard_outbound  # type: ignore[import-untyped]
+        from phi_guard import guard_outbound
 
         decision = guard_outbound(
             endpoint_url=self._url,
@@ -451,7 +451,7 @@ class LocalModelProvider:
             data = resp.json()
         raw = str(data["choices"][0]["message"]["content"]).strip()
         # Put real identifiers back for the clinician (no-op unless scrubbed).
-        return decision.restore(raw)
+        return str(decision.restore(raw))
 
 
 def get_model(patient_names: list[str] | None = None) -> ModelProvider:

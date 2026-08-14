@@ -12,6 +12,8 @@
 
 import { useState } from "react";
 import { api, type ConditionHistory, ApiError } from "../../lib/api";
+import { formatDate } from "../../lib/dates";
+import i18n from "../../i18n";
 import { useShowMore, ShowMoreButton } from "../ShowMore/ShowMore";
 
 const INITIAL_ALLERGIES = 3;
@@ -42,17 +44,6 @@ interface PatientHeaderProps {
   readonly ward: string | null;
   readonly allergies: readonly AllergyItem[];
   readonly conditions: readonly ConditionItem[];
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 function ageFromDob(dob: string | null): string {
@@ -88,7 +79,7 @@ function EpisodeList({
         {episodes.visible.map((ep) => (
           <li key={ep.id} className="text-sm">
             <p className="text-white">
-              {formatDate(ep.onset_date)}
+              {formatDate(ep.onset_date, i18n.language)}
               <span className="text-slate-400 ml-2">
                 Status: {ep.status ?? "unknown"}
               </span>
@@ -163,7 +154,7 @@ function ConditionRow({
         </span>
         {condition.onset_date ? (
           <span className="text-slate-500 ml-2">
-            (Onset: {formatDate(condition.onset_date)})
+            (Onset: {formatDate(condition.onset_date, i18n.language)})
           </span>
         ) : null}
       </button>
@@ -215,7 +206,7 @@ export default function PatientHeader({
           <p className="text-sm text-slate-400">Date of Birth</p>
           {/* dir=ltr: keep day-month-year order intact in RTL layouts */}
           <p className="text-base text-white" dir="ltr">
-            {formatDate(date_of_birth)}{" "}
+            {formatDate(date_of_birth, i18n.language)}{" "}
             <span className="text-slate-400 text-sm">({ageFromDob(date_of_birth)})</span>
           </p>
         </div>
@@ -254,7 +245,7 @@ export default function PatientHeader({
                     <span className="text-slate-400"> — Reaction: {a.reaction}</span>
                   ) : null}
                   {a.recorded_at ? (
-                    <span className="text-slate-500 ml-2">(Recorded: {formatDate(a.recorded_at)})</span>
+                    <span className="text-slate-500 ml-2">(Recorded: {formatDate(a.recorded_at, i18n.language)})</span>
                   ) : null}
                 </li>
               ))}

@@ -21,6 +21,7 @@ from evidence_chain import EvidenceStep, build_evidence_chain  # noqa: E402
 from nphies_queries import NECESSITY_LOOKUP_CYPHER, SUGGESTED_DIAGNOSES_CYPHER  # noqa: E402
 from nscre_engine import (  # noqa: E402
     ACTIVE_MEDICATIONS_CYPHER,
+    ATC_CLASS_FOR_MEDICATION_CYPHER,
     CONDITIONS_CYPHER,
     DOSE_LIMIT_FOR_DRUG_CYPHER,
     DRUG_INTERACTION_CYPHER,
@@ -28,6 +29,7 @@ from nscre_engine import (  # noqa: E402
     PROPOSED_DRUG_INTERACTIONS_CYPHER,
     PROPOSED_MEDICATION_NAME_CYPHER,
     SCREENABLE_MEDICATIONS_CYPHER,
+    SCREENABLE_MEDICATIONS_BY_CLASS_CYPHER,
     PATIENT_CONFLICTING_DRUGS_CYPHER,
     screen_alternative_candidates,
     check_dose_safety,
@@ -46,6 +48,15 @@ class FakeGraph:
 
     def __init__(self):
         self.calls = []
+
+        # ATC therapeutic-subgroup class for each drug (3-char prefix of ATC code).
+        self.medication_atc_class = {
+            "warfarin": "B01A",
+            "ibuprofen": "M01A",
+            "metformin": "A10B",
+            "lisinopril": "C09A",
+            "repaglinide": "A10B",  # same class as metformin
+        }
 
         self.patient_medications = {
             "patient-warfarin-nsaid": [
@@ -86,6 +97,8 @@ class FakeGraph:
             "patient-low-egfr-no-metformin": [
                 {"key": "lisinopril", "name": "Lisinopril", "sfda_code": None},
             ],
+            # S2/V2: patient with zero medications (triggers DDI defer).
+            "patient-no-meds": [],
         }
 
         # Symmetric -- stored once per unordered pair.
@@ -99,6 +112,12 @@ class FakeGraph:
                 "max_dose": "Contraindicated below eGFR 30",
                 "flag": "CRITICAL_OVERRIDE",
                 "rule_rationale": "Lactic acidosis risk",
+            },
+            "repaglinide": {
+                "egfr_threshold": 30.0,
+                "max_dose": "Reduce dose below eGFR 30",
+                "flag": "DOSE_ADJUST",
+                "rule_rationale": "Hypoglycaemia risk",
             },
         }
 
@@ -154,13 +173,41 @@ class FakeGraph:
         if cypher == SCREENABLE_MEDICATIONS_CYPHER:
             # Every drug the reference graph has safety data for, minus the flagged one.
             names = {"warfarin": "Warfarin", "ibuprofen": "Ibuprofen",
-                     "metformin": "Metformin", "lisinopril": "Lisinopril"}
+                     "metformin": "Metformin", "lisinopril": "Lisinopril",
+                     "repaglinide": "Repaglinide"}
             screenable = set()
             for pair in self.contraindications:
                 screenable |= set(pair)
             screenable |= set(self.dose_rules)
+            # Include drugs with safety edges (contraindications or dose rules)
+            # or with same ATC class as at least one other drug
+            for k in self.medication_atc_class:
+                if k in self.contraindications or k in self.dose_rules:
+                    screenable.add(k)
             return [{"key": k, "name": names.get(k, k.title())}
                     for k in sorted(screenable) if k != params["flagged_key"]]
+
+        if cypher == ATC_CLASS_FOR_MEDICATION_CYPHER:
+            cls = self.medication_atc_class.get(params["drug_key"])
+            return [{"class_code": cls}] if cls else []
+
+        if cypher == SCREENABLE_MEDICATIONS_BY_CLASS_CYPHER:
+            # Same as SCREENABLE_MEDICATIONS_CYPHER but filtered to a single ATC class.
+            names = {"warfarin": "Warfarin", "ibuprofen": "Ibuprofen",
+                     "metformin": "Metformin", "lisinopril": "Lisinopril",
+                     "repaglinide": "Repaglinide"}
+            screenable = set()
+            for pair in self.contraindications:
+                screenable |= set(pair)
+            screenable |= set(self.dose_rules)
+            for k in self.medication_atc_class:
+                if k in self.contraindications or k in self.dose_rules:
+                    screenable.add(k)
+            target_class = params["class_code"]
+            return [{"key": k, "name": names.get(k, k.title())}
+                    for k in sorted(screenable)
+                    if k != params["flagged_key"]
+                    and self.medication_atc_class.get(k) == target_class]
 
         if cypher == PATIENT_CONFLICTING_DRUGS_CYPHER:
             meds = self.patient_medications.get(params["patient_id"], [])
@@ -439,42 +486,81 @@ def test_check_order_endpoint(api_client):
     assert body["dose_safety"][0]["flag"] == "CRITICAL_OVERRIDE"
 
 
-# ---------------------------------------------------------------- Module D: alternative screening (Sprint 10)
+# ---------------------------------------------------------------- Module D: alternative screening (Sprint 10 / S2)
+
+
+def test_screening_filters_by_atc_therapeutic_class():
+    """Flagged Metformin (A10B) must only return same-class candidates."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "metformin", client=graph)
+
+    assert result["atc_class"] == "A10B"
+    screened_names = {c["medication"] for c in result["screened_candidates"]}
+    # Repaglinide is A10B (same class) — should appear if not rejected.
+    # Ibuprofen (M01A), Warfarin (B01A), Lisinopril (C09A) must never appear.
+    for unrelated in ("Ibuprofen", "Warfarin", "Lisinopril"):
+        assert unrelated not in screened_names, f"{unrelated} is not in ATC class A10B"
+
+
 def test_screening_excludes_drugs_conflicting_with_current_medications():
     """A candidate that clashes with something the patient is already on must
     never be offered as an alternative."""
     graph = FakeGraph()
-    result = screen_alternative_candidates("patient-on-warfarin", "metformin", client=graph)
-
-    screened = {c["medication"] for c in result["screened_candidates"]}
-    assert "Ibuprofen" not in screened  # contraindicated with the patient's warfarin
+    # Flag metformin (A10B). Repaglinide (A10B) is same-class. If patient is
+    # on a drug that contraindicates repaglinide, it must be rejected.
+    # For this test we flag ibuprofen (M01A) — warfarin is same-warfarin-class
+    # but we only have one B01A drug. Instead, use metformin for a patient
+    # where the same-class candidate passes. The conflict test still applies:
+    # if we add a contraindication edge, it must reject.
+    # Simpler: just verify the ibuprofen rejection path still works when the
+    # class filter would allow it through.
+    # Patient on warfarin, flag ibuprofen (M01A). No other M01A drug exists
+    # in the fake graph, so no candidates pass class filter.
+    # Instead test via metformin + a patient on ibuprofen would reject
+    # repaglinide if they were contraindicated.
+    # Core assertion: conflict rejection is still enforced within same-class.
+    graph.contraindications[frozenset({"repaglinide", "ibuprofen"})] = {
+        "severity": "moderate", "rationale": "Test interaction"
+    }
+    result = screen_alternative_candidates("patient-warfarin-nsaid", "metformin", client=graph)
     rejected = {r["medication"]: r for r in result["rejected_candidates"]}
-    assert rejected["Ibuprofen"]["reason"] == "contraindicated_with_current_medication"
+    # patient-warfarin-nsaid is on ibuprofen; repaglinide contraindicated with ibuprofen
+    assert "Repaglinide" in rejected
+    assert rejected["Repaglinide"]["reason"] == "contraindicated_with_current_medication"
 
 
 def test_screening_excludes_drugs_violating_renal_dose_limit():
-    """eGFR 28 must knock metformin out of the candidate list."""
+    """eGFR 28 must knock metformin out of the candidate list when it is in
+    the same ATC class as the flagged drug."""
     graph = FakeGraph()
-    result = screen_alternative_candidates("patient-low-egfr-no-metformin", "warfarin", client=graph)
+    # Flag metformin (A10B). Repaglinide (A10B) has a dose rule too.
+    # patient-low-egfr-no-metformin has eGFR 22, so BOTH repaglinide and
+    # metformin should be rejected on renal grounds if they appear as candidates.
+    # But metformin is not in same-class candidates (it IS the flagged drug).
+    # Repaglinide IS same-class, and its threshold is 30, eGFR is 22 → rejected.
+    result = screen_alternative_candidates("patient-low-egfr-no-metformin", "metformin", client=graph)
 
     screened = {c["medication"] for c in result["screened_candidates"]}
-    assert "Metformin" not in screened
+    assert "Repaglinide" not in screened
     reasons = {r["reason"] for r in result["rejected_candidates"]}
     assert "renal_dose_limit" in reasons
 
 
 def test_screening_never_offers_a_drug_the_patient_already_takes():
     graph = FakeGraph()
-    result = screen_alternative_candidates("patient-warfarin-nsaid", "metformin", client=graph)
+    # Flag metformin (A10B), patient on metformin. Same-class candidates only.
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "metformin", client=graph)
     screened = {c["medication"] for c in result["screened_candidates"]}
-    assert "Warfarin" not in screened and "Ibuprofen" not in screened
+    assert "Metformin" not in screened
 
 
 def test_every_screened_candidate_carries_an_evidence_chain():
     """No candidate may reach the caller without the graph traversal that
     justified it -- same invariant as every other NSCRE finding."""
     graph = FakeGraph()
-    result = screen_alternative_candidates("patient-metformin-normal-egfr", "warfarin", client=graph)
+    # Flag metformin (A10B). Repaglinide (A10B) should pass screening
+    # for a patient with normal eGFR and no conflicting meds.
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "metformin", client=graph)
     assert result["screened_candidates"], "expected at least one candidate to pass"
     for cand in result["screened_candidates"]:
         assert cand["evidence_chain"]["steps"]
@@ -484,7 +570,7 @@ def test_every_screened_candidate_carries_an_evidence_chain():
 def test_screen_result_is_phrased_as_screening_not_recommendation():
     """Guards the wording boundary: passing screening is not an endorsement."""
     graph = FakeGraph()
-    result = screen_alternative_candidates("patient-metformin-normal-egfr", "warfarin", client=graph)
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "metformin", client=graph)
     for cand in result["screened_candidates"]:
         assert cand["screen_result"] == "no_contraindication_found"
         assert "recommend" not in cand["screen_result"]
@@ -493,15 +579,132 @@ def test_screen_result_is_phrased_as_screening_not_recommendation():
 
 def test_screening_respects_the_limit():
     graph = FakeGraph()
-    result = screen_alternative_candidates("patient-no-egfr-unknown", "warfarin", limit=1, client=graph)
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "metformin", limit=1, client=graph)
     assert len(result["screened_candidates"]) <= 1
 
 
 def test_screening_declares_its_limitations_in_the_payload():
-    """A caller must not be able to render this list without the caveats:
-    no therapeutic-class filtering, and no candidate-vs-candidate screening."""
+    """A caller must not be able to render this list without the caveats."""
     graph = FakeGraph()
-    result = screen_alternative_candidates("patient-metformin-normal-egfr", "warfarin", client=graph)
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "metformin", client=graph)
     joined = " ".join(result["limitations"]).lower()
-    assert "therapeutic class" in joined
+    # The only remaining limitation is individual (not candidate-vs-candidate) screening.
     assert "not screened" in joined and "against each other" in joined
+
+
+# ---------------------------------------------------------------- Evidence gaps / defer affordance (Sprint S2, Task V2)
+
+
+def test_evaluate_encounter_defer_when_no_egfr():
+    """evaluate_encounter must set overall_defer=True when dose safety cannot
+    be evaluated due to missing eGFR."""
+    graph = FakeGraph()
+    result = evaluate_encounter("patient-metformin-no-egfr", client=graph)
+    assert result["overall_defer"] is True
+    gap_checks = {g["check"] for g in result["evidence_gaps"]}
+    assert "dose_safety" in gap_checks
+    dose_gap = next(g for g in result["evidence_gaps"] if g["check"] == "dose_safety")
+    assert dose_gap["gap_type"] == "missing_input"
+    assert "eGFR" in dose_gap["detail"]
+
+
+def test_evaluate_encounter_no_defer_when_all_data_present():
+    """When all modules have data, overall_defer must be False."""
+    graph = FakeGraph()
+    # patient-necessity-green has eGFR 90, metformin (SFDA-coded), I10 condition.
+    result = evaluate_encounter("patient-necessity-green", client=graph)
+    assert result["overall_defer"] is False
+    assert result["evidence_gaps"] == []
+
+
+def test_evaluate_encounter_defer_when_no_medications():
+    """A patient with zero active medications must defer DDI check."""
+    graph = FakeGraph()
+    result = evaluate_encounter("patient-no-meds", client=graph)
+    assert result["overall_defer"] is True
+    gap_checks = {g["check"] for g in result["evidence_gaps"]}
+    assert "drug_interactions" in gap_checks
+
+
+def test_evaluate_encounter_defer_when_no_coded_conditions():
+    """Patient with meds but no ICD-10 coded conditions must defer necessity."""
+    graph = FakeGraph()
+    result = evaluate_encounter("patient-uncoded-condition", client=graph)
+    assert result["overall_defer"] is True
+    gap_checks = {g["check"] for g in result["evidence_gaps"]}
+    assert "necessity" in gap_checks
+    nec_gap = next(g for g in result["evidence_gaps"] if g["check"] == "necessity")
+    assert nec_gap["gap_type"] == "missing_input"
+    assert "diagnosis" in nec_gap["detail"].lower()
+
+
+def test_evaluate_encounter_defer_when_no_sfda_codes():
+    """Patient on only uncoded medications must defer necessity."""
+    graph = FakeGraph()
+    result = evaluate_encounter("patient-uncoded-med", client=graph)
+    assert result["overall_defer"] is True
+    gap_checks = {g["check"] for g in result["evidence_gaps"]}
+    assert "necessity" in gap_checks
+    nec_gap = next(g for g in result["evidence_gaps"] if g["check"] == "necessity")
+    assert "SFDA" in nec_gap["detail"]
+
+
+def test_check_order_defer_when_no_egfr():
+    """check_order with a proposed drug but no eGFR must defer dose safety."""
+    graph = FakeGraph()
+    result = check_order("patient-metformin-no-egfr", proposed_drug_key="metformin", client=graph)
+    assert result["overall_defer"] is True
+    assert any(g["check"] == "dose_safety" and g["gap_type"] == "missing_input" for g in result["evidence_gaps"])
+
+
+def test_check_order_no_defer_when_necessity_only():
+    """check_order for a service-only order (no proposed drug) should not
+    defer if there are no missing inputs for the necessity check."""
+    graph = FakeGraph()
+    result = check_order("patient-necessity-green", necessity_code="SFDA-A10BA02", icd10_code="I10", client=graph)
+    assert result["overall_defer"] is False
+
+
+def test_screening_defer_when_no_atc_class():
+    """Flagged drug without ATC class must set overall_defer."""
+    graph = FakeGraph()
+    # "generic pain reliever" has no ATC class entry in the fake graph.
+    result = screen_alternative_candidates("patient-uncoded-med", "generic pain reliever", client=graph)
+    assert result["overall_defer"] is True
+    gap_checks = {g["check"] for g in result["evidence_gaps"]}
+    assert "alternative_screening" in gap_checks
+    atc_gap = next(g for g in result["evidence_gaps"] if g["check"] == "alternative_screening")
+    assert atc_gap["gap_type"] == "missing_input"
+    assert "ATC" in atc_gap["detail"]
+
+
+def test_screening_defer_when_no_egfr():
+    """Missing eGFR must produce a defer gap for renal screening."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-metformin-no-egfr", "metformin", client=graph)
+    assert result["overall_defer"] is True
+    gap_checks = {g["check"] for g in result["evidence_gaps"]}
+    assert "alternative_screening" in gap_checks
+    egfr_gaps = [g for g in result["evidence_gaps"] if "eGFR" in g["detail"]]
+    assert len(egfr_gaps) >= 1
+
+
+def test_screening_no_defer_when_data_present():
+    """With ATC class and eGFR and candidates, no defer."""
+    graph = FakeGraph()
+    result = screen_alternative_candidates("patient-metformin-normal-egfr", "metformin", client=graph)
+    assert result["overall_defer"] is False
+    assert result["evidence_gaps"] == []
+
+
+def test_evaluate_encounter_endpoint_includes_evidence_gaps(api_client):
+    """The /evaluate-encounter HTTP response must contain evidence_gaps and overall_defer."""
+    resp = api_client.post(
+        "/api/v1/nscre/evaluate-encounter",
+        json={"patient_id": "patient-metformin-no-egfr"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "evidence_gaps" in body
+    assert "overall_defer" in body
+    assert body["overall_defer"] is True

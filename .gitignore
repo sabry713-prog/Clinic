@@ -61,3 +61,6 @@ coverage/
 
 # Storybook build output
 storybook-static/
+
+# ZCode agent session state
+.zcode/

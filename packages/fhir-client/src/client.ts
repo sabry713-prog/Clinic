@@ -236,7 +236,7 @@ export class FhirClient {
 
     if (this.tokenProvider !== null) {
       const token = await this.tokenProvider.getToken();
-      headers["Authorization"] = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const res = await fetch(url, { headers });
@@ -246,7 +246,7 @@ export class FhirClient {
       throw new FhirRequestError(
         res.status,
         url,
-        `FHIR request failed: ${res.status} ${text.slice(0, 200)}`,
+        `FHIR request failed: ${String(res.status)} ${text.slice(0, 200)}`,
       );
     }
 

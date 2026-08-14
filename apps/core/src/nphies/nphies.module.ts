@@ -15,5 +15,8 @@ import { AuthModule } from "../auth/auth.module";
   imports: [PatientModule, RbacModule, AuthModule],
   controllers: [NphiesController],
   providers: [ClaimReadinessService, IcdCodingService, SbsCodingService, LinkageService, NphiesConnectorService, RejectionRiskService, PreAuthService],
+  // ClaimReadinessService is re-exported for the claim-integrity module's
+  // batch simulator, which reuses the exact same deterministic checks.
+  exports: [ClaimReadinessService],
 })
 export class NphiesModule {}

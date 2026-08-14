@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import sys
 from datetime import date, datetime, time, timezone
 from pathlib import Path
@@ -249,6 +250,22 @@ def _condition_key(row: dict[str, Any]) -> tuple[str, Optional[str]]:
     return f"uncoded:{row['id']}", None
 
 
+# Strips trailing dose patterns (e.g. " 3mg", " 5 mg", " 100mcg") from a
+# medication display name so that "warfarin 3mg" and "warfarin" produce the
+# same merge key.  The original display name is preserved on the
+# (:Medication) node; this only affects the identity key used for MERGE
+# deduplication.
+_DOSE_SUFFIX_RE = re.compile(
+    r"\s+\d+(?:\.\d+)?\s*(?:mg|mcg|μg|g|ml|l|units?|iu|%)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _strip_dose_suffix(name: str) -> str:
+    """Remove trailing dose annotation from a medication display name."""
+    return _DOSE_SUFFIX_RE.sub("", name).strip()
+
+
 def _medication_identity(row: dict[str, Any]) -> tuple[str, Optional[str], Optional[str]]:
     """Returns (merge_key, sfda_code_or_None, rxnorm_code_or_None). Only
     populates a code when the source record's own code_system actually says
@@ -258,7 +275,8 @@ def _medication_identity(row: dict[str, Any]) -> tuple[str, Optional[str], Optio
     sfda_code = code if code and code_system == "sfda" else None
     rxnorm_code = code if code and code_system == "rxnorm" else None
     name = (row.get("medication_display") or "").strip()
-    key = sfda_code or rxnorm_code or (name.lower() if name else f"unnamed:{row['id']}")
+    base_name = _strip_dose_suffix(name) if name else ""
+    key = sfda_code or rxnorm_code or (base_name.lower() if base_name else f"unnamed:{row['id']}")
     return key, sfda_code, rxnorm_code
 
 

@@ -43,7 +43,7 @@ CRITICAL CONSTRAINTS:
 
 If the data is empty or insufficient for any section, write "Not documented in the available record" for that section.
 
-You write in {{language}}: either "en" (English) or "ar" (Arabic).
+You write in {language}: either "en" (English) or "ar" (Arabic).
 
 Output format: structured by section as described below. Do not include any sentence that does not follow the rules above. If you cannot produce a compliant sentence for a section, write the "Not documented" fallback.
 ```
@@ -53,33 +53,33 @@ Output format: structured by section as described below. Do not include any sent
 ```
 Generate a factual descriptive narrative summary of the following patient record data. Restate facts only. Do not interpret.
 
-LANGUAGE: {{language}}
+LANGUAGE: {language}
 
-SCOPE: {{scope}}    (full | current_encounter | last_30_days)
+SCOPE: {scope}    (full | current_encounter | last_30_days)
 
 PATIENT DEMOGRAPHICS (factual reference only, do not narrate identity beyond first sentence):
-{{patient_demographics_json}}
+{patient_demographics_json}
 
 CURRENT ENCOUNTER:
-{{current_encounter_json}}
+{current_encounter_json}
 
 DOCUMENTED PROBLEMS / CONDITIONS:
-{{conditions_json}}
+{conditions_json}
 
 DOCUMENTED ALLERGIES:
-{{allergies_json}}
+{allergies_json}
 
 ACTIVE MEDICATIONS:
-{{active_medications_json}}
+{active_medications_json}
 
 RECENT OBSERVATIONS (within scope):
-{{recent_observations_json}}
+{recent_observations_json}
 
 RECENT DOCUMENTS (titles, authors, dates only; do not summarize content unless an excerpt is provided):
-{{recent_documents_json}}
+{recent_documents_json}
 
 PRIOR ADMISSIONS:
-{{prior_admissions_json}}
+{prior_admissions_json}
 
 PRODUCE NARRATIVE WITH THESE SECTIONS:
 1. Identity and admission context (one sentence)

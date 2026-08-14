@@ -77,6 +77,27 @@ describe("AvailabilityService.getSlots", () => {
     const slots = await svc.getSlots("Neurology", null, TEST_DATE, TEST_DATE);
     expect(slots).toEqual([]);
   });
+
+  // S4.4 — clinician-gender scheduling preference. The pool mock ignores the
+  // bound params, so the filter's SQL predicate is asserted directly: the
+  // third parameter is the requested gender.
+  it("filters availability rows by the requested clinician gender", async () => {
+    const pool = makeMockPool({ "FROM app.provider_availability": [{ ...AVAILABILITY_ROW, clinician_gender: "female" }] });
+    const svc = new AvailabilityService(pool, makeAppointmentService());
+    const slots = await svc.getSlots(DEPARTMENT, null, TEST_DATE, TEST_DATE, "female");
+    expect(slots).toHaveLength(2);
+    const call = (pool.query as unknown as jest.Mock).mock.calls[0]!;
+    expect(call[1]).toEqual([DEPARTMENT, null, "female"]);
+    expect(String(call[0])).toContain("clinician_gender = $3::text");
+  });
+
+  it("passes NULL (no preference) by default so unfiltered queries are unchanged", async () => {
+    const pool = makeMockPool({ "FROM app.provider_availability": [AVAILABILITY_ROW] });
+    const svc = new AvailabilityService(pool, makeAppointmentService());
+    await svc.getSlots(DEPARTMENT, null, TEST_DATE, TEST_DATE);
+    const call = (pool.query as unknown as jest.Mock).mock.calls[0]!;
+    expect(call[1]).toEqual([DEPARTMENT, null, null]);
+  });
 });
 
 describe("AvailabilityService.bookSlot", () => {

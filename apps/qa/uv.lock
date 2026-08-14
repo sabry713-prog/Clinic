@@ -841,6 +841,19 @@ wheels = [
 ]
 
 [[package]]
+name = "prompt-loader"
+version = "0.1.0"
+source = { editable = "../../packages/prompt_loader" }
+
+[package.metadata]
+requires-dist = [
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.5" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "protobuf"
 version = "6.33.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1070,6 +1083,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-sdk" },
     { name = "phi-guard" },
+    { name = "prompt-loader" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "retrieval" },
@@ -1105,6 +1119,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.45b0" },
     { name = "opentelemetry-sdk", specifier = ">=1.24.0" },
     { name = "phi-guard", editable = "../../packages/phi-guard" },
+    { name = "prompt-loader", editable = "../../packages/prompt_loader" },
     { name = "pydantic", specifier = ">=2.7.1" },
     { name = "pydantic-settings", specifier = ">=2.2.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.2.0" },

@@ -66,8 +66,13 @@ export class PatientBookingController {
     @Query("clinicianDisplay") clinicianDisplay: string | undefined,
     @Query("dateFrom") dateFrom: string,
     @Query("dateTo") dateTo: string,
+    @Query("clinicianGender") clinicianGender: string | undefined,
   ) {
-    const data = await this.availabilitySvc.getSlots(departmentDisplay, clinicianDisplay ?? null, dateFrom, dateTo);
+    // S4.4 — optional patient preference for the serving clinician's gender.
+    // An unrecognised value means "no preference" rather than a 400 on a
+    // public form; filtering only happens on an exact declared match.
+    const gender = clinicianGender === "male" || clinicianGender === "female" ? clinicianGender : null;
+    const data = await this.availabilitySvc.getSlots(departmentDisplay, clinicianDisplay ?? null, dateFrom, dateTo, gender);
     return { data };
   }
 

@@ -10,6 +10,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api, type Appointment, type AppointmentStatus, ApiError } from "../../lib/api";
+import { formatDateTime } from "../../lib/dates";
+import i18n from "../../i18n";
 import ReminderSendControl from "../ReminderSendControl/ReminderSendControl";
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
@@ -18,13 +20,6 @@ const STATUS_LABEL: Record<AppointmentStatus, string> = {
   cancelled: "Cancelled",
   no_show: "No-show",
 };
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? iso
-    : d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
 
 export default function AppointmentPanel({ patientId }: { readonly patientId: string }): JSX.Element {
   const [appointments, setAppointments] = useState<Appointment[] | null>(null);
@@ -149,7 +144,7 @@ export default function AppointmentPanel({ patientId }: { readonly patientId: st
             return (
               <li key={a.id} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3 flex items-center gap-2 flex-wrap" dir="ltr">
                 <div className="min-w-0">
-                  <p className="text-sm text-white">{a.appointment_type} — {formatDateTime(a.scheduled_at)}</p>
+                  <p className="text-sm text-white">{a.appointment_type} — {formatDateTime(a.scheduled_at, i18n.language)}</p>
                   <p className="text-xs text-slate-500">
                     {[a.department_display, a.clinician_display].filter(Boolean).join(" · ") || "—"}
                   </p>

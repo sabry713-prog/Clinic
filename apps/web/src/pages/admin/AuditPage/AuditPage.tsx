@@ -7,6 +7,8 @@
  */
 
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { ShieldCheck, Archive } from "lucide-react";
 import ComplianceReport from "../../../components/ComplianceReport/ComplianceReport";
 import { api, type AuditEventItem, type AuditVerifyResult, ApiError } from "../../../lib/api";
 
@@ -29,6 +31,7 @@ const AUDIT_ACTIONS = [
 const OUTCOMES = ["", "SUCCESS", "FAILURE", "REFUSED"];
 
 export default function AuditPage(): JSX.Element {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<AuditFilters>({
     action: "",
     actor_id: "",
@@ -47,6 +50,10 @@ export default function AuditPage(): JSX.Element {
   const [verifyResult, setVerifyResult] = useState<AuditVerifyResult | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+
+  const [wormMessage, setWormMessage] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [wormError, setWormError] = useState<string | null>(null);
 
   const handleSearch = useCallback((): void => {
     setIsLoading(true);
@@ -107,6 +114,21 @@ export default function AuditPage(): JSX.Element {
       .finally(() => setIsVerifying(false));
   }, []);
 
+  const handleExportWorm = useCallback((): void => {
+    setIsExporting(true);
+    setWormMessage(null);
+    setWormError(null);
+
+    api.admin
+      .exportWorm()
+      .then((result) => setWormMessage(result.message))
+      .catch((err: unknown) => {
+        const msg = err instanceof ApiError ? err.message : "WORM export failed";
+        setWormError(msg);
+      })
+      .finally(() => setIsExporting(false));
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -114,6 +136,87 @@ export default function AuditPage(): JSX.Element {
 
         <ComplianceReport />
 
+        {/* S4.3 — tamper detection + WORM export, verified live in the UI.
+            Per docs/data/04-audit-log.md: every event carries
+            hash_self = SHA-256(canonical row incl. hash_prev), forming a
+            chain; verification replays it; a daily 02:00 job exports NDJSON
+            (gzip + SHA-256) to in-Kingdom object storage with Object Lock. */}
+        <div className="bg-slate-900 rounded-xl p-4 space-y-3" data-testid="tamper-detection-card">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-medium text-slate-200">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+                {t("audit.tamperTitle")}
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-500">{t("audit.tamperSubtitle")}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleVerify}
+                disabled={isVerifying}
+                className="border border-slate-700 text-white text-sm px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-50"
+              >
+                {isVerifying ? "Verifying..." : "Verify Integrity"}
+              </button>
+              <button
+                onClick={handleExportWorm}
+                disabled={isExporting}
+                className="inline-flex items-center gap-1.5 border border-slate-700 text-white text-sm px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-50"
+              >
+                <Archive className="h-4 w-4" aria-hidden="true" />
+                {isExporting ? t("audit.wormExporting") : t("audit.wormExport")}
+              </button>
+            </div>
+          </div>
+
+          {verifyResult && (
+            <div
+              data-testid="verify-result"
+              className={`rounded-lg p-3 text-sm ${
+                verifyResult.passed
+                  ? "bg-emerald-500/10 border border-emerald-500/30"
+                  : "bg-red-500/10 border border-red-500/40"
+              }`}
+            >
+              <p className="font-medium flex items-center gap-2">
+                {verifyResult.passed ? (
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+                ) : null}
+                {verifyResult.passed ? t("audit.passed") : t("audit.failed")} —{" "}
+                {verifyResult.passed
+                  ? t("audit.eventsVerified", { count: verifyResult.events_verified })
+                  : t("audit.failedEvents", { count: verifyResult.violations.length })}
+              </p>
+              <p className="text-slate-400 mt-1 text-xs">
+                {t("audit.checkedWindow", {
+                  start: verifyResult.started_at,
+                  end: verifyResult.finished_at,
+                })}
+              </p>
+              {!verifyResult.passed && verifyResult.violations.length > 0 && (
+                <ul className="mt-2 space-y-1 text-slate-300">
+                  {verifyResult.violations.map((v) => (
+                    <li key={v.event_id} dir="ltr" className="font-mono text-xs">
+                      Event {v.event_id}: {v.reason}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {verifyError && <p className="text-slate-400 text-sm">{verifyError}</p>}
+
+          {wormMessage && (
+            <p data-testid="worm-result" className="rounded-lg border border-slate-700 bg-slate-800/60 p-3 text-xs text-slate-300">
+              <Archive className="me-1.5 inline h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+              {t("audit.wormDone")}: {wormMessage}
+            </p>
+          )}
+          {wormError && <p className="text-slate-400 text-sm">{wormError}</p>}
+
+          <p className="text-xs text-slate-600">{t("audit.wormScheduleNote")}</p>
+        </div>
         {/* Filters */}
         <div className="bg-slate-900 rounded-xl p-4 space-y-4">
           <h2 className="text-sm font-medium text-slate-300">Filters</h2>
@@ -201,45 +304,8 @@ export default function AuditPage(): JSX.Element {
             >
               {isLoading ? "Loading..." : "Search"}
             </button>
-
-            <button
-              onClick={handleVerify}
-              disabled={isVerifying}
-              className="border border-slate-700 text-white text-sm px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-50"
-            >
-              {isVerifying ? "Verifying..." : "Verify Integrity"}
-            </button>
           </div>
         </div>
-
-        {/* Verify result */}
-        {verifyResult && (
-          <div
-            className={`rounded-xl p-4 text-sm ${
-              verifyResult.passed ? "bg-slate-800 border border-slate-700" : "bg-slate-900 border border-slate-600"
-            }`}
-          >
-            <p className="font-medium">
-              Integrity check: {verifyResult.passed ? "Passed" : "Failed"}
-            </p>
-            <p className="text-slate-400 mt-1">
-              Events verified: {verifyResult.events_verified} · Checked {verifyResult.started_at} – {verifyResult.finished_at}
-            </p>
-            {!verifyResult.passed && verifyResult.violations.length > 0 && (
-              <ul className="mt-2 space-y-1 text-slate-300">
-                {verifyResult.violations.map((v) => (
-                  <li key={v.event_id}>
-                    Event {v.event_id}: {v.reason}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {verifyError && (
-          <p className="text-slate-400 text-sm">{verifyError}</p>
-        )}
 
         {/* Error */}
         {error && (
