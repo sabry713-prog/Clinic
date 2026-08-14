@@ -69,7 +69,7 @@ async def answer(
     2. If REFUSED: build deterministic refusal, return immediately (no retrieval, no LLM)
     3. If ALLOWED: retrieve chunks, synthesize answer, apply blocklist
     """
-    from classifier import classify  # type: ignore[import-untyped]
+    from classifier import classify
 
     start_ms = time.monotonic() * 1000
     interaction_id = str(uuid.uuid4())
@@ -123,7 +123,7 @@ async def answer(
     chunks: list[dict[str, Any]] = _override_chunks if _override_chunks is not None else []
     if pool is not None and embedder is not None:
         try:
-            from retrieval.retriever import hybrid_retrieve  # type: ignore[import-untyped]
+            from retrieval.retriever import hybrid_retrieve
             retrieval_results = await hybrid_retrieve(
                 patient_id=patient_id,
                 query=question,

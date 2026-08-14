@@ -22,6 +22,7 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from graph_client import GraphError, get_client  # noqa: E402
+from nphies_queries import validate_order_necessity  # noqa: E402
 from nscre_engine import (  # noqa: E402
     check_order,
     evaluate_encounter,
@@ -49,6 +50,11 @@ class CheckOrderRequest(BaseModel):
     proposed_drug_key: Optional[str] = None
     necessity_code: Optional[str] = None
     icd10_code: Optional[str] = None
+
+
+class ValidateNecessityRequest(BaseModel):
+    icd10_code: str
+    service_or_drug_code: str
 
 
 @app.get("/health", response_class=JSONResponse)
@@ -98,6 +104,28 @@ async def check_order_route(body: CheckOrderRequest) -> dict[str, Any]:
         dose_safety_count=len(result["dose_safety"]),
         necessity_checked=result["necessity"] is not None,
     )
+    return result
+
+
+@app.post("/api/v1/nphies/validate-necessity", response_class=JSONResponse)
+async def validate_necessity_route(body: ValidateNecessityRequest) -> dict[str, Any]:
+    """Deterministic order-necessity lookup (nphies_queries).
+
+    Exposed for the apps/core claim simulator so "check before you send" reuses
+    the exact same Cypher set-membership check the NSCRE engine calls as a
+    library -- no LLM, no clinical judgment (CLAUDE.md Principle 1).
+    """
+    graph = get_client()
+    try:
+        result = validate_order_necessity(
+            body.icd10_code, body.service_or_drug_code, client=graph
+        )
+    except GraphError as exc:
+        logger.error("nphies_validate_necessity_failed", error=str(exc))
+        raise HTTPException(status_code=503, detail="Graph query failed") from exc
+    finally:
+        graph.close()
+    logger.info("nphies_validate_necessity", status=result["status"])
     return result
 
 

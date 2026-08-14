@@ -30,6 +30,7 @@ Usage:
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import time
@@ -387,6 +388,37 @@ def build_prior_auth_bundle(
     }
 
 
+# ---------------------------------------------------------------- stub responses
+# Deterministic canned-outcome selection. The stub must exercise the full
+# range of UNDECIDED payer states (queued / partial / an unrecognised value)
+# so the UI's pended path is demoable -- but it must never simulate an
+# approval: only a real payer `complete` outcome may turn a badge green, and
+# in stub mode there is no payer. Outcome choice is a pure function of the
+# submission key (sha256), so the same request always yields the same canned
+# state -- deterministic on the seeded demo data, no randomness in the demo.
+#
+# "processing" is deliberately NOT one of the four FHIR remittance-outcome
+# codes (queued | complete | error | partial): it exercises the
+# unrecognised-outcome -> pended fail-safe path.
+_STUB_PRIOR_AUTH_OUTCOMES: tuple[str, ...] = ("queued", "partial", "processing")
+_STUB_ELIGIBILITY_OUTCOMES: tuple[str, ...] = ("complete", "queued", "partial")
+
+
+def _stub_digest(*key_parts: str) -> str:
+    joined = "|".join(key_parts)
+    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
+
+
+def _stub_outcome(*key_parts: str, outcomes: tuple[str, ...]) -> str:
+    return outcomes[int(_stub_digest(*key_parts)[:2], 16) % len(outcomes)]
+
+
+def _stub_ref(*key_parts: str) -> str:
+    """Deterministic stub reference. Prefixed so a canned value can never be
+    mistaken for a real payer authorization in the UI or the audit trail."""
+    return f"STUB-NOT-A-REAL-AUTH-{_stub_digest(*key_parts)[:8].upper()}"
+
+
 # ---------------------------------------------------------------- response parsing
 def interpret_claim_response(bundle: dict[str, Any]) -> dict[str, Any]:
     """Map a ClaimResponse bundle onto the UI badge state.
@@ -578,16 +610,24 @@ class NphiesFhirClient:
         bundle = build_eligibility_bundle(patient_civil_id, payer_id)
 
         if self.mode == "stub":
-            logger.info("nphies_eligibility_stub", mode="stub")
+            # Deterministic variety over the payer states a real exchange
+            # returns: complete (coverage confirmed), queued, or partial. A
+            # coverage confirmation ("inforce") only ever appears alongside a
+            # `complete` outcome -- an undecided response must never read as
+            # eligible downstream (same badge discipline as prior-auth).
+            outcome = _stub_outcome(
+                patient_civil_id, payer_id, outcomes=_STUB_ELIGIBILITY_OUTCOMES
+            )
+            logger.info("nphies_eligibility_stub", mode="stub", outcome=outcome)
             return {
                 "mode": "stub",
-                "eligible": True,
+                "eligible": outcome == "complete",
                 "request_bundle": bundle,
                 "response": {
                     "resourceType": "CoverageEligibilityResponse",
-                    "outcome": "complete",
+                    "outcome": outcome,
                     "disposition": "Stub connector -- canned development response, not a payer decision.",
-                    "insurance": [{"inforce": True}],
+                    "insurance": [{"inforce": True}] if outcome == "complete" else [],
                 },
             }
 
@@ -611,20 +651,30 @@ class NphiesFhirClient:
         )
 
         if self.mode == "stub":
-            # Stub authorization references are prefixed so a canned value can
-            # never be mistaken for a real payer authorization in the UI or the
-            # audit trail.
-            stub_ref = f"STUB-NOT-A-REAL-AUTH-{uuid.uuid4().hex[:8].upper()}"
+            # Stub mode never simulates an approval: the canned outcome is
+            # always one of the UNDECIDED states (queued / partial / an
+            # unrecognised value), so the badge resolves to pended, never
+            # green. There is no payer behind a stub response, so there can be
+            # no payer approval either. The guard below keeps it that way even
+            # if a future edit adds "complete" to the outcome tuple.
+            outcome = _stub_outcome(
+                encounter_id, icd10_code, sbs_code, outcomes=_STUB_PRIOR_AUTH_OUTCOMES
+            )
+            if outcome == "complete":  # unreachable by construction
+                raise NphiesError(
+                    "Stub connector refused to simulate a payer approval -- no "
+                    "complete outcome exists in stub mode."
+                )
+            stub_ref = _stub_ref(encounter_id, icd10_code, sbs_code)
             response = {
                 "resourceType": "ClaimResponse",
                 "identifier": [
                     {"system": _system("identifier_systems", "claim"), "value": stub_ref}
                 ],
-                "outcome": "complete",
-                "preAuthRef": stub_ref,
+                "outcome": outcome,
                 "disposition": "Stub connector -- canned development response, not a payer decision.",
             }
-            logger.info("nphies_prior_auth_stub", mode="stub")
+            logger.info("nphies_prior_auth_stub", mode="stub", outcome=outcome)
             return {
                 "mode": "stub",
                 "request_bundle": bundle,

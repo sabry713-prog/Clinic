@@ -42,6 +42,7 @@ CONSTRAINTS = [
     "CREATE CONSTRAINT diagnosis_code IF NOT EXISTS FOR (d:Diagnosis) REQUIRE d.code IS UNIQUE",
     "CREATE CONSTRAINT service_code IF NOT EXISTS FOR (s:Service) REQUIRE s.code IS UNIQUE",
     "CREATE CONSTRAINT medication_code IF NOT EXISTS FOR (m:Medication) REQUIRE m.code IS UNIQUE",
+    "CREATE CONSTRAINT atc_class_code IF NOT EXISTS FOR (a:AtcClass) REQUIRE a.code IS UNIQUE",
 ]
 
 MERGE_DIAGNOSIS = """
@@ -57,6 +58,21 @@ SET s.display = $display, s.category = $category, s.system = $system
 MERGE_MEDICATION = """
 MERGE (m:Medication {code: $code})
 SET m.display = $display, m.form = $form, m.atc = $atc, m.system = 'SFDA'
+"""
+
+# ATC class hierarchy — first 3 characters of the ATC code form the
+# therapeutic subgroup level (e.g. A10B = "Blood glucose lowering drugs,
+# excl. insulins").  Used by NSCRE's Module D to filter alternative
+# candidates to the same therapeutic class as the flagged medication.
+MERGE_ATC_CLASS = """
+MERGE (a:AtcClass {code: $class_code})
+SET a.code = $class_code, a.description = $description
+"""
+
+LINK_MEDICATION_ATC_CLASS = """
+MATCH (m:Medication {code: $code})
+MATCH (a:AtcClass {code: $class_code})
+MERGE (m)-[r:HAS_ATC_CLASS]->(a)
 """
 
 # Target label varies, so the edge statement is templated per target type.
@@ -112,7 +128,7 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
     medications = _load_json_nodes(MEDICATIONS_FILE)
     necessity = load_necessity_rows()
 
-    counts = {"diagnoses": 0, "services": 0, "medications": 0, "necessity_edges": 0}
+    counts = {"diagnoses": 0, "services": 0, "medications": 0, "atc_classes": 0, "necessity_edges": 0}
 
     for node in diagnoses:
         graph.run(
@@ -143,6 +159,42 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
         )
         counts["medications"] += 1
 
+    # ATC therapeutic-subgroup classes (first 3 characters of ATC code) and
+    # HAS_ATC_CLASS edges.  Idempotent: MERGE-based.
+    _ATC_DESCRIPTIONS: dict[str, str] = {
+        "N02B": "Other analgesics and antipyretics",
+        "A10B": "Blood glucose lowering drugs, excl. insulins",
+        "A10J": "Drugs used in diabetes (GLP-1 analogues)",
+        "C09A": "ACE inhibitors, plain",
+        "C07A": "Beta blocking agents",
+        "C10A": "Lipid modifying agents, plain",
+        "R03B": "Anti-obstructive airways drugs (glucocorticoids)",
+        "R03A": "Anti-obstructive airways drugs (adrenergics)",
+        "A02B": "Drugs for peptic ulcer and GERD",
+        "H03A": "Thyroid therapy",
+        "N02C": "Antimigraine preparations",
+        "M01A": "Anti-inflammatory and antirheumatic products (NSAIDs)",
+        "B03B": "Antianemic preparations (folates)",
+    }
+    seen_atc: set[str] = set()
+    for node in medications:
+        atc = (node.get("atc") or "").strip()
+        if len(atc) >= 3:
+            class_code = atc[:3]
+            if class_code not in seen_atc:
+                seen_atc.add(class_code)
+                graph.run(
+                    MERGE_ATC_CLASS,
+                    class_code=class_code,
+                    description=_ATC_DESCRIPTIONS.get(class_code, ""),
+                )
+                counts["atc_classes"] += 1
+            graph.run(
+                LINK_MEDICATION_ATC_CLASS,
+                code=node["code"].strip().upper(),
+                class_code=class_code,
+            )
+
     for row in necessity:
         label = TARGET_LABELS[row["target_type"]]
         graph.run(
@@ -169,6 +221,7 @@ def main() -> int:
         f"{counts['diagnoses']} diagnoses, "
         f"{counts['services']} services, "
         f"{counts['medications']} medications, "
+        f"{counts['atc_classes']} ATC classes, "
         f"{counts['necessity_edges']} necessity edges."
     )
     return 0

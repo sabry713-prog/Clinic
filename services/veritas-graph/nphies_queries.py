@@ -24,6 +24,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from graph_client import GraphClient, get_client
+from evidence_chain import EvidenceStep, build_evidence_chain  # noqa: E402
 
 NECESSITY_LOOKUP_CYPHER = """
 MATCH (d:NphiesDiagnosis {icd10: $icd10})-[r:NPHIES_JUSTIFIES]->(t)
@@ -63,16 +64,39 @@ def validate_order_necessity(
     icd10 = _normalize(icd10_code)
     code = _normalize(service_or_drug_code)
     if not icd10 or not code:
-        return {"status": "RED", "pre_auth_required": True, "suggested_codes": []}
+        return {
+            "status": "RED",
+            "pre_auth_required": True,
+            "suggested_codes": [],
+            "evidence_chain": build_evidence_chain(
+                [
+                    EvidenceStep("NphiesDiagnosis", {"icd10": icd10 or None}),
+                    EvidenceStep("NphiesServiceOrDrug", {"code": code or None}),
+                    EvidenceStep("NecessityRule", {"status": "RED", "reason": "empty/missing code — no query executed"}),
+                ]
+            ),
+        }
 
     graph = client or get_client()
     rows = graph.run(NECESSITY_LOOKUP_CYPHER, icd10=icd10, code=code)
     if rows:
         pre_auth_required = bool(rows[0].get("pre_auth_required", True))
+        target_type = rows[0].get("target_type") if rows else None
         return {
             "status": "YELLOW" if pre_auth_required else "GREEN",
             "pre_auth_required": pre_auth_required,
             "suggested_codes": [],
+            "evidence_chain": build_evidence_chain(
+                [
+                    EvidenceStep("NphiesDiagnosis", {"icd10": icd10}),
+                    EvidenceStep(target_type or "NphiesServiceOrDrug", {"code": code}),
+                    EvidenceStep(
+                        "NecessityRule",
+                        {"pre_auth_required": pre_auth_required, "status": "YELLOW" if pre_auth_required else "GREEN"},
+                    ),
+                ],
+                cypher=[NECESSITY_LOOKUP_CYPHER],
+            ),
         }
 
     suggestions = graph.run(SUGGESTED_DIAGNOSES_CYPHER, code=code)
@@ -82,4 +106,15 @@ def validate_order_necessity(
         "suggested_codes": [
             {"icd10": r.get("icd10"), "description": r.get("description")} for r in suggestions
         ],
+        "evidence_chain": build_evidence_chain(
+            [
+                EvidenceStep("NphiesDiagnosis", {"icd10": icd10}),
+                EvidenceStep("NphiesServiceOrDrug", {"code": code}),
+                EvidenceStep(
+                    "NecessityRule",
+                    {"status": "RED", "reason": "no NPHIES_JUSTIFIES edge for this pair — conservative default"},
+                ),
+            ],
+            cypher=[NECESSITY_LOOKUP_CYPHER, SUGGESTED_DIAGNOSES_CYPHER],
+        ),
     }

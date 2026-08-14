@@ -10,7 +10,13 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { api, type NphiesRejectionAnalytics as Analytics, ApiError } from "../../lib/api";
+import { useTranslation } from "react-i18next";
+import {
+  api,
+  type NphiesRejectionAnalytics as Analytics,
+  type ClaimSimulationReport,
+  ApiError,
+} from "../../lib/api";
 
 /** Fixed average claim value in SAR — dashboard mock constant. */
 const AVERAGE_CLAIM_VALUE_SAR = 2_500;
@@ -25,9 +31,14 @@ function formatSar(value: number): string {
 }
 
 export default function RejectionCostDashboard(): JSX.Element {
+  const { t } = useTranslation();
   const [data, setData] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Prospective view (E3 claim simulator): runs alongside the historical
+  // analytics and must never break it — it has its own loading/error state.
+  const [simulation, setSimulation] = useState<ClaimSimulationReport | null>(null);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -39,9 +50,18 @@ export default function RejectionCostDashboard(): JSX.Element {
       .finally(() => setLoading(false));
   }, []);
 
+  const loadSimulation = useCallback(() => {
+    setSimulationError(null);
+    api.admin
+      .runClaimSimulator()
+      .then(setSimulation)
+      .catch(() => setSimulationError("unavailable"));
+  }, []);
+
   useEffect(() => {
     load();
-  }, [load]);
+    loadSimulation();
+  }, [load, loadSimulation]);
 
   if (loading) {
     return (
@@ -84,6 +104,53 @@ export default function RejectionCostDashboard(): JSX.Element {
             <div className="text-lg font-semibold text-white">{val}</div>
           </div>
         ))}
+      </div>
+
+      {/* Prospective — claim simulator (E3). Same estimate basis as the
+          historical cards above, but for claims NOT yet sent: flagged
+          pre-submission verdicts from the deterministic simulator. */}
+      <div className="border border-slate-700 rounded p-3 space-y-2">
+        <h3 className="font-medium text-white text-sm">
+          {t("rejectionCost.prospectiveTitle")}
+        </h3>
+        {simulationError !== null ? (
+          <p className="text-xs text-slate-500">{t("rejectionCost.prospectiveUnavailable")}</p>
+        ) : simulation === null ? (
+          <p className="text-xs text-slate-500">{t("rejectionCost.prospectiveLoading")}</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-slate-800 rounded p-3">
+              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveChecked")}</div>
+              <div className="text-lg font-semibold text-white">
+                {simulation.summary.patients_checked.toLocaleString("en-SA")}
+              </div>
+            </div>
+            <div className="bg-slate-800 rounded p-3">
+              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveFlagged")}</div>
+              <div className="text-lg font-semibold text-amber-300">
+                {simulation.summary.claims_flagged.toLocaleString("en-SA")}
+              </div>
+            </div>
+            <div className="bg-slate-800 rounded p-3">
+              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveRed")}</div>
+              <div className="text-lg font-semibold text-red-300">
+                {simulation.summary.orders_red.toLocaleString("en-SA")}
+              </div>
+            </div>
+            <div className="bg-slate-800 rounded p-3">
+              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveSar")}</div>
+              <div className="text-lg font-semibold text-white">
+                {formatSar(simulation.summary.estimated_sar_at_risk)}
+              </div>
+            </div>
+          </div>
+        )}
+        <p className="text-xs text-slate-500">
+          {t("rejectionCost.prospectiveNote")}{" "}
+          <a className="underline hover:text-slate-400" href="/admin/claim-simulator">
+            {t("rejectionCost.prospectiveLink")}
+          </a>
+        </p>
       </div>
 
       {/* Rejection code breakdown */}

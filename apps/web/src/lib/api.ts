@@ -447,6 +447,8 @@ export interface ProviderAvailability {
   readonly id: string;
   readonly department_display: string;
   readonly clinician_display: string | null;
+  /** S4.4 — gender of the clinician serving these slots (null = not declared). */
+  readonly clinician_gender: "male" | "female" | null;
   readonly day_of_week: number;
   readonly start_time: string;
   readonly end_time: string;
@@ -803,6 +805,92 @@ export interface NphiesRejectionAnalytics {
   readonly by_week: readonly { week: string; total: number; rejected: number }[];
   readonly disclaimer: string;
   readonly generated_at: string;
+}
+
+// ─── Claim-integrity types (E3: claim simulator + coder review queue) ───────
+
+export type SimulatorVerdict = "send" | "fix_before_send" | "do_not_send";
+export type NecessityStatus = "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE";
+
+/** Verbatim evidence chain from the graph's validate_order_necessity —
+ * passed through apps/core unmodified so the cutaway displays exactly what
+ * the graph produced (steps + rendered + the Cypher it executed). */
+export interface SimulatorEvidenceChain {
+  readonly steps: readonly { readonly node_type: string; readonly properties: Readonly<Record<string, unknown>> }[];
+  readonly rendered: string;
+  readonly cypher?: readonly string[];
+}
+
+export interface SimulatorOrderNecessity {
+  readonly order_id: string;
+  readonly order_display: string;
+  readonly icd10_code: string;
+  readonly sbs_code: string;
+  readonly status: NecessityStatus;
+  readonly pre_auth_required: boolean | null;
+  readonly suggested_codes: readonly { readonly icd10: string; readonly description: string }[];
+  readonly evidence_chain?: SimulatorEvidenceChain;
+}
+
+export interface SimulatorPatientVerdict {
+  readonly patient_id: string;
+  readonly mrn: string | null;
+  readonly display_name: string | null;
+  readonly historical_claims: number;
+  readonly historical_rejections: number;
+  readonly readiness_overall: "ready" | "issues" | "blocked";
+  readonly failed_checks: readonly string[];
+  readonly warning_checks: readonly string[];
+  readonly necessity: readonly SimulatorOrderNecessity[];
+  readonly verdict: SimulatorVerdict;
+}
+
+export interface ClaimSimulationReport {
+  readonly generated_at: string;
+  readonly graph_available: boolean;
+  readonly patients: readonly SimulatorPatientVerdict[];
+  readonly summary: {
+    readonly patients_checked: number;
+    readonly send: number;
+    readonly fix_before_send: number;
+    readonly do_not_send: number;
+    readonly orders_checked: number;
+    readonly orders_green: number;
+    readonly orders_yellow: number;
+    readonly orders_red: number;
+    readonly orders_unavailable: number;
+    readonly claims_flagged: number;
+    readonly estimated_sar_at_risk: number;
+    readonly average_claim_value_sar: number;
+  };
+  readonly disclaimer: string;
+}
+
+export type CoderQueueItemStatus = "pending" | "in_review" | "resolved";
+
+export interface CoderQueueItem {
+  readonly item_id: string;
+  readonly patient_id: string;
+  readonly mrn: string | null;
+  readonly order_id: string | null;
+  readonly icd10_code: string | null;
+  readonly sbs_code: string | null;
+  readonly reason: string;
+  readonly detail: string;
+  readonly status: CoderQueueItemStatus;
+  readonly claimed_by: string | null;
+  readonly resolved_note: string | null;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface CoderQueueSyncResult {
+  readonly queue_size: number;
+  readonly added: number;
+  readonly updated: number;
+  readonly removed: number;
+  readonly preserved: number;
+  readonly simulation_summary: ClaimSimulationReport["summary"];
 }
 
 /** SOAP note returned by the orchestrator's DeepSeek formatting engine. */
@@ -1427,11 +1515,18 @@ export const api = {
     matchIntent: (text: string) =>
       request<NluMatchResult>(`/api/v1/booking/nlu-match?q=${encodeURIComponent(text)}`),
 
-    availability: (departmentDisplay: string, clinicianDisplay: string | null, dateFrom: string, dateTo: string) =>
+    availability: (
+      departmentDisplay: string,
+      clinicianDisplay: string | null,
+      dateFrom: string,
+      dateTo: string,
+      clinicianGender?: "male" | "female" | null,
+    ) =>
       request<{ data: BookingSlot[] }>(
         `/api/v1/booking/availability?departmentDisplay=${encodeURIComponent(departmentDisplay)}` +
           (clinicianDisplay ? `&clinicianDisplay=${encodeURIComponent(clinicianDisplay)}` : "") +
-          `&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}`,
+          `&dateFrom=${encodeURIComponent(dateFrom)}&dateTo=${encodeURIComponent(dateTo)}` +
+          (clinicianGender ? `&clinicianGender=${clinicianGender}` : ""),
       ),
 
     bookAppointment: (
@@ -1461,10 +1556,19 @@ export const api = {
       startTime: string,
       endTime: string,
       slotDurationMinutes: number,
+      clinicianGender?: "male" | "female" | null,
     ) =>
       request<ProviderAvailability>("/api/v1/admin/provider-availability", {
         method: "POST",
-        body: JSON.stringify({ departmentDisplay, clinicianDisplay, dayOfWeek, startTime, endTime, slotDurationMinutes }),
+        body: JSON.stringify({
+          departmentDisplay,
+          clinicianDisplay,
+          dayOfWeek,
+          startTime,
+          endTime,
+          slotDurationMinutes,
+          ...(clinicianGender ? { clinicianGender } : {}),
+        }),
       }),
 
     setActive: (id: string, active: boolean) =>
@@ -1538,6 +1642,9 @@ export const api = {
     verifyAudit: () =>
       request<AuditVerifyResult>("/api/v1/admin/audit/verify", { method: "POST" }),
 
+    exportWorm: () =>
+      request<{ message: string }>("/api/v1/admin/audit/export-worm", { method: "POST" }),
+
     auditSummary: (params?: { since?: string; until?: string }) => {
       const qs = new URLSearchParams();
       if (params?.since) qs.set("since", params.since);
@@ -1553,6 +1660,26 @@ export const api = {
       const query = qs.toString();
       return request<NphiesRejectionAnalytics>(`/api/v1/admin/nphies/rejection-analytics${query ? `?${query}` : ""}`);
     },
+
+    runClaimSimulator: () =>
+      request<ClaimSimulationReport>("/api/v1/admin/nphies/claim-simulator"),
+
+    syncCoderQueue: () =>
+      request<CoderQueueSyncResult>("/api/v1/admin/nphies/coder-queue/sync", { method: "POST" }),
+
+    listCoderQueue: () =>
+      request<{ items: readonly CoderQueueItem[] }>("/api/v1/admin/nphies/coder-queue"),
+
+    claimCoderQueueItem: (itemId: string) =>
+      request<CoderQueueItem>(`/api/v1/admin/nphies/coder-queue/${encodeURIComponent(itemId)}/claim`, {
+        method: "POST",
+      }),
+
+    resolveCoderQueueItem: (itemId: string, note: string) =>
+      request<CoderQueueItem>(`/api/v1/admin/nphies/coder-queue/${encodeURIComponent(itemId)}/resolve`, {
+        method: "POST",
+        body: JSON.stringify({ note }),
+      }),
   },
 
   dsr: {

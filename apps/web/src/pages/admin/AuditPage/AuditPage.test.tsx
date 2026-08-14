@@ -8,6 +8,8 @@ vi.mock("../../../lib/api", () => ({
     admin: {
       listAudit: vi.fn(),
       verifyAudit: vi.fn(),
+      exportWorm: vi.fn(),
+      auditSummary: vi.fn(),
     },
   },
   ApiError: class extends Error {
@@ -15,6 +17,14 @@ vi.mock("../../../lib/api", () => ({
       super(message);
     }
   },
+}));
+
+// t() returns keys (same shape as the other page/component tests).
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: { changeLanguage: vi.fn() },
+  }),
 }));
 
 const mockEvents = [
@@ -81,10 +91,12 @@ describe("AuditPage", () => {
     fireEvent.click(screen.getByText("Verify Integrity"));
 
     await waitFor(() => {
-      expect(screen.getByText(/Integrity check: Passed/)).toBeInTheDocument();
+      expect(screen.getByTestId("verify-result")).toBeInTheDocument();
     });
-
-    expect(screen.getByText(/Events verified: 100/)).toBeInTheDocument();
+    // Key-based i18n (t returns the key; the count interpolation itself is
+    // covered by the en/ar resource strings).
+    expect(screen.getByText(/audit\.passed/)).toBeInTheDocument();
+    expect(screen.getByText(/audit\.eventsVerified/)).toBeInTheDocument();
     expect(api.admin.verifyAudit).toHaveBeenCalledTimes(1);
   });
 
@@ -101,9 +113,30 @@ describe("AuditPage", () => {
     fireEvent.click(screen.getByText("Verify Integrity"));
 
     await waitFor(() => {
-      expect(screen.getByText(/Integrity check: Failed/)).toBeInTheDocument();
+      expect(screen.getByText(/audit\.failed/)).toBeInTheDocument();
     });
 
     expect(screen.getByText(/hash_self mismatch/)).toBeInTheDocument();
+  });
+
+  it("renders the tamper-detection card with the WORM affordance and schedule note", () => {
+    render(<AuditPage />);
+    const card = screen.getByTestId("tamper-detection-card");
+    expect(within(card).getByText("audit.tamperTitle")).toBeInTheDocument();
+    expect(within(card).getByText("audit.wormScheduleNote")).toBeInTheDocument();
+    expect(within(card).getByRole("button", { name: /audit\.wormExport/ })).toBeInTheDocument();
+  });
+
+  it("WORM export button calls the API and shows the result", async () => {
+    vi.mocked(api.admin.exportWorm).mockResolvedValue({
+      message: "WORM export triggered successfully",
+    });
+
+    render(<AuditPage />);
+    fireEvent.click(screen.getByRole("button", { name: /audit\.wormExport/ }));
+
+    const result = await screen.findByTestId("worm-result");
+    expect(result).toHaveTextContent("WORM export triggered successfully");
+    expect(api.admin.exportWorm).toHaveBeenCalledTimes(1);
   });
 });

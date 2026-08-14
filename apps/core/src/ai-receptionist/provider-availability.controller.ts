@@ -8,7 +8,7 @@ import { Body, Controller, Get, Inject, Param, Patch, Post, Req, UseGuards } fro
 import type { Request } from "express";
 import { ApiCookieAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { v4 as uuidv4 } from "uuid";
-import { IsBoolean, IsInt, IsOptional, IsString, Matches, Max, Min } from "class-validator";
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Matches, Max, Min } from "class-validator";
 import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { RbacGuard, RequirePermission } from "../rbac/rbac.guard";
@@ -17,6 +17,7 @@ import type { RequestId, UserId, UserRole } from "@clinical-copilot/shared-types
 import { ProviderAvailabilityService } from "./provider-availability.service";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
+const CLINICIAN_GENDERS = ["male", "female"] as const;
 
 class CreateProviderAvailabilityDto {
   @IsString()
@@ -25,6 +26,12 @@ class CreateProviderAvailabilityDto {
   @IsOptional()
   @IsString()
   clinicianDisplay?: string;
+
+  /** S4.4 — gender of the clinician serving these slots, so patients can
+   * express a scheduling preference. NULL/omitted = not declared. */
+  @IsOptional()
+  @IsIn(CLINICIAN_GENDERS)
+  clinicianGender?: "male" | "female";
 
   @IsInt()
   @Min(0)
@@ -95,6 +102,7 @@ export class ProviderAvailabilityController {
       body.startTime,
       body.endTime,
       body.slotDurationMinutes,
+      body.clinicianGender ?? null,
     );
     await this.audit(req, "PROVIDER_AVAILABILITY_CREATED", result.id, { department_display: result.department_display });
     return result;

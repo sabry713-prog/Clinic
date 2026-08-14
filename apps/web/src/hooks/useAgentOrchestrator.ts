@@ -21,6 +21,10 @@ export interface EvidenceStep {
 export interface EvidenceChain {
   readonly steps: readonly EvidenceStep[];
   readonly rendered: string;
+  /** Verbatim Cypher statements the engine executed to produce this chain
+   * (S4.1 terminal cutaway). Absent for deductions that ran no graph query
+   * (e.g. reference-map SQL lookups, which carry their query text instead). */
+  readonly cypher?: readonly string[];
 }
 
 export interface PharmacistResult {

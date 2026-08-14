@@ -188,7 +188,10 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
 
     const client = new S3Client({
       region,
-      ...(endpoint ? { endpoint } : {}),
+      // A custom endpoint (dev MinIO, or any S3-compatible store) must use
+      // path-style addressing -- virtual-host style would resolve
+      // <bucket>.localhost, which doesn't exist outside real AWS S3.
+      ...(endpoint ? { endpoint, forcePathStyle: true } : {}),
       credentials: {
         accessKeyId: this.config.get<string>("S3_ACCESS_KEY_ID", ""),
         secretAccessKey: this.config.get<string>("S3_SECRET_ACCESS_KEY", ""),

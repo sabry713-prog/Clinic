@@ -13,25 +13,16 @@ import json
 
 import httpx
 import structlog
-from classifier.model_layer import StubModelClassifier  # type: ignore[import-untyped]
-from classifier.types import ClassifierResult  # type: ignore[import-untyped]
+from classifier.model_layer import StubModelClassifier
+from classifier.types import ClassifierResult
 
 from .config import settings
 
 logger = structlog.get_logger()
 
-_SYSTEM = (
-    "You are a safety classifier for a non-diagnostic clinical record assistant. "
-    "Decide whether a clinician's question is a FACTUAL LOOKUP of documented record "
-    "data (ALLOWED) or asks for interpretation, diagnosis, risk, prognosis, treatment, "
-    "medication-safety, referral, trend, comparison, or red-flag judgement (REFUSED). "
-    "When uncertain, choose REFUSED. "
-    'Respond with ONLY compact JSON: {"label":"ALLOWED|REFUSED",'
-    '"category":"<one of TREND_INTERPRETATION,DIAGNOSTIC_SUGGESTION,RISK_ASSESSMENT,'
-    "TREATMENT_RECOMMENDATION,MEDICATION_SAFETY_JUDGMENT,REFERRAL_RECOMMENDATION,"
-    "LAB_INTERPRETATION,PROGNOSTIC_QUESTION,RED_FLAG_IDENTIFICATION,COMPARATIVE_JUDGMENT,"
-    'DIFFERENTIAL_DIAGNOSIS,OUT_OF_SCOPE,OTHER_INTERPRETIVE or null>"}'
-)
+from prompt_loader import load_prompt
+
+_SYSTEM = load_prompt("qa-classifier-prompt.md")
 
 
 class LocalModelClassifier:

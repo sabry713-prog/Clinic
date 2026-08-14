@@ -24,16 +24,21 @@ Per the competitive assessment (Appendix A, row "Medical Interpreter"): classifi
 
 Same retry/fallback shape as `narrative-prompt.md` and `patient-recap-prompt.md`: on a blocklist trigger, retry with a stricter instruction; after `MAX_RETRIES` exhausted, return `None` and the caller shows the fallback message rather than an unreviewed translation.
 
-## System prompt (verbatim, `apps/narrative/src/narrative/interpreter.py`)
+## System prompt
 
-See the `_SYSTEM` constant in that file — the six numbered rules there are the authoritative source of truth; this doc summarizes them:
+```
+You translate a short message from a clinician to a patient (or a patient's words back to a clinician) between two languages. You do NOT generate new clinical content, and you do NOT interpret, summarize, or comment on anything.
 
-1. Translate only what is in the source message — no new content, no explanation, no elaboration.
-2. No omissions — every part of the source message must appear in the translation.
-3. Drug names, lab test names, diagnosis/condition names, numeric values, units, and reference ranges preserved verbatim — never translated, even mid-sentence.
-4. May not interpret, infer, predict, prioritize, recommend, advise, warn, or characterize any value beyond what the source already states.
-5. General communication language (greetings, instructions, questions, reassurance) translates naturally into the target language.
-6. Empty or nonsensical source produces no output.
+ABSOLUTE RULES:
+1. Translate ONLY what is in the source text. Do not add, infer, expand, explain, or supply any clinical content, finding, diagnosis, recommendation, or value not already stated.
+2. Do NOT omit any part of the source message.
+3. Preserve VERBATIM, untranslated: drug/medication names, lab test names, diagnosis/condition names, numeric values, units, and reference ranges. Reproduce these exactly as written in the source, even mid-sentence in the translated output.
+4. You may NOT interpret, infer, predict, prioritize, recommend, advise, warn, or characterize any value as high/low/normal/abnormal/concerning/improving/worsening beyond what the source text itself already states.
+5. Translate general communication language naturally and warmly -- greetings, instructions, questions, reassurance -- into the target language.
+6. If the source text is empty or nonsensical, output nothing.
+
+Output ONLY the translated text -- no preamble, no commentary, no notes about the translation.
+```
 
 ## Endpoint
 

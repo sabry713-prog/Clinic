@@ -137,3 +137,121 @@ async def test_generate_soap_note_stub_routing(monkeypatch):
 
     soap = await model_router.generate_soap_note("Patient reports fatigue for two days.")
     assert soap["subjective"]
+
+
+# --------------------------------------------------------------------------
+# local provider -- resolve_provider
+# --------------------------------------------------------------------------
+def test_local_provider_resolves_when_explicit():
+    env = {"ORCHESTRATOR_MODEL_PROVIDER": "local"}
+    assert model_router.resolve_provider(env) == "local"
+
+
+def test_local_provider_is_case_insensitive():
+    env = {"ORCHESTRATOR_MODEL_PROVIDER": "LOCAL"}
+    assert model_router.resolve_provider(env) == "local"
+
+
+def test_local_provider_does_not_require_deepseek_key():
+    # "local" should resolve even without a DEEPSEEK_API_KEY.
+    env = {"ORCHESTRATOR_MODEL_PROVIDER": "local"}
+    assert model_router.resolve_provider(env) == "local"
+
+
+# --------------------------------------------------------------------------
+# local provider -- format_agent_prose / generate_soap_note routing
+# --------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_local_provider_routes_format_agent_prose(monkeypatch):
+    monkeypatch.setenv("ORCHESTRATOR_MODEL_PROVIDER", "local")
+    monkeypatch.setenv("MODEL_ENDPOINT_URL", "http://localhost:11434")
+    monkeypatch.setenv("MODEL_NAME", "test-model")
+
+    from model_provider import LocalModelProvider  # noqa: E402
+
+    async def fake_complete(self, system_prompt, user_prompt, params):
+        assert "Consultant" in system_prompt
+        assert "diagnosis" in user_prompt
+        return "The patient has been diagnosed with Hypertension."
+
+    monkeypatch.setattr(LocalModelProvider, "complete", fake_complete)
+
+    out = await model_router.format_agent_prose(
+        {"diagnosis": "Hypertension"}, agent_role="Consultant",
+    )
+    assert "Hypertension" in out
+
+
+@pytest.mark.asyncio
+async def test_local_provider_routes_generate_soap_note(monkeypatch):
+    monkeypatch.setenv("ORCHESTRATOR_MODEL_PROVIDER", "local")
+    monkeypatch.setenv("MODEL_ENDPOINT_URL", "http://localhost:11434")
+    monkeypatch.setenv("MODEL_NAME", "test-model")
+
+    from model_provider import LocalModelProvider  # noqa: E402
+
+    async def fake_complete(self, system_prompt, user_prompt, params):
+        assert "TRANSCRIPT:" in user_prompt
+        return (
+            '{"subjective": "Patient reports headache.", '
+            '"objective": "BP 130/85.", '
+            '"assessment": "As documented.", '
+            '"plan": "Follow up in two weeks."}'
+        )
+
+    monkeypatch.setattr(LocalModelProvider, "complete", fake_complete)
+
+    soap = await model_router.generate_soap_note("Patient reports headache. BP 130/85.")
+    assert set(soap.keys()) == set(model_router.SOAP_FIELDS)
+    assert "headache" in soap["subjective"]
+
+
+@pytest.mark.asyncio
+async def test_local_provider_empty_facts_returns_empty(monkeypatch):
+    monkeypatch.setenv("ORCHESTRATOR_MODEL_PROVIDER", "local")
+    monkeypatch.setenv("MODEL_ENDPOINT_URL", "http://localhost:11434")
+
+    out = await model_router.format_agent_prose({}, agent_role="Consultant")
+    assert out == ""
+
+
+@pytest.mark.asyncio
+async def test_local_provider_empty_transcript_returns_empty_soap(monkeypatch):
+    monkeypatch.setenv("ORCHESTRATOR_MODEL_PROVIDER", "local")
+    monkeypatch.setenv("MODEL_ENDPOINT_URL", "http://localhost:11434")
+
+    soap = await model_router.generate_soap_note("   ")
+    assert soap == {field: "" for field in model_router.SOAP_FIELDS}
+
+
+@pytest.mark.asyncio
+async def test_local_provider_does_not_call_deepseek(monkeypatch):
+    """When ORCHESTRATOR_MODEL_PROVIDER=local, deepseek_client must not be invoked."""
+    monkeypatch.setenv("ORCHESTRATOR_MODEL_PROVIDER", "local")
+    monkeypatch.setenv("MODEL_ENDPOINT_URL", "http://localhost:11434")
+
+    from model_provider import LocalModelProvider  # noqa: E402
+
+    call_count = 0
+
+    async def fake_complete(self, system_prompt, user_prompt, params):
+        nonlocal call_count
+        call_count += 1
+        # First call is format_agent_prose, second is generate_soap_note
+        if call_count == 1:
+            return "local prose"
+        return '{"subjective": "Patient reports fatigue.", "objective": "", "assessment": "", "plan": ""}'
+
+    monkeypatch.setattr(LocalModelProvider, "complete", fake_complete)
+
+    async def fail_if_called(*a, **k):
+        raise AssertionError("deepseek_client must not be called in local mode")
+
+    monkeypatch.setattr(deepseek_client, "format_agent_prose", fail_if_called)
+    monkeypatch.setattr(deepseek_client, "generate_soap_note", fail_if_called)
+
+    prose = await model_router.format_agent_prose({"x": 1}, agent_role="Consultant")
+    soap = await model_router.generate_soap_note("Patient reports fatigue.")
+    assert prose == "local prose"
+    assert set(soap.keys()) == set(model_router.SOAP_FIELDS)
+    assert soap["subjective"] == "Patient reports fatigue."

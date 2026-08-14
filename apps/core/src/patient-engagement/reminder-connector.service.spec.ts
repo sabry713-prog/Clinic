@@ -22,8 +22,9 @@ function makeConfig(values: Record<string, string> = {}): ConfigService {
   return { get: (key: string) => values[key] } as unknown as ConfigService;
 }
 
-function makeStatefulPool(opts: { hasContact?: boolean } = {}) {
+function makeStatefulPool(opts: { hasContact?: boolean; contactLanguage?: string | null } = {}) {
   const hasContact = opts.hasContact ?? true;
+  const contactLanguage = opts.contactLanguage === undefined ? "en" : opts.contactLanguage;
   const sends: Record<string, unknown>[] = [];
   const query = jest.fn((sql: string, params?: unknown[]) => {
     if (sql.includes("FROM hospital.appointment")) {
@@ -38,6 +39,9 @@ function makeStatefulPool(opts: { hasContact?: boolean } = {}) {
     }
     if (sql.includes("FROM app.patient_contact")) {
       if (!hasContact) return Promise.resolve({ rows: [] } as unknown as QueryResult);
+      if (sql.includes("SELECT language")) {
+        return Promise.resolve({ rows: [{ language: contactLanguage }] } as unknown as QueryResult);
+      }
       return Promise.resolve({ rows: [{ phone: "+966500000000", email: "patient@example.com" }] } as unknown as QueryResult);
     }
     if (sql.includes("INSERT INTO app.reminder_send")) {
@@ -121,5 +125,29 @@ describe("PatientEngagementConnectorService.send — template content", () => {
     expect(result.rendered_message).toContain("follow_up");
     expect(result.rendered_message).toContain("Cardiology");
     expect(result.rendered_message.toLowerCase()).not.toContain("diagnos");
+  });
+
+  it("renders the Arabic template with a Hijri date when the contact language is Arabic (S4.4)", async () => {
+    const pool = makeStatefulPool({ contactLanguage: "ar" });
+    const svc = new PatientEngagementConnectorService(pool, mockScopeService, makeConfig());
+    const result = await svc.send(USER_ID, PATIENT_ID, APPOINTMENT_ID, "sms");
+    expect(result.template_used).toBe("follow_up:sms:ar");
+    // Arabic fixed template: reminder wording, localized type, Hijri year
+    // (2026-08-01 = 1447/1448 AH depending on day — assert the Hijri marker
+    // and Arabic-Indic digits rather than pinning the year boundary).
+    expect(result.rendered_message).toContain("تذكير: لديك موعد متابعة");
+    expect(result.rendered_message).toMatch(/[٠-٩]/);
+    expect(result.rendered_message).toContain("هـ");
+    expect(result.rendered_message).toContain("Cardiology"); // location stays verbatim
+    // Still administrative-only.
+    expect(result.rendered_message).not.toContain("diagnos");
+  });
+
+  it("defaults to Arabic when no language preference is recorded", async () => {
+    const pool = makeStatefulPool({ contactLanguage: null });
+    const svc = new PatientEngagementConnectorService(pool, mockScopeService, makeConfig());
+    const result = await svc.send(USER_ID, PATIENT_ID, APPOINTMENT_ID, "sms");
+    expect(result.template_used).toBe("follow_up:sms:ar");
+    expect(result.rendered_message).toContain("تذكير");
   });
 });

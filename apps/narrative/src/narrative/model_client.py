@@ -4,7 +4,8 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from collections.abc import Callable
+from typing import Any, Protocol, runtime_checkable
 
 import httpx
 
@@ -101,7 +102,8 @@ class StubModelProvider:
         ar = bool(lang_match and lang_match.group(1).strip().lower() == "ar")
 
         # Label sets — Arabic vs English. Only structural text is localized.
-        L = {
+        # (titles is a list; every other value is a string.)
+        L: dict[str, Any] = {
             "titles": [
                 "١. السياق التعريفي والدخول", "٢. المشاكل النشطة الموثقة",
                 "٣. الحساسيات الموثقة", "٤. الأدوية الحالية",
@@ -138,7 +140,7 @@ class StubModelProvider:
         sex = ({"male": "ذكر", "female": "أنثى"}.get(sex_raw.lower(), sex_raw)) if ar else sex_raw
         ward = demographics.get("ward") or ("الجناح الموثق" if ar else "the documented ward")
 
-        def _fmt_condition(c: dict) -> str:
+        def _fmt_condition(c: dict[str, object]) -> str:
             parts = [str(c.get("code_display") or c.get("code") or ("حالة غير محددة" if ar else "Unspecified condition"))]
             if c.get("clinical_status"):
                 parts.append(f"{L['status']}: {c['clinical_status']}")
@@ -146,7 +148,7 @@ class StubModelProvider:
                 parts.append(f"{L['onset']}: {c['onset_date']}")
             return ("، " if ar else ", ").join(parts) + "."
 
-        def _fmt_allergy(a: dict) -> str:
+        def _fmt_allergy(a: dict[str, object]) -> str:
             parts = [str(a.get("code_display") or ("مُحسِّس غير محدد" if ar else "Unspecified allergen"))]
             if a.get("reaction"):
                 parts.append(f"{L['reaction']}: {a['reaction']}")
@@ -154,7 +156,7 @@ class StubModelProvider:
                 parts.append(f"{L['recorded']}: {a['recorded_at']}")
             return ("، " if ar else ", ").join(parts) + "."
 
-        def _fmt_medication(m: dict) -> str:
+        def _fmt_medication(m: dict[str, object]) -> str:
             parts = [str(m.get("medication_display") or m.get("code") or ("دواء غير محدد" if ar else "Unspecified medication"))]
             for key in ("dose", "route", "frequency"):
                 if m.get(key):
@@ -163,7 +165,7 @@ class StubModelProvider:
                 parts.append(f"{L['started']}: {m['started_at']}")
             return ("، " if ar else ", ").join(parts) + "."
 
-        def _fmt_observation(o: dict) -> str:
+        def _fmt_observation(o: dict[str, object]) -> str:
             label = str(o.get("code_display") or o.get("code") or ("ملاحظة" if ar else "Observation"))
             if o.get("value_numeric") is not None:
                 value = f"{o['value_numeric']} {o.get('unit') or ''}".strip()
@@ -178,7 +180,7 @@ class StubModelProvider:
             when = f"، {L['recorded_in']} {o['effective_at']}" if (ar and o.get("effective_at")) else (f", {L['recorded_in']} {o['effective_at']}" if o.get("effective_at") else "")
             return f"{label}: {value}{ref}{when}."
 
-        def _fmt_document(d: dict) -> str:
+        def _fmt_document(d: dict[str, object]) -> str:
             parts = [str(d.get("type_display") or ("مستند" if ar else "Document"))]
             if d.get("author_display"):
                 parts.append(f"{L['author']}: {d['author_display']}")
@@ -186,7 +188,7 @@ class StubModelProvider:
                 parts.append(f"{L['dated']}: {d['authored_at']}")
             return ("، " if ar else ", ").join(parts) + "."
 
-        def _fmt_prior(p: dict) -> str:
+        def _fmt_prior(p: dict[str, object]) -> str:
             parts = [str(p.get("encounter_type") or ("زيارة" if ar else "Encounter"))]
             if p.get("started_at"):
                 parts.append(f"{L['from']} {p['started_at']}")
@@ -194,7 +196,7 @@ class StubModelProvider:
                 parts.append(f"{L['to']} {p['ended_at']}")
             return " ".join(parts) + "."
 
-        def _section(items: object, fmt, empty: str) -> list[str]:
+        def _section(items: object, fmt: Callable[[dict[str, object]], str], empty: str) -> list[str]:
             if isinstance(items, list) and items:
                 return [fmt(i) for i in items if isinstance(i, dict)]
             return [empty]
@@ -247,11 +249,19 @@ class LocalModelProvider:
 
     async def complete(self, system_prompt: str, user_prompt: str,
                        params: ModelParams) -> str:
+        from phi_guard import guard_outbound
+
+        decision = guard_outbound(
+            endpoint_url=self._url,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            contains_phi=True,
+        )
         payload = {
             "model": self._model,
             "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {"role": "system", "content": decision.system_prompt},
+                {"role": "user", "content": decision.user_prompt},
             ],
             "temperature": params.temperature,
             "top_p": params.top_p,
@@ -265,7 +275,8 @@ class LocalModelProvider:
             resp = await client.post(self._url, json=payload, headers=headers)
             resp.raise_for_status()
             data = resp.json()
-        return str(data["choices"][0]["message"]["content"]).strip()
+        raw = str(data["choices"][0]["message"]["content"]).strip()
+        return str(decision.restore(raw))
 
 
 def get_model() -> ModelProvider:

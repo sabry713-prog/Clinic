@@ -9,6 +9,8 @@ from grpc_health.v1.health import HealthServicer
 
 import structlog
 
+from .model_client import ModelProvider
+
 logger = structlog.get_logger()
 
 
@@ -51,7 +53,7 @@ class NarrativeHealthServicer(HealthServicer):
 # ---------------------------------------------------------------------------
 
 try:
-    from .proto_gen import narrative_pb2, narrative_pb2_grpc  # type: ignore[import]
+    from .proto_gen import narrative_pb2, narrative_pb2_grpc  # type: ignore[import-untyped]
 
     class NarrativeServicer(narrative_pb2_grpc.NarrativeServiceServicer):
         """gRPC NarrativeService servicer.
@@ -63,7 +65,7 @@ try:
         def __init__(
             self,
             pool: object,  # asyncpg.Pool — typed loosely to avoid import cycle
-            model: object,  # ModelProvider
+            model: ModelProvider,
         ) -> None:
             self._pool = pool
             self._model = model
@@ -82,8 +84,8 @@ try:
                         patient_id=request.patient_id,
                         language=request.language or "en",
                         scope=request.scope or "full",
-                        pool=self._pool,  # type: ignore[arg-type]
-                        model=self._model,  # type: ignore[arg-type]
+                        pool=self._pool,
+                        model=self._model,
                     )
                 )
             finally:
@@ -140,7 +142,7 @@ except ImportError:
 def create_grpc_server(
     port: int,
     pool: object | None = None,
-    model: object | None = None,
+    model: ModelProvider | None = None,
 ) -> grpc.Server:
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
 
@@ -150,8 +152,8 @@ def create_grpc_server(
 
     # Narrative (only if stubs were generated and pool/model are provided)
     if _NARRATIVE_STUBS_AVAILABLE and pool is not None and model is not None:
-        narrative_servicer = NarrativeServicer(pool=pool, model=model)  # type: ignore[possibly-undefined]
-        narrative_pb2_grpc.add_NarrativeServiceServicer_to_server(narrative_servicer, server)  # type: ignore[possibly-undefined]
+        narrative_servicer = NarrativeServicer(pool=pool, model=model)
+        narrative_pb2_grpc.add_NarrativeServiceServicer_to_server(narrative_servicer, server)
 
     server.add_insecure_port(f"[::]:{port}")
     return server

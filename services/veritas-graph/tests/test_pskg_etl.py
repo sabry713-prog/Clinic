@@ -47,6 +47,7 @@ from etl_pskg import (  # noqa: E402
     _condition_key,
     _lab_flag,
     _medication_identity,
+    _strip_dose_suffix,
     ingest_patient,
     sync_patient_to_graph,
 )
@@ -383,3 +384,110 @@ async def test_sync_patient_to_graph_matches_ingest_patient_directly():
     assert graph_a.patients.keys() == graph_b.patients.keys()
     assert graph_a.conditions.keys() == graph_b.conditions.keys()
     assert graph_a.medications.keys() == graph_b.medications.keys()
+
+
+# ── Dose-suffix stripping (Task 6) ────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    ("input_name", "expected"),
+    [
+        ("warfarin 3mg", "warfarin"),
+        ("warfarin 5 mg", "warfarin"),
+        ("Metformin 500mg", "Metformin"),
+        ("Metformin  500MG", "Metformin"),
+        ("insulin 100units", "insulin"),
+        ("insulin 100 units", "insulin"),
+        ("amlodipine 2.5mg", "amlodipine"),
+        ("solution 5%", "solution"),
+        ("warfarin", "warfarin"),
+        ("Warfarin 3mg", "Warfarin"),
+        ("B12 100mcg", "B12"),
+    ],
+)
+def test_strip_dose_suffix_variants(input_name, expected):
+    assert _strip_dose_suffix(input_name) == expected
+
+
+def test_medication_identity_strips_dose_suffix_from_name_key():
+    """Two rows whose display names differ only by a dose suffix must
+    produce the same merge key."""
+    row_suffixed = {
+        "id": "med-a",
+        "medication_display": "warfarin 3mg",
+        "code": None,
+        "code_system": "",
+    }
+    row_plain = {
+        "id": "med-b",
+        "medication_display": "warfarin",
+        "code": None,
+        "code_system": "",
+    }
+    key_a, _, _ = _medication_identity(row_suffixed)
+    key_b, _, _ = _medication_identity(row_plain)
+    assert key_a == key_b == "warfarin"
+
+
+def test_medication_identity_code_based_key_is_unaffected_by_dose_suffix():
+    """SFDA/RxNorm-coded medications ignore the display name entirely."""
+    row = {
+        "id": "med-x",
+        "medication_display": "Amlodipine 5mg",
+        "code": "SFDA-1234",
+        "code_system": "sfda",
+    }
+    key, sfda, rxnorm = _medication_identity(row)
+    assert key == "SFDA-1234"
+    assert sfda == "SFDA-1234"
+    assert rxnorm is None
+
+
+@pytest.mark.asyncio
+async def test_dose_suffixed_medication_names_merge_with_base_name():
+    """Two patients, one with "warfarin 3mg" and another with "warfarin"
+    (both uncoded), should produce a SINGLE Medication node -- MERGE
+    deduplicates on the stripped name key."""
+    med_a = [
+        {
+            "id": "med-a",
+            "encounter_id": None,
+            "medication_display": "warfarin 3mg",
+            "code": None,
+            "code_system": "",
+            "dose": "3mg",
+            "route": "oral",
+            "frequency": "once daily",
+            "started_at": None,
+        }
+    ]
+    med_b = [
+        {
+            "id": "med-b",
+            "encounter_id": None,
+            "medication_display": "warfarin",
+            "code": None,
+            "code_system": "",
+            "dose": "5mg",
+            "route": "oral",
+            "frequency": "once daily",
+            "started_at": None,
+        }
+    ]
+
+    graph = FakeAsyncGraph()
+    pool_a = _make_pool(encounters=[], medications=med_a)
+    await ingest_patient("patient-a", pool_a, graph)
+
+    pool_b = _make_pool(encounters=[], medications=med_b)
+    await ingest_patient("patient-b", pool_b, graph)
+
+    # Both patients should share the same Medication node (key = "warfarin").
+    assert "warfarin" in graph.medications
+    assert len(graph.medications) == 1
+
+    # Each patient has its own PRESCRIBED edge with its own dose.
+    assert ("patient", "patient-a", "warfarin") in graph.prescribed_edges
+    assert ("patient", "patient-b", "warfarin") in graph.prescribed_edges
+    assert graph.prescribed_edges[("patient", "patient-a", "warfarin")]["dose"] == "3mg"
+    assert graph.prescribed_edges[("patient", "patient-b", "warfarin")]["dose"] == "5mg"

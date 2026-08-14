@@ -2,12 +2,14 @@
 name = "orchestrator"
 version = "0.1.0"
 description = "Veritas-Medica orchestrator services (DeepSeek integration)"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.27",
     "fastapi>=0.110",
     "uvicorn>=0.29",
     "structlog>=24.1",
+    "phi-guard",
+    "prompt_loader",
 ]
 
 [dependency-groups]
@@ -26,3 +28,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+
+[tool.uv.sources]
+phi-guard = { path = "../../packages/phi-guard", editable = true }
+prompt_loader = { path = "../../packages/prompt_loader", editable = true }

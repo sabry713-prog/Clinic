@@ -244,6 +244,86 @@ async function seed(): Promise<void> {
       }
     }
 
+    // ─── Claim-simulator demo artifacts (E3) ──────────────────────────────
+    // The seeded batch's patients have documented conditions but no clinician
+    // coding/linkage, so "check before you send" would never exercise the
+    // necessity lookup. These rows are the same rows the confirm/link
+    // endpoints write, representing clinicians who already did that work:
+    //   1. every mappable active condition gets its reference-map ICD-10-AM
+    //      confirmation;
+    //   2. three patients get one coded, linked order each, chosen so the
+    //      NPHIES_JUSTIFIES graph returns GREEN twice (documented rule, no
+    //      pre-auth) and RED once (no documented rule -- the flagged, at-risk
+    //      case the coder queue exists for).
+    // Fully deterministic and idempotent: fixed UUIDs + ON CONFLICT DO NOTHING.
+    await client.query(
+      `INSERT INTO app.condition_icd_coding
+         (condition_id, patient_id, snomed_code, icd10am_code, icd10am_display, confirmed_by)
+       SELECT c.id, c.patient_id, c.code, m.icd10am_code, m.icd10am_display, $1
+       FROM hospital.condition c
+       JOIN app.snomed_icd10am_map m ON m.snomed_code = c.code
+       WHERE c.patient_id = ANY($2::uuid[]) AND c.status = 'active'
+       ON CONFLICT (condition_id) DO NOTHING`,
+      [submittedBy, patients.rows.map((p) => p.id)],
+    );
+
+    const SIMULATOR_CASES: ReadonlyArray<{
+      mrn: string;
+      conditionSnomed: string;
+      orderId: string;
+      orderCode: string;
+      category: string;
+      sbsCode: string;
+    }> = [
+      // I10 (hypertension) -> ECG: documented rule, no pre-auth -> GREEN.
+      { mrn: "MRN-006", conditionSnomed: "38341003", orderId: "00000000-0000-4000-8000-0000000000b1", orderCode: "29303009", category: "procedure", sbsCode: "11700-00-10" },
+      // E11.9 (T2DM) -> HbA1c: documented rule, no pre-auth -> GREEN.
+      { mrn: "MRN-008", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b2", orderCode: "43396009", category: "laboratory", sbsCode: "66551-00-10" },
+      // E11.9 (T2DM) -> lumbar MRI: NO documented rule -> RED (conservative
+      // pre-auth default) -- the at-risk finding for the coder review queue.
+      { mrn: "MRN-007", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b3", orderCode: "113091000", category: "imaging", sbsCode: "63001-00-10" },
+    ];
+
+    for (const demoCase of SIMULATOR_CASES) {
+      const patient = patients.rows.find((p) => p.mrn === demoCase.mrn);
+      if (!patient) continue;
+      const condition = await client.query<{ id: string }>(
+        `SELECT id FROM hospital.condition
+         WHERE patient_id = $1 AND code = $2 AND status = 'active'
+         ORDER BY onset_date NULLS LAST, id LIMIT 1`,
+        [patient.id, demoCase.conditionSnomed],
+      );
+      const conditionId = condition.rows[0]?.id;
+      if (!conditionId) continue;
+      const sbsRow = await client.query<{ sbs_display: string }>(
+        `SELECT sbs_display FROM app.order_sbs_map WHERE sbs_code = $1`,
+        [demoCase.sbsCode],
+      );
+      const sbsDisplay = sbsRow.rows[0]?.sbs_display ?? demoCase.sbsCode;
+
+      await client.query(
+        `INSERT INTO app.service_request
+           (id, patient_id, category, code_system, code, code_display, status, intent, requested_by, requested_at)
+         VALUES ($1, $2, $3, 'http://snomed.info/sct', $4, $5, 'active', 'order', $6, now() - interval '2 days')
+         ON CONFLICT (id) DO NOTHING`,
+        [demoCase.orderId, patient.id, demoCase.category, demoCase.orderCode, sbsDisplay, submittedBy],
+      );
+      await client.query(
+        `INSERT INTO app.service_request_sbs_coding
+           (service_request_id, patient_id, order_code, sbs_code, sbs_display, confirmed_by)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (service_request_id) DO NOTHING`,
+        [demoCase.orderId, patient.id, demoCase.orderCode, demoCase.sbsCode, sbsDisplay, submittedBy],
+      );
+      await client.query(
+        `INSERT INTO app.service_request_diagnosis_link
+           (service_request_id, condition_id, patient_id, linked_by)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (service_request_id, condition_id) DO NOTHING`,
+        [demoCase.orderId, conditionId, patient.id, submittedBy],
+      );
+    }
+
     await client.query("COMMIT");
     console.log(`Seeded ${inserted} historical NPHIES claims (${rejected} rejected, ${inserted - rejected} accepted)`);
     console.log(

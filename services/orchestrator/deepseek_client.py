@@ -31,25 +31,11 @@ SOAP_FIELDS = ("subjective", "objective", "assessment", "plan")
 
 # System prompts pin the model to formatting-only behaviour so it can never
 # become a source of clinical facts (CLAUDE.md Principle 1).
-_SOAP_SYSTEM_PROMPT = (
-    "You are a medical scribe formatter. You are given a raw ambient "
-    "consultation transcript. Reorganise its EXISTING content into a SOAP "
-    "note. Do NOT add, infer, diagnose, or invent any clinical fact, "
-    "measurement, medication, or dosage that is not literally present in the "
-    "transcript. If a SOAP section has no supporting content in the "
-    "transcript, return an empty string for it. "
-    'Respond ONLY with a JSON object with exactly these keys: '
-    '"subjective", "objective", "assessment", "plan".'
-)
+from prompt_loader import load_prompt
 
-_AGENT_SYSTEM_PROMPT = (
-    "You are the '{agent_role}' agent in a clinician-facing assistant. You are "
-    "given a set of structured facts that were already retrieved "
-    "deterministically from the knowledge graph. Rephrase ONLY those facts "
-    "into a short, clear, conversational message for the clinician. Do NOT "
-    "add, infer, or invent any fact, value, recommendation, or code beyond "
-    "what is given. Preserve every clinical term, value, and code verbatim."
-)
+_SOAP_SYSTEM_PROMPT = load_prompt("soap-format-prompt.md")
+
+_AGENT_SYSTEM_PROMPT = load_prompt("agent-prose-prompt.md")
 
 
 class DeepSeekError(RuntimeError):
@@ -77,16 +63,32 @@ async def _chat_completion(
     """POST to DeepSeek's OpenAI-compatible /chat/completions and return the
     assistant message content. This is the single network boundary and the
     seam that tests patch.
+
+    DATA-RESIDENCY GATE (CLAUDE.md §7 / PDPL): every outbound call passes
+    through ``phi_guard.guard_outbound()``.  In-Kingdom endpoints are
+    pass-through; external endpoints are governed by ``PHI_EGRESS_POLICY``
+    (default: *block*).
     """
     base_url = os.environ.get("DEEPSEEK_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
     model = os.environ.get("DEEPSEEK_MODEL", DEFAULT_MODEL)
     timeout = float(os.environ.get("DEEPSEEK_TIMEOUT_S", DEFAULT_TIMEOUT_S))
+    endpoint_url = f"{base_url}/chat/completions"
+
+    # DATA-RESIDENCY GATE (CLAUDE.md §7 / PDPL).
+    from phi_guard import guard_outbound  # type: ignore[import-untyped]
+
+    decision = guard_outbound(
+        endpoint_url=endpoint_url,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        contains_phi=True,
+    )
 
     payload: dict[str, Any] = {
         "model": model,
         "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
+            {"role": "system", "content": decision.system_prompt},
+            {"role": "user", "content": decision.user_prompt},
         ],
         "temperature": temperature,
         "stream": False,
@@ -103,7 +105,7 @@ async def _chat_completion(
     client = client or httpx.AsyncClient(timeout=timeout)
     try:
         resp = await client.post(
-            f"{base_url}/chat/completions", json=payload, headers=headers
+            endpoint_url, json=payload, headers=headers
         )
         resp.raise_for_status()
         data = resp.json()
@@ -114,7 +116,8 @@ async def _chat_completion(
             await client.aclose()
 
     try:
-        return str(data["choices"][0]["message"]["content"])
+        raw = str(data["choices"][0]["message"]["content"])
+        return decision.restore(raw)
     except (KeyError, IndexError, TypeError) as exc:
         raise DeepSeekError(f"Unexpected DeepSeek response shape: {data!r}") from exc
 

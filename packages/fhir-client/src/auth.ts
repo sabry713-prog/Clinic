@@ -26,7 +26,7 @@ interface TokenResponse {
 
 export class OAuth2TokenProvider {
   private accessToken: string | null = null;
-  private expiresAt: number = 0;
+  private expiresAt = 0;
 
   constructor(private readonly config: OAuth2Config) {}
 
@@ -51,7 +51,7 @@ export class OAuth2TokenProvider {
     if (!res.ok) {
       const text = await res.text();
       throw new Error(
-        `OAuth2 token request failed: ${res.status} ${text}`,
+        `OAuth2 token request failed: ${String(res.status)} ${text}`,
       );
     }
 

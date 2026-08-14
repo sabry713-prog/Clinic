@@ -112,7 +112,10 @@ def _event(
 ) -> dict[str, Any]:
     """Build one `nphies_status_updated` payload.
 
-    `status` is one of: queued | approved | pended | error | eligible | not_eligible.
+    `status` is one of: queued | approved | pended | error | eligible |
+    not_eligible. `pended` is used by both flows: an undecided prior-auth
+    outcome, and an eligibility response that arrived in a non-complete state
+    (queued/partial) -- neither may read as approved or eligible downstream.
     """
     return {
         "event": EVENT_NAME,
@@ -189,16 +192,31 @@ async def check_eligibility_task(
     try:
         result = await client.check_eligibility(patient_civil_id, payer_id)
         response = result.get("response", {}) or {}
-        inforce = any(
-            bool(ins.get("inforce")) for ins in (response.get("insurance") or []) if isinstance(ins, dict)
-        )
-        event = _event(
-            encounter_id,
-            None,
-            "eligible" if inforce else "not_eligible",
-            disposition=response.get("disposition"),
-            mode=result.get("mode"),
-        )
+        outcome = str(response.get("outcome") or "complete")
+        if outcome != "complete":
+            # An undecided eligibility response (queued/partial, or anything
+            # unrecognised) is PENDED -- it must not render as eligible, and
+            # calling it "not eligible" would overstate what the payer said.
+            event = _event(
+                encounter_id,
+                None,
+                "pended",
+                disposition=response.get("disposition"),
+                mode=result.get("mode"),
+            )
+        else:
+            inforce = any(
+                bool(ins.get("inforce"))
+                for ins in (response.get("insurance") or [])
+                if isinstance(ins, dict)
+            )
+            event = _event(
+                encounter_id,
+                None,
+                "eligible" if inforce else "not_eligible",
+                disposition=response.get("disposition"),
+                mode=result.get("mode"),
+            )
     except (NphiesNotConfigured, NphiesEgressBlocked) as exc:
         logger.error("nphies_eligibility_refused", encounter_id=encounter_id, error=str(exc))
         event = _event(encounter_id, None, "error", detail=str(exc))

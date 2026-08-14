@@ -34,8 +34,8 @@ describe("getSimConfig", () => {
   });
 
   it("is a pure function -- an explicit env object never touches real process.env", () => {
-    const before = process.env["SIM_DEFAULT"];
+    const before = process.env.SIM_DEFAULT;
     getSimConfig({ SIM_DEFAULT: "false" });
-    expect(process.env["SIM_DEFAULT"]).toBe(before);
+    expect(process.env.SIM_DEFAULT).toBe(before);
   });
 });

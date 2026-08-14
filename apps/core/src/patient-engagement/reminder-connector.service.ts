@@ -53,6 +53,44 @@ const SIMULATED_FAILURES: readonly string[] = [
   "Simulated: number/address unreachable",
 ];
 
+// S4.4 — Arabic patient-facing message templates. Same fixed, factual shape
+// as the English template (date/time/type/location only — no reason for
+// visit, no clinical detail, never model-generated). The date renders in the
+// Hijri Umm al-Qura calendar with Arabic-Indic numerals, the calendar Saudi
+// patients read natively.
+const APPOINTMENT_TYPE_AR: Readonly<Record<string, string>> = {
+  follow_up: "متابعة",
+  new_patient: "جديد",
+  consultation: "استشارة",
+  procedure: "إجراء",
+};
+
+function hijriDateDisplay(iso: string): string {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-arab", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function gregorianDateDisplay(iso: string): string {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(date);
+}
+
 @Injectable()
 export class PatientEngagementConnectorService {
   constructor(
@@ -75,6 +113,7 @@ export class PatientEngagementConnectorService {
 
     const appointment = await this.resolveAppointment(patientId, appointmentId);
     const contactValue = await this.resolveContactValue(patientId, channel);
+    const language = await this.resolveContactLanguage(patientId);
 
     if (this.mode() === "live") {
       throw new BadRequestException({
@@ -87,8 +126,8 @@ export class PatientEngagementConnectorService {
       });
     }
 
-    const templateKey = `${appointment.appointment_type}:${channel}`;
-    const renderedMessage = this.renderTemplate(appointment, channel);
+    const templateKey = `${appointment.appointment_type}:${channel}:${language}`;
+    const renderedMessage = this.renderTemplate(appointment, channel, language);
     const outcome = this.simulateDelivery(appointmentId, channel, patientId);
 
     const res = await this.pool.query<ReminderSendRow>(
@@ -152,13 +191,34 @@ export class PatientEngagementConnectorService {
     return value;
   }
 
-  // Fixed, factual template -- date/time/type/location only, never a reason
-  // for visit or any clinical detail, never model-generated.
-  private renderTemplate(appointment: AppointmentForReminder, channel: ReminderChannel): string {
-    const date = new Date(appointment.scheduled_at);
-    const dateDisplay = isNaN(date.getTime()) ? appointment.scheduled_at : date.toISOString();
+  /** Contact language for patient-facing templates (S4.4). Defaults to
+   * Arabic — the Saudi default — when no preference is recorded. */
+  private async resolveContactLanguage(patientId: string): Promise<"ar" | "en"> {
+    const res = await this.pool.query<{ language: string | null }>(
+      `SELECT language FROM app.patient_contact WHERE patient_id = $1`,
+      [patientId],
+    );
+    return res.rows[0]?.language === "en" ? "en" : "ar";
+  }
+
+  // Fixed, factual templates (S4.4: bilingual) -- date/time/type/location
+  // only, never a reason for visit or any clinical detail, never
+  // model-generated. Arabic renders the date in the Hijri Umm al-Qura
+  // calendar; English keeps Gregorian.
+  private renderTemplate(
+    appointment: AppointmentForReminder,
+    channel: ReminderChannel,
+    language: "ar" | "en",
+  ): string {
     const location = appointment.department_display ? `, ${appointment.department_display}` : "";
-    const base = `Reminder: you have a ${appointment.appointment_type} appointment on ${dateDisplay}${location}. Please arrive 15 minutes early.`;
+    let base: string;
+    if (language === "ar") {
+      const typeAr = APPOINTMENT_TYPE_AR[appointment.appointment_type] ?? appointment.appointment_type;
+      const dateAr = hijriDateDisplay(appointment.scheduled_at);
+      base = `تذكير: لديك موعد ${typeAr} بتاريخ ${dateAr}${location}. يُرجى الحضور قبل الموعد بخمس عشرة دقيقة.`;
+    } else {
+      base = `Reminder: you have a ${appointment.appointment_type} appointment on ${gregorianDateDisplay(appointment.scheduled_at)}${location}. Please arrive 15 minutes early.`;
+    }
     return channel === "sms" ? base.slice(0, 320) : base;
   }
 

@@ -18,6 +18,7 @@ export default function ProviderAvailabilityPage(): JSX.Element {
 
   const [departmentDisplay, setDepartmentDisplay] = useState("");
   const [clinicianDisplay, setClinicianDisplay] = useState("");
+  const [clinicianGender, setClinicianGender] = useState<"" | "male" | "female">("");
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
@@ -46,16 +47,18 @@ export default function ProviderAvailabilityPage(): JSX.Element {
         startTime,
         endTime,
         slotDurationMinutes,
+        clinicianGender === "" ? null : clinicianGender,
       );
       setDepartmentDisplay("");
       setClinicianDisplay("");
+      setClinicianGender("");
       refresh();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to create");
     } finally {
       setCreating(false);
     }
-  }, [departmentDisplay, clinicianDisplay, dayOfWeek, startTime, endTime, slotDurationMinutes, refresh]);
+  }, [departmentDisplay, clinicianDisplay, clinicianGender, dayOfWeek, startTime, endTime, slotDurationMinutes, refresh]);
 
   const toggleActive = useCallback(
     async (id: string, active: boolean) => {
@@ -104,6 +107,19 @@ export default function ProviderAvailabilityPage(): JSX.Element {
               onChange={(e) => setClinicianDisplay(e.target.value)}
               className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
             />
+          </label>
+          <label className="text-xs text-slate-400">
+            Clinician gender
+            <select
+              value={clinicianGender}
+              onChange={(e) => setClinicianGender(e.target.value as "" | "male" | "female")}
+              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              title="Lets patients express a scheduling preference. Leave unset to not declare."
+            >
+              <option value="">Not declared</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+            </select>
           </label>
           <label className="text-xs text-slate-400">
             Day
@@ -161,6 +177,7 @@ export default function ProviderAvailabilityPage(): JSX.Element {
               <tr className="border-b border-slate-800 text-slate-400 text-xs">
                 <th className="px-4 py-3">Department</th>
                 <th className="px-4 py-3">Clinician</th>
+                <th className="px-4 py-3">Gender</th>
                 <th className="px-4 py-3">Day</th>
                 <th className="px-4 py-3">Time</th>
                 <th className="px-4 py-3">Duration</th>
@@ -175,6 +192,9 @@ export default function ProviderAvailabilityPage(): JSX.Element {
                   <tr key={row.id} className="border-b border-slate-800 hover:bg-slate-800/50">
                     <td className="px-4 py-3 text-white">{row.department_display}</td>
                     <td className="px-4 py-3 text-slate-300">{row.clinician_display ?? "—"}</td>
+                    <td className="px-4 py-3 text-slate-300">
+                      {row.clinician_gender === "female" ? "Female" : row.clinician_gender === "male" ? "Male" : "—"}
+                    </td>
                     <td className="px-4 py-3 text-slate-300">{DAY_LABELS[row.day_of_week]}</td>
                     <td className="px-4 py-3 text-slate-300" dir="ltr">{row.start_time}–{row.end_time}</td>
                     <td className="px-4 py-3 text-slate-300">{row.slot_duration_minutes} min</td>

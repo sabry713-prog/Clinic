@@ -192,6 +192,23 @@ export default function AiTeamDrawer(): JSX.Element {
                 <span className="font-mono text-[10px] text-slate-600">{msg.at}</span>
               </div>
               <p className="mt-0.5 text-[11px] leading-relaxed text-slate-300">{msg.text}</p>
+              {msg.findings && msg.findings.length > 0 && (
+                <ul className="mt-1.5 space-y-1" data-testid="message-findings">
+                  {msg.findings.map((finding) => (
+                    <li
+                      key={`${finding.kind}-${finding.label}`}
+                      className="flex flex-wrap items-center gap-1.5 rounded border border-slate-800 bg-slate-950/60 px-1.5 py-1"
+                    >
+                      <span className="text-[11px] text-slate-300">{finding.label}</span>
+                      <EvidenceChainPopover
+                        evidenceChain={finding.evidenceChain}
+                        triggerLabel="Evidence"
+                        title={finding.label}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
               {msg.evidenceChain && (
                 <div className="mt-1.5">
                   <EvidenceChainPopover evidenceChain={msg.evidenceChain} />

@@ -165,11 +165,11 @@ async def build_refusal(
     if cat in CATEGORIES_WITH_FACT_OFFERS:
         offered = await fetch_offerable_facts(question, cat, patient_id, lang, pool)
 
-    values_list = format_values(offered.get("values"), lang)  # type: ignore[arg-type]
-    conditions_list = format_conditions(offered.get("conditions"), lang)  # type: ignore[arg-type]
-    medications_list = format_medications(offered.get("medications"), lang)  # type: ignore[arg-type]
-    allergies_list = format_allergies(offered.get("allergies"), lang)  # type: ignore[arg-type]
-    relevant_labs_list = format_labs(offered.get("labs"), lang)  # type: ignore[arg-type]
+    values_list = format_values(offered.get("values"), lang)
+    conditions_list = format_conditions(offered.get("conditions"), lang)
+    medications_list = format_medications(offered.get("medications"), lang)
+    allergies_list = format_allergies(offered.get("allergies"), lang)
+    relevant_labs_list = format_labs(offered.get("labs"), lang)
 
     # Infer measurable term for TREND_INTERPRETATION template
     measurable = _infer_measurable_term(question) or ("values" if lang == "en" else "القيم")
@@ -212,7 +212,7 @@ async def build_refusal(
 
     # Safety net: blocklist check (import here to avoid circular at module level)
     try:
-        from blocklist import scan  # type: ignore[import-untyped]
+        from blocklist import scan
         scan_result = scan(text, language=lang)
         if not scan_result.passed:
             return _generic_refusal(lang, cat)

@@ -29,19 +29,9 @@ FALLBACK_MESSAGE = "Translation unavailable. Please rephrase or use an in-person
 
 INTERPRETER_TEMPLATE_VERSION = "v1.0"
 
-_SYSTEM = """\
-You translate a short message from a clinician to a patient (or a patient's words back to a clinician) between two languages. You do NOT generate new clinical content, and you do NOT interpret, summarize, or comment on anything.
+from prompt_loader import load_prompt
 
-ABSOLUTE RULES:
-1. Translate ONLY what is in the source text. Do not add, infer, expand, explain, or supply any clinical content, finding, diagnosis, recommendation, or value not already stated.
-2. Do NOT omit any part of the source message.
-3. Preserve VERBATIM, untranslated: drug/medication names, lab test names, diagnosis/condition names, numeric values, units, and reference ranges. Reproduce these exactly as written in the source, even mid-sentence in the translated output.
-4. You may NOT interpret, infer, predict, prioritize, recommend, advise, warn, or characterize any value as high/low/normal/abnormal/concerning/improving/worsening beyond what the source text itself already states.
-5. Translate general communication language naturally and warmly -- greetings, instructions, questions, reassurance -- into the target language.
-6. If the source text is empty or nonsensical, output nothing.
-
-Output ONLY the translated text -- no preamble, no commentary, no notes about the translation.\
-"""
+_SYSTEM = load_prompt("interpreter-prompt.md")
 
 
 async def translate_message(

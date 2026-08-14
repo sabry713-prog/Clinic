@@ -99,6 +99,15 @@ export interface AgentAction {
   readonly pendingIntegration?: true;
 }
 
+/** One individually-clickable clinical assertion inside an agent message
+ * (S4.1 terminal cutaway): the label names the finding, the chain is NSCRE's
+ * own traversal for exactly that finding — never shared across findings. */
+export interface MessageFinding {
+  readonly kind: "ddi" | "dose" | "screened" | "necessity";
+  readonly label: string;
+  readonly evidenceChain: EvidenceChain;
+}
+
 export interface AgentMessage {
   readonly id: string;
   readonly from: AgentId;
@@ -108,6 +117,10 @@ export interface AgentMessage {
    * agent result (Sprint 8) — the "Show Reasoning" trigger only appears when
    * this is set. When multiple findings back one message, this is the first. */
   readonly evidenceChain?: EvidenceChain;
+  /** Per-finding assertions (S4.1): each entry renders as its own clickable
+   * row with the exact chain for that one finding, so a multi-finding message
+   * never collapses distinct evidence into one shared trail. */
+  readonly findings?: readonly MessageFinding[];
   /** Set when this message is an inter-agent handoff rather than a single
    * agent's own output (Sprint 10) -- rendered with the source -> target
    * chain so the clinician can see who passed what to whom. */
@@ -469,6 +482,67 @@ const NSCRE_STATUS_TO_BADGE: Record<string, NphiesStatus | undefined> = {
   RED: "red",
 };
 
+// -- S4.1 per-finding cutaway helpers -----------------------------------------
+// Each assertion inside an agent result gets its own clickable evidence row.
+// The label states what the finding IS (administrative restatement only --
+// never an interpretation); the chain is the finding's own traversal, read
+// verbatim from the result object, never shared or reconstructed.
+
+function chainOf(value: unknown): EvidenceChain | null {
+  if (typeof value !== "object" || value === null) return null;
+  const candidate = value as { steps?: unknown; rendered?: unknown };
+  if (!Array.isArray(candidate.steps) || typeof candidate.rendered !== "string") return null;
+  return value as EvidenceChain;
+}
+
+function propOf(f: Record<string, unknown>, key: string): string | null {
+  const value = f[key];
+  return typeof value === "string" ? value : null;
+}
+
+/** Human label for one raw NSCRE finding, by finding kind. Returns null when
+ * the shape doesn't match -- the finding is then simply not offered as a
+ * clickable row rather than guessed at. */
+function findingLabel(kind: MessageFinding["kind"], f: Record<string, unknown>): string | null {
+  if (kind === "ddi") {
+    const a = propOf(f, "drug_a");
+    const b = propOf(f, "drug_b");
+    return a !== null && b !== null ? `DDI alert: ${a} × ${b}` : null;
+  }
+  if (kind === "dose") {
+    const med = propOf(f, "medication");
+    const egfr = f["egfr_value"];
+    return med !== null && (typeof egfr === "number" || typeof egfr === "string")
+      ? `Renal dose: ${med} (eGFR ${String(egfr)})`
+      : null;
+  }
+  if (kind === "necessity") {
+    const med = propOf(f, "medication");
+    const status = propOf(f, "status");
+    return med !== null && status !== null ? `Necessity: ${med} — ${status}` : null;
+  }
+  // screened
+  const med = propOf(f, "medication");
+  const result = propOf(f, "screen_result");
+  return med !== null ? `Screened: ${med}${result !== null ? ` — ${result}` : ""}` : null;
+}
+
+function findingsFrom(
+  list: readonly unknown[],
+  kind: MessageFinding["kind"],
+): readonly MessageFinding[] {
+  const findings: MessageFinding[] = [];
+  for (const item of list) {
+    if (typeof item !== "object" || item === null) continue;
+    const record = item as Record<string, unknown>;
+    const label = findingLabel(kind, record);
+    const chain = chainOf(record["evidence_chain"]);
+    if (label === null || chain === null) continue;
+    findings.push({ kind, label, evidenceChain: chain });
+  }
+  return findings;
+}
+
 /** Maps agent_bus.py's agent names onto the drawer's tab ids. */
 const AGENT_ID_BY_NAME: Record<string, AgentId> = {
   nscre: "consultant",
@@ -631,6 +705,10 @@ export function SullyProvider({
   useEffect(() => {
     if (!pharmacist) return;
     messageSeq.current += 1;
+    const findings = [
+      ...findingsFrom(pharmacist.findings.drug_interactions, "ddi"),
+      ...findingsFrom(pharmacist.findings.dose_safety, "dose"),
+    ];
     setMessages((prev) => [
       ...prev,
       {
@@ -639,6 +717,7 @@ export function SullyProvider({
         text: pharmacist.prose || "No drug-interaction or dose-safety findings.",
         at: "now",
         ...(pharmacist.evidence_chains[0] ? { evidenceChain: pharmacist.evidence_chains[0] } : {}),
+        ...(findings.length > 0 ? { findings } : {}),
       },
     ]);
   }, [pharmacist]);
@@ -646,6 +725,11 @@ export function SullyProvider({
   useEffect(() => {
     if (!consultant) return;
     messageSeq.current += 1;
+    const findings = [
+      ...findingsFrom(consultant.findings.drug_interactions, "ddi"),
+      ...findingsFrom(consultant.findings.dose_safety, "dose"),
+      ...findingsFrom(consultant.findings.necessity, "necessity"),
+    ];
     setMessages((prev) => [
       ...prev,
       {
@@ -654,6 +738,7 @@ export function SullyProvider({
         text: consultant.prose || "No additional clinical considerations.",
         at: "now",
         ...(consultant.evidence_chains[0] ? { evidenceChain: consultant.evidence_chains[0] } : {}),
+        ...(findings.length > 0 ? { findings } : {}),
       },
     ]);
   }, [consultant]);
@@ -661,6 +746,9 @@ export function SullyProvider({
   useEffect(() => {
     if (!nphies) return;
     messageSeq.current += 1;
+    // Each NPHIES necessity card is its own clickable assertion — the chain is
+    // the card's own traversal from the graph, never the message's first chain.
+    const findings = findingsFrom(nphies.cards, "necessity");
     setMessages((prev) => [
       ...prev,
       {
@@ -669,6 +757,7 @@ export function SullyProvider({
         text: nphies.prose || "No NPHIES necessity findings for current orders.",
         at: "now",
         ...(nphies.evidence_chains[0] ? { evidenceChain: nphies.evidence_chains[0] } : {}),
+        ...(findings.length > 0 ? { findings } : {}),
       },
     ]);
   }, [nphies]);
@@ -850,6 +939,10 @@ export function SullyProvider({
       ...fresh.map((h) => {
         messageSeq.current += 1;
         const chain = (h.payload as { evidence_chain?: EvidenceChain }).evidence_chain;
+        // Alternative-medication screening hops carry the graph's per-candidate
+        // results; surface each screened candidate as its own clickable row.
+        const screened = (h.payload as { screened_candidates?: readonly unknown[] }).screened_candidates;
+        const findings = Array.isArray(screened) ? findingsFrom(screened, "screened") : [];
         return {
           id: `m-handoff-${h.correlation_id}-${h.sequence}`,
           from: AGENT_ID_BY_NAME[h.source_agent] ?? "consultant",
@@ -861,6 +954,7 @@ export function SullyProvider({
             correlationId: h.correlation_id,
           },
           ...(chain ? { evidenceChain: chain } : {}),
+          ...(findings.length > 0 ? { findings } : {}),
         } satisfies AgentMessage;
       }),
     ]);

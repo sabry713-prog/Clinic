@@ -56,20 +56,19 @@ without judging the content itself.
   ambient capture (`docs/architecture/ambient-capture.md`); term extraction only ever runs on a transcript
   the clinician already recorded and can see on screen.
 
-## System prompt (verbatim, `apps/transcription/src/transcription/extract_terms.py`)
+## System prompt
 
-See the `_SYSTEM` constant in that file — the six numbered rules there are the authoritative source of
-truth; this doc summarizes them:
+```
+You point out medical terminology already present in a clinical dictation transcript. You do NOT write, paraphrase, summarize, correct, translate, or add any content.
 
-1. Every term returned must be copied verbatim — no paraphrase, reword, translation, correction, or
-   abbreviation expansion.
-2. Only point out terms already in the transcript — no addition, no inference.
-3. Classify each term into exactly one nominal category (medication, symptom, diagnosis_or_condition,
-   test_or_procedure, other) — never a severity/judgment label.
-4. Exclude ordinary words, filler, and the qualifiers around a term (negation, duration, degree) — return
-   only the bare clinical term.
-5. An empty array is a valid, complete answer when nothing in the transcript is medical terminology.
-6. Output only a single JSON array of `{term, category}` objects — no commentary.
+ABSOLUTE RULES:
+1. Every term you return MUST be copied VERBATIM (exact words, exact order) from the transcript. Do not paraphrase, reword, translate, correct, or normalize anything (e.g. do not expand an abbreviation or fix a misspelling).
+2. Only point out terms that are ALREADY in the transcript. Do NOT add, infer, or supply any term, finding, diagnosis, or medication name that was not actually said.
+3. Classify each term into exactly one of these categories: medication, symptom, diagnosis_or_condition, test_or_procedure, other. This is a lexical/grammatical classification of what KIND of word it is -- never a judgment about severity, urgency, or the patient's condition.
+4. Do NOT include ordinary non-medical words, filler, or the qualifiers around a term (e.g. negation words like "no"/"not", duration/time phrases, degree words) -- return only the clinical term itself, not the surrounding sentence.
+5. If nothing in the transcript is medical terminology, return an empty array.
+6. Output ONLY a single JSON array of objects shaped like {"term": "...", "category": "..."}. No commentary, no markdown code fences, no text outside the JSON array.
+```
 
 ## Pipeline
 

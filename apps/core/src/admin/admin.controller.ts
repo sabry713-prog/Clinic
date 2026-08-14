@@ -523,8 +523,20 @@ export class AdminController {
   @HttpCode(200)
   @ApiOperation({ summary: "Manually trigger yesterday's WORM audit export" })
   async exportWorm(@Req() req: Request): Promise<{ message: string }> {
-    this.assertAdmin(req);
+    const userId = this.assertAdmin(req);
     await this.wormExport.exportYesterday();
+    // A manual export trigger is itself an audited admin action (S4.3) --
+    // previously this endpoint wrote no audit event, unlike audit search.
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "AUDIT_WORM_EXPORT_TRIGGERED",
+      target_type: "audit.event",
+      target_id: null,
+      outcome: "SUCCESS",
+      metadata_json: { trigger: "manual", scope: "yesterday" },
+      request_id: (req.requestId ?? uuidv4()) as RequestId,
+    });
     return { message: "WORM export triggered successfully" };
   }
 

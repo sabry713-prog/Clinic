@@ -142,6 +142,9 @@ export interface AuditEvent {
   readonly ts: Date;
   readonly actor_id: UserId | null;
   readonly actor_role: UserRole | null;
+  // The literal union is documentation/autocomplete only — `string` absorbs
+  // it, which no-redundant-type-constituents flags; keep the intent explicit.
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   readonly action: AuditAction | string;
   readonly target_type: string | null;
   readonly target_id: string | null;
@@ -157,6 +160,15 @@ export interface HealthResponse {
   readonly status: "ok";
   readonly service: string;
   readonly ts: string;
+  /** Deployment profile (E3): which module composition this process booted.
+   * "clinical" loads the clinical agents; "claim-integrity" boots the
+   * SaMD-free administrative surface without them. */
+  readonly profile?: "clinical" | "claim-integrity";
+  /** Whether clinical-agent modules (ai-team/ambient/narrative/qa/interpreter/
+   * handoff/drafts/ai-receptionist) are loaded in this process. */
+  readonly clinical_agents_loaded?: boolean;
+  /** Names of the feature modules actually loaded under the active profile. */
+  readonly modules?: readonly string[];
 }
 
 // Language codes
@@ -215,9 +227,9 @@ export function getSimConfig(
   env: Record<string, string | undefined> = nodeProcessEnv,
 ): SimulationConfig {
   return {
-    simNphiesConnector: parseSimMode(env["SIM_NPHIES_CONNECTOR"]),
-    simHisFeed: parseSimMode(env["SIM_HIS_FEED"]),
-    simSmsOtp: parseSimMode(env["SIM_SMS_OTP"]),
-    simDefault: parseSimBool(env["SIM_DEFAULT"], true),
+    simNphiesConnector: parseSimMode(env.SIM_NPHIES_CONNECTOR),
+    simHisFeed: parseSimMode(env.SIM_HIS_FEED),
+    simSmsOtp: parseSimMode(env.SIM_SMS_OTP),
+    simDefault: parseSimBool(env.SIM_DEFAULT, true),
   };
 }

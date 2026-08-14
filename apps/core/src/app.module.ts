@@ -20,6 +20,7 @@ import { DraftModule } from "./draft/draft.module";
 import { ConditionModule } from "./condition/condition.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
 import { NphiesModule } from "./nphies/nphies.module";
+import { ClaimIntegrityModule } from "./claim-integrity/claim-integrity.module";
 import { InterpreterModule } from "./interpreter/interpreter.module";
 import { AmbientModule } from "./ambient/ambient.module";
 import { RefillRequestModule } from "./refill-request/refill-request.module";
@@ -27,6 +28,54 @@ import { HisConnectorModule } from "./his-connector/his-connector.module";
 import { PatientEngagementModule } from "./patient-engagement/patient-engagement.module";
 import { AiReceptionistModule } from "./ai-receptionist/ai-receptionist.module";
 import { AiTeamModule } from "./ai-team/ai-team.module";
+import { appProfile } from "./app-profile";
+
+/**
+ * Compose the feature-module list for the active deployment profile
+ * (docs/build/03-slices.md slice pattern; E3 claim-integrity profile).
+ *
+ * "clinical" (default) loads everything. "claim-integrity" excludes exactly
+ * the clinical-agent modules -- the LLM-driven surfaces (Scribe /
+ * Consultant / Pharmacist via ai-team, ambient scribe, narrative, Q&A,
+ * interpreter, handoff, drafts, ai-receptionist) -- leaving a SaMD-free
+ * administrative surface: claim readiness, coding, rejection risk, pre-auth,
+ * plus the claim simulator and coder queue. One codebase, a config switch
+ * (APP_PROFILE), never a fork.
+ */
+function composeFeatureModules() {
+  const claimIntegrity = appProfile() === "claim-integrity";
+  return [
+    DatabaseModule,
+    HealthModule,
+    AuthModule,
+    RbacModule,
+    PatientModule,
+    IngestionModule,
+    AdminModule,
+    ConditionModule,
+    ServiceRequestModule,
+    NphiesModule,
+    ClaimIntegrityModule,
+    RefillRequestModule,
+    HisConnectorModule,
+    PatientEngagementModule,
+    DsrModule,
+    MetricsModule,
+    FeatureFlagsModule,
+    ...(claimIntegrity
+      ? []
+      : [
+          NarrativeProxyModule,
+          QAProxyModule,
+          InterpreterModule,
+          AmbientModule,
+          AiTeamModule,
+          HandoffModule,
+          DraftModule,
+          AiReceptionistModule,
+        ]),
+  ];
+}
 
 @Module({
   imports: [
@@ -68,30 +117,7 @@ import { AiTeamModule } from "./ai-team/ai-team.module";
         },
       },
     }),
-    DatabaseModule,
-    HealthModule,
-    AuthModule,
-    RbacModule,
-    PatientModule,
-    IngestionModule,
-    AdminModule,
-    NarrativeProxyModule,
-    QAProxyModule,
-    HandoffModule,
-    DraftModule,
-    ConditionModule,
-    ServiceRequestModule,
-    NphiesModule,
-    InterpreterModule,
-    AmbientModule,
-    RefillRequestModule,
-    HisConnectorModule,
-    PatientEngagementModule,
-    AiReceptionistModule,
-    AiTeamModule,
-    DsrModule,
-    MetricsModule,
-    FeatureFlagsModule,
+    ...composeFeatureModules(),
   ],
 })
 export class AppModule implements NestModule {

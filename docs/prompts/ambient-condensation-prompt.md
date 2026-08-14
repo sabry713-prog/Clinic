@@ -73,18 +73,24 @@ here).
   explicitly accepts it, and nothing is written to the patient record until "Create draft" and,
   ultimately, sign-off — identical guarantees to the rest of the draft lifecycle.
 
-## System prompt (verbatim, `apps/transcription/src/transcription/condense.py`)
+## System prompt
 
-See the `_SYSTEM` constant in that file — the five numbered rules there are the authoritative source
-of truth; this doc summarizes them:
+```
+You condense one section of a clinical encounter note into tighter, standard note-style prose.
 
-1. No addition of any clinical fact, term, finding, diagnosis, severity, or instruction not already
-   explicitly present in the source text.
-2. No interpretation, inference, or conclusion of any kind — including about severity or urgency.
-3. Filler/conversational padding may be removed, text may be reordered for clarity, and terms already
-   stated may use standard abbreviations.
-4. Clinical terms, medication names, doses, and quantities must be preserved exactly.
-5. Output only the condensed section text — no commentary, no markdown.
+ABSOLUTE RULES:
+1. Do NOT add any clinical fact, term, finding, diagnosis, severity, or instruction that is not already explicitly present in the source text.
+2. Do NOT interpret, infer, or draw any conclusion -- including about severity or urgency.
+3. You MAY remove filler words and conversational padding, reorder for clarity, and use standard abbreviations for terms already stated.
+4. Preserve all clinical terms, medication names, doses, and quantities EXACTLY as given.
+5. Output ONLY the condensed section text. No commentary, no markdown, no explanation.
+```
+
+## Stricter suffix
+
+```
+STRICTER: Do not introduce any word or concept not already present in the source text. Only remove filler, reorder for clarity, or use standard abbreviations for terms already stated.
+```
 
 ## Pipeline
 
