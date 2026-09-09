@@ -131,16 +131,16 @@ export default function CommandBar({ open, onClose }: CommandBarProps): JSX.Elem
       aria-label={t("shell.commandBar")}
     >
       <div
-        className="w-full max-w-xl mx-4 rounded-xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden"
+        className="w-full max-w-xl mx-4 rounded-xl border border-line bg-white shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Context chip + input */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800">
-          <svg className="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
+          <svg className="w-5 h-5 text-ink-soft shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           {activePatientName && query.trim().length < 2 && (
-            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-blue-600/20 text-blue-300 text-xs px-2.5 py-1" dir="ltr">
+            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-agent-nph-bg border border-ev-pill-line text-agent-nph font-semibold text-xs px-2.5 py-1" dir="ltr">
               {activePatientName}
             </span>
           )}
@@ -155,18 +155,18 @@ export default function CommandBar({ open, onClose }: CommandBarProps): JSX.Elem
               else if (e.key === "Enter") runRow(rows[selected]);
             }}
             placeholder={t("shell.commandPlaceholder")}
-            className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-ink placeholder-ink-faint focus:outline-none"
           />
-          <kbd className="shrink-0 text-[10px] text-slate-500 border border-slate-700 rounded px-1.5 py-0.5">Esc</kbd>
+          <kbd className="shrink-0 text-[10px] text-ink-soft border border-line rounded px-1.5 py-0.5">Esc</kbd>
         </div>
 
         {/* Results */}
         <div className="max-h-80 overflow-y-auto py-2">
           {searching && (
-            <p className="px-4 py-2 text-sm text-slate-500">{t("common.loading")}</p>
+            <p className="px-4 py-2 text-sm text-ink-soft">{t("common.loading")}</p>
           )}
           {!searching && rows.length === 0 && (
-            <p className="px-4 py-2 text-sm text-slate-500">
+            <p className="px-4 py-2 text-sm text-ink-soft">
               {query.trim().length >= 2 ? t("shell.noResults") : t("shell.commandHint")}
             </p>
           )}
@@ -177,11 +177,11 @@ export default function CommandBar({ open, onClose }: CommandBarProps): JSX.Elem
               onMouseEnter={() => setSelected(i)}
               className={`
                 w-full flex items-center justify-between gap-3 px-4 py-2 text-start text-sm transition-colors
-                ${i === selected ? "bg-slate-800 text-white" : "text-slate-300"}
+                ${i === selected ? "bg-ink text-white" : "text-ink-deep"}
               `}
             >
               <span className="truncate">{row.label}</span>
-              {row.hint && <span className="text-xs text-slate-500 truncate" dir="ltr">{row.hint}</span>}
+              {row.hint && <span className="text-xs text-ink-soft truncate" dir="ltr">{row.hint}</span>}
             </button>
           ))}
         </div>

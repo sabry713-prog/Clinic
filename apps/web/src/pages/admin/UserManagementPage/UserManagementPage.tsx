@@ -28,12 +28,12 @@ function EditModal({ user, onClose, onSave }: EditModalProps): JSX.Element {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-sm space-y-4">
-        <h2 className="text-white font-semibold">Edit roles for {user.display_name}</h2>
+      <div className="bg-white border border-line rounded-xl p-6 w-full max-w-sm space-y-4">
+        <h2 className="text-ink font-semibold">Edit roles for {user.display_name}</h2>
 
         <div className="space-y-2">
           {ALL_ROLES.map((role) => (
-            <label key={role} className="flex items-center gap-3 text-sm text-slate-200 cursor-pointer">
+            <label key={role} className="flex items-center gap-3 text-sm text-ink-deep cursor-pointer">
               <input
                 type="checkbox"
                 checked={selectedRoles.includes(role)}
@@ -48,13 +48,13 @@ function EditModal({ user, onClose, onSave }: EditModalProps): JSX.Element {
         <div className="flex gap-2 pt-2">
           <button
             onClick={() => onSave(user.id, selectedRoles)}
-            className="bg-white text-slate-950 text-sm px-4 py-2 rounded hover:bg-slate-200"
+            className="bg-white text-ink text-sm px-4 py-2 rounded hover:bg-line"
           >
             Save
           </button>
           <button
             onClick={onClose}
-            className="border border-slate-700 text-white text-sm px-4 py-2 rounded hover:bg-slate-800"
+            className="border border-line text-ink text-sm px-4 py-2 rounded hover:bg-veil"
           >
             Cancel
           </button>
@@ -118,23 +118,23 @@ export default function UserManagementPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <p className="text-slate-400 text-sm">Loading users...</p>
+      <div className="min-h-screen bg-wash flex items-center justify-center">
+        <p className="text-ink-soft text-sm">Loading users...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
+    <div className="min-h-screen bg-wash text-ink p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <h1 className="text-lg font-semibold">User Management</h1>
 
-        {error && <p className="text-slate-400 text-sm">{error}</p>}
+        {error && <p className="text-ink-soft text-sm">{error}</p>}
 
-        <div className="bg-slate-900 rounded-xl overflow-hidden">
+        <div className="bg-white rounded-xl overflow-hidden">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 text-xs">
+              <tr className="border-b border-line text-ink-soft text-xs">
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Roles</th>
@@ -144,22 +144,22 @@ export default function UserManagementPage(): JSX.Element {
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="border-b border-slate-800 hover:bg-slate-800/50">
-                  <td className="px-4 py-3 text-white">{user.display_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-300">{user.email ?? "—"}</td>
+                <tr key={user.id} className="border-b border-line hover:bg-veil">
+                  <td className="px-4 py-3 text-ink">{user.display_name ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink-deep">{user.email ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {user.roles.map((role) => (
                         <span
                           key={role}
-                          className="text-xs border border-slate-600 rounded px-2 py-0.5 text-slate-300"
+                          className="text-xs border border-line-strong rounded px-2 py-0.5 text-ink-deep"
                         >
                           {role}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">
+                  <td className="px-4 py-3 text-ink-soft text-xs">
                     {user.disabled_at ? `Disabled ${new Date(user.disabled_at).toLocaleDateString()}` : "Active"}
                   </td>
                   <td className="px-4 py-3">
@@ -168,13 +168,13 @@ export default function UserManagementPage(): JSX.Element {
                         <>
                           <button
                             onClick={() => setEditingUser(user)}
-                            className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded px-2 py-1"
+                            className="text-xs text-ink-soft hover:text-ink border border-line rounded px-2 py-1"
                           >
                             Edit roles
                           </button>
                           <button
                             onClick={() => setDisableConfirm(user.id)}
-                            className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded px-2 py-1"
+                            className="text-xs text-ink-soft hover:text-ink border border-line rounded px-2 py-1"
                           >
                             Disable
                           </button>
@@ -188,7 +188,7 @@ export default function UserManagementPage(): JSX.Element {
           </table>
 
           {users.length === 0 && (
-            <p className="text-slate-500 text-sm p-4">No users found.</p>
+            <p className="text-ink-soft text-sm p-4">No users found.</p>
           )}
         </div>
       </div>
@@ -205,20 +205,20 @@ export default function UserManagementPage(): JSX.Element {
       {/* Disable confirmation */}
       {disableConfirm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-sm space-y-4">
-            <p className="text-white text-sm">
+          <div className="bg-white border border-line rounded-xl p-6 w-full max-w-sm space-y-4">
+            <p className="text-ink text-sm">
               Are you sure you want to disable this user? This action cannot be undone via the UI.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => handleDisable(disableConfirm)}
-                className="bg-white text-slate-950 text-sm px-4 py-2 rounded"
+                className="bg-white text-ink text-sm px-4 py-2 rounded"
               >
                 Confirm disable
               </button>
               <button
                 onClick={() => setDisableConfirm(null)}
-                className="border border-slate-700 text-white text-sm px-4 py-2 rounded"
+                className="border border-line text-ink text-sm px-4 py-2 rounded"
               >
                 Cancel
               </button>

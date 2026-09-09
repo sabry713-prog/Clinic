@@ -31,19 +31,19 @@ function labValue(l: Brief["labs"][number]): string {
 function ClinicCard({ clinic }: { readonly clinic: Brief["clinics"][number] }): JSX.Element {
   const symptoms = useShowMore(clinic.symptoms, 4);
   return (
-    <div className="border border-slate-700 rounded-lg p-3">
-      <p className="text-sm font-medium text-white mb-1.5">{clinic.clinic}</p>
+    <div className="border border-line bg-mist rounded-2xl p-4">
+      <p className="text-sm font-medium text-ink mb-1.5">{clinic.clinic}</p>
       <div className="mb-2">
-        <p className="text-xs text-slate-400 mb-0.5">Symptoms reported</p>
+        <p className="text-xs text-ink-soft mb-0.5">Symptoms reported</p>
         {clinic.symptoms.length === 0 ? (
-          <p className="text-xs text-slate-500">None documented</p>
+          <p className="text-xs text-ink-soft">None documented</p>
         ) : (
           <>
             <ul className="space-y-0.5">
               {symptoms.visible.map((s, i) => (
-                <li key={i} className="text-sm text-white" dir="ltr">
+                <li key={i} className="text-sm text-ink" dir="ltr">
                   {s.display}
-                  <span className="text-slate-500 ml-1">({s.status ?? "—"}, {formatDate(s.onset_date)})</span>
+                  <span className="text-ink-soft ml-1">({s.status ?? "—"}, {formatDate(s.onset_date)})</span>
                 </li>
               ))}
             </ul>
@@ -52,15 +52,15 @@ function ClinicCard({ clinic }: { readonly clinic: Brief["clinics"][number] }): 
         )}
       </div>
       <div>
-        <p className="text-xs text-slate-400 mb-0.5">Treatment documented</p>
+        <p className="text-xs text-ink-soft mb-0.5">Treatment documented</p>
         {clinic.treatments.length === 0 ? (
-          <p className="text-xs text-slate-500">None documented</p>
+          <p className="text-xs text-ink-soft">None documented</p>
         ) : (
           <ul className="space-y-0.5">
             {clinic.treatments.map((t, i) => (
-              <li key={i} className="text-sm text-white" dir="ltr">
+              <li key={i} className="text-sm text-ink" dir="ltr">
                 {t.display}
-                <span className="text-slate-500 ml-1">
+                <span className="text-ink-soft ml-1">
                   {[t.dose, t.route, t.frequency].filter(Boolean).join(", ")}{t.status ? ` — ${t.status}` : ""}
                 </span>
               </li>
@@ -93,15 +93,15 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
 
   if (loading) {
     return (
-      <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
-        <p className="text-sm text-slate-500">Loading patient brief…</p>
+      <div className="bg-white border border-line rounded-[18px] shadow-card p-6">
+        <p className="text-sm text-ink-soft">Loading patient brief…</p>
       </div>
     );
   }
   if (error || !brief) {
     return (
-      <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
-        <p className="text-sm text-slate-400">{error ?? "No brief available"}</p>
+      <div className="bg-white border border-line rounded-[18px] shadow-card p-6">
+        <p className="text-sm text-ink-soft">{error ?? "No brief available"}</p>
       </div>
     );
   }
@@ -123,29 +123,29 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
   );
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-5">
+    <div className="bg-white border border-line rounded-[18px] shadow-card p-6 space-y-5">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-base font-semibold text-white">Patient Brief</h2>
-        <span className="text-xs text-slate-500">Factual reproduction — not a clinical risk assessment</span>
+        <h2 className="text-base font-bold tracking-tight text-ink">Patient Brief</h2>
+        <span className="text-xs text-ink-soft">Factual reproduction — not a clinical risk assessment</span>
       </div>
 
       {/* At-a-glance strip — documented facts only */}
-      <div className="grid gap-4 sm:grid-cols-3 border border-slate-800 rounded-lg px-4 py-3">
+      <div className="grid gap-4 sm:grid-cols-3 border border-line rounded-2xl px-4 py-3 bg-gradient-to-r from-brand-teal/5 to-brand-indigo/5">
         <div className="min-w-0">
-          <p className="text-xs text-slate-500 mb-0.5">Documented active conditions</p>
-          <p className="text-sm text-white truncate" dir="ltr" title={activeConditionNames.join(", ")}>
+          <p className="text-xs text-ink-soft mb-0.5">Documented active conditions</p>
+          <p className="text-sm text-ink truncate" dir="ltr" title={activeConditionNames.join(", ")}>
             {activeConditionNames.length > 0 ? activeConditionNames.join(", ") : "None documented"}
           </p>
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-slate-500 mb-0.5">Active medications</p>
-          <p className="text-sm text-white truncate" dir="ltr" title={activeMedNames.join(", ")}>
+          <p className="text-xs text-ink-soft mb-0.5">Active medications</p>
+          <p className="text-sm text-ink truncate" dir="ltr" title={activeMedNames.join(", ")}>
             {activeMedNames.length > 0 ? activeMedNames.join(", ") : "None documented"}
           </p>
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-slate-500 mb-0.5">Most recent lab result</p>
-          <p className="text-sm text-white truncate" dir="ltr">
+          <p className="text-xs text-ink-soft mb-0.5">Most recent lab result</p>
+          <p className="text-sm text-ink truncate" dir="ltr">
             {latestLab
               ? `${latestLab.code_display ?? latestLab.code}: ${labValue(latestLab)} (${formatDate(latestLab.effective_at)})`
               : "None documented"}
@@ -155,33 +155,33 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
 
       {/* Documented conditions (problem list) with their active medications */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">
+        <h3 className="text-sm font-medium text-ink-deep mb-2">
           Documented conditions &amp; current medications
         </h3>
         {brief.documented_conditions.length === 0 ? (
-          <p className="text-sm text-slate-500">None documented</p>
+          <p className="text-sm text-ink-soft">None documented</p>
         ) : (
           <>
             <ul className="space-y-2">
               {conditions.visible.map((c, i) => (
-                <li key={i} className="border border-slate-700 rounded px-3 py-2">
-                  <p className="text-sm text-white" dir="ltr">
+                <li key={i} className="border border-line bg-mist rounded-xl px-3 py-2">
+                  <p className="text-sm text-ink" dir="ltr">
                     {c.code_display ?? "Unknown"}
-                    <span className="text-slate-500 ml-1">({c.status ?? "—"}, {formatDate(c.onset_date)})</span>
+                    <span className="text-ink-soft ml-1">({c.status ?? "—"}, {formatDate(c.onset_date)})</span>
                   </p>
                   {c.active_medications.length > 0 ? (
                     <ul className="mt-1 ml-3 space-y-0.5">
                       {c.active_medications.map((m, j) => (
-                        <li key={j} className="text-sm text-slate-300" dir="ltr">
+                        <li key={j} className="text-sm text-ink-deep" dir="ltr">
                           • {m.display}
-                          <span className="text-slate-500 ml-1">
+                          <span className="text-ink-soft ml-1">
                             {[m.dose, m.route, m.frequency].filter(Boolean).join(", ")}
                           </span>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-1 ml-3 text-xs text-slate-500">
+                    <p className="mt-1 ml-3 text-xs text-ink-soft">
                       No medication with a documented indication for this condition
                     </p>
                   )}
@@ -193,14 +193,14 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
         )}
         {brief.other_active_medications.length > 0 && (
           <div className="mt-3">
-            <p className="text-xs text-slate-400 mb-1">
+            <p className="text-xs text-ink-soft mb-1">
               Other active medications (no documented condition indication)
             </p>
             <ul className="ml-3 space-y-0.5">
               {brief.other_active_medications.map((m, i) => (
-                <li key={i} className="text-sm text-slate-300" dir="ltr">
+                <li key={i} className="text-sm text-ink-deep" dir="ltr">
                   • {m.display}
-                  <span className="text-slate-500 ml-1">
+                  <span className="text-ink-soft ml-1">
                     {[m.dose, m.route, m.frequency].filter(Boolean).join(", ")}
                   </span>
                 </li>
@@ -212,9 +212,9 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
 
       {/* Care history by clinic */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">Care history by clinic</h3>
+        <h3 className="text-sm font-medium text-ink-deep mb-2">Care history by clinic</h3>
         {brief.clinics.length === 0 ? (
-          <p className="text-sm text-slate-500">No clinic visits documented</p>
+          <p className="text-sm text-ink-soft">No clinic visits documented</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {brief.clinics.map((c) => <ClinicCard key={c.clinic} clinic={c} />)}
@@ -224,17 +224,17 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
 
       {/* Lab investigations */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">Lab investigations (latest per test)</h3>
+        <h3 className="text-sm font-medium text-ink-deep mb-2">Lab investigations (latest per test)</h3>
         {brief.labs.length === 0 ? (
-          <p className="text-sm text-slate-500">None documented</p>
+          <p className="text-sm text-ink-soft">None documented</p>
         ) : (
           <>
             <ul className="grid gap-1 sm:grid-cols-2">
               {labs.visible.map((l, i) => (
                 <li key={i} className="text-sm" dir="ltr">
-                  <span className="text-slate-300">{l.code_display ?? l.code}: </span>
-                  <span className="text-white font-mono">{labValue(l)}</span>
-                  <span className="text-slate-500 ml-1">{formatDate(l.effective_at)}</span>
+                  <span className="text-ink-deep">{l.code_display ?? l.code}: </span>
+                  <span className="text-ink font-mono">{labValue(l)}</span>
+                  <span className="text-ink-soft ml-1">{formatDate(l.effective_at)}</span>
                 </li>
               ))}
             </ul>
@@ -245,19 +245,19 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
 
       {/* Procedures / interventions */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">Procedures &amp; interventions</h3>
+        <h3 className="text-sm font-medium text-ink-deep mb-2">Procedures &amp; interventions</h3>
         {brief.procedures.length === 0 ? (
-          <p className="text-sm text-slate-500">None documented</p>
+          <p className="text-sm text-ink-soft">None documented</p>
         ) : (
           <ul className="space-y-1.5">
             {brief.procedures.map((p, i) => (
-              <li key={i} className="text-sm text-white">
+              <li key={i} className="text-sm text-ink">
                 <span dir="ltr">{p.code_display}</span>
-                <span className="text-slate-500 ml-1">
+                <span className="text-ink-soft ml-1">
                   ({p.status ?? "—"}, {formatDate(p.performed_at)})
                 </span>
-                {p.performer_display ? <span className="text-slate-500 ml-1">— {p.performer_display}</span> : null}
-                {p.note ? <p className="text-slate-400 mt-0.5">{p.note}</p> : null}
+                {p.performer_display ? <span className="text-ink-soft ml-1">— {p.performer_display}</span> : null}
+                {p.note ? <p className="text-ink-soft mt-0.5">{p.note}</p> : null}
               </li>
             ))}
           </ul>
@@ -266,16 +266,16 @@ export default function PatientBrief({ patientId }: { readonly patientId: string
 
       {/* Imaging */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">Imaging reports</h3>
+        <h3 className="text-sm font-medium text-ink-deep mb-2">Imaging reports</h3>
         {brief.imaging.length === 0 ? (
-          <p className="text-sm text-slate-500">None documented</p>
+          <p className="text-sm text-ink-soft">None documented</p>
         ) : (
           <ul className="space-y-1.5">
             {brief.imaging.map((im, i) => (
-              <li key={i} className="text-sm text-white">
-                <span className="text-slate-300">{im.code_display}</span>
-                <span className="text-slate-500 ml-1">({formatDate(im.effective_at)})</span>
-                {im.value_text ? <p className="text-slate-400 mt-0.5">{im.value_text}</p> : null}
+              <li key={i} className="text-sm text-ink">
+                <span className="text-ink-deep">{im.code_display}</span>
+                <span className="text-ink-soft ml-1">({formatDate(im.effective_at)})</span>
+                {im.value_text ? <p className="text-ink-soft mt-0.5">{im.value_text}</p> : null}
               </li>
             ))}
           </ul>

@@ -86,6 +86,7 @@
   },
   "shell": {
     "brand": "Cortex.ai",
+    "demoMode": "وضع العرض · تكاملات محاكاة",
     "patients": "المرضى",
     "commandBar": "إجراءات سريعة",
     "commandPlaceholder": "ابحث عن مريض بالاسم أو رقم الملف…",

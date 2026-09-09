@@ -19,21 +19,21 @@ import ClaimActions from "./ClaimActions";
 const STATUS_STYLE: { [K in "pass" | "warning" | "fail" | "not_applicable"]: { icon: string; cls: string } } = {
   pass: {
     icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    cls: "text-emerald-400",
+    cls: "text-status-ok",
   },
   warning: {
     icon: "M12 9v3.75m0 3.75h.008v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    cls: "text-amber-400",
+    cls: "text-status-pend",
   },
   fail: {
     icon: "M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    cls: "text-red-400",
+    cls: "text-status-rej",
   },
   // Neutral (not amber/red) — the system couldn't verify this check, which
   // is not itself an administrative problem to flag.
   not_applicable: {
     icon: "M8.25 12h7.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    cls: "text-slate-500",
+    cls: "text-ink-soft",
   },
 };
 
@@ -61,26 +61,26 @@ export default function ClaimReadinessPanel({ patientId }: { readonly patientId:
   }, [patientId]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-4">
+    <div className="bg-white border border-line rounded-lg p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-white">NPHIES Claim Readiness</h2>
-        <span className="text-xs text-slate-500">Administrative completeness checks — not billing advice</span>
+        <h2 className="text-base font-semibold text-ink">NPHIES Claim Readiness</h2>
+        <span className="text-xs text-ink-soft">Administrative completeness checks — not billing advice</span>
       </div>
 
-      {error && <p className="text-sm text-slate-400">{error}</p>}
+      {error && <p className="text-sm text-ink-soft">{error}</p>}
 
       {readiness === null ? (
         <button
           type="button"
           onClick={() => void run()}
           disabled={busy}
-          className="text-sm px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+          className="text-sm px-3 py-1.5 rounded bg-white hover:bg-veil border border-line text-ink-deep disabled:opacity-50"
         >
           {busy ? "Checking…" : "Run claim-completeness checks"}
         </button>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm text-slate-300">{OVERALL_LABEL[readiness.overall]}</p>
+          <p className="text-sm text-ink-deep">{OVERALL_LABEL[readiness.overall]}</p>
           <ul className="space-y-1.5">
             {readiness.checks.map((c) => {
               const style = STATUS_STYLE[c.status];
@@ -97,8 +97,8 @@ export default function ClaimReadinessPanel({ patientId }: { readonly patientId:
                     <path strokeLinecap="round" strokeLinejoin="round" d={style.icon} />
                   </svg>
                   <div className="min-w-0">
-                    <p className="text-sm text-white">{c.label}</p>
-                    <p className="text-xs text-slate-500">{c.detail}</p>
+                    <p className="text-sm text-ink">{c.label}</p>
+                    <p className="text-xs text-ink-soft">{c.detail}</p>
                   </div>
                 </li>
               );
@@ -109,24 +109,24 @@ export default function ClaimReadinessPanel({ patientId }: { readonly patientId:
               type="button"
               onClick={() => void run()}
               disabled={busy}
-              className="text-xs px-2.5 py-1.5 rounded border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 disabled:opacity-50"
+              className="text-xs px-2.5 py-1.5 rounded border border-line text-ink-soft hover:text-ink hover:border-line-strong disabled:opacity-50"
             >
               {busy ? "Checking…" : "Re-run checks"}
             </button>
-            <span className="text-xs text-slate-600">{readiness.disclaimer}</span>
+            <span className="text-xs text-ink-faint">{readiness.disclaimer}</span>
           </div>
 
-          <hr className="border-slate-800" />
+          <hr className="border-line" />
 
           {/* ICD-10-AM coding confirm flow — deterministic suggestions, doctor confirms */}
           <CodingQueue patientId={patientId} />
 
-          <hr className="border-slate-800" />
+          <hr className="border-line" />
 
           {/* Pairing compatibility + historical rejection frequency — deterministic, not a prediction */}
           <RejectionRiskPanel patientId={patientId} />
 
-          <hr className="border-slate-800" />
+          <hr className="border-line" />
 
           {/* Eligibility, claim-draft assembly, submission (stub connector in dev) */}
           <ClaimActions patientId={patientId} />

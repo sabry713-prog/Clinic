@@ -60,21 +60,21 @@ export default function QuarantinePage(): JSX.Element {
   const openItems = items.filter((i) => i.status === "open");
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
+    <div className="min-h-screen bg-wash text-ink p-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-semibold mb-2">Identity Quarantine Queue</h1>
-        <p className="text-sm text-slate-400 mb-6">
+        <p className="text-sm text-ink-soft mb-6">
           Records flagged for potential duplicate identity. Review and resolve each case.
         </p>
 
         {successMessage && (
-          <div className="mb-4 p-3 bg-slate-800 border border-slate-700 rounded-md text-sm text-slate-300">
+          <div className="mb-4 p-3 bg-veil border border-line rounded-md text-sm text-ink-deep">
             {successMessage}
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 bg-slate-800 border border-slate-700 rounded-md text-sm text-slate-400">
+          <div className="mb-4 p-3 bg-veil border border-line rounded-md text-sm text-ink-soft">
             {error}
           </div>
         )}
@@ -82,11 +82,11 @@ export default function QuarantinePage(): JSX.Element {
         {/* Resolve confirmation modal */}
         {resolving && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="bg-white border border-line rounded-2xl shadow-card p-6 max-w-md w-full mx-4">
               <h2 className="text-base font-semibold mb-3">
                 Confirm: {resolving.action === "merge" ? "Merge records" : "Keep separate"}
               </h2>
-              <p className="text-sm text-slate-400 mb-4">
+              <p className="text-sm text-ink-soft mb-4">
                 Provide a reason for this decision (required for audit log).
               </p>
               <textarea
@@ -94,19 +94,19 @@ export default function QuarantinePage(): JSX.Element {
                 onChange={(e) => setReasonInput(e.target.value)}
                 rows={3}
                 placeholder="Clinical rationale..."
-                className="w-full bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 resize-none mb-4"
+                className="w-full bg-veil border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-line-strong resize-none mb-4"
               />
               <div className="flex gap-3">
                 <button
                   onClick={confirmResolve}
                   disabled={!reasonInput.trim()}
-                  className="flex-1 px-4 py-2 bg-slate-700 border border-slate-600 rounded-md text-sm text-white hover:bg-slate-600 disabled:opacity-50 transition-colors"
+                  className="flex-1 px-4 py-2 bg-grad-accent border border-transparent rounded-full text-sm font-semibold text-white shadow-pill hover:brightness-110 disabled:opacity-50 transition-all"
                 >
                   Confirm
                 </button>
                 <button
                   onClick={() => setResolving(null)}
-                  className="flex-1 px-4 py-2 bg-transparent border border-slate-700 rounded-md text-sm text-slate-400 hover:border-slate-500 transition-colors"
+                  className="flex-1 px-4 py-2 bg-transparent border border-line rounded-md text-sm text-ink-soft hover:border-line-strong transition-colors"
                 >
                   Cancel
                 </button>
@@ -116,32 +116,32 @@ export default function QuarantinePage(): JSX.Element {
         )}
 
         {isLoading ? (
-          <p className="text-sm text-slate-400">Loading queue...</p>
+          <p className="text-sm text-ink-soft">Loading queue...</p>
         ) : openItems.length === 0 ? (
-          <div className="bg-slate-900 border border-slate-700 rounded-lg p-8 text-center">
-            <p className="text-slate-500 text-sm">No open quarantine records</p>
+          <div className="bg-white border border-line rounded-2xl shadow-card p-8 text-center">
+            <p className="text-ink-soft text-sm">No open quarantine records</p>
           </div>
         ) : (
           <div className="space-y-4">
             {openItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-slate-900 border border-slate-700 rounded-lg p-5"
+                className="bg-white border border-line rounded-2xl shadow-card p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1 flex-1">
-                    <p className="text-xs text-slate-500 font-mono">ID: {item.id}</p>
+                    <p className="text-xs text-ink-soft font-mono">ID: {item.id}</p>
                     <div className="grid grid-cols-2 gap-4 mt-2">
                       <div>
-                        <p className="text-xs text-slate-400 mb-1">Candidate A</p>
-                        <p className="text-sm font-mono text-white">{item.candidate_a_id}</p>
+                        <p className="text-xs text-ink-soft mb-1">Candidate A</p>
+                        <p className="text-sm font-mono text-ink">{item.candidate_a_id}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 mb-1">Candidate B</p>
-                        <p className="text-sm font-mono text-white">{item.candidate_b_id}</p>
+                        <p className="text-xs text-ink-soft mb-1">Candidate B</p>
+                        <p className="text-sm font-mono text-ink">{item.candidate_b_id}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-400 mt-2">
+                    <p className="text-xs text-ink-soft mt-2">
                       Confidence score: {Math.round(item.confidence * 100)}% —
                       Created: {new Date(item.created_at).toLocaleDateString()}
                     </p>
@@ -150,13 +150,13 @@ export default function QuarantinePage(): JSX.Element {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleResolve(item.id, "merge")}
-                      className="px-3 py-1.5 bg-slate-700 border border-slate-600 rounded-md text-xs text-white hover:bg-slate-600 transition-colors"
+                      className="px-3.5 py-1.5 bg-grad-accent border border-transparent rounded-full text-xs font-semibold text-white shadow-pill hover:brightness-110 transition-all"
                     >
                       Merge
                     </button>
                     <button
                       onClick={() => handleResolve(item.id, "keep_separate")}
-                      className="px-3 py-1.5 bg-transparent border border-slate-700 rounded-md text-xs text-slate-300 hover:border-slate-500 transition-colors"
+                      className="px-3 py-1.5 bg-transparent border border-line rounded-md text-xs text-ink-deep hover:border-line-strong transition-colors"
                     >
                       Keep separate
                     </button>

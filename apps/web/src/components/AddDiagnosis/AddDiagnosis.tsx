@@ -56,9 +56,9 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
   }, [patientId, selected, status, onset, onAdded]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-3">
-      <h2 className="text-base font-semibold text-white">Add diagnosis to problem list</h2>
-      <p className="text-xs text-slate-500">
+    <div className="bg-white border border-line rounded-lg p-6 space-y-3">
+      <h2 className="text-base font-semibold text-ink">Add diagnosis to problem list</h2>
+      <p className="text-xs text-ink-soft">
         You author the diagnosis and confirm the code. The AI only suggests a matching code — you decide.
       </p>
 
@@ -70,23 +70,23 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") suggest(); }}
           placeholder="Diagnosis, e.g. headache / type 2 diabetes"
-          className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white placeholder-slate-500"
+          className="flex-1 bg-veil border border-line rounded px-3 py-2 text-sm text-ink placeholder-ink-faint"
         />
         <button onClick={suggest} disabled={!text.trim()}
-          className="px-3 py-2 text-sm rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-40">
+          className="px-3 py-2 text-sm rounded bg-white hover:bg-veil border border-line text-ink-deep disabled:opacity-40">
           Suggest code
         </button>
       </div>
 
       {suggestions.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs text-slate-400">Suggested codes (confirm or pick another):</p>
+          <p className="text-xs text-ink-soft">Suggested codes (confirm or pick another):</p>
           {suggestions.map((s) => (
-            <label key={s.code} className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
+            <label key={s.code} className="flex items-center gap-2 text-sm text-ink-deep cursor-pointer">
               <input type="radio" name="code" checked={selected?.code === s.code}
                 onChange={() => setSelected(s)} />
               <span>{s.code_display}</span>
-              <span className="text-xs text-slate-500 font-mono">SNOMED {s.code}</span>
+              <span className="text-xs text-ink-soft font-mono">SNOMED {s.code}</span>
             </label>
           ))}
         </div>
@@ -95,27 +95,27 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
       {selected && (
         <div className="flex flex-wrap items-end gap-3 pt-1">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Status</label>
+            <label className="block text-xs text-ink-soft mb-1">Status</label>
             <select value={status} onChange={(e) => setStatus(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white">
+              className="bg-veil border border-line rounded px-2 py-1 text-sm text-ink">
               <option value="active">active</option>
               <option value="resolved">resolved</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Onset (optional)</label>
+            <label className="block text-xs text-ink-soft mb-1">Onset (optional)</label>
             <input type="date" value={onset} onChange={(e) => setOnset(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-sm text-white" />
+              className="bg-veil border border-line rounded px-2 py-1 text-sm text-ink" />
           </div>
           <button onClick={add} disabled={busy}
-            className="px-3 py-2 text-sm rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 ml-auto">
+            className="px-3 py-2 text-sm rounded bg-grad-accent hover:brightness-110 shadow-pill text-white disabled:opacity-50 ml-auto">
             {busy ? "Adding…" : "Add to problem list"}
           </button>
         </div>
       )}
 
-      {msg && <p className="text-sm text-green-400">{msg}</p>}
-      {error && <p className="text-sm text-slate-400">{error}</p>}
+      {msg && <p className="text-sm text-status-ok">{msg}</p>}
+      {error && <p className="text-sm text-ink-soft">{error}</p>}
     </div>
   );
 }

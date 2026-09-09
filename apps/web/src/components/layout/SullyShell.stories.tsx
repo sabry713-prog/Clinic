@@ -26,7 +26,7 @@ type Story = StoryObj<typeof SullyShell>;
 export const FullShell: Story = {
   args: { patientName: "Test Patient Alpha", autoStream: true },
   render: (args) => (
-    <div className="min-h-screen bg-slate-950 p-4 text-white">
+    <div className="h-screen bg-wash p-4 text-ink">
       <SullyShell {...args} />
     </div>
   ),
@@ -36,7 +36,7 @@ export const FullShell: Story = {
 export const StaticNoStreaming: Story = {
   args: { patientName: "Test Patient Alpha", autoStream: false },
   render: (args) => (
-    <div className="min-h-screen bg-slate-950 p-4 text-white">
+    <div className="h-screen bg-wash p-4 text-ink">
       <SullyShell {...args} />
     </div>
   ),
@@ -45,8 +45,8 @@ export const StaticNoStreaming: Story = {
 // ---------------------------------------------------------------- panes
 function PaneFrame({ children, width }: { children: React.ReactNode; width: string }): JSX.Element {
   return (
-    <div className="min-h-screen bg-slate-950 p-4 text-white">
-      <div className={`${width} h-[80vh] overflow-hidden rounded-xl border border-slate-800`}>
+    <div className="h-screen bg-wash p-4 text-ink">
+      <div className={`${width} h-[80vh] overflow-hidden rounded-xl border border-line`}>
         <SullyProvider autoStream={false}>{children}</SullyProvider>
       </div>
     </div>
@@ -72,8 +72,8 @@ export const RightPane_AiTeam: StoryObj = {
 export const NphiesBadges: StoryObj = {
   name: "NPHIES status badges",
   render: () => (
-    <div className="min-h-screen space-y-6 bg-slate-950 p-8 text-white">
-      <p className="text-xs text-slate-400">
+    <div className="min-h-screen space-y-6 bg-wash p-8 text-ink">
+      <p className="text-xs text-ink-soft">
         Badge colour reflects billing / claim state only — never clinical severity.
         Hover or click a badge for its tooltip.
       </p>

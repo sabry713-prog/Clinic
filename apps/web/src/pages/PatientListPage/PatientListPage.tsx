@@ -83,9 +83,9 @@ export default function PatientListPage(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
+    <div className="min-h-screen bg-wash text-ink p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-semibold mb-6">Patients</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink mb-6">Patients</h1>
 
         {/* Search and filter controls */}
         <div className="flex flex-wrap gap-4 mb-6">
@@ -94,34 +94,34 @@ export default function PatientListPage(): JSX.Element {
             placeholder="Search by name or MRN"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 w-64"
+            className="bg-veil border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-line-strong w-64"
           />
           <input
             type="text"
             placeholder="Ward filter"
             value={wardFilter}
             onChange={(e) => setWardFilter(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 w-48"
+            className="bg-veil border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-line-strong w-48"
           />
         </div>
 
         {/* Patient table */}
         {isLoading ? (
-          <p className="text-slate-400 text-sm">Loading patients...</p>
+          <p className="text-ink-soft text-sm">Loading patients...</p>
         ) : error ? (
-          <div className="bg-slate-900 border border-slate-700 rounded-lg p-4">
-            <p className="text-sm text-slate-300">{error}</p>
+          <div className="bg-white border border-line rounded-lg p-4">
+            <p className="text-sm text-ink-deep">{error}</p>
           </div>
         ) : patients.length === 0 ? (
-          <div className="bg-slate-900 border border-slate-700 rounded-lg p-8 text-center">
-            <p className="text-slate-500 text-sm">No patients in your care scope</p>
+          <div className="bg-white border border-line rounded-lg p-8 text-center">
+            <p className="text-ink-soft text-sm">No patients in your care scope</p>
           </div>
         ) : (
           <>
-            <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
+            <div className="bg-white border border-line rounded-2xl shadow-card overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-slate-400 border-b border-slate-700 bg-slate-800">
+                  <tr className="text-start text-[10.5px] uppercase tracking-[0.1em] text-ink-faint border-b border-line bg-veil/60">
                     <th className="px-4 py-3 font-medium">MRN</th>
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Date of Birth</th>
@@ -134,21 +134,21 @@ export default function PatientListPage(): JSX.Element {
                     <tr
                       key={patient.id}
                       onClick={() => handleRowClick(patient.id)}
-                      className="border-b border-slate-800 last:border-0 hover:bg-slate-800 cursor-pointer transition-colors"
+                      className="border-b border-line last:border-0 hover:bg-veil cursor-pointer transition-colors"
                     >
-                      <td className="px-4 py-3 font-mono text-slate-300">
+                      <td className="px-4 py-3 font-mono text-ink-deep">
                         {patient.mrn ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-white font-medium">
+                      <td className="px-4 py-3 text-ink font-medium">
                         {patient.display_name ?? "Unknown"}
                       </td>
-                      <td className="px-4 py-3 text-slate-300">
+                      <td className="px-4 py-3 text-ink-deep">
                         {formatDate(patient.date_of_birth)}
                       </td>
-                      <td className="px-4 py-3 text-slate-300 capitalize">
+                      <td className="px-4 py-3 text-ink-deep capitalize">
                         {patient.sex ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-slate-300">
+                      <td className="px-4 py-3 text-ink-deep">
                         {patient.ward ?? "—"}
                       </td>
                     </tr>
@@ -162,7 +162,7 @@ export default function PatientListPage(): JSX.Element {
                 <button
                   onClick={handleLoadMore}
                   disabled={isLoadingMore}
-                  className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-md text-sm text-slate-300 hover:bg-slate-700 disabled:opacity-50 transition-colors"
+                  className="px-5 py-2 bg-white border border-line rounded-full text-sm font-medium text-ink-deep hover:bg-veil disabled:opacity-50 transition-colors shadow-card"
                 >
                   {isLoadingMore ? "Loading..." : "Load more"}
                 </button>

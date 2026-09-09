@@ -21,12 +21,12 @@ const DEFAULT_ICON =
 export default function EmptyState({ message, iconPath }: EmptyStateProps): React.ReactElement {
   return (
     <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
-        <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+      <div className="w-10 h-10 rounded-xl bg-veil flex items-center justify-center">
+        <svg className="w-5 h-5 text-ink-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d={iconPath ?? DEFAULT_ICON} />
         </svg>
       </div>
-      <p className="text-sm text-slate-500">{message}</p>
+      <p className="text-sm text-ink-soft">{message}</p>
     </div>
   );
 }

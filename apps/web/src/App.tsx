@@ -27,8 +27,8 @@ function AppRoutes(): JSX.Element {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <span className="text-slate-400 text-sm">{t("common.loading")}</span>
+      <div className="min-h-screen bg-wash flex items-center justify-center">
+        <span className="text-ink-soft text-sm">{t("common.loading")}</span>
       </div>
     );
   }

@@ -86,6 +86,7 @@
   },
   "shell": {
     "brand": "Cortex.ai",
+    "demoMode": "Demo mode · simulated integrations",
     "patients": "Patients",
     "commandBar": "Quick actions",
     "commandPlaceholder": "Search patients by name or MRN…",

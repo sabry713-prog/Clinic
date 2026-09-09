@@ -59,7 +59,7 @@ export default function ReminderSendControl({
     }
   }, [patientId, appointmentId, channel, refresh]);
 
-  if (reminders === null) return <span className="text-xs text-slate-600">…</span>;
+  if (reminders === null) return <span className="text-xs text-ink-faint">…</span>;
 
   const latest = reminders[0] ?? null;
 
@@ -69,7 +69,7 @@ export default function ReminderSendControl({
         value={channel}
         onChange={(e) => setChannel(e.target.value as ReminderChannel)}
         disabled={busy}
-        className="text-xs bg-slate-950/40 border border-slate-700 rounded-lg px-1.5 py-1 text-slate-300"
+        className="text-xs bg-white border border-line rounded-lg px-1.5 py-1 text-ink-deep"
       >
         {(Object.keys(CHANNEL_LABEL) as ReminderChannel[]).map((c) => (
           <option key={c} value={c}>{CHANNEL_LABEL[c]}</option>
@@ -79,23 +79,23 @@ export default function ReminderSendControl({
         type="button"
         onClick={() => void send()}
         disabled={busy}
-        className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 disabled:opacity-50"
+        className="text-xs px-2.5 py-1.5 rounded-lg border border-line text-ink-deep hover:text-ink hover:border-line-strong disabled:opacity-50"
       >
         {busy ? "Sending…" : "Send reminder"}
       </button>
       {latest && (
-        <span className="text-xs text-slate-400 bg-slate-800 rounded px-1.5 py-0.5">
+        <span className="text-xs text-ink-soft bg-veil rounded px-1.5 py-0.5">
           {CHANNEL_LABEL[latest.channel]}: {STATUS_LABEL[latest.status] ?? latest.status}
         </span>
       )}
       {latest && (
-        <button type="button" onClick={() => setShowDetail((v) => !v)} className="text-xs text-slate-500 hover:text-slate-300 underline">
+        <button type="button" onClick={() => setShowDetail((v) => !v)} className="text-xs text-ink-soft hover:text-ink-deep underline">
           {showDetail ? "Hide message" : "Review message"}
         </button>
       )}
-      {error && <span className="text-xs text-slate-500">{error}</span>}
+      {error && <span className="text-xs text-ink-soft">{error}</span>}
       {showDetail && latest && (
-        <p className="basis-full text-xs text-slate-400 border-s-2 border-slate-700 ps-3 mt-1" dir="auto">
+        <p className="basis-full text-xs text-ink-soft border-s-2 border-line ps-3 mt-1" dir="auto">
           {latest.rendered_message}
           {latest.simulated_outcome_detail && ` — ${latest.simulated_outcome_detail}`}
         </p>

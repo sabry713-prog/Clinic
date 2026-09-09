@@ -69,13 +69,13 @@ export default function IntakePanel({ patientId }: { readonly patientId: string 
   }, [patientId, contactConfirmed, contactPhone, contactEmail, preferredChannel, reasonForVisitText, refresh]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-4">
+    <div className="bg-white border border-line rounded-lg p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-white">Check-in Intake</h2>
-        <span className="text-xs text-slate-500">Staff-assisted — reason for visit captured verbatim, never interpreted</span>
+        <h2 className="text-base font-semibold text-ink">Check-in Intake</h2>
+        <span className="text-xs text-ink-soft">Staff-assisted — reason for visit captured verbatim, never interpreted</span>
       </div>
 
-      {error && <p className="text-sm text-slate-400">{error}</p>}
+      {error && <p className="text-sm text-ink-soft">{error}</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <input
@@ -83,26 +83,26 @@ export default function IntakePanel({ patientId }: { readonly patientId: string 
           placeholder="Phone"
           value={contactPhone}
           onChange={(e) => setContactPhone(e.target.value)}
-          className="text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white"
+          className="text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink"
         />
         <input
           type="text"
           placeholder="Email"
           value={contactEmail}
           onChange={(e) => setContactEmail(e.target.value)}
-          className="text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white"
+          className="text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink"
         />
         <select
           value={preferredChannel}
           onChange={(e) => setPreferredChannel(e.target.value as ReminderChannel | "")}
-          className="text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white"
+          className="text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink"
         >
           <option value="">Preferred channel…</option>
           <option value="sms">SMS</option>
           <option value="email">Email</option>
           <option value="whatsapp">WhatsApp</option>
         </select>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
+        <label className="flex items-center gap-2 text-sm text-ink-deep">
           <input type="checkbox" checked={contactConfirmed} onChange={(e) => setContactConfirmed(e.target.checked)} />
           Contact confirmed with patient
         </label>
@@ -113,33 +113,33 @@ export default function IntakePanel({ patientId }: { readonly patientId: string 
         value={reasonForVisitText}
         onChange={(e) => setReasonForVisitText(e.target.value)}
         rows={3}
-        className="w-full text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white resize-none"
+        className="w-full text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink resize-none"
       />
 
       <button
         type="button"
         onClick={() => void submit()}
         disabled={submitting}
-        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+        className="text-xs px-3 py-1.5 rounded-lg bg-grad-accent hover:brightness-110 shadow-pill text-white disabled:opacity-50"
       >
         {submitting ? "Recording…" : "Record intake"}
       </button>
 
-      <hr className="border-slate-800" />
+      <hr className="border-line" />
 
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">History</h3>
+        <h3 className="text-sm font-medium text-ink-deep mb-2">History</h3>
         {records === null ? (
-          <p className="text-sm text-slate-500">Loading…</p>
+          <p className="text-sm text-ink-soft">Loading…</p>
         ) : records.length === 0 ? (
-          <p className="text-sm text-slate-500">No intake records yet</p>
+          <p className="text-sm text-ink-soft">No intake records yet</p>
         ) : (
           <ul className="space-y-2">
             {records.map((r) => (
-              <li key={r.id} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3">
-                <p className="text-xs text-slate-500">{formatDateTime(r.captured_at)}{r.contact_confirmed ? " · contact confirmed" : ""}</p>
+              <li key={r.id} className="border border-line bg-white rounded-xl px-4 py-3">
+                <p className="text-xs text-ink-soft">{formatDateTime(r.captured_at)}{r.contact_confirmed ? " · contact confirmed" : ""}</p>
                 {r.reason_for_visit_text && (
-                  <p className="text-sm text-white mt-1" dir="auto">{r.reason_for_visit_text}</p>
+                  <p className="text-sm text-ink mt-1" dir="auto">{r.reason_for_visit_text}</p>
                 )}
               </li>
             ))}

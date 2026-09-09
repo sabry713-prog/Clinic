@@ -96,7 +96,7 @@ function SectionHeading({
   readonly children: React.ReactNode;
 }): JSX.Element {
   return (
-    <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+    <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       {children}
     </h4>
@@ -131,7 +131,7 @@ function ActionButton({
       <span
         data-testid="pending-integration"
         title={`${label} is not connected to a backend yet — nothing will be sent.`}
-        className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/60 px-2 py-1 text-[11px] font-medium text-slate-400"
+        className="inline-flex items-center gap-1 rounded-md border border-line bg-veil px-2 py-1 text-[11px] font-medium text-ink-soft"
       >
         <Clock className="h-3 w-3" aria-hidden="true" />
         Pending integration
@@ -141,7 +141,7 @@ function ActionButton({
 
   if (state === "done") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-[11px] font-medium text-emerald-300">
+      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-[11px] font-medium text-status-ok">
         <Check className="h-3 w-3" aria-hidden="true" />
         {doneLabel}
       </span>
@@ -158,7 +158,7 @@ function ActionButton({
           .then(() => setState("done"))
           .catch(() => setState("idle"));
       }}
-      className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-full bg-grad-accent shadow-pill px-2 py-1 text-[11px] font-medium text-white hover:bg-blue-500 disabled:opacity-50"
     >
       {state === "busy" ? (
         <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
@@ -179,7 +179,7 @@ export default function ReceptionistTab({
 }: ReceptionistTabProps): JSX.Element {
   if (loading && !postCare) {
     return (
-      <p className="flex items-center gap-1.5 text-[11px] text-slate-400">
+      <p className="flex items-center gap-1.5 text-[11px] text-ink-soft">
         <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
         Drafting the post-care package…
       </p>
@@ -188,7 +188,7 @@ export default function ReceptionistTab({
 
   if (!postCare) {
     return (
-      <p className="text-[11px] leading-relaxed text-slate-500">
+      <p className="text-[11px] leading-relaxed text-ink-soft">
         No post-care package drafted yet. This fills in once a discharge order is finalised
         for the encounter.
       </p>
@@ -200,7 +200,7 @@ export default function ReceptionistTab({
 
   return (
     <div className="space-y-4">
-      <p className="flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] leading-relaxed text-amber-300">
+      <p className="flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] leading-relaxed text-status-pend">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         Drafts for review — nothing below has been booked or sent yet. Booking and dispatch are not connected to a backend yet.
       </p>
@@ -212,14 +212,14 @@ export default function ReceptionistTab({
             {slots.map((slot) => (
               <li
                 key={slot.starts_at}
-                className="flex items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950 px-2.5 py-2"
+                className="flex items-center justify-between gap-2 rounded-md border border-line bg-wash px-2.5 py-2"
               >
                 <span className="min-w-0">
-                  <span className="block text-[11px] font-medium text-slate-100">
+                  <span className="block text-[11px] font-medium text-ink">
                     {formatSlot(slot.starts_at)}
                   </span>
                   {slot.department && (
-                    <span className="block text-[10px] text-slate-500">{slot.department}</span>
+                    <span className="block text-[10px] text-ink-soft">{slot.department}</span>
                   )}
                 </span>
                 {onBookSlot && (
@@ -239,12 +239,12 @@ export default function ReceptionistTab({
       {care?.text && (
         <section>
           <SectionHeading icon={MessageSquare}>Patient care instructions</SectionHeading>
-          <p className="mb-1.5 text-[10px] italic text-amber-300/80">
+          <p className="mb-1.5 text-[10px] italic text-status-pend/80">
             AI-drafted clinical text — review before sending.
           </p>
           <p
             data-testid="care-instructions"
-            className="whitespace-pre-wrap rounded-md border border-slate-800 bg-slate-950 p-2.5 text-[11px] leading-relaxed text-slate-300"
+            className="whitespace-pre-wrap rounded-md border border-line bg-wash p-2.5 text-[11px] leading-relaxed text-ink-deep"
           >
             {care.text}
           </p>
@@ -256,9 +256,9 @@ export default function ReceptionistTab({
           <SectionHeading icon={FlaskConical}>Lab preparation</SectionHeading>
           <ul className="space-y-1.5">
             {labPrep.map((r) => (
-              <li key={r.lab} className="rounded-md border border-slate-800 bg-slate-950 px-2.5 py-2">
-                <span className="block text-[11px] font-medium text-slate-100">{r.lab}</span>
-                <span className="block text-[11px] leading-relaxed text-slate-400">
+              <li key={r.lab} className="rounded-md border border-line bg-wash px-2.5 py-2">
+                <span className="block text-[11px] font-medium text-ink">{r.lab}</span>
+                <span className="block text-[11px] leading-relaxed text-ink-soft">
                   {r.instruction}
                 </span>
               </li>
@@ -274,15 +274,15 @@ export default function ReceptionistTab({
             {dispatches.map((payload, i) => (
               <li
                 key={`${payload.kind}-${i}`}
-                className="rounded-md border border-slate-800 bg-slate-950 px-2.5 py-2"
+                className="rounded-md border border-line bg-wash px-2.5 py-2"
               >
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-300">
+                  <span className="rounded bg-veil px-1.5 py-0.5 text-[10px] font-medium text-ink-deep">
                     {CHANNEL_LABEL[payload.channel] ?? payload.channel}
                   </span>
-                  <span className="text-[10px] text-slate-500">{payload.kind.replace(/_/g, " ")}</span>
+                  <span className="text-[10px] text-ink-soft">{payload.kind.replace(/_/g, " ")}</span>
                 </div>
-                <p className="mb-2 whitespace-pre-wrap text-[11px] leading-relaxed text-slate-300">
+                <p className="mb-2 whitespace-pre-wrap text-[11px] leading-relaxed text-ink-deep">
                   {payload.body}
                 </p>
                 {onDispatch && (

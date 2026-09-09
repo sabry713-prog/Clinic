@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veritas-Medica — UI Reorganization v2 (Warm Professional)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --grad: linear-gradient(135deg, #0EA5A4 0%, #6366F1 100%);   /* teal → indigo */
+    --grad-soft: linear-gradient(135deg, #CCFBF1, #E0E7FF);
+    --teal: #0D9488; --indigo: #6366F1;
+    --ink: #1E1B36;            /* warm-dark, not slate-cold */
+    --ink-muted: #7C7A94;
+    --line: #ECEAF4;
+    --card: #FFFFFF;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sh-card: 0 1px 2px rgba(30,27,54,.04), 0 8px 24px rgba(30,27,54,.06);
+    --sh-pop: 0 2px 6px rgba(30,27,54,.06), 0 16px 40px rgba(30,27,54,.10);
+    /* agent identities (borrowed from the Sully lesson) */
+    --ag-scribe: #F43F5E;  --ag-scribe-bg: #FFF1F2;
+    --ag-cons:   #6366F1;  --ag-cons-bg:   #EEF2FF;
+    --ag-nph:    #2563EB;  --ag-nph-bg:    #EFF6FF;
+    --ag-pharm:  #0D9488;  --ag-pharm-bg:  #F0FDFA;
+    --ag-recep:  #D97706;  --ag-recep-bg:  #FFFBEB;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:"Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(180deg,#F4F7FE 0%,#F6F4FE 45%,#F8FAFC 100%);
+    color:var(--ink); padding:40px 24px; line-height:1.55;
+  }
+  .page { max-width:1180px; margin:0 auto; }
+  h1 { font-size:26px; font-weight:800; letter-spacing:-.3px; }
+  h1 .v2 { background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub { color:var(--ink-muted); margin-bottom:26px; font-size:14px; }
+  h2.sec { font-size:16px; margin:46px 0 6px; font-weight:700; display:flex; align-items:center; gap:9px; letter-spacing:-.2px; }
+  h2.sec .n { background:var(--grad); color:#fff; width:24px; height:24px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; }
+  .sec-desc { font-size:13px; color:var(--ink-muted); margin-bottom:16px; max-width:860px; }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:var(--sh-card); }
+
+  /* ============ A. before/after ============ */
+  .ba { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .ba-col { padding:18px; }
+  .ba-col h5 { font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; font-weight:700; }
+  .ba-col.before { border-color:#FECACA; } .ba-col.before h5 { color:#E11D48; }
+  .ba-col.after  { border-color:#C7D2FE; } .ba-col.after h5 { color:var(--indigo); }
+  .ba-item { font-size:11.5px; padding:4px 0 4px 15px; position:relative; color:#4B4867; }
+  .ba-col.before .ba-item::before { content:"–"; position:absolute; left:0; color:#D6D3E8; }
+  .ba-col.after .ba-item::before { content:"›"; position:absolute; left:0; color:var(--indigo); font-weight:800; }
+  .ba-group { font-size:10px; font-weight:800; letter-spacing:1px; color:var(--teal); margin:10px 0 3px; text-transform:uppercase; }
+  .ba-note { font-size:10.5px; color:var(--ink-muted); margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
+
+  /* ============ browser frame ============ */
+  .browser { background:#fff; border-radius:16px; box-shadow:var(--sh-pop); overflow:hidden; border:1px solid var(--line); }
+  .browser-bar { background:#F6F5FB; padding:10px 14px; display:flex; gap:6px; align-items:center; border-bottom:1px solid var(--line); }
+  .dot { width:11px; height:11px; border-radius:50%; }
+  .browser-url { margin-left:12px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:4px 12px; font-size:11px; color:var(--ink-muted); font-family:var(--mono); flex:1; max-width:430px; }
+
+  /* ============ app shell ============ */
+  .app { display:grid; grid-template-columns:222px 1fr; min-height:660px; background:#FAFBFE; }
+
+  .topbar { grid-column:1/-1; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:14px; padding:0 18px; height:56px; }
+  .logo { font-weight:800; font-size:14.5px; letter-spacing:-.2px; display:flex; align-items:center; gap:9px; }
+  .logo .mark { width:26px; height:26px; border-radius:9px; background:var(--grad); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; box-shadow:0 4px 10px rgba(99,102,241,.35); }
+  .logo em { font-style:normal; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .cmdbar { flex:1; max-width:340px; background:#F4F3FA; border:1px solid var(--line); border-radius:12px; padding:7px 13px; font-size:12px; color:var(--ink-muted); display:flex; justify-content:space-between; }
+  .cmdbar kbd { font-family:var(--mono); font-size:10px; background:#fff; border:1px solid var(--line); border-radius:5px; padding:1px 6px; box-shadow:0 1px 0 var(--line); }
+  .spacer{flex:1;}
+  .sim-chip { background:#FFF7E6; color:#B45309; border:1px solid #FDE4B8; font-size:11px; font-weight:600; padding:5px 12px; border-radius:999px; display:flex; align-items:center; gap:7px; }
+  .sim-chip .pulse { width:8px; height:8px; border-radius:50%; background:#F59E0B; box-shadow:0 0 0 3px rgba(245,158,11,.18); }
+  .lang { font-size:12px; color:var(--ink-muted); border:1px solid var(--line); border-radius:10px; padding:5px 10px; background:#fff; }
+  .lang b { color:var(--ink); }
+  .avatar { width:30px; height:30px; border-radius:10px; background:var(--grad); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+
+  .side { background:#fff; border-right:1px solid var(--line); padding:14px 12px; font-size:12.5px; }
+  .ws-label { font-size:9.5px; letter-spacing:1.4px; color:#A5A3BC; font-weight:800; padding:13px 10px 6px; text-transform:uppercase; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:8px 11px; border-radius:11px; color:#4B4867; margin:2px 0; font-weight:500; }
+  .nav-item .ic { width:17px; text-align:center; font-size:12.5px; }
+  .nav-item.active { background:var(--grad); color:#fff; font-weight:700; box-shadow:0 6px 14px rgba(79,70,229,.30); }
+  .nav-item.locked { color:#B9B7CC; }
+  .count { margin-left:auto; background:#F4F3FA; border-radius:999px; font-size:10px; padding:1.5px 8px; color:var(--ink-muted); font-weight:600; }
+  .nav-item.active .count { background:rgba(255,255,255,.28); color:#fff; }
+  .role-note { margin-top:16px; padding:11px; background:linear-gradient(135deg,#F0FDFA,#EEF2FF); border:1px solid #E2E8F0; border-radius:12px; font-size:10.5px; color:var(--ink-muted); }
+  .role-note b { color:var(--ink); font-size:11.5px; display:block; }
+
+  .main { padding:16px 18px; }
+  .pt-header { background:linear-gradient(120deg,#FFFFFF 55%,#F0FDFA 100%); border:1px solid var(--line); border-radius:16px; padding:13px 17px; display:flex; align-items:center; gap:14px; margin-bottom:12px; box-shadow:var(--sh-card); }
+  .pt-avatar { width:42px; height:42px; border-radius:14px; background:var(--grad-soft); display:flex; align-items:center; justify-content:center; font-size:19px; }
+  .pt-name { font-weight:800; font-size:15.5px; letter-spacing:-.2px; }
+  .pt-meta { font-size:11.5px; color:var(--ink-muted); }
+  .chip { font-size:10.5px; font-weight:700; padding:4px 11px; border-radius:999px; }
+  .chip.allergy { background:#FFF1F2; color:#E11D48; border:1px solid #FFE0E4; }
+  .chip.scope { background:#EEF2FF; color:#4F46E5; border:1px solid #E0E7FF; }
+  .tabs { display:flex; gap:4px; margin-bottom:13px; }
+  .tab { font-size:12px; padding:7px 14px; color:var(--ink-muted); border-radius:10px; font-weight:600; }
+  .tab.on { color:#fff; background:var(--ink); font-weight:700; }
+
+  .panes { display:grid; grid-template-columns:1.05fr 1.5fr 1fr; gap:12px; }
+  .pane { background:#fff; border:1px solid var(--line); border-radius:16px; padding:13px; min-height:340px; box-shadow:var(--sh-card); }
+  .pane h4 { font-size:10.5px; letter-spacing:1px; color:#A5A3BC; text-transform:uppercase; margin-bottom:10px; display:flex; justify-content:space-between; font-weight:800; }
+  .pane h4 .tag { text-transform:none; letter-spacing:0; font-weight:700; }
+
+  /* scribe */
+  .transcript { font-family:var(--mono); font-size:10px; background:#F8F7FC; border-radius:11px; padding:10px; color:#56536E; line-height:1.75; margin-bottom:10px; border:1px solid var(--line); }
+  .transcript .ar { color:var(--teal); }
+  .soap { border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:11px; }
+  .soap .row { display:flex; }
+  .soap .k { width:66px; background:var(--grad-soft); color:#0F766E; font-weight:800; padding:7px 9px; font-size:10px; }
+  .soap .v { padding:7px 10px; color:#3D3A57; }
+  .tpl-pick { display:flex; gap:6px; margin-top:11px; }
+  .tpl { font-size:10px; border:1px solid var(--line); border-radius:999px; padding:4px 11px; color:var(--ink-muted); background:#fff; font-weight:600; }
+  .tpl.on { border-color:transparent; color:#fff; background:var(--grad); font-weight:700; }
+
+  /* timeline */
+  .alert { background:linear-gradient(120deg,#FFF1F2,#FFF8F3); border:1px solid #FFD9DE; border-radius:12px; padding:9px 12px; font-size:11px; margin-bottom:9px; color:#8C1D33; box-shadow:0 2px 8px rgba(244,63,94,.08); }
+  .alert b { color:#E11D48; }
+  .tl-item { display:flex; gap:10px; padding:9px 10px; border-radius:12px; font-size:11.5px; align-items:flex-start; margin-bottom:6px; background:#FDFCFF; border:1px solid var(--line); }
+  .tl-dot { width:9px; height:9px; border-radius:50%; margin-top:4px; flex:none; }
+  .badge { display:inline-flex; align-items:center; gap:4px; font-size:9.5px; font-weight:800; padding:3px 9px; border-radius:999px; margin-left:6px; }
+  .b-green { background:#DCFCE7; color:#15803D; }
+  .b-yellow{ background:#FEF6D8; color:#A16207; }
+  .b-red   { background:#FEE9EC; color:#BE123C; }
+  .ev-pill { display:inline-flex; align-items:center; gap:3px; color:var(--indigo); font-size:9.5px; font-weight:700; background:#EEF2FF; border-radius:999px; padding:2.5px 8px; margin-left:6px; border:1px solid #E0E7FF; }
+  .assertion { border-bottom:2px dotted #A5B4FC; cursor:pointer; }
+
+  /* AI team — per-agent identity */
+  .agent { border-radius:14px; padding:10px 11px; margin-bottom:8px; border:1px solid var(--line); }
+  .agent .a-top { display:flex; align-items:center; gap:9px; }
+  .a-ava { width:32px; height:32px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:15px; color:#fff; flex:none; box-shadow:0 4px 10px rgba(30,27,54,.14); }
+  .a-name { font-size:11.5px; font-weight:700; }
+  .a-sub { font-size:9.5px; color:var(--ink-muted); }
+  .a-actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .abtn { font-size:9.5px; border:1px solid var(--line); background:#fff; border-radius:999px; padding:4px 11px; color:#3D3A57; font-weight:600; }
+  .abtn.solid { background:var(--grad); border-color:transparent; color:#fff; font-weight:700; box-shadow:0 4px 10px rgba(79,70,229,.30); }
+  .pending { font-size:9px; color:#8E8BA6; background:#F6F5FB; border:1px dashed #D6D3E8; border-radius:999px; padding:4px 10px; display:inline-flex; align-items:center; gap:5px; font-weight:600; }
+
+  /* ============ evidence ============ */
+  .ev-grid { display:grid; grid-template-columns:1fr 1.35fr; gap:14px; }
+  .cypher { font-family:var(--mono); font-size:10.5px; background:#181632; color:#A5F3FC; border-radius:14px; padding:14px; line-height:1.8; box-shadow:inset 0 0 40px rgba(99,102,241,.08); }
+  .cypher .kw { color:#F0ABFC; } .cypher .st { color:#FDE68A; }
+  .facts { font-size:11px; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .facts .fr { display:flex; justify-content:space-between; padding:8px 13px; border-bottom:1px solid var(--line); }
+  .facts .fr:last-child { border:none; }
+  .facts .fk { color:var(--ink-muted); }
+  .eq-check { background:#DCFCE7; color:#166534; font-size:11px; font-weight:700; border-radius:12px; padding:10px 13px; display:flex; gap:8px; align-items:center; margin-top:10px; border:1px solid #BBF7D0; }
+
+  /* ============ SAR ============ */
+  .kpi-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:14px; }
+  .kpi { padding:14px; position:relative; overflow:hidden; }
+  .kpi::after { content:""; position:absolute; right:-22px; top:-22px; width:74px; height:74px; border-radius:50%; background:var(--grad-soft); opacity:.6; }
+  .kpi .kv { font-size:20px; font-weight:800; letter-spacing:-.5px; }
+  .kpi .kl { font-size:10.5px; color:var(--ink-muted); margin-top:2px; position:relative; }
+  .sar-row { display:grid; grid-template-columns:130px 1fr 84px; gap:10px; align-items:center; padding:8px 0; font-size:11.5px; }
+  .bar-track { background:#F1F0F8; border-radius:99px; height:12px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:99px; background:var(--grad); }
+  .bar-fill.warn { background:linear-gradient(90deg,#F59E0B,#F97316); }
+  .sar-val { text-align:right; font-family:var(--mono); font-weight:700; font-size:11px; }
+
+  /* ============ patterns ============ */
+  .pat-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .pat { padding:15px; }
+  .pat h5 { font-size:10.5px; color:#A5A3BC; text-transform:uppercase; letter-spacing:1px; margin-bottom:11px; font-weight:800; }
+  .badge-legend { display:flex; flex-direction:column; gap:8px; font-size:11px; }
+  .empty { border:1px dashed #D6D3E8; border-radius:14px; padding:16px; text-align:center; background:#FBFAFE; }
+  .empty .t { font-size:12px; font-weight:700; margin:7px 0 3px; }
+  .empty .d { font-size:10.5px; color:var(--ink-muted); }
+  .empty code { font-family:var(--mono); font-size:10px; background:#fff; border:1px solid var(--line); border-radius:6px; padding:1px 6px; }
+  .rtl-demo { direction:rtl; text-align:right; background:var(--grad-soft); border:1px solid #E2E8F0; border-radius:12px; padding:11px 13px; font-size:12px; }
+
+  footer { margin-top:46px; font-size:11px; color:var(--ink-muted); border-top:1px solid var(--line); padding-top:14px; }
+  .tok { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+  .swatch { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--ink-muted); font-family:var(--mono); }
+  .swatch i { width:14px; height:14px; border-radius:5px; display:inline-block; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Veritas-Medica — UI v2 <span class="v2">· Warm Professional</span></h1>
+  <div class="sub">Redesign after the Sully comparison — keeps clinical density, evidence chain, and honesty patterns; adds agent color identity, gradient accent, softer surfaces, rounded pills. Companion to v1.</div>
+
+  <!-- A -->
+  <h2 class="sec"><span class="n">A</span> Navigation — before vs after</h2>
+  <div class="sec-desc">Structure unchanged from v1 (it was right). Only the styling warms up: pill-shaped active states with the gradient, softer labels.</div>
+  <div class="ba">
+    <div class="ba-col card before">
+      <h5>Current (flat)</h5>
+      <div class="ba-item">Home</div><div class="ba-item">Patients</div><div class="ba-item">Patient Detail</div>
+      <div class="ba-item">AI Receptionist</div><div class="ba-item">Front Desk Queue</div><div class="ba-item">Pharmacy Queue</div>
+      <div class="ba-item">Audit</div><div class="ba-item">Quarantine</div><div class="ba-item">Compliance</div>
+      <div class="ba-item">Claim Simulator</div><div class="ba-item">Coder Queue</div><div class="ba-item">NPHIES Analytics</div>
+      <div class="ba-item">Rejection Cost</div><div class="ba-item">Provider Availability</div>
+      <div class="ba-note">~20 flat pages · no grouping · no role filter · duplicated concept names</div>
+    </div>
+    <div class="ba-col card after">
+      <h5>Proposed (4 workspaces)</h5>
+      <div class="ba-group">Clinical · physician</div>
+      <div class="ba-item">Patients &rarr; Encounter Workspace</div><div class="ba-item">Today's Encounters</div>
+      <div class="ba-group">Revenue Cycle · admin + coder</div>
+      <div class="ba-item">Claim Readiness · Simulator · Coder Queue</div><div class="ba-item">Rejection Analytics + SAR at Risk</div>
+      <div class="ba-group">Front Office · reception + pharmacy</div>
+      <div class="ba-item">Receptionist · Front Desk · Intake</div><div class="ba-item">Appointments · Pharmacy Refills</div>
+      <div class="ba-group">Governance · admin</div>
+      <div class="ba-item">Audit &amp; Chain · Quarantine · Compliance</div>
+      <div class="ba-note">⌘K CommandBar anywhere · locked sections explain why · one term per concept</div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <h2 class="sec"><span class="n">B</span> Encounter Workspace — main screen</h2>
+  <div class="sec-desc">Same 3-pane skeleton as v1, restyled: gradient accent, agent avatars with individual colors (Scribe rose, Consultant indigo, NPHIES blue, Pharmacist teal, Receptionist amber), pill badges and buttons, soft shadows, warmer background wash.</div>
+
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="dot" style="background:#FF5F57"></div><div class="dot" style="background:#FEBC2E"></div><div class="dot" style="background:#28C840"></div>
+      <div class="browser-url">localhost:3000/patients/pt-017/workspace</div>
+    </div>
+    <div class="app">
+      <div class="topbar">
+        <div class="logo"><span class="mark">V</span> Veritas<em>-Medica</em></div>
+        <div class="cmdbar"><span>&#8984;K &nbsp;Jump to patient, action, panel…</span><kbd>&#8629;</kbd></div>
+        <div class="spacer"></div>
+        <div class="sim-chip"><span class="pulse"></span> Demo mode · simulated integrations</div>
+        <div class="lang"><b>EN</b> | ع</div>
+        <div class="avatar">OA</div>
+      </div>
+
+      <div class="side">
+        <div class="ws-label">Clinical</div>
+        <div class="nav-item active"><span class="ic">&#9878;</span> Patients <span class="count">50</span></div>
+        <div class="nav-item"><span class="ic">&#128197;</span> Today's Encounters</div>
+        <div class="ws-label">Revenue Cycle</div>
+        <div class="nav-item"><span class="ic">&#9989;</span> Claim Readiness</div>
+        <div class="nav-item"><span class="ic">&#129514;</span> Claim Simulator</div>
+        <div class="nav-item"><span class="ic">&#128203;</span> Coder Queue <span class="count">12</span></div>
+        <div class="nav-item"><span class="ic">&#128200;</span> Rejection · SAR</div>
+        <div class="ws-label">Front Office</div>
+        <div class="nav-item"><span class="ic">&#128100;</span> Receptionist</div>
+        <div class="nav-item"><span class="ic">&#128228;</span> Front Desk</div>
+        <div class="nav-item"><span class="ic">&#128138;</span> Pharmacy Refills</div>
+        <div class="ws-label">Governance</div>
+        <div class="nav-item locked"><span class="ic">&#128274;</span> Audit &amp; Chain</div>
+        <div class="nav-item locked"><span class="ic">&#128274;</span> Quarantine</div>
+        <div class="role-note"><b>Dr. Omar Al-Amin</b> physician · encounter-scoped<br>Locked items need admin role</div>
+      </div>
+
+      <div class="main">
+        <div class="pt-header">
+          <div class="pt-avatar">&#128100;</div>
+          <div style="flex:1">
+            <div class="pt-name">Fatimah Al-Sayed <span style="font-weight:500;color:var(--ink-muted);font-size:12px">· MRN 0017 · 68F</span></div>
+            <div class="pt-meta">Encounter ENC-2291 · Internal Medicine · attending: Dr. Omar</div>
+          </div>
+          <span class="chip allergy">&#9888; Penicillin allergy</span>
+          <span class="chip scope">In scope</span>
+        </div>
+
+        <div class="tabs">
+          <div class="tab">Timeline</div><div class="tab on">Orders &amp; Meds</div><div class="tab">Labs</div>
+          <div class="tab">Reconciliation</div><div class="tab">Narrative</div><div class="tab">Q&amp;A</div><div class="tab">Scribe</div>
+        </div>
+
+        <div class="panes">
+          <div class="pane">
+            <h4>&#127908; Ambient Scribe <span class="tag" style="color:#E11D48">&#9679; listening</span></h4>
+            <div class="transcript">
+              clinician: "creatinine is up again, let's adjust the metformin"<br>
+              <span class="ar">clinician: "&#1606;&#1581;&#1578;&#1575;&#1580; &#1578;&#1581;&#1604;&#1610;&#1604; &#1585;&#1576;&#1610;&#1606; &#1602;&#1576;&#1604; &#1575;&#1604;&#1580;&#1585;&#1593;&#1577;"</span><br>
+              clinician: "start the pre-auth for the MRI"
+            </div>
+            <div class="soap">
+              <div class="row"><div class="k">S</div><div class="v">Reports rising creatinine; here for renal review.</div></div>
+              <div class="row"><div class="k">O</div><div class="v"><span class="assertion">Creatinine 168 (24 May)</span><span class="ev-pill">&#9906; evidence</span> · <span class="assertion">eGFR 38</span><span class="ev-pill">&#9906; evidence</span></div></div>
+              <div class="row"><div class="k">A</div><div class="v">Factual findings only — no interpretation (non-SaMD).</div></div>
+              <div class="row"><div class="k">P</div><div class="v">Metformin review flagged · pre-auth drafted.</div></div>
+            </div>
+            <div class="tpl-pick"><div class="tpl on">SOAP</div><div class="tpl">Behavioral Health</div><div class="tpl">Cardiology</div></div>
+          </div>
+
+          <div class="pane">
+            <h4>&#128207; Orders &amp; Timeline <span class="tag">NPHIES live</span></h4>
+            <div class="alert"><b>&#9888; Interaction alert</b> — Warfarin pair: <span class="assertion" style="border-color:#FDA4AF">contraindication edge found in graph</span><span class="ev-pill" style="background:#FEE9EC;color:#BE123C;border-color:#FECDD3">&#9906; view Cypher</span></div>
+            <div class="tl-item"><span class="tl-dot" style="background:var(--ag-pharm)"></span><div><b>Metformin 500mg</b> <span class="assertion">renal dose review</span><span class="ev-pill">&#9906; evidence</span><br><span style="color:var(--ink-muted);font-size:10px">Pharmacy · active</span></div></div>
+            <div class="tl-item"><span class="tl-dot" style="background:var(--ag-nph)"></span><div><b>MRI pre-auth</b><span class="badge b-yellow">&#9679; pended</span><br><span style="color:var(--ink-muted);font-size:10px">NPHIES · queued at payer (simulated)</span></div></div>
+            <div class="tl-item"><span class="tl-dot" style="background:#8B5CF6"></span><div><b>CBC panel</b><span class="badge b-green">&#9679; complete</span><br><span class="assertion">WBC 6.1 · Hgb 11.2</span><span class="ev-pill">&#9906; evidence</span></div></div>
+            <div class="tl-item"><span class="tl-dot" style="background:#EF4444"></span><div><b>Echo</b><span class="badge b-red">&#9679; rejected — coding</span><span class="ev-pill">&#9906; fix code</span></div></div>
+          </div>
+
+          <div class="pane">
+            <h4>&#129309; AI Team <span class="tag">you approve</span></h4>
+            <div class="agent" style="background:var(--ag-scribe-bg)">
+              <div class="a-top"><div class="a-ava" style="background:linear-gradient(135deg,#FB7185,#F43F5E)">&#127908;</div>
+                <div><div class="a-name">Scribe</div><div class="a-sub">drafts · you sign</div></div></div>
+              <div class="a-actions"><button class="abtn solid">Regenerate SOAP</button></div>
+            </div>
+            <div class="agent" style="background:var(--ag-cons-bg)">
+              <div class="a-top"><div class="a-ava" style="background:linear-gradient(135deg,#818CF8,#6366F1)">&#128172;</div>
+                <div><div class="a-name">Consultant</div><div class="a-sub">summarises · cites graph</div></div></div>
+              <div class="a-actions"><button class="abtn">Summarise priors</button><button class="abtn">Related results</button></div>
+            </div>
+            <div class="agent" style="background:var(--ag-nph-bg)">
+              <div class="a-top"><div class="a-ava" style="background:linear-gradient(135deg,#60A5FA,#2563EB)">&#128203;</div>
+                <div><div class="a-name">NPHIES Agent</div><div class="a-sub">claims · never auto-sends</div></div></div>
+              <div class="a-actions"><button class="abtn">Submit Pre-Auth</button></div>
+            </div>
+            <div class="agent" style="background:var(--ag-pharm-bg)">
+              <div class="a-top"><div class="a-ava" style="background:linear-gradient(135deg,#2DD4BF,#0D9488)">&#128138;</div>
+                <div><div class="a-name">Pharmacist</div><div class="a-sub">screens · ATC-filtered</div></div></div>
+              <div class="a-actions"><span class="pending">&#9644; Adjust dosage — pending</span><span class="pending">&#9644; Formulary — pending</span></div>
+            </div>
+            <div class="agent" style="background:var(--ag-recep-bg)">
+              <div class="a-top"><div class="a-ava" style="background:linear-gradient(135deg,#FBBF24,#D97706)">&#128222;</div>
+                <div><div class="a-name">Receptionist</div><div class="a-sub">books · confirms with you</div></div></div>
+              <div class="a-actions"><span class="pending">&#9644; Book follow-up — pending</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <h2 class="sec"><span class="n">C</span> Evidence-chain cutaway</h2>
+  <div class="sec-desc">Same hero interaction, restyled: warmer dark panel, pill evidence links, softer fact cards. Still the screen no competitor can show.</div>
+  <div class="browser">
+    <div class="browser-bar"><div class="dot" style="background:#FF5F57"></div><div class="dot" style="background:#FEBC2E"></div><div class="dot" style="background:#28C840"></div><div class="browser-url">evidence chain · assertion: "Creatinine 168 (24 May)"</div></div>
+    <div style="padding:18px; display:grid; grid-template-columns:1fr 1.35fr; gap:14px; background:#FAFBFE;">
+      <div>
+        <div class="cypher"><span class="kw">MATCH</span> (p:Patient {id: $pid})<br>&#8594 [:HAS_ENCOUNTER]&#8594 (e:Encounter)<br>&#8594 [:HAS_OBS]&#8594 (o:LabResult)<br><span class="kw">WHERE</span> o.code = <span class="st">'2160-0'</span>  <span style="color:#64748B">// creatinine</span><br>&nbsp;&nbsp;<span class="kw">AND</span> o.effective &gt;= date('2026-05-01')<br><span class="kw">RETURN</span> o.value, o.unit, o.effective, o.source_ref<br><span class="kw">ORDER BY</span> o.effective <span class="kw">DESC</span></div>
+        <div class="eq-check">&#10003; object-equality passed — UI value === graph return</div>
+      </div>
+      <div class="facts">
+        <div class="fr"><span class="fk">value</span><b>168 µmol/L</b></div>
+        <div class="fr"><span class="fk">effective</span><b>2026-05-24</b></div>
+        <div class="fr"><span class="fk">source_ref</span><b style="font-family:var(--mono);font-size:10.5px">LIS/ORU^R01/MSG-88412</b></div>
+        <div class="fr"><span class="fk">ingested</span><b>2026-05-24 14:02 · audit #4471</b></div>
+        <div class="fr"><span class="fk">interpretation</span><b style="color:var(--ink-muted)">— none (non-SaMD boundary)</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <h2 class="sec"><span class="n">D</span> Revenue Cycle — SAR at Risk</h2>
+  <div class="sec-desc">Gradient bars, KPI cards with the soft-corner accent, same data story.</div>
+  <div class="browser">
+    <div class="browser-bar"><div class="dot" style="background:#FF5F57"></div><div class="dot" style="background:#FEBC2E"></div><div class="dot" style="background:#28C840"></div><div class="browser-url">localhost:3000/admin/rejection-cost</div></div>
+    <div style="padding:18px; background:#FAFBFE;">
+      <div class="kpi-strip">
+        <div class="kpi card"><div class="kv">SAR 1.24M</div><div class="kl">At risk across 60 seeded claims</div></div>
+        <div class="kpi card"><div class="kv">31%</div><div class="kl">Rejections from coding mismatch</div></div>
+        <div class="kpi card"><div class="kv">4.2 days</div><div class="kl">Avg pended pre-auth age</div></div>
+      </div>
+      <div class="card" style="padding:6px 16px;">
+        <div class="sar-row"><b>Cardiology</b><div class="bar-track"><div class="bar-fill warn" style="width:88%"></div></div><span class="sar-val">412K</span></div>
+        <div class="sar-row"><b>Internal Medicine</b><div class="bar-track"><div class="bar-fill" style="width:64%"></div></div><span class="sar-val">298K</span></div>
+        <div class="sar-row"><b>Orthopedics</b><div class="bar-track"><div class="bar-fill" style="width:41%"></div></div><span class="sar-val">192K</span></div>
+        <div class="sar-row"><b>Pediatrics</b><div class="bar-track"><div class="bar-fill" style="width:22%"></div></div><span class="sar-val">103K</span></div>
+        <div class="sar-row"><b>ENT</b><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><span class="sar-val">56K</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- E -->
+  <h2 class="sec"><span class="n">E</span> Shared patterns</h2>
+  <div class="sec-desc">Same semantics as v1 — one component per concept — in the warmer skin. Honesty patterns got friendlier copy but identical meaning.</div>
+  <div class="pat-grid">
+    <div class="pat card">
+      <h5>NPHIES badge — one semantic</h5>
+      <div class="badge-legend">
+        <div><span class="badge b-green">&#9679; complete</span> &nbsp;payer-complete only — never on simulated data</div>
+        <div><span class="badge b-yellow">&#9679; pended</span> &nbsp;queued · partial · unrecognised</div>
+        <div><span class="badge b-red">&#9679; rejected</span> &nbsp;with reason + fix-code action</div>
+      </div>
+    </div>
+    <div class="pat card">
+      <h5>Global demo chip</h5>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="sim-chip"><span class="pulse"></span> Demo mode · simulated integrations</span>
+        <span style="font-size:10.5px;color:var(--ink-muted)">tap &#8594; what's stubbed + the .env that flips it live</span>
+      </div>
+    </div>
+    <div class="pat card">
+      <h5>Agent identity colors (the Sully lesson)</h5>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="a-ava" style="background:linear-gradient(135deg,#FB7185,#F43F5E);width:28px;height:28px;font-size:13px">&#127908;</span>
+        <span class="a-ava" style="background:linear-gradient(135deg,#818CF8,#6366F1);width:28px;height:28px;font-size:13px">&#128172;</span>
+        <span class="a-ava" style="background:linear-gradient(135deg,#60A5FA,#2563EB);width:28px;height:28px;font-size:13px">&#128203;</span>
+        <span class="a-ava" style="background:linear-gradient(135deg,#2DD4BF,#0D9488);width:28px;height:28px;font-size:13px">&#128138;</span>
+        <span class="a-ava" style="background:linear-gradient(135deg,#FBBF24,#D97706);width:28px;height:28px;font-size:13px">&#128222;</span>
+        <span style="font-size:10.5px;color:var(--ink-muted);align-self:center">each agent keeps its color everywhere — cards, timeline dots, chat</span>
+      </div>
+    </div>
+    <div class="pat card">
+      <h5>Pending-integration chip</h5>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="pending">&#9644; Adjust dosage — pending</span>
+        <span class="pending">&#9644; Visit summary — pending</span>
+      </div>
+      <div style="font-size:10.5px;color:var(--ink-muted);margin-top:9px">Disabled with reason — never a dead button.</div>
+    </div>
+    <div class="pat card">
+      <h5>Empty state — says why</h5>
+      <div class="empty">
+        <div style="font-size:19px">&#128269;</div>
+        <div class="t">No graph data reachable</div>
+        <div class="d">NSCRE (:5004) isn't responding. Start the stack with <code>just demo</code> —<br>this is not an empty result.</div>
+      </div>
+    </div>
+    <div class="pat card">
+      <h5>RTL / Arabic parity</h5>
+      <div class="rtl-demo">
+        &#1575;&#1604;&#1605;&#1585;&#1610;&#1590;&#1577;: &#1601;&#1575;&#1591;&#1605;&#1577; &#1575;&#1604;&#1587;&#1610;&#1583; &middot; &#1578;&#1602;&#1585;&#1610;&#1585; &#1575;&#1604;&#1603;&#1585;&#1610;&#1575;&#1578;&#1610;&#1606;
+        <div style="font-size:10px;color:var(--ink-muted);margin-top:4px" dir="ltr">Clinical terms &amp; values stay verbatim — never translated</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ F. COPILOT PAGE ============ -->
+  <style>
+    /* copilot-specific */
+    .cp-strip { display:flex; align-items:center; gap:12px; background:linear-gradient(120deg,#FFFFFF 55%,#F0FDFA); border:1px solid var(--line); border-radius:14px; padding:10px 14px; margin-bottom:11px; box-shadow:var(--sh-card); }
+    .cp-strip .pt-avatar { width:36px; height:36px; font-size:16px; }
+    .modes { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+    .mode { font-size:10px; font-weight:700; border-radius:999px; padding:4px 11px; background:#fff; border:1px solid var(--line); color:#56536E; display:inline-flex; align-items:center; gap:6px; }
+    .mode .md { width:7px; height:7px; border-radius:50%; }
+    .mode.on { border-color:transparent; color:#fff; background:var(--grad); box-shadow:0 4px 10px rgba(79,70,229,.28); }
+    .mode.on .md { background:#fff; }
+    .feed { display:flex; flex-direction:column; gap:10px; padding:14px; background:#FDFCFF; border:1px solid var(--line); border-radius:16px; min-height:300px; }
+    .msg-user { align-self:flex-end; max-width:72%; background:var(--ink); color:#fff; border-radius:16px 16px 4px 16px; padding:9px 14px; font-size:12px; font-weight:500; }
+    .msg-user.ar { direction:rtl; }
+    .msg-cp { align-self:flex-start; max-width:86%; background:#fff; border:1px solid var(--line); border-radius:16px 16px 16px 4px; padding:11px 14px; font-size:12px; box-shadow:var(--sh-card); }
+    .msg-cp .cp-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .cp-ava { width:24px; height:24px; border-radius:8px; background:var(--grad); color:#fff; font-size:12px; display:inline-flex; align-items:center; justify-content:center; }
+    .cp-name { font-size:10.5px; font-weight:800; color:var(--indigo); }
+    .cp-foot { margin-top:7px; padding-top:7px; border-top:1px dashed var(--line); font-size:9.5px; color:var(--ink-muted); display:flex; align-items:center; gap:6px; }
+    .msg-cp.ar-body { direction:rtl; text-align:right; }
+    .refusal { align-self:flex-start; max-width:86%; background:#F6F5FB; border:1px dashed #D6D3E8; border-radius:16px; padding:11px 14px; font-size:12px; color:#56536E; }
+    .refusal .r-tag { display:inline-flex; align-items:center; gap:6px; font-size:10px; font-weight:700; color:var(--ink-muted); background:#fff; border:1px solid var(--line); border-radius:999px; padding:3px 10px; margin-bottom:7px; }
+    .composer { display:flex; align-items:center; gap:9px; background:#fff; border:1px solid var(--line); border-radius:999px; padding:7px 8px 7px 16px; box-shadow:var(--sh-pop); margin-top:12px; }
+    .composer .in { flex:1; font-size:12px; color:#A5A3BC; }
+    .composer .cbtn { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; background:#F4F3FA; border:1px solid var(--line); color:#56536E; }
+    .composer .cbtn.send { background:var(--grad); color:#fff; border:none; box-shadow:0 4px 10px rgba(79,70,229,.30); }
+    /* patient-file (theme-only) */
+    .pf-note { background:#EEF2FF; border:1px solid #E0E7FF; color:#4338CA; border-radius:12px; padding:10px 14px; font-size:11.5px; margin-bottom:12px; display:flex; gap:9px; align-items:flex-start; font-weight:500; }
+    .pf-stack { display:flex; flex-direction:column; gap:12px; }
+    .pf-card { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--sh-card); padding:14px 16px; }
+    .pf-card h6 { font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:#A5A3BC; font-weight:800; margin-bottom:10px; display:flex; justify-content:space-between; }
+    .pf-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dashed var(--line); font-size:11.5px; }
+    .pf-row:last-child { border:none; }
+    .pf-row .k { color:var(--ink-muted); }
+    .lab-trend { display:inline-flex; gap:4px; align-items:center; }
+  </style>
+
+  <h2 class="sec"><span class="n">F</span> The Copilot page — one composer, one feed</h2>
+  <div class="sec-desc">Matches the real <span style="font-family:var(--mono);font-size:11px">PatientWorkspace.tsx</span> architecture: a single composer and a single feed with mode chips — no tab switching. Modes carry the agent identity colors. Refusals stay neutral and muted by design (trust surface), with a fact-offer path. Language toggle starts a fresh conversation.</div>
+
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="dot" style="background:#FF5F57"></div><div class="dot" style="background:#FEBC2E"></div><div class="dot" style="background:#28C840"></div>
+      <div class="browser-url">localhost:3000/patients/pt-017/workspace</div>
+    </div>
+    <div style="padding:14px 16px; background:#FAFBFE;">
+      <div class="cp-strip">
+        <div class="pt-avatar">&#128100;</div>
+        <div style="flex:1">
+          <div style="font-weight:800; font-size:13px;">Fatimah Al-Sayed <span style="font-weight:500;color:var(--ink-muted);font-size:11px">· MRN 0017 · 68F</span></div>
+          <div style="font-size:10.5px; color:var(--ink-muted);">ENC-2291 · Internal Medicine · grounded in this encounter only</div>
+        </div>
+        <span class="chip allergy">&#9888; Penicillin</span>
+        <span class="chip scope">Copilot · factual mode</span>
+      </div>
+
+      <div class="modes">
+        <span class="mode on"><span class="md"></span>Consultant</span>
+        <span class="mode"><span class="md" style="background:#8B5CF6"></span>Diagnosis</span>
+        <span class="mode"><span class="md" style="background:#0EA5E9"></span>Researcher</span>
+        <span class="mode"><span class="md" style="background:#14B8A6"></span>Handoff</span>
+        <span class="mode"><span class="md" style="background:#A855F7"></span>Draft</span>
+        <span class="mode"><span class="md" style="background:#64748B"></span>Orders</span>
+        <span class="mode"><span class="md" style="background:var(--ag-nph)"></span>Coder</span>
+        <span class="mode"><span class="md" style="background:#94A3B8"></span>Search</span>
+        <span class="mode"><span class="md" style="background:#F59E0B"></span>Interpreter</span>
+        <span class="mode"><span class="md" style="background:var(--ag-scribe)"></span>Scribe</span>
+        <span class="mode"><span class="md" style="background:var(--ag-pharm)"></span>Refills</span>
+      </div>
+
+      <div class="feed">
+        <div class="msg-user">What was the creatinine over the last three months?</div>
+        <div class="msg-cp">
+          <div class="cp-head"><span class="cp-ava">&#10022;</span><span class="cp-name">Copilot</span><span style="font-size:9px;color:#A5A3BC">· from the graph, not the model</span></div>
+          Creatinine: <span class="assertion">138 (Mar)</span><span class="ev-pill">&#9906;</span> · <span class="assertion">141 (Apr)</span><span class="ev-pill">&#9906;</span> · <span class="assertion">168 (24 May)</span><span class="ev-pill">&#9906;</span> µmol/L
+          <div class="cp-foot">&#128279; LIS/ORU^R01 · 3 source facts · no interpretation added</div>
+        </div>
+
+        <div class="msg-user ar">&#1605;&#1575; &#1607;&#1608; &#1570;&#1582;&#1585; &#1578;&#1581;&#1604;&#1610;&#1604; &#1604;&#1604;&#1603;&#1585;&#1610;&#1575;&#1578;&#1610;&#1606;&#1617;&#1567;</div>
+        <div class="msg-cp ar-body">
+          <div class="cp-head" style="direction:ltr"><span class="cp-ava">&#10022;</span><span class="cp-name">Copilot</span></div>
+          &#1570;&#1582;&#1585; &#1602;&#1610;&#1605;&#1577;: <b>168 µmol/L</b> &#1576;&#1578;&#1575;&#1585;&#1610;&#1582; 24 &#1605;&#1575;&#1610;&#1608;<span class="ev-pill">&#9906;</span>
+          <div class="cp-foot" style="direction:ltr">&#127462;&#127466; &#1602;&#1610;&#1605; &#1575;&#1604;&#1578;&#1581;&#1575;&#1604;&#1610;&#1604; &#1578;&#1579;&#1576;&#1578; &#1603;&#1605;&#1575; &#1607;&#1610; — values verbatim</div>
+        </div>
+
+        <div class="msg-user">Is her kidney function getting worse?</div>
+        <div class="refusal">
+          <span class="r-tag">&#9888;&#65039; trend interpretation — outside my scope</span>
+          I can't interpret trends or severity — that judgement stays with you. What I can offer are the recorded values:
+          <span class="assertion">138</span> &#8594; <span class="assertion">141</span> &#8594; <span class="assertion">168</span> µmol/L <span class="ev-pill">&#9906; evidence</span>
+          <div class="cp-foot" style="margin-top:8px;">Refusals are neutral by design — no alert styling. Facts are still offered.</div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <span style="font-size:13px">&#9997;&#65039;</span>
+        <span class="in">Ask anything factual about this patient…</span>
+        <span class="mode" style="padding:4px 10px;"><b>EN</b> | ع</span>
+        <span class="cbtn" title="dictate">&#127908;</span>
+        <span class="cbtn send">&#8593;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ G. PATIENT FILE (THEME ONLY, FAITHFUL) ============ -->
+  <style>
+    .pfd { background:#020617; padding:18px 20px; }
+    .pfd .back { color:#64748B; font-size:12px; margin-bottom:14px; display:inline-block; }
+    .pfd-card { background:#0F172A; border:1px solid #1E293B; border-radius:14px; padding:15px 17px; margin-bottom:14px; }
+    .pfd-card h6 { font-size:12.5px; font-weight:700; color:#F1F5F9; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+    .pfd-card h6 .src { font-size:9px; color:#475569; font-family:var(--mono); text-transform:none; letter-spacing:0; font-weight:600; }
+    .pfd-row { display:flex; justify-content:space-between; gap:10px; padding:6.5px 0; border-bottom:1px solid #16203A; font-size:11.5px; color:#CBD5E1; }
+    .pfd-row:last-child { border:none; }
+    .pfd-row .k { color:#7C8DB0; }
+    .pfd-sub { font-size:10.5px; font-weight:700; color:#A9B7CE; margin:12px 0 4px; text-transform:none; letter-spacing:0; }
+    .showmore { color:#94A3B8; font-size:10px; border:1px solid #26334D; border-radius:999px; padding:3px 10px; display:inline-flex; gap:5px; background:#0B1222; }
+    .cat-chips { display:flex; gap:6px; margin-bottom:11px; }
+    .cat { font-size:10px; font-weight:600; border-radius:999px; padding:3.5px 12px; background:#0B1222; border:1px solid #26334D; color:#94A3B8; }
+    .cat.on-d { background:var(--grad); color:#fff; border-color:transparent; font-weight:700; }
+    .loadmore { color:#8EE3E0; font-size:10.5px; border:1px dashed #2C4A49; border-radius:10px; padding:7px; text-align:center; margin-top:9px; background:rgba(14,165,164,.05); }
+    /* v2 LIGHT theme variant — final direction */
+    .pfd.light { background:linear-gradient(180deg,#F4F7FE,#F8FAFC); }
+    .pfd.light .pfd-card { background:#FFFFFF; border:1px solid #ECEAF4; border-radius:18px; box-shadow:0 1px 2px rgba(30,27,54,.04), 0 8px 24px rgba(30,27,54,.06); }
+    .pfd.light .pfd-card h6 { color:var(--ink); }
+    .pfd.light .pfd-card h6::before { content:""; width:3.5px; height:15px; border-radius:99px; background:var(--grad); display:inline-block; margin-right:9px; }
+    .pfd.light .pfd-row { border-bottom-color:#EFEDF6; color:#3D3A57; }
+    .pfd.light .pfd-row .k { color:#7C7A94; }
+    .pfd.light .pfd-sub { color:#A5A3BC; }
+    .pfd.light .showmore { border-color:#E4E1EF; color:#8E8BA6; background:#FFFFFF; }
+    .pfd.light .cat { background:#FFFFFF; border-color:#ECEAF4; color:#7C7A94; }
+    .pfd.light .back { color:#7C7A94; }
+    .pfd.light .pfd-ava { width:42px; height:42px; border-radius:14px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:0 6px 16px rgba(99,102,241,.30); }
+    .pfd.light .ident { color:var(--ink); font-weight:800; font-size:14.5px; }
+    .pfd.light .loadmore { color:#0F766E; border-color:#C8ECEA; background:#F0FDFA; }
+  </style>
+
+  <style>
+    .glance { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; border:1px solid #16203A; border-radius:10px; padding:11px 14px; }
+    .glance .gl { font-size:9.5px; color:#6E7F9E; margin-bottom:2px; }
+    .glance .gv { font-size:10.5px; color:#E6EDF8; }
+    .clinic-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .clinic-box { border:1px solid #26334D; border-radius:10px; padding:11px 13px; background:#0B1222; }
+    .clinic-box .cb-name { font-size:12px; font-weight:600; color:#F1F5F9; margin-bottom:6px; }
+    .clinic-box .cb-lab { font-size:9px; color:#7C8DB0; margin:7px 0 3px; text-transform:uppercase; letter-spacing:.6px; }
+    .clinic-box .cb-li { font-size:10.5px; color:#DEE7F5; padding:1.5px 0; }
+    .clinic-box .cb-li span, .cond-item .ci-med span, .ci-t span { color:#6E7F9E; }
+    .cond-item { border:1px solid #26334D; border-radius:9px; padding:8px 11px; margin-bottom:7px; }
+    .cond-item .ci-t { font-size:11.5px; color:#F1F5F9; }
+    .cond-item .ci-med { font-size:10.5px; color:#B9C6DE; margin-left:12px; padding:1px 0; }
+    .labs2 { display:grid; grid-template-columns:1fr 1fr; gap:3px 16px; list-style:none; }
+    .labs2 li { font-size:10.5px; color:#B9C6DE; }
+    .labs2 b { font-family:var(--mono); color:#F1F5F9; font-weight:600; }
+    .labs2 span { color:#6E7F9E; }
+    .pfd.light .clinic-box { border-color:#ECEAF4; background:#FBFAFE; border-radius:14px; }
+    .pfd.light .clinic-box::before { content:""; display:block; width:26px; height:3px; border-radius:99px; background:var(--grad); margin-bottom:8px; }
+    .pfd.light .clinic-box .cb-name { color:var(--ink); }
+    .pfd.light .clinic-box .cb-lab { color:#A5A3BC; }
+    .pfd.light .clinic-box .cb-li { color:#3D3A57; }
+    .pfd.light .glance { border-color:#ECEAF4; background:linear-gradient(90deg,rgba(14,165,164,.05),rgba(99,102,241,.05)); }
+    .pfd.light .glance .gl { color:#A5A3BC; }
+    .pfd.light .glance .gv { color:#3D3A57; }
+    .pfd.light .cond-item { border-color:#ECEAF4; background:#FBFAFE; border-radius:12px; }
+    .pfd.light .cond-item .ci-t { color:var(--ink); }
+    .pfd.light .cond-item .ci-med { color:#56536E; }
+    .pfd.light .labs2 li { color:#56536E; }
+    .pfd.light .labs2 b { color:var(--ink); }
+  </style>
+
+  <h2 class="sec"><span class="n">G</span> Patient File — real structure, faithfully mirrored</h2>
+  <div class="sec-desc">Corrected to match the shipped app exactly. The real Patient File is <b>dark-themed</b> (slate-950), reached via <span style="font-family:var(--mono);font-size:11px">?view=chart</span> (default is the Copilot workspace; <span style="font-family:var(--mono);font-size:11px">?view=encounter</span> opens the Sully shell). Component order: PatientHeader &#8594; PatientBrief &#8594; Observations &#8594; Medications &#8594; Reconciliation — with the expandable allergies/conditions, category filter, and Load-more exactly as coded. Constraints honored: no clinical color-coding, no severity flags, plain factual text.</div>
+
+  <div class="pf-note"><span style="font-size:14px">&#128274;</span><span><b>Structure unchanged — both frames below are the same page.</b> Left: as shipped today. Right: v2 tokens applied <i>in the existing dark context</i> (the literal "just apply the theme" option). Same components, same order, same data, same constraints.</span></div>
+
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="dot" style="background:#FF5F57"></div><div class="dot" style="background:#FEBC2E"></div><div class="dot" style="background:#28C840"></div>
+      <div class="browser-url">localhost:3000/patients/pt-017?view=chart &nbsp;—&nbsp; BEFORE · as shipped</div>
+    </div>
+    <div class="pfd">
+      <span class="back">&#8592; Patients</span>
+
+      <div class="pfd-card">
+        <h6>PatientHeader <span class="src">expandable · INITIAL_ALLERGIES=3 · INITIAL_CONDITIONS=5</span></h6>
+        <div class="pfd-row"><span class="k">Fatimah Al-Sayed</span><span>MRN 0017 · 68F · DOB 1958-03-12 · AR (preferred) · Ward 4B</span></div>
+        <div class="pfd-sub">Allergies</div>
+        <div class="pfd-row"><span>Penicillin — rash (2019)</span><span class="k">documented</span></div>
+        <div class="pfd-row"><span>Sulfonamides — urticaria (2021)</span><span class="k">documented</span></div>
+        <span class="showmore">&#8943; Show 2 more allergies</span>
+        <div class="pfd-sub">Conditions <span style="color:#475569;font-weight:500">(click a row to load every documented episode)</span></div>
+        <div class="pfd-row"><span>Chronic kidney disease, stage 3</span><span class="k">since 2023 · &#9662; episodes</span></div>
+        <div class="pfd-row"><span>Type 2 diabetes mellitus</span><span class="k">since 2014 · &#9662; episodes</span></div>
+        <div class="pfd-row"><span>Essential hypertension</span><span class="k">since 2012 · &#9662; episodes</span></div>
+        <span class="showmore">&#8943; Show 3 more conditions</span>
+      </div>
+
+      <div class="pfd-card">
+        <h6>PatientBrief <span class="src">6 sections · ClinicCard grid · as coded</span></h6>
+        <div style="display:flex; justify-content:space-between; margin-bottom:9px;"><span class="brief-tag" style="color:#94A3B8">Factual reproduction — not a clinical risk assessment</span></div>
+
+        <div class="glance">
+          <div class="g-item"><div class="gl">Documented active conditions</div><div class="gv">CKD stage 3, T2DM, HTN…</div></div>
+          <div class="g-item"><div class="gl">Active medications</div><div class="gv">Metformin, Warfarin, Insulin glargine…</div></div>
+          <div class="g-item"><div class="gl">Most recent lab result</div><div class="gv">Creatinine: 168 µmol/L (24 May 2026)</div></div>
+        </div>
+
+        <div class="pfd-sub">Documented conditions &amp; current medications</div>
+        <div class="cond-item"><div class="ci-t">Chronic kidney disease, stage 3 <span>(active, 12 Mar 2023)</span></div>
+          <div class="ci-med">• Metformin 500mg <span>oral, 2×/day</span></div></div>
+        <div class="cond-item"><div class="ci-t">Type 2 diabetes mellitus <span>(active, 08 Jun 2014)</span></div>
+          <div class="ci-med">• Insulin glargine 16U <span>subcutaneous, nocte</span></div></div>
+        <span class="showmore">&#8943; Show 3 more conditions</span>
+        <div style="font-size:9.5px;color:#6E7F9E;margin-top:7px;">Other active medications (no documented condition indication)</div>
+        <div class="ci-med" style="margin:3px 0 0 12px;">• Warfarin 3mg <span>oral, 1×/day</span></div>
+
+        <div class="pfd-sub">Care history by clinic — the 4 boxes, kept as-is</div>
+        <div class="clinic-grid">
+          <div class="clinic-box">
+            <div class="cb-name">Internal Medicine</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Fatigue <span>(active, 12 Mar 2026)</span></div>
+            <div class="cb-li">Nocturia <span>(active, 12 Mar 2026)</span></div>
+            <div class="showmore" style="margin:4px 0;">&#8943; Show 2 more symptoms</div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Metformin 500mg, oral, 2×/day <span>— active</span></div>
+          </div>
+          <div class="clinic-box">
+            <div class="cb-name">Nephrology</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Ankle swelling <span>(active, 02 Apr 2026)</span></div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Furosemide 40mg, oral, 1×/day <span>— active</span></div>
+          </div>
+          <div class="clinic-box">
+            <div class="cb-name">Endocrinology</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Polydipsia <span>(resolved, 18 Sep 2024)</span></div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Insulin glargine 16U, subcutaneous, nocte <span>— active</span></div>
+          </div>
+          <div class="clinic-box">
+            <div class="cb-name">Cardiology</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Palpitations <span>(active, 14 May 2026)</span></div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Warfarin 3mg, oral, 1×/day <span>— active</span></div>
+          </div>
+        </div>
+
+        <div class="pfd-sub">Lab investigations (latest per test)</div>
+        <ul class="labs2">
+          <li>Creatinine: <b>168 µmol/L [60–110]</b> <span>24 May 2026</span></li>
+          <li>eGFR: <b>38 mL/min [&gt;60]</b> <span>24 May 2026</span></li>
+          <li>HbA1c: <b>7.8 % [4.0–5.6]</b> <span>30 Apr 2026</span></li>
+          <li>Hemoglobin: <b>11.2 g/dL [12.0–15.5]</b> <span>20 May 2026</span></li>
+        </ul>
+        <span class="showmore" style="margin-top:5px;">&#8943; Show 3 more labs</span>
+
+        <div class="pfd-sub">Procedures &amp; interventions</div>
+        <div class="pfd-row"><span>Echocardiogram <span class="k">(completed, 14 May 2026) — Dr. Al-Rashid</span></span></div>
+        <div class="pfd-row"><span>Coronary angiography <span class="k">(completed, 09 Jan 2026)</span></span></div>
+
+        <div class="pfd-sub">Imaging reports</div>
+        <div class="pfd-row"><span>Chest X-ray <span class="k">(20 May 2026)</span></span><span class="k">no acute cardiopulmonary finding</span></div>
+      </div>
+
+      <div class="pfd-card">
+        <h6>Observations <span class="src">LabPanel · INITIAL_ROWS=5 · paginated</span></h6>
+        <div class="cat-chips"><span class="cat on-d">All</span><span class="cat">laboratory</span><span class="cat">vital-signs</span><span class="cat">imaging</span></div>
+        <div class="pfd-row"><span>Creatinine · 24 May 2026</span><span>168 µmol/L</span></div>
+        <div class="pfd-row"><span>Blood pressure · 24 May 2026</span><span>148/86 mmHg</span></div>
+        <div class="pfd-row"><span>eGFR · 24 May 2026</span><span>38 mL/min</span></div>
+        <div class="pfd-row"><span>Chest X-ray · 20 May 2026</span><span>report: no acute finding</span></div>
+        <div class="pfd-row"><span>HbA1c · 30 Apr 2026</span><span>7.8 %</span></div>
+        <div class="loadmore">&#8635; Load more observations</div>
+      </div>
+
+      <div class="pfd-card">
+        <h6>Medications <span class="src">MedicationPanel · status=active</span></h6>
+        <div class="pfd-row"><span>Metformin 500mg</span><span class="k">active · started 2024-11-02</span></div>
+        <div class="pfd-row"><span>Warfarin 3mg</span><span class="k">active · started 2023-06-18</span></div>
+        <div class="pfd-row"><span>Insulin glargine 16U</span><span class="k">active · started 2022-09-30</span></div>
+      </div>
+
+      <div class="pfd-card">
+        <h6>Reconciliation <span class="src">ReconciliationPanel</span></h6>
+        <div class="pfd-row"><span class="k">Candidate duplicates</span><span>MRN 0017-2 · 2 overlapping meds</span></div>
+        <div class="pfd-row"><span class="k">Dose discrepancies</span><span>Metformin: 500mg (Rx) vs 850mg (LIS note)</span></div>
+        <div class="pfd-row"><span class="k">Stale entries</span><span>1 medication not renewed &gt; 12 months</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:14px"></div>
+
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="dot" style="background:#FF5F57"></div><div class="dot" style="background:#FEBC2E"></div><div class="dot" style="background:#28C840"></div>
+      <div class="browser-url">localhost:3000/patients/pt-017?view=chart &nbsp;—&nbsp; AFTER · v2 light theme — final direction</div>
+    </div>
+    <div class="pfd light">
+      <span class="back">&#8592; Patients</span>
+
+      <div class="pfd-card">
+        <h6>PatientHeader <span class="src">identical DOM order · theme only</span></h6>
+        <div style="display:flex; align-items:center; gap:13px; margin-bottom:8px;">
+          <div class="pfd-ava">&#128100;</div>
+          <div>
+            <div class="ident">Fatimah Al-Sayed <span style="font-weight:500;color:#8B9BB8;font-size:11.5px">· MRN 0017 · 68F · AR · Ward 4B</span></div>
+            <div style="font-size:10px;color:#6E7F9E;margin-top:1px;">read-only chart · plain factual text (non-SaMD constraints preserved)</div>
+          </div>
+        </div>
+        <div class="pfd-sub">Allergies</div>
+        <div class="pfd-row"><span>Penicillin — rash (2019)</span><span class="k">documented</span></div>
+        <div class="pfd-row"><span>Sulfonamides — urticaria (2021)</span><span class="k">documented</span></div>
+        <span class="showmore">&#8943; Show 2 more allergies</span>
+        <div class="pfd-sub">Conditions</div>
+        <div class="pfd-row"><span>Chronic kidney disease, stage 3</span><span class="k">since 2023 · &#9662; episodes</span></div>
+        <div class="pfd-row"><span>Type 2 diabetes mellitus</span><span class="k">since 2014 · &#9662; episodes</span></div>
+        <span class="showmore">&#8943; Show 3 more conditions</span>
+      </div>
+
+      <div class="pfd-card">
+        <h6>PatientBrief <span class="src">identical — 4 clinic boxes untouched, theme only</span></h6>
+        <div style="display:flex; justify-content:space-between; margin-bottom:9px;"><span class="brief-tag" style="color:#8B9BB8">Factual reproduction — not a clinical risk assessment</span></div>
+
+        <div class="glance">
+          <div class="g-item"><div class="gl">Documented active conditions</div><div class="gv">CKD stage 3, T2DM, HTN…</div></div>
+          <div class="g-item"><div class="gl">Active medications</div><div class="gv">Metformin, Warfarin, Insulin glargine…</div></div>
+          <div class="g-item"><div class="gl">Most recent lab result</div><div class="gv">Creatinine: 168 µmol/L (24 May 2026)</div></div>
+        </div>
+
+        <div class="pfd-sub">Documented conditions &amp; current medications</div>
+        <div class="cond-item"><div class="ci-t">Chronic kidney disease, stage 3 <span>(active, 12 Mar 2023)</span></div>
+          <div class="ci-med">• Metformin 500mg <span>oral, 2×/day</span></div></div>
+        <div class="cond-item"><div class="ci-t">Type 2 diabetes mellitus <span>(active, 08 Jun 2014)</span></div>
+          <div class="ci-med">• Insulin glargine 16U <span>subcutaneous, nocte</span></div></div>
+        <span class="showmore">&#8943; Show 3 more conditions</span>
+        <div style="font-size:9.5px;color:#8B9BB8;margin-top:7px;">Other active medications (no documented condition indication)</div>
+        <div class="ci-med" style="margin:3px 0 0 12px;">• Warfarin 3mg <span>oral, 1×/day</span></div>
+
+        <div class="pfd-sub">Care history by clinic — same 4 boxes, v2 skin</div>
+        <div class="clinic-grid">
+          <div class="clinic-box">
+            <div class="cb-name">Internal Medicine</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Fatigue <span>(active, 12 Mar 2026)</span></div>
+            <div class="cb-li">Nocturia <span>(active, 12 Mar 2026)</span></div>
+            <div class="showmore" style="margin:4px 0;">&#8943; Show 2 more symptoms</div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Metformin 500mg, oral, 2×/day <span>— active</span></div>
+          </div>
+          <div class="clinic-box">
+            <div class="cb-name">Nephrology</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Ankle swelling <span>(active, 02 Apr 2026)</span></div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Furosemide 40mg, oral, 1×/day <span>— active</span></div>
+          </div>
+          <div class="clinic-box">
+            <div class="cb-name">Endocrinology</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Polydipsia <span>(resolved, 18 Sep 2024)</span></div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Insulin glargine 16U, subcutaneous, nocte <span>— active</span></div>
+          </div>
+          <div class="clinic-box">
+            <div class="cb-name">Cardiology</div>
+            <div class="cb-lab">Symptoms reported</div>
+            <div class="cb-li">Palpitations <span>(active, 14 May 2026)</span></div>
+            <div class="cb-lab">Treatment documented</div>
+            <div class="cb-li">Warfarin 3mg, oral, 1×/day <span>— active</span></div>
+          </div>
+        </div>
+
+        <div class="pfd-sub">Lab investigations (latest per test)</div>
+        <ul class="labs2">
+          <li>Creatinine: <b>168 µmol/L [60–110]</b> <span>24 May 2026</span></li>
+          <li>eGFR: <b>38 mL/min [&gt;60]</b> <span>24 May 2026</span></li>
+          <li>HbA1c: <b>7.8 % [4.0–5.6]</b> <span>30 Apr 2026</span></li>
+          <li>Hemoglobin: <b>11.2 g/dL [12.0–15.5]</b> <span>20 May 2026</span></li>
+        </ul>
+        <span class="showmore" style="margin-top:5px;">&#8943; Show 3 more labs</span>
+
+        <div class="pfd-sub">Procedures &amp; interventions</div>
+        <div class="pfd-row"><span>Echocardiogram <span class="k">(completed, 14 May 2026) — Dr. Al-Rashid</span></span></div>
+        <div class="pfd-row"><span>Coronary angiography <span class="k">(completed, 09 Jan 2026)</span></span></div>
+
+        <div class="pfd-sub">Imaging reports</div>
+        <div class="pfd-row"><span>Chest X-ray <span class="k">(20 May 2026)</span></span><span class="k">no acute cardiopulmonary finding</span></div>
+      </div>
+
+      <div class="pfd-card">
+        <h6>Observations <span class="src">identical · filter + pagination preserved</span></h6>
+        <div class="cat-chips"><span class="cat on-d">All</span><span class="cat">laboratory</span><span class="cat">vital-signs</span><span class="cat">imaging</span></div>
+        <div class="pfd-row"><span>Creatinine · 24 May 2026</span><span>168 µmol/L</span></div>
+        <div class="pfd-row"><span>Blood pressure · 24 May 2026</span><span>148/86 mmHg</span></div>
+        <div class="pfd-row"><span>eGFR · 24 May 2026</span><span>38 mL/min</span></div>
+        <div class="pfd-row"><span>Chest X-ray · 20 May 2026</span><span>report: no acute finding</span></div>
+        <div class="pfd-row"><span>HbA1c · 30 Apr 2026</span><span>7.8 %</span></div>
+        <div class="loadmore">&#8635; Load more observations</div>
+      </div>
+
+      <div class="pfd-card">
+        <h6>Medications <span class="src">identical · no clinical color-coding (by design)</span></h6>
+        <div class="pfd-row"><span>Metformin 500mg</span><span class="k">active · started 2024-11-02</span></div>
+        <div class="pfd-row"><span>Warfarin 3mg</span><span class="k">active · started 2023-06-18</span></div>
+        <div class="pfd-row"><span>Insulin glargine 16U</span><span class="k">active · started 2022-09-30</span></div>
+      </div>
+
+      <div class="pfd-card">
+        <h6>Reconciliation <span class="src">identical</span></h6>
+        <div class="pfd-row"><span class="k">Candidate duplicates</span><span>MRN 0017-2 · 2 overlapping meds</span></div>
+        <div class="pfd-row"><span class="k">Dose discrepancies</span><span>Metformin: 500mg (Rx) vs 850mg (LIS note)</span></div>
+        <div class="pfd-row"><span class="k">Stale entries</span><span>1 medication not renewed &gt; 12 months</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf-note" style="margin-top:12px"><span style="font-size:14px">&#9888;&#65039;</span><span><b>Decision made: full light re-skin app-wide.</b> The AFTER frame above is the final direction — the same patient-file structure (4 clinic boxes, at-a-glance strip, filters, pagination all untouched) in the light v2 skin, consistent with sections B–F. The BEFORE frame stays for reference only.</span></div>
+
+  <footer>
+    v2 tokens &nbsp;·&nbsp; accent gradient <code>#0EA5A4 &rarr; #6366F1</code> &nbsp;·&nbsp; agent set rose/indigo/blue/teal/amber &nbsp;·&nbsp; surfaces 16–18px radius, layered soft shadows &nbsp;·&nbsp; Inter
+    <div class="tok">
+      <span class="swatch"><i style="background:linear-gradient(135deg,#0EA5A4,#6366F1)"></i>accent</span>
+      <span class="swatch"><i style="background:#F43F5E"></i>scribe</span>
+      <span class="swatch"><i style="background:#6366F1"></i>consult</span>
+      <span class="swatch"><i style="background:#2563EB"></i>nphies</span>
+      <span class="swatch"><i style="background:#0D9488"></i>pharm</span>
+      <span class="swatch"><i style="background:#D97706"></i>recep</span>
+      <span class="swatch"><i style="background:#F59E0B"></i>demo</span>
+    </div>
+    <div style="margin-top:10px">v1 (clinical wireframe) kept as <code>Veritas-Medica-UI-Mockup.html</code> · v2 2026-08-15</div>
+  </footer>
+
+</div>
+</body>
+</html>

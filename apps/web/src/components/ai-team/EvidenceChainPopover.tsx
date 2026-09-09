@@ -18,9 +18,10 @@
  * NphiesBadge.tsx -- no new UI-library dependency.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { GitBranch, ChevronRight, TerminalSquare } from "lucide-react";
 import type { EvidenceChain } from "../../hooks/useAgentOrchestrator";
+import FixedPopover from "../common/FixedPopover";
 
 interface EvidenceChainPopoverProps {
   readonly evidenceChain: EvidenceChain;
@@ -41,41 +42,44 @@ export default function EvidenceChainPopover({
   queryLabel = "Cypher executed",
 }: EvidenceChainPopoverProps): JSX.Element {
   const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLSpanElement>(null);
 
   return (
-    <span className="relative inline-flex">
+    <span ref={anchorRef} className="relative inline-flex">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={triggerLabel}
-        className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-300 hover:border-slate-500 hover:text-white"
+        className="inline-flex items-center gap-1 rounded-full border border-ev-pill-line bg-ev-pill-bg px-2.5 py-0.5 text-[11px] font-semibold text-ev-pill hover:brightness-95"
       >
         <GitBranch className="h-3 w-3" aria-hidden="true" />
         {triggerLabel}
       </button>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-label="Evidence chain"
-          className="absolute end-0 top-full z-40 mt-1 w-96 max-w-[90vw] rounded-lg border border-slate-700 bg-slate-900 p-3 text-xs text-slate-200 shadow-xl"
-        >
+      <FixedPopover
+        anchorRef={anchorRef}
+        open={open}
+        onClose={() => setOpen(false)}
+        role="dialog"
+        ariaLabel="Evidence chain"
+        className="rounded-2xl border border-line bg-white p-3 text-xs text-ink-deep shadow-pop"
+      >
           {title && (
-            <p className="mb-2 text-[11px] font-semibold text-slate-200" data-testid="evidence-title">
+            <p className="mb-2 text-[11px] font-semibold text-ink-deep" data-testid="evidence-title">
               {title}
             </p>
           )}
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
             Graph traversal
           </p>
           <div className="flex flex-wrap items-center gap-1" data-testid="evidence-chain-steps">
             {evidenceChain.steps.map((step, i) => (
               <span key={`${step.node_type}-${i}`} className="flex items-center gap-1">
-                <span className="rounded border border-slate-700 bg-slate-950 px-1.5 py-0.5 font-mono text-[10px] text-slate-200">
+                <span className="rounded border border-line bg-wash px-1.5 py-0.5 font-mono text-[10px] text-ink-deep">
                   {step.node_type}
                   {Object.keys(step.properties).length > 0 && (
-                    <span className="text-slate-500">
+                    <span className="text-ink-soft">
                       (
                       {Object.entries(step.properties)
                         .map(([k, v]) => `${k}=${String(v)}`)
@@ -85,25 +89,25 @@ export default function EvidenceChainPopover({
                   )}
                 </span>
                 {i < evidenceChain.steps.length - 1 && (
-                  <ChevronRight className="h-3 w-3 text-slate-600" aria-hidden="true" />
+                  <ChevronRight className="h-3 w-3 text-ink-faint" aria-hidden="true" />
                 )}
               </span>
             ))}
           </div>
 
           {/* Source facts — every property of every step, verbatim. */}
-          <p className="mt-3 mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <p className="mt-3 mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
             Source facts
           </p>
           <table className="w-full border-collapse" data-testid="evidence-source-facts">
             <tbody>
               {evidenceChain.steps.flatMap((step, i) =>
                 Object.entries(step.properties).map(([k, v]) => (
-                  <tr key={`${step.node_type}-${i}-${k}`} className="border-b border-slate-800 last:border-0">
-                    <td className="py-0.5 pe-2 font-mono text-[10px] text-slate-500 align-top">
+                  <tr key={`${step.node_type}-${i}-${k}`} className="border-b border-line last:border-0">
+                    <td className="py-0.5 pe-2 font-mono text-[10px] text-ink-soft align-top">
                       {step.node_type}.{k}
                     </td>
-                    <td className="py-0.5 font-mono text-[10px] text-slate-200 align-top">{String(v)}</td>
+                    <td className="py-0.5 font-mono text-[10px] text-ink-deep align-top">{String(v)}</td>
                   </tr>
                 )),
               )}
@@ -115,7 +119,7 @@ export default function EvidenceChainPopover({
               even in the Arabic locale. */}
           {evidenceChain.cypher && evidenceChain.cypher.length > 0 && (
             <div className="mt-3" data-testid="evidence-cypher-section">
-              <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
                 <TerminalSquare className="h-3 w-3" aria-hidden="true" />
                 {queryLabel}
               </p>
@@ -124,7 +128,7 @@ export default function EvidenceChainPopover({
                   key={`cypher-${i}`}
                   dir="ltr"
                   data-testid={`evidence-cypher-${i}`}
-                  className="overflow-x-auto rounded border border-slate-800 bg-slate-950 p-2 font-mono text-[10px] leading-relaxed text-emerald-300/90"
+                  className="overflow-x-auto rounded-xl border border-term-bg bg-term-bg p-3 font-mono text-[10.5px] leading-relaxed text-term-cyan shadow-[inset_0_0_40px_rgba(99,102,241,0.08)]"
                 >
                   {query}
                 </pre>
@@ -132,11 +136,10 @@ export default function EvidenceChainPopover({
             </div>
           )}
 
-          <p className="mt-2 break-words border-t border-slate-800 pt-2 font-mono text-[10px] text-slate-500">
+          <p className="mt-2 break-words border-t border-line pt-2 font-mono text-[10px] text-ink-soft">
             {evidenceChain.rendered}
           </p>
-        </div>
-      )}
+    </FixedPopover>
     </span>
   );
 }
