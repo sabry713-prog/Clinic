@@ -8,7 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ShieldCheck, Archive } from "lucide-react";
+import { ShieldCheck, Archive, ShieldAlert } from "lucide-react";
 import ComplianceReport from "../../../components/ComplianceReport/ComplianceReport";
 import { api, type AuditEventItem, type AuditVerifyResult, ApiError } from "../../../lib/api";
 
@@ -108,7 +108,12 @@ export default function AuditPage(): JSX.Element {
       .verifyAudit()
       .then((result) => setVerifyResult(result))
       .catch((err: unknown) => {
-        const msg = err instanceof ApiError ? err.message : "Verification failed";
+        const msg =
+          err instanceof ApiError && err.status === 403
+            ? "Not authorized — verification requires an administrator role."
+            : err instanceof ApiError
+              ? err.message
+              : "Verification failed";
         setVerifyError(msg);
       })
       .finally(() => setIsVerifying(false));
@@ -123,7 +128,12 @@ export default function AuditPage(): JSX.Element {
       .exportWorm()
       .then((result) => setWormMessage(result.message))
       .catch((err: unknown) => {
-        const msg = err instanceof ApiError ? err.message : "WORM export failed";
+        const msg =
+          err instanceof ApiError && err.status === 403
+            ? "Not authorized — WORM export requires an administrator role."
+            : err instanceof ApiError
+              ? err.message
+              : "WORM export failed";
         setWormError(msg);
       })
       .finally(() => setIsExporting(false));
@@ -205,7 +215,12 @@ export default function AuditPage(): JSX.Element {
             </div>
           )}
 
-          {verifyError && <p className="text-ink-soft text-sm">{verifyError}</p>}
+          {verifyError && (
+            <p role="alert" data-testid="verify-error" className="flex items-center gap-2 rounded-xl border border-status-rej-line bg-status-rej-bg px-3 py-2 text-sm text-status-rej">
+              <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {verifyError}
+            </p>
+          )}
 
           {wormMessage && (
             <p data-testid="worm-result" className="rounded-lg border border-line bg-veil p-3 text-xs text-ink-deep">
@@ -213,7 +228,12 @@ export default function AuditPage(): JSX.Element {
               {t("audit.wormDone")}: {wormMessage}
             </p>
           )}
-          {wormError && <p className="text-ink-soft text-sm">{wormError}</p>}
+          {wormError && (
+            <p role="alert" data-testid="worm-error" className="flex items-center gap-2 rounded-xl border border-status-rej-line bg-status-rej-bg px-3 py-2 text-sm text-status-rej">
+              <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {wormError}
+            </p>
+          )}
 
           <p className="text-xs text-ink-faint">{t("audit.wormScheduleNote")}</p>
         </div>

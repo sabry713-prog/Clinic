@@ -6,6 +6,11 @@ import { HomePage } from "./pages/HomePage";
 import { useTranslation } from "react-i18next";
 import { CopilotProvider } from "./context/CopilotContext";
 import AppShell from "./components/AppShell/AppShell";
+import RequireRoles, {
+  ADMIN_ROLES,
+  FRONT_DESK_ROLES,
+  PHARMACY_ROLES,
+} from "./components/common/RequireRoles";
 
 const PatientListPage = lazy(() => import("./pages/PatientListPage/PatientListPage"));
 const PatientDetailPage = lazy(() => import("./pages/PatientDetailPage/PatientDetailPage"));
@@ -45,16 +50,19 @@ function AppRoutes(): JSX.Element {
         <Route path="/" element={<Navigate to="/patients" replace />} />
         <Route path="/patients" element={<PatientListPage />} />
         <Route path="/patients/:id" element={<PatientDetailPage />} />
-        <Route path="/admin/quarantine" element={<QuarantinePage />} />
-        <Route path="/admin/audit" element={<AuditPage />} />
-        <Route path="/admin/users" element={<UserManagementPage />} />
-        <Route path="/admin/nphies" element={<NphiesAnalyticsPage />} />
-        <Route path="/admin/rejection-cost" element={<RejectionCostPage />} />
-        <Route path="/admin/claim-simulator" element={<ClaimSimulatorPage />} />
-        <Route path="/admin/coder-queue" element={<CoderQueuePage />} />
-        <Route path="/admin/provider-availability" element={<ProviderAvailabilityPage />} />
-        <Route path="/pharmacy/queue" element={<PharmacyQueuePage />} />
-        <Route path="/front-desk/appointments" element={<FrontDeskQueuePage />} />
+        {/* Role-guarded routes — the API enforces the same permissions;
+            the guard keeps the UI from rendering pages whose actions would
+            silently 403 (see docs/testing/test-round-2026-09-09.md). */}
+        <Route path="/admin/quarantine" element={<RequireRoles roles={ADMIN_ROLES}><QuarantinePage /></RequireRoles>} />
+        <Route path="/admin/audit" element={<RequireRoles roles={ADMIN_ROLES}><AuditPage /></RequireRoles>} />
+        <Route path="/admin/users" element={<RequireRoles roles={ADMIN_ROLES}><UserManagementPage /></RequireRoles>} />
+        <Route path="/admin/nphies" element={<RequireRoles roles={ADMIN_ROLES}><NphiesAnalyticsPage /></RequireRoles>} />
+        <Route path="/admin/rejection-cost" element={<RequireRoles roles={ADMIN_ROLES}><RejectionCostPage /></RequireRoles>} />
+        <Route path="/admin/claim-simulator" element={<RequireRoles roles={ADMIN_ROLES}><ClaimSimulatorPage /></RequireRoles>} />
+        <Route path="/admin/coder-queue" element={<RequireRoles roles={ADMIN_ROLES}><CoderQueuePage /></RequireRoles>} />
+        <Route path="/admin/provider-availability" element={<RequireRoles roles={ADMIN_ROLES}><ProviderAvailabilityPage /></RequireRoles>} />
+        <Route path="/pharmacy/queue" element={<RequireRoles roles={PHARMACY_ROLES}><PharmacyQueuePage /></RequireRoles>} />
+        <Route path="/front-desk/appointments" element={<RequireRoles roles={FRONT_DESK_ROLES}><FrontDeskQueuePage /></RequireRoles>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
