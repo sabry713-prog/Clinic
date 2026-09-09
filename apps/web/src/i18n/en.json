@@ -18,6 +18,12 @@
     "loading": "Loading...",
     "retry": "Retry"
   },
+  "access": {
+    "denied_title": "Access denied",
+    "denied_body": "Your account does not have permission to view this page. If you believe you need access, contact your administrator.",
+    "required_roles": "Required role",
+    "back": "Back to patients"
+  },
   "brief": {
     "title": "Patient summary",
     "generating": "Summarising the documented record…",
