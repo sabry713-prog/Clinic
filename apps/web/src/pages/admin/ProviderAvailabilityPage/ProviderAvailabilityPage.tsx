@@ -77,43 +77,43 @@ export default function ProviderAvailabilityPage(): JSX.Element {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
+    <div className="min-h-screen bg-wash text-ink p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-lg font-semibold">Provider Availability</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-ink-soft mt-1">
             Recurring weekly slot windows for AI Receptionist self-service booking. Administrative
             scheduling configuration only.
           </p>
         </div>
 
-        {error && <p className="text-slate-400 text-sm">{error}</p>}
+        {error && <p className="text-ink-soft text-sm">{error}</p>}
 
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 grid grid-cols-2 md:grid-cols-6 gap-2 items-end">
-          <label className="text-xs text-slate-400 col-span-2">
+        <div className="bg-white border border-line rounded-2xl shadow-card p-4 grid grid-cols-2 md:grid-cols-6 gap-2 items-end">
+          <label className="text-xs text-ink-soft col-span-2">
             Department
             <input
               type="text"
               value={departmentDisplay}
               onChange={(e) => setDepartmentDisplay(e.target.value)}
-              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              className="mt-1 w-full bg-white border border-line rounded-lg px-2 py-1.5 text-ink text-sm"
             />
           </label>
-          <label className="text-xs text-slate-400 col-span-2">
+          <label className="text-xs text-ink-soft col-span-2">
             Clinician (optional)
             <input
               type="text"
               value={clinicianDisplay}
               onChange={(e) => setClinicianDisplay(e.target.value)}
-              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              className="mt-1 w-full bg-white border border-line rounded-lg px-2 py-1.5 text-ink text-sm"
             />
           </label>
-          <label className="text-xs text-slate-400">
+          <label className="text-xs text-ink-soft">
             Clinician gender
             <select
               value={clinicianGender}
               onChange={(e) => setClinicianGender(e.target.value as "" | "male" | "female")}
-              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              className="mt-1 w-full bg-white border border-line rounded-lg px-2 py-1.5 text-ink text-sm"
               title="Lets patients express a scheduling preference. Leave unset to not declare."
             >
               <option value="">Not declared</option>
@@ -121,60 +121,60 @@ export default function ProviderAvailabilityPage(): JSX.Element {
               <option value="male">Male</option>
             </select>
           </label>
-          <label className="text-xs text-slate-400">
+          <label className="text-xs text-ink-soft">
             Day
             <select
               value={dayOfWeek}
               onChange={(e) => setDayOfWeek(Number(e.target.value))}
-              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              className="mt-1 w-full bg-white border border-line rounded-lg px-2 py-1.5 text-ink text-sm"
             >
               {DAY_LABELS.map((label, i) => (
                 <option key={label} value={i}>{label}</option>
               ))}
             </select>
           </label>
-          <label className="text-xs text-slate-400">
+          <label className="text-xs text-ink-soft">
             Duration (min)
             <input
               type="number"
               min={1}
               value={slotDurationMinutes}
               onChange={(e) => setSlotDurationMinutes(Number(e.target.value))}
-              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              className="mt-1 w-full bg-white border border-line rounded-lg px-2 py-1.5 text-ink text-sm"
             />
           </label>
-          <label className="text-xs text-slate-400">
+          <label className="text-xs text-ink-soft">
             Start
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              className="mt-1 w-full bg-white border border-line rounded-lg px-2 py-1.5 text-ink text-sm"
             />
           </label>
-          <label className="text-xs text-slate-400">
+          <label className="text-xs text-ink-soft">
             End
             <input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="mt-1 w-full bg-slate-950/60 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-sm"
+              className="mt-1 w-full bg-white border border-line rounded-lg px-2 py-1.5 text-ink text-sm"
             />
           </label>
           <button
             type="button"
             onClick={() => void create()}
             disabled={creating || !departmentDisplay.trim()}
-            className="col-span-2 md:col-span-6 mt-2 text-xs px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+            className="col-span-2 md:col-span-6 mt-2 text-xs px-3 py-2 rounded-lg bg-grad-accent hover:brightness-110 shadow-pill text-white disabled:opacity-50"
           >
             {creating ? "Adding…" : "Add availability window"}
           </button>
         </div>
 
-        <div className="bg-slate-900 rounded-xl overflow-hidden">
+        <div className="bg-white rounded-xl overflow-hidden">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 text-xs">
+              <tr className="border-b border-line text-ink-soft text-xs">
                 <th className="px-4 py-3">Department</th>
                 <th className="px-4 py-3">Clinician</th>
                 <th className="px-4 py-3">Gender</th>
@@ -189,21 +189,21 @@ export default function ProviderAvailabilityPage(): JSX.Element {
               {rows.map((row) => {
                 const busy = busyIds.has(row.id);
                 return (
-                  <tr key={row.id} className="border-b border-slate-800 hover:bg-slate-800/50">
-                    <td className="px-4 py-3 text-white">{row.department_display}</td>
-                    <td className="px-4 py-3 text-slate-300">{row.clinician_display ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-300">
+                  <tr key={row.id} className="border-b border-line hover:bg-veil">
+                    <td className="px-4 py-3 text-ink">{row.department_display}</td>
+                    <td className="px-4 py-3 text-ink-deep">{row.clinician_display ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink-deep">
                       {row.clinician_gender === "female" ? "Female" : row.clinician_gender === "male" ? "Male" : "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-300">{DAY_LABELS[row.day_of_week]}</td>
-                    <td className="px-4 py-3 text-slate-300" dir="ltr">{row.start_time}–{row.end_time}</td>
-                    <td className="px-4 py-3 text-slate-300">{row.slot_duration_minutes} min</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{row.active ? "Active" : "Inactive"}</td>
+                    <td className="px-4 py-3 text-ink-deep">{DAY_LABELS[row.day_of_week]}</td>
+                    <td className="px-4 py-3 text-ink-deep" dir="ltr">{row.start_time}–{row.end_time}</td>
+                    <td className="px-4 py-3 text-ink-deep">{row.slot_duration_minutes} min</td>
+                    <td className="px-4 py-3 text-ink-soft text-xs">{row.active ? "Active" : "Inactive"}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => void toggleActive(row.id, !row.active)}
                         disabled={busy}
-                        className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded px-2 py-1 disabled:opacity-50"
+                        className="text-xs text-ink-soft hover:text-ink border border-line rounded px-2 py-1 disabled:opacity-50"
                       >
                         {row.active ? "Deactivate" : "Activate"}
                       </button>
@@ -213,7 +213,7 @@ export default function ProviderAvailabilityPage(): JSX.Element {
               })}
             </tbody>
           </table>
-          {!isLoading && rows.length === 0 && <p className="text-slate-500 text-sm p-4">No availability windows configured.</p>}
+          {!isLoading && rows.length === 0 && <p className="text-ink-soft text-sm p-4">No availability windows configured.</p>}
         </div>
       </div>
     </div>

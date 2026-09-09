@@ -2,16 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Inter (Latin) self-hosted; IBM Plex Sans Arabic covers Arabic glyphs. */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/inter/800.css";
+
 html[lang="ar"] {
   direction: rtl;
-  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  font-family: "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
 html[lang="en"] {
   direction: ltr;
-  font-family: system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Light v2 page wash — docs/design/ui-theme-v2.html §"page background" */
+body {
+  background: linear-gradient(180deg, #f4f7fe 0%, #f6f4fe 45%, #f8fafc 100%);
+  background-attachment: fixed;
+  color: #1e1b36;
+}
+
+::selection {
+  background: #e0e7ff;
+  color: #1e1b36;
+}
+
+/* Light scrollbars to match the v2 surfaces */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d6d3e8 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #d6d3e8;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
 }

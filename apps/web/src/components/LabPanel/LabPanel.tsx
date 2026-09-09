@@ -86,8 +86,8 @@ export default function LabPanel({
   const rows = useShowMore(filtered, INITIAL_ROWS);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
-      <h2 className="text-base font-semibold text-white mb-4">Observations</h2>
+    <div className="bg-white border border-line rounded-[18px] shadow-card p-6">
+      <h2 className="text-base font-semibold text-ink mb-4">Observations</h2>
 
       {/* Category filter tabs — no clinical significance implied */}
       <div className="flex gap-2 mb-4 flex-wrap">
@@ -98,8 +98,8 @@ export default function LabPanel({
             className={[
               "px-3 py-1 text-xs rounded-full border transition-colors",
               activeCategory === cat
-                ? "bg-slate-600 border-slate-500 text-white"
-                : "bg-transparent border-slate-700 text-slate-400 hover:border-slate-500",
+                ? "bg-grad-accent border-transparent text-white font-semibold shadow-pill"
+                : "bg-white border-line text-ink-soft hover:border-line-strong hover:text-ink",
             ].join(" ")}
           >
             {cat}
@@ -108,14 +108,14 @@ export default function LabPanel({
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-slate-500">Loading observations...</p>
+        <p className="text-sm text-ink-soft">Loading observations...</p>
       ) : filtered.length === 0 ? (
         <EmptyState message="No observations documented" />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-slate-400 border-b border-slate-700">
+              <tr className="text-left text-ink-soft border-b border-line">
                 <th className="pb-2 pr-4 font-medium">Date</th>
                 <th className="pb-2 pr-4 font-medium">Observation</th>
                 <th className="pb-2 pr-4 font-medium">Value</th>
@@ -126,20 +126,20 @@ export default function LabPanel({
               {rows.visible.map((obs) => (
                 <tr
                   key={obs.id}
-                  className="border-b border-slate-800 last:border-0"
+                  className="border-b border-line last:border-0"
                 >
-                  <td className="py-2 pr-4 text-slate-400 whitespace-nowrap">
+                  <td className="py-2 pr-4 text-ink-soft whitespace-nowrap">
                     <span dir="ltr">{formatDate(obs.effective_at)}</span>
                   </td>
-                  <td className="py-2 pr-4 text-white">
+                  <td className="py-2 pr-4 text-ink">
                     {obs.code_display ?? obs.code ?? "Unknown"}
                   </td>
                   {/* Plain text value — no color-coding.
                       dir=ltr isolates "16 /min"-style values in RTL layouts */}
-                  <td className="py-2 pr-4 text-white font-mono">
+                  <td className="py-2 pr-4 text-ink font-mono">
                     <span dir="ltr">{formatValue(obs)}</span>
                   </td>
-                  <td className="py-2 pr-4 text-slate-400">
+                  <td className="py-2 pr-4 text-ink-soft">
                     <span dir="ltr">{formatRefRange(obs)}</span>
                   </td>
                 </tr>
@@ -153,7 +153,7 @@ export default function LabPanel({
       {hasMore && onLoadMore && rows.expanded && (
         <button
           onClick={onLoadMore}
-          className="mt-4 text-sm text-slate-400 hover:text-white transition-colors"
+          className="mt-4 text-sm text-ink-soft hover:text-ink transition-colors"
         >
           Load more observations
         </button>

@@ -85,71 +85,71 @@ export default function AppointmentPanel({ patientId }: { readonly patientId: st
   );
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-4">
+    <div className="bg-white border border-line rounded-lg p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-white">Appointments</h2>
-        <span className="text-xs text-slate-500">Administrative scheduling only — no clinical content</span>
+        <h2 className="text-base font-semibold text-ink">Appointments</h2>
+        <span className="text-xs text-ink-soft">Administrative scheduling only — no clinical content</span>
       </div>
 
-      {error && <p className="text-sm text-slate-400">{error}</p>}
+      {error && <p className="text-sm text-ink-soft">{error}</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <input
           type="datetime-local"
           value={scheduledAt}
           onChange={(e) => setScheduledAt(e.target.value)}
-          className="text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white"
+          className="text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink placeholder-ink-faint focus:border-brand-indigo focus:outline-none"
         />
         <input
           type="text"
           placeholder="Appointment type (e.g. follow_up)"
           value={appointmentType}
           onChange={(e) => setAppointmentType(e.target.value)}
-          className="text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white"
+          className="text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink placeholder-ink-faint focus:border-brand-indigo focus:outline-none"
         />
         <input
           type="text"
           placeholder="Department (optional)"
           value={departmentDisplay}
           onChange={(e) => setDepartmentDisplay(e.target.value)}
-          className="text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white"
+          className="text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink placeholder-ink-faint focus:border-brand-indigo focus:outline-none"
         />
         <input
           type="text"
           placeholder="Clinician (optional)"
           value={clinicianDisplay}
           onChange={(e) => setClinicianDisplay(e.target.value)}
-          className="text-sm bg-slate-950/40 border border-slate-700 rounded-lg px-3 py-2 text-white"
+          className="text-sm bg-white border border-line rounded-lg px-3 py-2 text-ink placeholder-ink-faint focus:border-brand-indigo focus:outline-none"
         />
       </div>
       <button
         type="button"
         onClick={() => void schedule()}
         disabled={scheduling || !scheduledAt || !appointmentType.trim()}
-        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+        className="text-xs px-3 py-1.5 rounded-lg bg-grad-accent hover:brightness-110 shadow-pill text-white disabled:opacity-50"
       >
         {scheduling ? "Scheduling…" : "Schedule appointment"}
       </button>
 
-      <hr className="border-slate-800" />
+      <hr className="border-line" />
 
       {appointments === null ? (
-        <p className="text-sm text-slate-500">Loading…</p>
+        <p className="text-sm text-ink-soft">Loading…</p>
       ) : appointments.length === 0 ? (
-        <p className="text-sm text-slate-500">No appointments yet</p>
+        <p className="text-sm text-ink-soft">No appointments yet</p>
       ) : (
         <ul className="space-y-2">
           {appointments.map((a) => {
             const busy = busyIds.has(a.id);
             return (
-              <li key={a.id} className="border border-slate-700 bg-slate-950/40 rounded-xl px-4 py-3 flex items-center gap-2 flex-wrap" dir="ltr">
+              <li key={a.id} className="border border-line bg-white rounded-xl px-4 py-3 flex items-center gap-2 flex-wrap" dir="ltr">
                 <div className="min-w-0">
-                  <p className="text-sm text-white">{a.appointment_type} — {formatDateTime(a.scheduled_at, i18n.language)}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-sm text-ink">{a.appointment_type} — {formatDateTime(a.scheduled_at, i18n.language)}</p>
+                  <p className="text-xs text-ink-soft">
                     {[a.department_display, a.clinician_display].filter(Boolean).join(" · ") || "—"}
                   </p>
                 </div>
-                <span className="text-xs text-slate-400 bg-slate-800 rounded px-1.5 py-0.5">
+                <span className="text-xs text-ink-soft bg-veil rounded px-1.5 py-0.5">
                   {STATUS_LABEL[a.status]}
                 </span>
                 {a.status === "scheduled" && <ReminderSendControl patientId={patientId} appointmentId={a.id} />}
@@ -159,7 +159,7 @@ export default function AppointmentPanel({ patientId }: { readonly patientId: st
                       type="button"
                       onClick={() => void updateStatus(a.id, "completed")}
                       disabled={busy}
-                      className="text-xs px-2 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 disabled:opacity-50"
+                      className="text-xs px-2 py-1 rounded-lg border border-line text-ink-deep hover:text-ink hover:border-line-strong disabled:opacity-50"
                     >
                       Complete
                     </button>
@@ -167,7 +167,7 @@ export default function AppointmentPanel({ patientId }: { readonly patientId: st
                       type="button"
                       onClick={() => void updateStatus(a.id, "no_show")}
                       disabled={busy}
-                      className="text-xs px-2 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 disabled:opacity-50"
+                      className="text-xs px-2 py-1 rounded-lg border border-line text-ink-deep hover:text-ink hover:border-line-strong disabled:opacity-50"
                     >
                       No-show
                     </button>
@@ -175,7 +175,7 @@ export default function AppointmentPanel({ patientId }: { readonly patientId: st
                       type="button"
                       onClick={() => void updateStatus(a.id, "cancelled")}
                       disabled={busy}
-                      className="text-xs text-slate-500 hover:text-slate-300 underline disabled:opacity-50"
+                      className="text-xs text-ink-soft hover:text-ink-deep underline disabled:opacity-50"
                     >
                       Cancel
                     </button>

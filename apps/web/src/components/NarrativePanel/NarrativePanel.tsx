@@ -216,13 +216,13 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
 
   return (
     <div
-      className="bg-slate-900 border border-slate-700 rounded-lg p-4 space-y-4"
+      className="bg-white border border-line rounded-lg p-4 space-y-4"
       dir={isRTL ? "rtl" : "ltr"}
       data-testid="narrative-panel"
     >
       {/* Header + controls */}
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-slate-200 text-base font-medium">
+        <h2 className="text-ink-deep text-base font-medium">
           {t("narrative.title", "Narrative Summary")}
         </h2>
         <div className="flex gap-2 ml-auto">
@@ -230,7 +230,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
             aria-label={t("narrative.languageLabel", "Language")}
             data-testid="language-select"
           >
@@ -241,7 +241,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
           <select
             value={scope}
             onChange={(e) => setScope(e.target.value as typeof scope)}
-            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
             aria-label={t("narrative.scopeLabel", "Scope")}
             data-testid="scope-select"
           >
@@ -253,7 +253,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
           <button
             onClick={() => handleGenerate(false)}
             disabled={isLoading}
-            className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm px-3 py-1 rounded transition-colors"
+            className="bg-white hover:bg-veil border border-line disabled:opacity-50 text-ink-deep text-sm px-3 py-1 rounded transition-colors"
             data-testid="generate-narrative-btn"
           >
             {isLoading
@@ -267,7 +267,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
             <button
               onClick={handleToggleRecap}
               disabled={isLoadingRecap}
-              className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm px-3 py-1 rounded transition-colors"
+              className="bg-white hover:bg-veil border border-line disabled:opacity-50 text-ink-deep text-sm px-3 py-1 rounded transition-colors"
               data-testid="patient-recap-toggle"
             >
               {isLoadingRecap
@@ -290,13 +290,13 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
 
       {/* Error */}
       {error && (
-        <div className="text-slate-400 text-sm bg-slate-800 rounded p-3" data-testid="error-message">
+        <div className="text-ink-soft text-sm bg-veil rounded p-3" data-testid="error-message">
           {error}
         </div>
       )}
 
       {recapError && (
-        <div className="text-slate-400 text-sm bg-slate-800 rounded p-3" data-testid="recap-error-message">
+        <div className="text-ink-soft text-sm bg-veil rounded p-3" data-testid="recap-error-message">
           {recapError}
         </div>
       )}
@@ -304,20 +304,20 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
       {/* Patient recap — same facts, friendlier prose. Distinct styling so
           it's never confused with the clinical text underneath. */}
       {showRecap && recap && (
-        <div className="bg-blue-950/30 border border-blue-800/50 rounded-lg p-4 space-y-2" data-testid="patient-recap">
+        <div className="bg-agent-cons-bg border border-ev-pill-line rounded-lg p-4 space-y-2" data-testid="patient-recap">
           {recap.text ? (
-            <p className="text-slate-100 text-sm leading-relaxed whitespace-pre-line">{recap.text}</p>
+            <p className="text-ink text-sm leading-relaxed whitespace-pre-line">{recap.text}</p>
           ) : (
-            <p className="text-slate-300 text-sm">{recap.fallback_message}</p>
+            <p className="text-ink-deep text-sm">{recap.fallback_message}</p>
           )}
-          <p className="text-blue-300/70 text-xs border-t border-blue-800/40 pt-2">{recap.disclaimer}</p>
+          <p className="text-agent-nph/70 text-xs border-t border-ev-pill-line pt-2">{recap.disclaimer}</p>
         </div>
       )}
 
       {/* Fallback message — neutral info box, no alarm styling */}
       {narrative && !narrative.text && narrative.fallback_message && (
         <div
-          className="bg-slate-800 border border-slate-600 rounded p-3 text-slate-300 text-sm"
+          className="bg-veil border border-line-strong rounded p-3 text-ink-deep text-sm"
           data-testid="fallback-message"
         >
           {narrative.fallback_message}
@@ -328,7 +328,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
       {narrative?.text && !showRecap && (
         <div className="flex gap-4">
           {/* Text area */}
-          <div className="flex-1 text-slate-200 text-sm leading-relaxed space-y-2" data-testid="narrative-text">
+          <div className="flex-1 text-ink-deep text-sm leading-relaxed space-y-2" data-testid="narrative-text">
             {groupSegments(sentences).map((group, gi) => {
               const renderSegment = (seg: Segment & { index: number }) => {
                 const prov = findProvenanceForSentence(seg.start, seg.end, narrative.provenance);
@@ -346,8 +346,8 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
                     }}
                     className={`cursor-default ${
                       isHovered
-                        ? "bg-slate-700 rounded px-0.5"
-                        : "hover:bg-slate-800 rounded px-0.5"
+                        ? "bg-veil rounded px-0.5"
+                        : "hover:bg-veil rounded px-0.5"
                     }`}
                     data-testid={`narrative-sentence-${seg.index}`}
                   >
@@ -358,14 +358,14 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
 
               if (group.kind === "header") {
                 return (
-                  <p key={gi} className="font-semibold text-slate-100 mt-3 first:mt-0">
+                  <p key={gi} className="font-semibold text-ink mt-3 first:mt-0">
                     {renderSegment(group.segments[0]!)}
                   </p>
                 );
               }
               if (group.kind === "bullet") {
                 return (
-                  <ul key={gi} className="list-disc list-inside space-y-1 marker:text-slate-500">
+                  <ul key={gi} className="list-disc list-inside space-y-1 marker:text-ink-soft">
                     {group.segments.map((seg) => (
                       <li key={seg.index}>{renderSegment(seg)}</li>
                     ))}
@@ -379,16 +379,16 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
           {/* Source sidebar — shown on hover */}
           {sidebarSources && sidebarSources.sources.length > 0 && (
             <div
-              className="w-48 shrink-0 bg-slate-800 border border-slate-600 rounded p-2 text-xs text-slate-400 space-y-1"
+              className="w-48 shrink-0 bg-veil border border-line-strong rounded p-2 text-xs text-ink-soft space-y-1"
               data-testid="source-sidebar"
             >
-              <p className="text-slate-300 font-medium mb-1">
+              <p className="text-ink-deep font-medium mb-1">
                 {t("narrative.sources", "Sources")}
               </p>
               {sidebarSources.sources.map((src, i) => (
                 <div key={i} className="truncate">
-                  <span className="text-slate-500">{src.type}:</span>{" "}
-                  <span className="text-slate-400 font-mono text-xs">{src.id.slice(0, 8)}…</span>
+                  <span className="text-ink-soft">{src.type}:</span>{" "}
+                  <span className="text-ink-soft font-mono text-xs">{src.id.slice(0, 8)}…</span>
                 </div>
               ))}
             </div>
@@ -398,9 +398,9 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
 
       {/* Provenance coverage + copy-with-citation */}
       {narrative?.text && (
-        <div className="flex items-center gap-3 border-t border-slate-700 pt-2">
+        <div className="flex items-center gap-3 border-t border-line pt-2">
           <span
-            className="text-xs text-slate-400"
+            className="text-xs text-ink-soft"
             data-testid="provenance-coverage"
             title={t("narrative.coverageHint", "Sentences linked to a documented source")}
           >
@@ -408,7 +408,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
           </span>
           <button
             onClick={handleCopyWithSources}
-            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 ml-auto"
+            className="flex items-center gap-1.5 text-xs text-agent-nph hover:text-agent-nph ml-auto"
             data-testid="copy-with-sources"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
@@ -422,7 +422,7 @@ export default function NarrativePanel({ patientId, preferredLanguage }: Narrati
       {/* Disclaimer — always shown after generation */}
       {narrative && (
         <p
-          className="text-slate-500 text-xs border-t border-slate-700 pt-2"
+          className="text-ink-soft text-xs border-t border-line pt-2"
           data-testid="disclaimer"
         >
           {disclaimer}

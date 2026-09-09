@@ -60,12 +60,12 @@ export default function InterpreterPanel({ patientId }: InterpreterPanelProps): 
 
   return (
     <div
-      className="bg-slate-900 border border-slate-700 rounded-lg p-4 space-y-4"
+      className="bg-white border border-line rounded-lg p-4 space-y-4"
       dir={isRTL ? "rtl" : "ltr"}
       data-testid="interpreter-panel"
     >
       <div className="flex items-center gap-3">
-        <h2 className="text-slate-200 text-base font-medium">
+        <h2 className="text-ink-deep text-base font-medium">
           {t("interpreter.title", "Medical Interpreter")}
         </h2>
       </div>
@@ -75,7 +75,7 @@ export default function InterpreterPanel({ patientId }: InterpreterPanelProps): 
         <select
           value={sourceLanguage}
           onChange={(e) => setSourceLanguage(e.target.value)}
-          className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+          className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
           aria-label={t("interpreter.sourceLanguageLabel", "From")}
           data-testid="source-language-select"
         >
@@ -86,7 +86,7 @@ export default function InterpreterPanel({ patientId }: InterpreterPanelProps): 
         <button
           type="button"
           onClick={handleSwap}
-          className="text-slate-400 hover:text-white p-1"
+          className="text-ink-soft hover:text-ink p-1"
           aria-label={t("interpreter.swapLanguages", "Swap languages")}
           data-testid="swap-languages-btn"
         >
@@ -97,7 +97,7 @@ export default function InterpreterPanel({ patientId }: InterpreterPanelProps): 
         <select
           value={targetLanguage}
           onChange={(e) => setTargetLanguage(e.target.value)}
-          className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+          className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
           aria-label={t("interpreter.targetLanguageLabel", "To")}
           data-testid="target-language-select"
         >
@@ -113,33 +113,33 @@ export default function InterpreterPanel({ patientId }: InterpreterPanelProps): 
         onChange={(e) => setMessageText(e.target.value)}
         placeholder={t("interpreter.placeholder", "Type a message to translate for the patient…")}
         rows={3}
-        className="w-full bg-slate-800 text-slate-200 text-sm border border-slate-600 rounded p-2 placeholder-slate-500 focus:outline-none resize-none"
+        className="w-full bg-veil text-ink-deep text-sm border border-line-strong rounded p-2 placeholder-ink-faint focus:outline-none resize-none"
         data-testid="interpreter-message-input"
       />
 
       <button
         onClick={handleTranslate}
         disabled={isLoading || !messageText.trim()}
-        className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm px-3 py-1.5 rounded transition-colors"
+        className="bg-white hover:bg-veil border border-line disabled:opacity-50 text-ink-deep text-sm px-3 py-1.5 rounded transition-colors"
         data-testid="translate-btn"
       >
         {isLoading ? t("interpreter.translating", "Translating…") : t("interpreter.translate", "Translate")}
       </button>
 
       {error && (
-        <div className="text-slate-400 text-sm bg-slate-800 rounded p-3" data-testid="interpreter-error">
+        <div className="text-ink-soft text-sm bg-veil rounded p-3" data-testid="interpreter-error">
           {error}
         </div>
       )}
 
       {result && (
-        <div className="bg-blue-950/30 border border-blue-800/50 rounded-lg p-4 space-y-2" data-testid="translation-result">
+        <div className="bg-agent-cons-bg border border-ev-pill-line rounded-lg p-4 space-y-2" data-testid="translation-result">
           {result.text ? (
-            <p className="text-slate-100 text-sm leading-relaxed whitespace-pre-line">{result.text}</p>
+            <p className="text-ink text-sm leading-relaxed whitespace-pre-line">{result.text}</p>
           ) : (
-            <p className="text-slate-300 text-sm">{result.fallback_message}</p>
+            <p className="text-ink-deep text-sm">{result.fallback_message}</p>
           )}
-          <p className="text-blue-300/70 text-xs border-t border-blue-800/40 pt-2">{result.disclaimer}</p>
+          <p className="text-agent-nph/70 text-xs border-t border-ev-pill-line pt-2">{result.disclaimer}</p>
         </div>
       )}
     </div>

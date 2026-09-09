@@ -58,7 +58,7 @@ export default function HisTransmitControl({
     }
   }, [patientId, sourceType, sourceId]);
 
-  if (transmission === undefined) return <span className="text-xs text-slate-600">…</span>;
+  if (transmission === undefined) return <span className="text-xs text-ink-faint">…</span>;
 
   if (transmission === null) {
     return (
@@ -67,11 +67,11 @@ export default function HisTransmitControl({
           type="button"
           onClick={() => void transmit()}
           disabled={busy}
-          className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 disabled:opacity-50"
+          className="text-xs px-2.5 py-1.5 rounded-lg border border-line text-ink-deep hover:text-ink hover:border-line-strong disabled:opacity-50"
         >
           {busy ? "Sending…" : "Send to Hospital System"}
         </button>
-        {error && <span className="text-xs text-slate-500">{error}</span>}
+        {error && <span className="text-xs text-ink-soft">{error}</span>}
       </span>
     );
   }
@@ -80,11 +80,11 @@ export default function HisTransmitControl({
 
   return (
     <span className="inline-flex items-center gap-2 flex-wrap">
-      <span className="text-xs text-slate-400 bg-slate-800 rounded px-1.5 py-0.5">
+      <span className="text-xs text-ink-soft bg-veil rounded px-1.5 py-0.5">
         {STATUS_LABEL[transmission.status] ?? transmission.status}
       </span>
       {transmission.backend_reason_text && (
-        <button type="button" onClick={() => setShowReason((v) => !v)} className="text-xs text-slate-500 hover:text-slate-300 underline">
+        <button type="button" onClick={() => setShowReason((v) => !v)} className="text-xs text-ink-soft hover:text-ink-deep underline">
           {showReason ? "Hide reason" : "Review reason"}
         </button>
       )}
@@ -93,14 +93,14 @@ export default function HisTransmitControl({
           type="button"
           onClick={() => void transmit()}
           disabled={busy}
-          className="text-xs px-2 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 disabled:opacity-50"
+          className="text-xs px-2 py-1 rounded-lg border border-line text-ink-deep hover:text-ink hover:border-line-strong disabled:opacity-50"
         >
           {busy ? "Sending…" : "Retry"}
         </button>
       )}
-      {error && <span className="text-xs text-slate-500">{error}</span>}
+      {error && <span className="text-xs text-ink-soft">{error}</span>}
       {showReason && transmission.backend_reason_text && (
-        <p className="basis-full text-xs text-slate-400 border-s-2 border-slate-700 ps-3 mt-1" dir="auto">
+        <p className="basis-full text-xs text-ink-soft border-s-2 border-line ps-3 mt-1" dir="auto">
           {transmission.backend_reason_text}
         </p>
       )}

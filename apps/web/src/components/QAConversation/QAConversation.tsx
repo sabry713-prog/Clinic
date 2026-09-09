@@ -161,14 +161,14 @@ export default function QAConversation({
   return (
     <div className="flex flex-col h-full" dir={language === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <h2 className="text-base font-semibold text-gray-800">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-line">
+        <h2 className="text-base font-semibold text-ink">
           {t("qa.title")}
         </h2>
         <button
           type="button"
           onClick={handleLanguageToggle}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-agent-cons hover:underline font-semibold"
           aria-label={t("qa.toggle_language")}
         >
           {language === "en" ? "عربي" : "English"}
@@ -176,14 +176,14 @@ export default function QAConversation({
       </div>
 
       {/* Disclaimer — shown once at the top */}
-      <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
+      <div className="px-4 py-2 bg-veil/60 border-b border-line text-xs text-ink-soft">
         {t("qa.disclaimer")}
       </div>
 
       {/* Conversation turns */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         {turns.length === 0 && !loading && (
-          <p className="text-sm text-gray-400 text-center mt-8">
+          <p className="text-sm text-ink-faint text-center mt-8">
             {t("qa.empty_state")}
           </p>
         )}
@@ -204,7 +204,7 @@ export default function QAConversation({
             {/* Echo the doctor's question immediately during the wait */}
             {pendingQuestion && (
               <div className={`flex ${language === "ar" ? "justify-start" : "justify-end"}`}>
-                <div className="max-w-[80%] rounded-2xl px-4 py-2 bg-blue-600 text-white text-sm opacity-90">
+                <div className="max-w-[80%] rounded-2xl px-4 py-2 bg-ink text-white text-sm opacity-90">
                   {pendingQuestion}
                 </div>
               </div>
@@ -212,19 +212,19 @@ export default function QAConversation({
             {/* Assistant typing bubble */}
             <div className={`flex ${language === "ar" ? "justify-end" : "justify-start"}`}>
               <div
-                className="rounded-2xl px-4 py-3 bg-gray-100 flex items-center gap-2"
+                className="rounded-2xl px-4 py-3 bg-veil border border-line flex items-center gap-2"
                 role="status"
                 aria-label={t("qa.thinking")}
               >
                 <TypingDots />
-                <span className="text-xs text-gray-400">{t("qa.thinking")}</span>
+                <span className="text-xs text-ink-soft">{t("qa.thinking")}</span>
               </div>
             </div>
           </div>
         )}
 
         {error !== null && (
-          <p className="text-sm text-gray-700 bg-gray-100 rounded px-3 py-2" role="alert">
+          <p className="text-sm text-status-rej bg-status-rej-bg border border-status-rej-line rounded-lg px-3 py-2" role="alert">
             {error}
           </p>
         )}
@@ -233,7 +233,7 @@ export default function QAConversation({
       </div>
 
       {/* Input */}
-      <div className="px-4 py-3 border-t border-gray-200">
+      <div className="px-4 py-3 border-t border-line">
         <div className="flex gap-2 items-end">
           <textarea
             ref={inputRef}
@@ -241,7 +241,7 @@ export default function QAConversation({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={2}
-            className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 resize-none rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-indigo/40 focus:border-transparent"
             placeholder={t("qa.placeholder")}
             aria-label={t("qa.input_label")}
             disabled={loading}
@@ -250,13 +250,13 @@ export default function QAConversation({
             type="button"
             onClick={() => void submit()}
             disabled={loading || input.trim() === ""}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-full bg-grad-accent text-white text-sm font-semibold shadow-pill hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all"
             aria-label={t("qa.send")}
           >
             {t("qa.send")}
           </button>
         </div>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-ink-faint">
           {t("qa.enter_hint")}
         </p>
       </div>
@@ -275,7 +275,7 @@ function TypingDots(): React.ReactElement {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+          className="w-1.5 h-1.5 rounded-full bg-ink-faint animate-bounce"
           style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.9s" }}
         />
       ))}
@@ -333,14 +333,14 @@ function AnswerBody({ text }: { readonly text: string }): React.ReactElement {
           {renderInline(line)}
         </p>
       ))}
-      <ul className="space-y-1.5 list-disc list-inside marker:text-gray-400">
+      <ul className="space-y-1.5 list-disc list-inside marker:text-ink-faint">
         {bullets.map((item, i) => {
           const match = /^([^:]{2,40}?(?:\([^)]*\))?):\s+(.*)$/s.exec(item);
           return (
             <li key={`b-${i}`} className="flex items-start gap-2">
               {match ? (
                 <>
-                  <span className="shrink-0 mt-0.5 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600 whitespace-nowrap">
+                  <span className="shrink-0 mt-0.5 rounded-md bg-veil border border-line px-1.5 py-0.5 text-xs text-ink-soft whitespace-nowrap">
                     {prettyLabel(match[1]!)}
                   </span>
                   <span className="min-w-0">{renderInline(match[2]!)}</span>
@@ -380,7 +380,7 @@ function TurnItem({
     <div className="space-y-2">
       {/* User question — aligned to end */}
       <div className={`flex ${isRtl ? "justify-start" : "justify-end"}`}>
-        <div className="max-w-[80%] rounded-2xl px-4 py-2 bg-blue-600 text-white text-sm">
+        <div className="max-w-[80%] rounded-2xl rounded-ee-md px-4 py-2 bg-ink text-white text-sm">
           {turn.question}
         </div>
       </div>
@@ -390,10 +390,10 @@ function TurnItem({
         <div className="max-w-[85%] space-y-2">
           {/* Response bubble — neutral muted style for both ALLOWED and REFUSED */}
           <div
-            className={`rounded-2xl px-4 py-3 text-sm ${
+            className={`rounded-2xl px-4 py-3 text-sm shadow-card ${
               isAllowed
-                ? "bg-gray-100 text-gray-800"
-                : "bg-gray-50 text-gray-700 border border-gray-200 italic"
+                ? "bg-white border border-line text-ink"
+                : "bg-veil text-ink-deep border border-dashed border-line-strong italic"
             }`}
             // No red/warning/alert styling for refused — neutral italic is sufficient
           >
@@ -403,7 +403,7 @@ function TurnItem({
           {/* Refusal category in plain language — small, neutral (no alarm).
               Neutral info glyph (an "i", never a warning icon). */}
           {!isAllowed && (
-            <p className="flex items-center gap-1 text-xs text-gray-400 px-1">
+            <p className="flex items-center gap-1 text-xs text-ink-faint px-1">
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
               </svg>
@@ -416,7 +416,7 @@ function TurnItem({
             <button
               type="button"
               onClick={onToggleSources}
-              className="text-xs text-blue-600 hover:underline px-1"
+              className="text-xs text-agent-cons hover:underline px-1 font-semibold"
               aria-expanded={sourcesExpanded}
             >
               {sourcesExpanded ? t("qa.hide_sources") : t("qa.show_sources")} (
@@ -442,15 +442,15 @@ interface SourceListProps {
 
 function SourceList({ sources, t }: SourceListProps): React.ReactElement {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-      <p className="px-3 py-1.5 text-xs font-medium text-gray-500 border-b border-gray-100">
+    <div className="rounded-xl border border-line bg-white overflow-hidden">
+      <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-ink-faint border-b border-line">
         {t("qa.sources_header")}
       </p>
-      <ul className="divide-y divide-gray-50">
+      <ul className="divide-y divide-line">
         {sources.map((src, i) => (
           <li key={`${src.id}-${i}`} className="px-3 py-2">
-            <p className="text-xs text-gray-700 font-medium">{src.fact_segment}</p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-ink-deep font-medium">{src.fact_segment}</p>
+            <p className="text-xs text-ink-faint mt-0.5">
               {src.type}
               {src.code ? ` · ${src.code}` : ""}
               {src.source_system ? ` · ${src.source_system}` : ""}

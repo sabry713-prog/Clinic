@@ -139,15 +139,15 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
   }, [draft]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-4">
+    <div className="bg-white border border-line rounded-lg p-6 space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-base font-semibold text-white">Document Draft</h2>
+        <h2 className="text-base font-semibold text-ink">Document Draft</h2>
         <div className="flex gap-2 ml-auto">
           <select
             value={language}
             disabled={busy || recording || transcribing}
             onChange={(e) => setLanguage(e.target.value as "en" | "ar")}
-            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
             aria-label="Language"
           >
             <option value="en">English</option>
@@ -157,7 +157,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
             value={docType}
             disabled={busy}
             onChange={(e) => setDocType(e.target.value as DraftDocumentType)}
-            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
           >
             {DOC_TYPES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
           </select>
@@ -165,7 +165,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
             value={specialty}
             disabled={busy}
             onChange={(e) => setSpecialty(e.target.value as DraftSpecialty)}
-            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
             aria-label="Specialty"
             data-testid="specialty-select"
           >
@@ -174,35 +174,35 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
           <button
             onClick={() => void run(() => api.patients.createDraft(patientId, docType, language, specialty))}
             disabled={busy}
-            className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm px-3 py-1 rounded"
+            className="bg-white hover:bg-veil border border-line disabled:opacity-50 text-ink-deep text-sm px-3 py-1 rounded"
           >
             {busy ? "Generating…" : "Generate draft"}
           </button>
         </div>
       </div>
 
-      {(error ?? dictation.error) && <p className="text-sm text-slate-400">{error ?? dictation.error}</p>}
+      {(error ?? dictation.error) && <p className="text-sm text-ink-soft">{error ?? dictation.error}</p>}
 
       {/* This patient's drafts & signed documents */}
       {list.length > 0 && (
-        <div className="border border-slate-800 rounded">
-          <p className="text-xs text-slate-400 px-3 py-2 border-b border-slate-800">
+        <div className="border border-line rounded">
+          <p className="text-xs text-ink-soft px-3 py-2 border-b border-line">
             Documents for this patient ({list.length})
           </p>
-          <ul className="divide-y divide-slate-800 max-h-40 overflow-y-auto">
+          <ul className="divide-y divide-line max-h-40 overflow-y-auto">
             {list.map((d) => (
               <li key={d.id}>
                 <button
                   onClick={() => openDraft(d.id)}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-800 flex items-center gap-2 ${
-                    draft?.id === d.id ? "bg-slate-800" : ""
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-veil flex items-center gap-2 ${
+                    draft?.id === d.id ? "bg-veil" : ""
                   }`}
                 >
-                  <span className="capitalize text-slate-200">{d.document_type.replace(/_/g, " ")}</span>
-                  <span className={`text-xs ${d.status === "signed" ? "text-green-400" : "text-slate-400"}`}>
+                  <span className="capitalize text-ink-deep">{d.document_type.replace(/_/g, " ")}</span>
+                  <span className={`text-xs ${d.status === "signed" ? "text-status-ok" : "text-ink-soft"}`}>
                     {d.status === "signed" ? "✓ signed" : "draft"}
                   </span>
-                  <span className="text-xs text-slate-500 ml-auto" dir="ltr">
+                  <span className="text-xs text-ink-soft ml-auto" dir="ltr">
                     {new Date(d.created_at).toLocaleDateString("en-GB")}
                   </span>
                 </button>
@@ -217,7 +217,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
           {/* DRAFT watermark until signed */}
           {!isSigned && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
-              <span className="text-6xl font-bold text-slate-700/30 rotate-[-20deg] select-none">
+              <span className="text-6xl font-bold text-ink-deep/30 rotate-[-20deg] select-none">
                 DRAFT
               </span>
             </div>
@@ -232,7 +232,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
             onClick={(e) => { caretRef.current = (e.target as HTMLTextAreaElement).selectionStart; }}
             onKeyUp={(e) => { caretRef.current = (e.target as HTMLTextAreaElement).selectionStart; }}
             dir="auto"
-            className="relative w-full h-80 bg-slate-950 border border-slate-700 rounded p-3 text-sm text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-slate-500"
+            className="relative w-full h-80 bg-wash border border-line rounded p-3 text-sm text-ink-deep font-mono leading-relaxed focus:outline-none focus:border-line-strong"
           />
 
           {/* Fidelity check: compare the polished text to the raw dictation */}
@@ -240,19 +240,19 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
             <div className="mt-2">
               <button
                 onClick={() => setShowRaw((v) => !v)}
-                className="text-xs text-blue-400 hover:underline"
+                className="text-xs text-agent-nph hover:underline"
               >
                 {showRaw ? "Hide original dictation" : "Polished from your dictation — show original"}
               </button>
               {showRaw && (
-                <pre className="mt-1 whitespace-pre-wrap bg-slate-950 border border-slate-700 rounded p-2 text-xs text-slate-400" dir="auto">
+                <pre className="mt-1 whitespace-pre-wrap bg-wash border border-line rounded p-2 text-xs text-ink-soft" dir="auto">
                   {rawTranscript}
                 </pre>
               )}
             </div>
           )}
 
-          <p className="text-xs text-slate-500 mt-2">{draft.disclaimer}</p>
+          <p className="text-xs text-ink-soft mt-2">{draft.disclaimer}</p>
 
           <div className="flex items-center gap-2 mt-3">
             {!isSigned ? (
@@ -260,8 +260,8 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
                 <button
                   onClick={() => (recording ? dictation.stop() : startDictation())}
                   disabled={busy || transcribing}
-                  className={`text-sm px-3 py-1 rounded text-white disabled:opacity-50 ${
-                    recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-slate-700 hover:bg-slate-600"
+                  className={`text-sm px-3 py-1 rounded text-ink disabled:opacity-50 ${
+                    recording ? "bg-red-600 hover:bg-red-500 animate-pulse" : "bg-white hover:bg-veil border border-line"
                   }`}
                   title="Dictate — speech is transcribed on-prem and inserted as your text to edit"
                 >
@@ -270,7 +270,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
                 <button
                   onClick={() => void makeProfessional()}
                   disabled={busy || transcribing || recording || !editText.trim()}
-                  className="text-sm px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+                  className="text-sm px-3 py-1 rounded bg-white hover:bg-veil border border-line text-ink-deep disabled:opacity-50"
                   title="Polish what you typed into professional prose (your words only, on-prem)"
                 >
                   ✨ Make professional
@@ -278,7 +278,7 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
                 <button
                   onClick={() => void run(() => api.drafts.update(draft.id, editText))}
                   disabled={busy}
-                  className="text-sm px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+                  className="text-sm px-3 py-1 rounded bg-white hover:bg-veil border border-line text-ink-deep disabled:opacity-50"
                 >
                   Save edits
                 </button>
@@ -290,23 +290,23 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
                     return api.drafts.sign(draft.id);
                   })}
                   disabled={busy}
-                  className="text-sm px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+                  className="text-sm px-3 py-1 rounded bg-grad-accent hover:brightness-110 shadow-pill text-white disabled:opacity-50"
                 >
                   Sign
                 </button>
-                <span className="text-xs text-slate-500 ml-auto">
+                <span className="text-xs text-ink-soft ml-auto">
                   Clinician dictation only (your own notes — not the patient). Runs on-prem;
                   audio is transcribed then discarded. In stub mode it inserts placeholder text.
                 </span>
               </>
             ) : (
               <>
-                <span className="text-xs text-green-400" data-testid="signed-badge">
+                <span className="text-xs text-status-ok" data-testid="signed-badge">
                   ✓ Signed {draft.signed_at ? new Date(draft.signed_at).toLocaleString("en-GB") : ""}
                 </span>
                 <button
                   onClick={() => void onExport()}
-                  className="text-sm px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white ml-auto"
+                  className="text-sm px-3 py-1 rounded bg-grad-accent hover:brightness-110 shadow-pill text-white ml-auto"
                 >
                   Export
                 </button>

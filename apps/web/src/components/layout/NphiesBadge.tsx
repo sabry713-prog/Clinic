@@ -14,31 +14,34 @@
  * clinical severity indicator and carries no clinical meaning.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle, Clock, Loader2 } from "lucide-react";
 import type { NphiesStatus } from "./SullyContext";
 import EvidenceChainPopover from "../ai-team/EvidenceChainPopover";
+import FixedPopover from "../common/FixedPopover";
 import type { EvidenceChain } from "../../hooks/useAgentOrchestrator";
 
+// v2 badge tokens (mockup §E): complete/pended/rejected. Green is
+// payer-complete ONLY — the pended family covers queued/partial/unrecognised.
 const STYLES: Record<NphiesStatus, { pill: string; dot: string; label: string }> = {
   green: {
-    pill: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
-    dot: "text-emerald-400",
+    pill: "bg-status-ok-bg text-status-ok border-status-ok-line",
+    dot: "text-status-ok",
     label: "Approved",
   },
   yellow: {
-    pill: "bg-amber-500/10 text-amber-300 border-amber-500/30",
-    dot: "text-amber-400",
+    pill: "bg-status-pend-bg text-status-pend border-status-pend-line",
+    dot: "text-status-pend",
     label: "Pre-auth required",
   },
   blue: {
-    pill: "bg-sky-500/10 text-sky-300 border-sky-500/30",
-    dot: "text-sky-400",
+    pill: "bg-status-pend-bg text-status-pend border-status-pend-line",
+    dot: "text-status-pend",
     label: "Pended (under review)",
   },
   red: {
-    pill: "bg-rose-500/10 text-rose-300 border-rose-500/30",
-    dot: "text-rose-400",
+    pill: "bg-status-rej-bg text-status-rej border-status-rej-line",
+    dot: "text-status-rej",
     label: "Code mismatch",
   },
 };
@@ -82,7 +85,20 @@ export default function NphiesBadge({
   onBadgeClick,
 }: NphiesBadgeProps): JSX.Element {
   const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const closeTimer = useRef<number | undefined>(undefined);
   const style = STYLES[status];
+
+  // Hover-intent bridge: the panel floats in a body portal with a gap
+  // between it and the badge, so closing on the badge's mouseleave would
+  // snap the tooltip shut before the pointer can cross that gap. Leaving
+  // either the badge or the panel starts a short grace timer; entering
+  // either cancels it. Outside click and Escape still close immediately.
+  const cancelClose = (): void => window.clearTimeout(closeTimer.current);
+  const scheduleClose = (): void => {
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => setOpen(false), 260);
+  };
   const Glyph = ICONS[status];
 
   // "Approved" alone is ambiguous once a payer is involved; showing the
@@ -93,16 +109,28 @@ export default function NphiesBadge({
       : style.label;
 
   return (
-    <span className="relative inline-flex">
+    <span ref={anchorRef} className="relative inline-flex">
       <button
         type="button"
         aria-label={`NPHIES status: ${label}`}
         title={detail}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onMouseEnter={() => {
+          cancelClose();
+          setOpen(true);
+        }}
+        onMouseLeave={scheduleClose}
         onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-        onClick={() => (onBadgeClick ? onBadgeClick() : setOpen((o) => !o))}
+        onClick={() => {
+          cancelClose();
+          if (onBadgeClick) {
+            setOpen(false);
+            onBadgeClick();
+          } else {
+            // Pin open — hovering already opens, so a toggle here would
+            // close the tooltip on the very click that aims to use it.
+            setOpen(true);
+          }
+        }}
         disabled={submitting}
         className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${style.pill} ${
           onBadgeClick && !submitting ? "cursor-pointer hover:brightness-125" : ""
@@ -116,21 +144,29 @@ export default function NphiesBadge({
         {submitting ? "Submitting…" : label}
       </button>
 
-      {open && (
-        <span
-          role="tooltip"
-          className="absolute end-0 top-full z-30 mt-1 w-72 rounded-lg border border-slate-700 bg-slate-900 p-3 text-xs text-slate-200 shadow-xl"
-        >
+      <FixedPopover
+        anchorRef={anchorRef}
+        open={open}
+        onClose={() => {
+          cancelClose();
+          setOpen(false);
+        }}
+        width={288}
+        role="tooltip"
+        className="rounded-xl border border-line bg-white p-3 text-xs text-ink-deep shadow-pop"
+        onPanelMouseEnter={cancelClose}
+        onPanelMouseLeave={scheduleClose}
+      >
           <span className="block leading-relaxed">{detail}</span>
 
           {suggestedCodes && suggestedCodes.length > 0 && (
             <span className="mt-2 block">
-              <span className="block text-slate-400">Suggested codes:</span>
+              <span className="block text-ink-soft">Suggested codes:</span>
               <span className="mt-1 flex flex-wrap gap-1">
                 {suggestedCodes.map((code) => (
                   <code
                     key={code}
-                    className="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-[11px] text-slate-200"
+                    className="rounded bg-veil px-1.5 py-0.5 font-mono text-[11px] text-ink-deep"
                   >
                     {code}
                   </code>
@@ -149,13 +185,12 @@ export default function NphiesBadge({
             <button
               type="button"
               onClick={onAction}
-              className="mt-2 w-full rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-500"
+              className="mt-2 w-full rounded-full bg-grad-accent px-2 py-1 text-xs font-semibold text-white shadow-pill hover:brightness-110 transition-all"
             >
               {actionLabel}
             </button>
           )}
-        </span>
-      )}
+      </FixedPopover>
     </span>
   );
 }

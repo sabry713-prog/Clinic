@@ -65,7 +65,7 @@ export default function RejectionCostDashboard(): JSX.Element {
 
   if (loading) {
     return (
-      <div className="bg-slate-900 rounded-xl p-6 text-sm text-slate-400">
+      <div className="bg-white border border-line rounded-2xl shadow-card p-6 text-sm text-ink-soft">
         Loading rejection cost data…
       </div>
     );
@@ -73,14 +73,14 @@ export default function RejectionCostDashboard(): JSX.Element {
 
   if (error) {
     return (
-      <div className="bg-slate-900 rounded-xl p-6 text-sm text-slate-400">
+      <div className="bg-white border border-line rounded-2xl shadow-card p-6 text-sm text-ink-soft">
         <p>{error}</p>
         <button onClick={load} className="mt-2 text-xs text-sky-400 hover:text-sky-300">Retry</button>
       </div>
     );
   }
 
-  if (!data) return <div className="bg-slate-900 rounded-xl p-6 text-sm text-slate-400">No data.</div>;
+  if (!data) return <div className="bg-white border border-line rounded-2xl shadow-card p-6 text-sm text-ink-soft">No data.</div>;
 
   const totalRejected = data.rejected_claims;
   const estimatedTotalSar = totalRejected * AVERAGE_CLAIM_VALUE_SAR;
@@ -90,7 +90,7 @@ export default function RejectionCostDashboard(): JSX.Element {
     : 1;
 
   return (
-    <div className="bg-slate-900 rounded-xl p-4 space-y-4">
+    <div className="bg-white border border-line rounded-2xl shadow-card p-4 space-y-4">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {([
@@ -99,9 +99,9 @@ export default function RejectionCostDashboard(): JSX.Element {
           ["Rejection rate", `${Math.round(data.rejection_rate * 1000) / 10}%`],
           ["Est. SAR at risk", formatSar(estimatedTotalSar)],
         ] as const).map(([label, val]) => (
-          <div key={label} className="bg-slate-800 rounded p-3">
-            <div className="text-xs text-slate-400">{label}</div>
-            <div className="text-lg font-semibold text-white">{val}</div>
+          <div key={label} className="bg-veil rounded p-3">
+            <div className="text-xs text-ink-soft">{label}</div>
+            <div className="text-lg font-semibold text-ink">{val}</div>
           </div>
         ))}
       </div>
@@ -109,45 +109,45 @@ export default function RejectionCostDashboard(): JSX.Element {
       {/* Prospective — claim simulator (E3). Same estimate basis as the
           historical cards above, but for claims NOT yet sent: flagged
           pre-submission verdicts from the deterministic simulator. */}
-      <div className="border border-slate-700 rounded p-3 space-y-2">
-        <h3 className="font-medium text-white text-sm">
+      <div className="border border-line rounded p-3 space-y-2">
+        <h3 className="font-medium text-ink text-sm">
           {t("rejectionCost.prospectiveTitle")}
         </h3>
         {simulationError !== null ? (
-          <p className="text-xs text-slate-500">{t("rejectionCost.prospectiveUnavailable")}</p>
+          <p className="text-xs text-ink-soft">{t("rejectionCost.prospectiveUnavailable")}</p>
         ) : simulation === null ? (
-          <p className="text-xs text-slate-500">{t("rejectionCost.prospectiveLoading")}</p>
+          <p className="text-xs text-ink-soft">{t("rejectionCost.prospectiveLoading")}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-slate-800 rounded p-3">
-              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveChecked")}</div>
-              <div className="text-lg font-semibold text-white">
+            <div className="bg-veil rounded p-3">
+              <div className="text-xs text-ink-soft">{t("rejectionCost.prospectiveChecked")}</div>
+              <div className="text-lg font-semibold text-ink">
                 {simulation.summary.patients_checked.toLocaleString("en-SA")}
               </div>
             </div>
-            <div className="bg-slate-800 rounded p-3">
-              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveFlagged")}</div>
-              <div className="text-lg font-semibold text-amber-300">
+            <div className="bg-veil rounded p-3">
+              <div className="text-xs text-ink-soft">{t("rejectionCost.prospectiveFlagged")}</div>
+              <div className="text-lg font-semibold text-status-pend">
                 {simulation.summary.claims_flagged.toLocaleString("en-SA")}
               </div>
             </div>
-            <div className="bg-slate-800 rounded p-3">
-              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveRed")}</div>
-              <div className="text-lg font-semibold text-red-300">
+            <div className="bg-veil rounded p-3">
+              <div className="text-xs text-ink-soft">{t("rejectionCost.prospectiveRed")}</div>
+              <div className="text-lg font-semibold text-status-rej">
                 {simulation.summary.orders_red.toLocaleString("en-SA")}
               </div>
             </div>
-            <div className="bg-slate-800 rounded p-3">
-              <div className="text-xs text-slate-400">{t("rejectionCost.prospectiveSar")}</div>
-              <div className="text-lg font-semibold text-white">
+            <div className="bg-veil rounded p-3">
+              <div className="text-xs text-ink-soft">{t("rejectionCost.prospectiveSar")}</div>
+              <div className="text-lg font-semibold text-ink">
                 {formatSar(simulation.summary.estimated_sar_at_risk)}
               </div>
             </div>
           </div>
         )}
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-ink-soft">
           {t("rejectionCost.prospectiveNote")}{" "}
-          <a className="underline hover:text-slate-400" href="/admin/claim-simulator">
+          <a className="underline hover:text-ink-soft" href="/admin/claim-simulator">
             {t("rejectionCost.prospectiveLink")}
           </a>
         </p>
@@ -155,11 +155,11 @@ export default function RejectionCostDashboard(): JSX.Element {
 
       {/* Rejection code breakdown */}
       <div>
-        <h3 className="font-medium mb-2 text-white text-sm">
+        <h3 className="font-medium mb-2 text-ink text-sm">
           SAR at risk by rejection code
         </h3>
         {data.by_rejection_code.length === 0 ? (
-          <p className="text-slate-500 text-sm">No rejections recorded.</p>
+          <p className="text-ink-soft text-sm">No rejections recorded.</p>
         ) : (
           <div className="space-y-2">
             {data.by_rejection_code
@@ -170,22 +170,22 @@ export default function RejectionCostDashboard(): JSX.Element {
                 const pctOfRejected = totalByCode > 0 ? (r.count / totalByCode) * 100 : 0;
                 return (
                   <div key={r.code} className="flex items-center gap-3 text-sm">
-                    <span className="font-mono text-xs text-slate-300 w-20 shrink-0" title={`Rejection code: ${r.code}`}>
+                    <span className="font-mono text-xs text-ink-deep w-20 shrink-0" title={`Rejection code: ${r.code}`}>
                       {r.code}
                     </span>
                     <div className="flex-1">
-                      <div className="h-5 bg-slate-800 rounded relative overflow-hidden">
+                      <div className="h-5 bg-veil rounded relative overflow-hidden">
                         <div
-                          className="absolute inset-y-0 left-0 bg-slate-500 rounded"
+                          className="absolute inset-y-0 left-0 bg-ink-soft rounded"
                           style={{ width: `${Math.max(4, (r.count / maxCodeCount) * 100)}%` }}
                         />
-                        <span className="absolute inset-y-0 left-2 flex items-center text-xs text-white">
+                        <span className="absolute inset-y-0 left-2 flex items-center text-xs text-ink">
                           {r.count.toLocaleString("en-SA")} claims
                         </span>
                       </div>
                     </div>
-                    <span className="text-right text-white w-24 shrink-0">{formatSar(sar)}</span>
-                    <span className="text-right text-slate-400 w-16 shrink-0 text-xs">
+                    <span className="text-right text-ink w-24 shrink-0">{formatSar(sar)}</span>
+                    <span className="text-right text-ink-soft w-16 shrink-0 text-xs">
                       {Math.round(pctOfRejected)}%
                     </span>
                   </div>
@@ -197,13 +197,13 @@ export default function RejectionCostDashboard(): JSX.Element {
 
       {/* Status breakdown */}
       <div>
-        <h3 className="font-medium mb-2 text-white text-sm">Claims by status</h3>
+        <h3 className="font-medium mb-2 text-ink text-sm">Claims by status</h3>
         <table className="w-full text-sm">
           <tbody>
             {data.by_status.map((r) => (
-              <tr key={r.status} className="border-b border-slate-800">
-                <td className="py-1 pr-2 text-slate-300">{r.status}</td>
-                <td className="py-1 text-right text-white">{r.count.toLocaleString("en-SA")}</td>
+              <tr key={r.status} className="border-b border-line">
+                <td className="py-1 pr-2 text-ink-deep">{r.status}</td>
+                <td className="py-1 text-right text-ink">{r.count.toLocaleString("en-SA")}</td>
               </tr>
             ))}
           </tbody>
@@ -211,8 +211,8 @@ export default function RejectionCostDashboard(): JSX.Element {
       </div>
 
       {/* Disclaimer */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded p-3 text-xs text-slate-400 space-y-1">
-        <p className="font-medium text-slate-300">Estimated — not actual settlement data</p>
+      <div className="bg-veil border border-line rounded p-3 text-xs text-ink-soft space-y-1">
+        <p className="font-medium text-ink-deep">Estimated — not actual settlement data</p>
         <p>
           SAR values are calculated using a fixed average claim value of{" "}
           {formatSar(AVERAGE_CLAIM_VALUE_SAR)}. Actual reimbursement amounts
@@ -222,7 +222,7 @@ export default function RejectionCostDashboard(): JSX.Element {
       </div>
 
       {/* Generated timestamp */}
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         Generated {new Date(data.generated_at).toLocaleString("en-GB")}
         {" · "}Range: {data.range.since ?? "all"} → {data.range.until ?? "all"}
       </p>

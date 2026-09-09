@@ -42,9 +42,9 @@ export default function RecordSearch({ patientId }: RecordSearchProps): JSX.Elem
   }, [patientId, query]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
-      <h2 className="text-base font-semibold text-white mb-1">Search record</h2>
-      <p className="text-xs text-slate-500 mb-4">
+    <div className="bg-white border border-line rounded-lg p-6">
+      <h2 className="text-base font-semibold text-ink mb-1">Search record</h2>
+      <p className="text-xs text-ink-soft mb-4">
         Finds verbatim entries in this patient&apos;s record. English, Arabic, or mixed.
       </p>
 
@@ -56,18 +56,18 @@ export default function RecordSearch({ patientId }: RecordSearchProps): JSX.Elem
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") runSearch(); }}
           placeholder="Search e.g. creatinine, warfarin, دوخة…"
-          className="flex-1 bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500"
+          className="flex-1 bg-veil border border-line rounded-md px-3 py-2 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-line-strong"
         />
         <button
           onClick={runSearch}
           disabled={isSearching || !query.trim()}
-          className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-500 transition-colors"
+          className="px-4 py-2 text-sm rounded-full bg-grad-accent shadow-pill text-white font-semibold hover:brightness-110 disabled:opacity-40 hover:bg-blue-500 transition-colors"
         >
           {isSearching ? "Searching…" : "Search"}
         </button>
       </div>
 
-      {error && <p className="text-sm text-slate-400">{error}</p>}
+      {error && <p className="text-sm text-ink-soft">{error}</p>}
 
       {results && !error && (
         results.total === 0 ? (
@@ -77,22 +77,22 @@ export default function RecordSearch({ patientId }: RecordSearchProps): JSX.Elem
           />
         ) : (
           <div className="space-y-5">
-            <p className="text-xs text-slate-500">{results.total} entr{results.total === 1 ? "y" : "ies"} found</p>
+            <p className="text-xs text-ink-soft">{results.total} entr{results.total === 1 ? "y" : "ies"} found</p>
             {results.groups.map((group) => (
               <div key={group.source_type}>
-                <h3 className="text-sm font-medium text-slate-300 capitalize mb-2">
+                <h3 className="text-sm font-medium text-ink-deep capitalize mb-2">
                   {group.source_type} ({group.results.length})
                 </h3>
                 <ul className="space-y-2">
                   {group.results.map((r) => (
                     <li
                       key={r.source_id}
-                      className="text-sm text-white bg-slate-800/50 border border-slate-800 rounded-md px-3 py-2"
+                      className="text-sm bg-mist text-ink border border-line rounded-lg px-3 py-2 hover:border-line-strong transition-colors"
                       title={`${r.source_type} · ${r.source_id}`}
                     >
                       <span dir="auto">{r.excerpt}</span>
                       {formatDate(r.recorded_at) && (
-                        <span className="block text-xs text-slate-500 mt-1" dir="ltr">
+                        <span className="block text-xs text-ink-soft mt-1" dir="ltr">
                           {formatDate(r.recorded_at)}
                         </span>
                       )}

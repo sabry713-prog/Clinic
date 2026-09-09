@@ -297,15 +297,15 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
   }, [patientId, transcript, sections, language, specialty, onDraftCreated, reset, condensedKeys, translatedKeys]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 space-y-4" data-testid="ambient-panel">
+    <div className="bg-white border border-line rounded-lg p-4 space-y-4" data-testid="ambient-panel">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-slate-200 text-base font-medium">Encounter Recording</h2>
+        <h2 className="text-ink-deep text-base font-medium">Encounter Recording</h2>
         <div className="flex gap-2 ml-auto">
           <select
             value={language}
             disabled={recording || transcribing}
             onChange={(e) => setLanguage(e.target.value as "en" | "ar")}
-            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
             aria-label="Language"
           >
             <option value="en">English</option>
@@ -315,7 +315,7 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
             value={specialty}
             disabled={recording || transcribing}
             onChange={(e) => setSpecialty(e.target.value as DraftSpecialty)}
-            className="bg-slate-800 text-slate-300 text-sm border border-slate-600 rounded px-2 py-1"
+            className="bg-veil text-ink-deep text-sm border border-line-strong rounded px-2 py-1"
             aria-label="Specialty"
             data-testid="ambient-specialty-select"
           >
@@ -326,7 +326,7 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
 
       {!transcript && !recording && (
         <div className="space-y-2">
-          <label className="flex items-start gap-2 text-sm text-slate-300">
+          <label className="flex items-start gap-2 text-sm text-ink-deep">
             <input
               type="checkbox"
               checked={consentAcknowledged}
@@ -339,7 +339,7 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
           <button
             onClick={() => void startRecording()}
             disabled={!consentAcknowledged || transcribing}
-            className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm px-3 py-1.5 rounded"
+            className="bg-white hover:bg-veil border border-line disabled:opacity-50 text-ink-deep text-sm px-3 py-1.5 rounded"
             data-testid="start-recording-btn"
           >
             ● Start recording
@@ -357,26 +357,26 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
         </button>
       )}
 
-      {transcribing && <p className="text-sm text-slate-400">Transcribing…</p>}
+      {transcribing && <p className="text-sm text-ink-soft">Transcribing…</p>}
 
       {(error ?? dictation.error) && (
-        <div className="text-slate-400 text-sm bg-slate-800 rounded p-3" data-testid="ambient-error">
+        <div className="text-ink-soft text-sm bg-veil rounded p-3" data-testid="ambient-error">
           {error ?? dictation.error}
         </div>
       )}
 
       {transcript && !sections && (
         <div className="space-y-2">
-          <p className="text-xs text-slate-400">Raw transcript — review before structuring:</p>
-          <div className="bg-slate-950 border border-slate-700 rounded p-3 text-sm text-slate-200 whitespace-pre-line max-h-48 overflow-y-auto" dir="auto" data-testid="raw-transcript">
+          <p className="text-xs text-ink-soft">Raw transcript — review before structuring:</p>
+          <div className="bg-wash border border-line rounded p-3 text-sm text-ink-deep whitespace-pre-line max-h-48 overflow-y-auto" dir="auto" data-testid="raw-transcript">
             {transcript}
           </div>
           {extractingTerms && (
-            <p className="text-xs text-slate-500">Finding medical terms…</p>
+            <p className="text-xs text-ink-soft">Finding medical terms…</p>
           )}
           {!extractingTerms && terms && terms.length > 0 && (
             <div className="space-y-1" data-testid="medical-terms-glossary">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-ink-soft">
                 Medical terms mentioned (reference only — read alongside the transcript above, not a
                 clinical summary):
               </p>
@@ -384,7 +384,7 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
                 {terms.map((t, i) => (
                   <span
                     key={`${t.term}-${i}`}
-                    className="text-xs px-2 py-0.5 rounded-full border border-slate-600 text-slate-300 bg-slate-800/60"
+                    className="text-xs px-2 py-0.5 rounded-full border border-line-strong text-ink-deep bg-veil"
                     data-testid={`term-chip-${i}`}
                     title={CATEGORY_LABELS[t.category] ?? t.category}
                   >
@@ -398,12 +398,12 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
             <button
               onClick={structureNote}
               disabled={segmenting}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm px-3 py-1.5 rounded"
+              className="bg-grad-accent hover:brightness-110 shadow-pill disabled:opacity-50 text-white text-sm px-3 py-1.5 rounded"
               data-testid="structure-note-btn"
             >
               {segmenting ? "Structuring…" : "Structure into note"}
             </button>
-            <button onClick={reset} className="text-sm text-slate-400 hover:text-white px-3 py-1.5">
+            <button onClick={reset} className="text-sm text-ink-soft hover:text-ink px-3 py-1.5">
               Discard
             </button>
           </div>
@@ -422,13 +422,13 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
             return (
               <div key={spec.key}>
                 <div className="flex items-center justify-between">
-                  <label className="text-xs text-slate-400">{spec.title}</label>
+                  <label className="text-xs text-ink-soft">{spec.title}</label>
                   {isCondensable && (
                     <button
                       type="button"
                       onClick={() => condenseSection(spec.key)}
                       disabled={condensingKey === spec.key || !(sections[spec.key] ?? "").trim()}
-                      className="text-xs text-slate-500 hover:text-slate-300 underline disabled:opacity-50"
+                      className="text-xs text-ink-soft hover:text-ink-deep underline disabled:opacity-50"
                       data-testid={`condense-btn-${spec.key}`}
                     >
                       {condensingKey === spec.key ? "Condensing…" : "Condense"}
@@ -440,27 +440,27 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
                   onChange={(e) => setSections((prev) => ({ ...(prev ?? {}), [spec.key]: e.target.value }))}
                   rows={2}
                   dir="auto"
-                  className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-sm text-slate-200 mt-1"
+                  className="w-full bg-wash border border-line rounded p-2 text-sm text-ink-deep mt-1"
                   data-testid={`section-${spec.key}`}
                 />
                 {suggestion && (
-                  <div className="mt-1.5 p-2.5 rounded border border-slate-700 bg-slate-800/60 space-y-1.5" data-testid={`condense-suggestion-${spec.key}`}>
+                  <div className="mt-1.5 p-2.5 rounded border border-line bg-veil space-y-1.5" data-testid={`condense-suggestion-${spec.key}`}>
                     {suggestion.condensed ? (
                       <>
-                        <p className="text-xs text-slate-400">Suggested condensed version — only words from your own text:</p>
-                        <p className="text-sm text-slate-200" dir="auto">{suggestion.text}</p>
+                        <p className="text-xs text-ink-soft">Suggested condensed version — only words from your own text:</p>
+                        <p className="text-sm text-ink-deep" dir="auto">{suggestion.text}</p>
                         <div className="flex gap-2 pt-1">
                           <button
                             type="button"
                             onClick={() => acceptCondensed(spec.key)}
-                            className="text-xs px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white"
+                            className="text-xs px-2.5 py-1 rounded bg-grad-accent hover:brightness-110 shadow-pill text-white"
                           >
                             Use condensed version
                           </button>
                           <button
                             type="button"
                             onClick={() => discardSuggestion(spec.key)}
-                            className="text-xs px-2.5 py-1 rounded border border-slate-600 text-slate-300 hover:text-white"
+                            className="text-xs px-2.5 py-1 rounded border border-line-strong text-ink-deep hover:text-ink"
                           >
                             Keep original
                           </button>
@@ -468,11 +468,11 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
                       </>
                     ) : (
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs text-slate-500">No safe condensation found — your original text was kept.</p>
+                        <p className="text-xs text-ink-soft">No safe condensation found — your original text was kept.</p>
                         <button
                           type="button"
                           onClick={() => discardSuggestion(spec.key)}
-                          className="text-xs text-slate-500 hover:text-slate-300 underline shrink-0"
+                          className="text-xs text-ink-soft hover:text-ink-deep underline shrink-0"
                         >
                           Dismiss
                         </button>
@@ -481,32 +481,32 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
                   </div>
                 )}
                 {isTranslating && (
-                  <p className="text-xs text-slate-500 mt-1.5">Translating…</p>
+                  <p className="text-xs text-ink-soft mt-1.5">Translating…</p>
                 )}
                 {!isTranslating && translation !== undefined && (
-                  <div className="mt-1.5 p-2.5 rounded border border-slate-700 bg-slate-800/40 space-y-1.5" data-testid={`translation-preview-${spec.key}`}>
+                  <div className="mt-1.5 p-2.5 rounded border border-line bg-veil/60 space-y-1.5" data-testid={`translation-preview-${spec.key}`}>
                     {translation ? (
                       <>
-                        <p className="text-xs text-slate-400">English translation (reference — clinical terms kept as stated):</p>
-                        <p className="text-sm text-slate-200" dir="ltr">{translation}</p>
+                        <p className="text-xs text-ink-soft">English translation (reference — clinical terms kept as stated):</p>
+                        <p className="text-sm text-ink-deep" dir="ltr">{translation}</p>
                         {isTranslatable && (
                           <div className="flex gap-2 pt-1">
                             {!isUsingTranslation ? (
                               <button
                                 type="button"
                                 onClick={() => toggleUseTranslation(spec.key, true)}
-                                className="text-xs px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white"
+                                className="text-xs px-2.5 py-1 rounded bg-grad-accent hover:brightness-110 shadow-pill text-white"
                                 data-testid={`use-translation-btn-${spec.key}`}
                               >
                                 Use English version
                               </button>
                             ) : (
                               <>
-                                <span className="text-xs text-blue-300 px-1 py-1">Will use English version</span>
+                                <span className="text-xs text-agent-nph px-1 py-1">Will use English version</span>
                                 <button
                                   type="button"
                                   onClick={() => toggleUseTranslation(spec.key, false)}
-                                  className="text-xs px-2.5 py-1 rounded border border-slate-600 text-slate-300 hover:text-white"
+                                  className="text-xs px-2.5 py-1 rounded border border-line-strong text-ink-deep hover:text-ink"
                                   data-testid={`keep-arabic-btn-${spec.key}`}
                                 >
                                   Keep original
@@ -517,7 +517,7 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
                         )}
                       </>
                     ) : (
-                      <p className="text-xs text-slate-500">Translation unavailable — original text kept.</p>
+                      <p className="text-xs text-ink-soft">Translation unavailable — original text kept.</p>
                     )}
                   </div>
                 )}
@@ -526,13 +526,13 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
           })}
           {unclassified && (
             <div>
-              <label className="text-xs text-slate-400">Unsorted (not confidently classified)</label>
-              <div className="w-full bg-slate-950 border border-amber-800/50 rounded p-2 text-sm text-slate-300 mt-1 whitespace-pre-line" dir="auto" data-testid="unclassified-text">
+              <label className="text-xs text-ink-soft">Unsorted (not confidently classified)</label>
+              <div className="w-full bg-wash border border-amber-800/50 rounded p-2 text-sm text-ink-deep mt-1 whitespace-pre-line" dir="auto" data-testid="unclassified-text">
                 {unclassified}
               </div>
             </div>
           )}
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-ink-soft">
             You can trim or move this text between sections, but can't add new words here — anything
             else can be added once the draft is created.
           </p>
@@ -540,19 +540,19 @@ export default function AmbientPanel({ patientId, onDraftCreated }: AmbientPanel
             <button
               onClick={createDraft}
               disabled={creatingDraft}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm px-3 py-1.5 rounded"
+              className="bg-grad-accent hover:brightness-110 shadow-pill disabled:opacity-50 text-white text-sm px-3 py-1.5 rounded"
               data-testid="create-draft-btn"
             >
               {creatingDraft ? "Creating…" : "Create draft"}
             </button>
-            <button onClick={reset} className="text-sm text-slate-400 hover:text-white px-3 py-1.5">
+            <button onClick={reset} className="text-sm text-ink-soft hover:text-ink px-3 py-1.5">
               Discard
             </button>
           </div>
         </div>
       )}
 
-      <p className="text-slate-500 text-xs border-t border-slate-700 pt-2">
+      <p className="text-ink-soft text-xs border-t border-line pt-2">
         Explicit start/stop only — no always-on or background capture. Audio is transcribed on-prem and
         discarded. Structuring only relocates the recorded words; it never adds or rewrites content.
       </p>

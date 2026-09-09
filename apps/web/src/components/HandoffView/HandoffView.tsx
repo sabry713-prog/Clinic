@@ -23,19 +23,19 @@ function SectionPanel({ title, items }: SectionPanelProps): JSX.Element {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="border border-slate-700 rounded-lg overflow-hidden mb-3">
+    <div className="border border-line rounded-lg overflow-hidden mb-3">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 bg-slate-800 text-white text-sm font-medium text-left"
+        className="w-full flex items-center justify-between px-4 py-3 bg-ink text-white text-sm font-medium text-left"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
       >
         <span>{title}</span>
-        <span className="text-slate-400 text-xs">{isOpen ? "▲" : "▼"}</span>
+        <span className="text-ink-soft text-xs">{isOpen ? "▲" : "▼"}</span>
       </button>
       {isOpen && (
-        <div className="px-4 py-3 bg-slate-900 text-slate-200 text-sm">
+        <div className="px-4 py-3 bg-white text-ink-deep text-sm">
           {items.length === 0 ? (
-            <p className="text-slate-500 italic">None documented</p>
+            <p className="text-ink-soft italic">None documented</p>
           ) : (
             <ul className="space-y-1">
               {items.map((item, idx) => (
@@ -61,7 +61,7 @@ export default function HandoffView({ handoff, isLoading }: HandoffViewProps): J
 
   if (isLoading) {
     return (
-      <div className="bg-slate-900 rounded-xl p-6">
+      <div className="bg-white rounded-xl p-6">
         <GeneratingIndicator label={t("handoff.generating", "Assembling shift handoff…")} lines={5} />
       </div>
     );
@@ -85,11 +85,11 @@ export default function HandoffView({ handoff, isLoading }: HandoffViewProps): J
   ];
 
   return (
-    <div className="bg-slate-950 rounded-xl p-6 space-y-4">
+    <div className="bg-wash rounded-xl p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-white text-base font-semibold">{t("handoff.title")}</h2>
-          <p className="text-slate-400 text-xs mt-1">
+          <h2 className="text-ink text-base font-semibold">{t("handoff.title")}</h2>
+          <p className="text-ink-soft text-xs mt-1">
             {t("handoff.generated_at")}: {new Date(handoff.generated_at).toLocaleString()} ·{" "}
             {t("handoff.scope")}: {handoff.scope} · {t("handoff.language")}: {handoff.language.toUpperCase()}
           </p>
@@ -97,14 +97,14 @@ export default function HandoffView({ handoff, isLoading }: HandoffViewProps): J
         <div className="flex gap-2">
           <button
             onClick={handleCopy}
-            className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded px-3 py-1"
+            className="text-xs text-ink-soft hover:text-ink border border-line rounded px-3 py-1"
             aria-label={t("handoff.copy")}
           >
             {t("handoff.copy")}
           </button>
           <button
             onClick={handlePrint}
-            className="text-xs text-slate-400 hover:text-white border border-slate-700 rounded px-3 py-1"
+            className="text-xs text-ink-soft hover:text-ink border border-line rounded px-3 py-1"
             aria-label={t("handoff.print")}
           >
             {t("handoff.print")}
@@ -122,8 +122,8 @@ export default function HandoffView({ handoff, isLoading }: HandoffViewProps): J
         ))}
       </div>
 
-      <div className="border-t border-slate-800 pt-4 mt-4">
-        <p className="text-slate-500 text-xs leading-relaxed">{handoff.disclaimer}</p>
+      <div className="border-t border-line pt-4 mt-4">
+        <p className="text-ink-soft text-xs leading-relaxed">{handoff.disclaimer}</p>
       </div>
     </div>
   );

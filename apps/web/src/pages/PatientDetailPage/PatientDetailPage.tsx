@@ -89,25 +89,25 @@ export default function PatientDetailPage(): JSX.Element {
 
   if (isLoadingPatient) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <p className="text-slate-400 text-sm">Loading patient record...</p>
+      <div className="min-h-screen bg-wash flex items-center justify-center">
+        <p className="text-ink-soft text-sm">Loading patient record...</p>
       </div>
     );
   }
 
   if (patientError) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-wash flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-slate-300 text-sm">
+          <p className="text-ink-deep text-sm">
             {patientError.code === "PATIENT_OUT_OF_SCOPE"
               ? "This patient is not within your care scope."
               : patientError.message}
           </p>
-          <p className="text-slate-500 text-xs">Error code: {patientError.code}</p>
+          <p className="text-ink-soft text-xs">Error code: {patientError.code}</p>
           <button
             onClick={() => void navigate(-1)}
-            className="text-sm text-slate-400 hover:text-white"
+            className="text-sm text-ink-soft hover:text-ink"
           >
             Go back
           </button>
@@ -118,12 +118,34 @@ export default function PatientDetailPage(): JSX.Element {
 
   if (!patient) return <></>;
 
+  // The encounter shell is a full-height 3-pane workspace (mockup §B): it
+  // fills the main area instead of scrolling inside the content column, so
+  // its wrapper swaps the padded/max-width page chrome for a definite-height
+  // flex column. The other views keep the document-style page chrome.
+  const encounterView = view === "encounter";
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div
+      className={
+        encounterView
+          ? "flex h-screen flex-col overflow-hidden bg-wash text-ink"
+          : "min-h-screen bg-wash text-ink p-6"
+      }
+    >
+      <div
+        className={
+          encounterView
+            ? "flex min-h-0 flex-1 flex-col"
+            : "max-w-6xl mx-auto space-y-6"
+        }
+      >
         <button
           onClick={() => void navigate("/patients")}
-          className="text-sm text-slate-400 hover:text-white transition-colors"
+          className={
+            encounterView
+              ? "px-5 py-2.5 text-sm text-ink-soft hover:text-ink transition-colors"
+              : "text-sm text-ink-soft hover:text-ink transition-colors"
+          }
         >
           ← Patients
         </button>
@@ -138,11 +160,13 @@ export default function PatientDetailPage(): JSX.Element {
         )}
         {view === "chart" && <PatientFilePage patient={patient} />}
         {view === "encounter" && (
-          <SullyShell
-            patientName={patient.display_name ?? patient.mrn ?? undefined}
-            patientId={patientId}
-            encounterId={activeEncounterId}
-          />
+          <div className="min-h-0 flex-1 px-3 pb-3">
+            <SullyShell
+              patientName={patient.display_name ?? patient.mrn ?? undefined}
+              patientId={patientId}
+              encounterId={activeEncounterId}
+            />
+          </div>
         )}
       </div>
     </div>

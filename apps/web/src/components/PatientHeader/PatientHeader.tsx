@@ -69,7 +69,7 @@ function EpisodeList({
 
   return (
     <>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-soft">
         Code: {history.code.code ?? "—"}
         {history.code.system ? ` (${history.code.system})` : ""}
         {" · "}
@@ -78,26 +78,26 @@ function EpisodeList({
       <ul className="space-y-2">
         {episodes.visible.map((ep) => (
           <li key={ep.id} className="text-sm">
-            <p className="text-white">
+            <p className="text-ink">
               {formatDate(ep.onset_date, i18n.language)}
-              <span className="text-slate-400 ml-2">
+              <span className="text-ink-soft ml-2">
                 Status: {ep.status ?? "unknown"}
               </span>
               {ep.encounter?.ward ? (
-                <span className="text-slate-400 ml-2">
+                <span className="text-ink-soft ml-2">
                   — {ep.encounter.ward}
                 </span>
               ) : null}
             </p>
             {ep.note ? (
-              <p className="text-slate-400 mt-0.5">
+              <p className="text-ink-soft mt-0.5">
                 {ep.note.type ?? "Note"}
                 {ep.note.author_display ? ` — ${ep.note.author_display}` : ""}
                 {": "}
                 {ep.note.content_text ?? ""}
               </p>
             ) : (
-              <p className="text-slate-500 mt-0.5">
+              <p className="text-ink-soft mt-0.5">
                 No note documented on this date.
               </p>
             )}
@@ -140,32 +140,32 @@ function ConditionRow({
   };
 
   return (
-    <li className="text-sm text-white">
+    <li className="text-sm text-ink">
       <button
         type="button"
         onClick={toggle}
         aria-expanded={expanded}
-        className="w-full text-left hover:bg-slate-800 rounded px-1 py-0.5"
+        className="w-full text-left hover:bg-veil rounded px-1 py-0.5"
       >
-        <span className="text-slate-500 mr-1">{expanded ? "▾" : "▸"}</span>
+        <span className="text-ink-soft mr-1">{expanded ? "▾" : "▸"}</span>
         {condition.code_display ?? "Unknown condition"}
-        <span className="text-slate-400 ml-2">
+        <span className="text-ink-soft ml-2">
           Status: {condition.status ?? "unknown"}
         </span>
         {condition.onset_date ? (
-          <span className="text-slate-500 ml-2">
+          <span className="text-ink-soft ml-2">
             (Onset: {formatDate(condition.onset_date, i18n.language)})
           </span>
         ) : null}
       </button>
 
       {expanded && (
-        <div className="ml-5 mt-1 mb-2 border-l border-slate-700 pl-3 space-y-2">
+        <div className="ml-5 mt-1 mb-2 border-l border-line pl-3 space-y-2">
           {state.loading && (
-            <p className="text-sm text-slate-500">Loading episode history…</p>
+            <p className="text-sm text-ink-soft">Loading episode history…</p>
           )}
           {state.error && (
-            <p className="text-sm text-slate-400">{state.error}</p>
+            <p className="text-sm text-ink-soft">{state.error}</p>
           )}
           {state.history && <EpisodeList history={state.history} />}
         </div>
@@ -189,63 +189,63 @@ export default function PatientHeader({
   const conditionList = useShowMore(conditions, INITIAL_CONDITIONS);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-4">
+    <div className="bg-white border border-line rounded-[18px] shadow-card p-6 space-y-4">
       {/* Identity row */}
       <div className="flex flex-wrap items-start gap-6">
         <div>
-          <p className="text-sm text-slate-400">Patient Name</p>
-          <p className="text-lg font-semibold text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-faint">Patient Name</p>
+          <p className="text-lg font-semibold text-ink">
             {display_name ?? "Unknown"}
           </p>
         </div>
         <div>
-          <p className="text-sm text-slate-400">MRN</p>
-          <p className="text-base text-white font-mono">{mrn ?? "—"}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-faint">MRN</p>
+          <p className="text-base text-ink font-mono">{mrn ?? "—"}</p>
         </div>
         <div>
-          <p className="text-sm text-slate-400">Date of Birth</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-faint">Date of Birth</p>
           {/* dir=ltr: keep day-month-year order intact in RTL layouts */}
-          <p className="text-base text-white" dir="ltr">
+          <p className="text-base text-ink" dir="ltr">
             {formatDate(date_of_birth, i18n.language)}{" "}
-            <span className="text-slate-400 text-sm">({ageFromDob(date_of_birth)})</span>
+            <span className="text-ink-soft text-sm">({ageFromDob(date_of_birth)})</span>
           </p>
         </div>
         <div>
-          <p className="text-sm text-slate-400">Sex</p>
-          <p className="text-base text-white capitalize">{sex ?? "—"}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-faint">Sex</p>
+          <p className="text-base text-ink capitalize">{sex ?? "—"}</p>
         </div>
         {ward && (
           <div>
-            <p className="text-sm text-slate-400">Ward</p>
-            <p className="text-base text-white">{ward}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-faint">Ward</p>
+            <p className="text-base text-ink">{ward}</p>
           </div>
         )}
         {preferred_language && (
           <div>
-            <p className="text-sm text-slate-400">Language</p>
-            <p className="text-base text-white uppercase">{preferred_language}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-faint">Language</p>
+            <p className="text-base text-ink uppercase">{preferred_language}</p>
           </div>
         )}
       </div>
 
-      <hr className="border-slate-700" />
+      <hr className="border-line/70" />
 
       {/* Allergies */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">Allergies</h3>
+        <h3 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-faint mb-2">Allergies</h3>
         {allergies.length === 0 ? (
-          <p className="text-sm text-slate-500">None documented</p>
+          <p className="text-sm text-ink-soft">None documented</p>
         ) : (
           <>
             <ul className="space-y-1">
               {allergyList.visible.map((a) => (
-                <li key={a.id} className="text-sm text-white">
+                <li key={a.id} className="text-sm text-ink">
                   {a.code_display ?? "Unknown substance"}
                   {a.reaction ? (
-                    <span className="text-slate-400"> — Reaction: {a.reaction}</span>
+                    <span className="text-ink-soft"> — Reaction: {a.reaction}</span>
                   ) : null}
                   {a.recorded_at ? (
-                    <span className="text-slate-500 ml-2">(Recorded: {formatDate(a.recorded_at, i18n.language)})</span>
+                    <span className="text-ink-soft ml-2">(Recorded: {formatDate(a.recorded_at, i18n.language)})</span>
                   ) : null}
                 </li>
               ))}
@@ -257,11 +257,11 @@ export default function PatientHeader({
 
       {/* Conditions */}
       <div>
-        <h3 className="text-sm font-medium text-slate-300 mb-2">
+        <h3 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-faint mb-2">
           Conditions / Problems
         </h3>
         {conditions.length === 0 ? (
-          <p className="text-sm text-slate-500">None documented</p>
+          <p className="text-sm text-ink-soft">None documented</p>
         ) : (
           <>
             <ul className="space-y-1">

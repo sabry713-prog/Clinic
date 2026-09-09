@@ -71,14 +71,14 @@ export default function SinceLastVisitPanel({ patientId }: SinceLastVisitPanelPr
   if (hasPreviousEncounter === null || error) return null;
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-xl p-4" data-testid="since-last-visit-panel">
-      <h2 className="text-sm font-medium text-slate-200 mb-1">Documented Since Your Last Visit</h2>
+    <div className="bg-white border border-line rounded-xl p-4" data-testid="since-last-visit-panel">
+      <h2 className="text-sm font-medium text-ink-deep mb-1">Documented Since Your Last Visit</h2>
       {!hasPreviousEncounter ? (
-        <p className="text-sm text-slate-500" data-testid="since-last-visit-empty">
+        <p className="text-sm text-ink-soft" data-testid="since-last-visit-empty">
           No previous visit to compare — this is the first documented encounter.
         </p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-slate-500" data-testid="since-last-visit-empty">
+        <p className="text-sm text-ink-soft" data-testid="since-last-visit-empty">
           Nothing new documented since the last visit.
         </p>
       ) : (
@@ -88,16 +88,16 @@ export default function SinceLastVisitPanel({ patientId }: SinceLastVisitPanelPr
             return (
               <li
                 key={idx}
-                className="flex items-baseline gap-2 text-sm text-slate-300"
+                className="flex items-baseline gap-2 text-sm text-ink-deep"
                 data-testid="since-last-visit-item"
                 data-item-type={item.type}
               >
-                <span className="shrink-0 text-[10px] font-medium tracking-wide text-blue-300/80 bg-blue-950/40 border border-blue-800/40 rounded px-1.5 py-0.5">
+                <span className="shrink-0 text-[10px] font-bold tracking-wide text-agent-nph bg-agent-nph-bg border border-ev-pill-line rounded-full px-2 py-0.5">
                   NEW
                 </span>
-                <span className="text-slate-500 text-xs shrink-0">{TYPE_LABEL[item.type]}:</span>
+                <span className="text-ink-soft text-xs shrink-0">{TYPE_LABEL[item.type]}:</span>
                 <span className="flex-1">{text}</span>
-                <span className="text-slate-500 text-xs shrink-0" dir="ltr">{date}</span>
+                <span className="text-ink-soft text-xs shrink-0" dir="ltr">{date}</span>
               </li>
             );
           })}

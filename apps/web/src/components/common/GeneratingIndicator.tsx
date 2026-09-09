@@ -40,9 +40,9 @@ export default function GeneratingIndicator({
   variant = "dark",
 }: GeneratingIndicatorProps): React.ReactElement {
   const isLight = variant === "light";
-  const labelClass = isLight ? "text-gray-400" : "text-slate-400";
-  const dotClass = isLight ? "bg-gray-400" : "bg-slate-400";
-  const skeletonClass = isLight ? "bg-gray-200" : "bg-slate-700/60";
+  const labelClass = isLight ? "text-gray-400" : "text-ink-soft";
+  const dotClass = isLight ? "bg-gray-400" : "bg-ink-faint";
+  const skeletonClass = isLight ? "bg-gray-200" : "bg-veil/60";
   return (
     <div className="py-4" role="status" aria-label={label} data-testid="loading-state">
       <div className={`flex items-center gap-2 text-sm mb-3 ${labelClass}`}>

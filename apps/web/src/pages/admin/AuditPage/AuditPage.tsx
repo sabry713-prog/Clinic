@@ -130,7 +130,7 @@ export default function AuditPage(): JSX.Element {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
+    <div className="min-h-screen bg-wash text-ink p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <h1 className="text-lg font-semibold">Audit Log</h1>
 
@@ -141,27 +141,27 @@ export default function AuditPage(): JSX.Element {
             hash_self = SHA-256(canonical row incl. hash_prev), forming a
             chain; verification replays it; a daily 02:00 job exports NDJSON
             (gzip + SHA-256) to in-Kingdom object storage with Object Lock. */}
-        <div className="bg-slate-900 rounded-xl p-4 space-y-3" data-testid="tamper-detection-card">
+        <div className="bg-white border border-line rounded-2xl shadow-card p-4 space-y-3" data-testid="tamper-detection-card">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="flex items-center gap-2 text-sm font-medium text-slate-200">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+              <h2 className="flex items-center gap-2 text-sm font-medium text-ink-deep">
+                <ShieldCheck className="h-4 w-4 text-status-ok" aria-hidden="true" />
                 {t("audit.tamperTitle")}
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">{t("audit.tamperSubtitle")}</p>
+              <p className="mt-0.5 text-xs text-ink-soft">{t("audit.tamperSubtitle")}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleVerify}
                 disabled={isVerifying}
-                className="border border-slate-700 text-white text-sm px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-50"
+                className="border border-line text-ink text-sm px-4 py-2 rounded hover:bg-veil disabled:opacity-50"
               >
                 {isVerifying ? "Verifying..." : "Verify Integrity"}
               </button>
               <button
                 onClick={handleExportWorm}
                 disabled={isExporting}
-                className="inline-flex items-center gap-1.5 border border-slate-700 text-white text-sm px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 border border-line text-ink text-sm px-4 py-2 rounded hover:bg-veil disabled:opacity-50"
               >
                 <Archive className="h-4 w-4" aria-hidden="true" />
                 {isExporting ? t("audit.wormExporting") : t("audit.wormExport")}
@@ -180,21 +180,21 @@ export default function AuditPage(): JSX.Element {
             >
               <p className="font-medium flex items-center gap-2">
                 {verifyResult.passed ? (
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+                  <ShieldCheck className="h-4 w-4 text-status-ok" aria-hidden="true" />
                 ) : null}
                 {verifyResult.passed ? t("audit.passed") : t("audit.failed")} —{" "}
                 {verifyResult.passed
                   ? t("audit.eventsVerified", { count: verifyResult.events_verified })
                   : t("audit.failedEvents", { count: verifyResult.violations.length })}
               </p>
-              <p className="text-slate-400 mt-1 text-xs">
+              <p className="text-ink-soft mt-1 text-xs">
                 {t("audit.checkedWindow", {
                   start: verifyResult.started_at,
                   end: verifyResult.finished_at,
                 })}
               </p>
               {!verifyResult.passed && verifyResult.violations.length > 0 && (
-                <ul className="mt-2 space-y-1 text-slate-300">
+                <ul className="mt-2 space-y-1 text-ink-deep">
                   {verifyResult.violations.map((v) => (
                     <li key={v.event_id} dir="ltr" className="font-mono text-xs">
                       Event {v.event_id}: {v.reason}
@@ -205,29 +205,29 @@ export default function AuditPage(): JSX.Element {
             </div>
           )}
 
-          {verifyError && <p className="text-slate-400 text-sm">{verifyError}</p>}
+          {verifyError && <p className="text-ink-soft text-sm">{verifyError}</p>}
 
           {wormMessage && (
-            <p data-testid="worm-result" className="rounded-lg border border-slate-700 bg-slate-800/60 p-3 text-xs text-slate-300">
-              <Archive className="me-1.5 inline h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+            <p data-testid="worm-result" className="rounded-lg border border-line bg-veil p-3 text-xs text-ink-deep">
+              <Archive className="me-1.5 inline h-3.5 w-3.5 text-ink-soft" aria-hidden="true" />
               {t("audit.wormDone")}: {wormMessage}
             </p>
           )}
-          {wormError && <p className="text-slate-400 text-sm">{wormError}</p>}
+          {wormError && <p className="text-ink-soft text-sm">{wormError}</p>}
 
-          <p className="text-xs text-slate-600">{t("audit.wormScheduleNote")}</p>
+          <p className="text-xs text-ink-faint">{t("audit.wormScheduleNote")}</p>
         </div>
         {/* Filters */}
-        <div className="bg-slate-900 rounded-xl p-4 space-y-4">
-          <h2 className="text-sm font-medium text-slate-300">Filters</h2>
+        <div className="bg-white border border-line rounded-2xl shadow-card p-4 space-y-4">
+          <h2 className="text-sm font-medium text-ink-deep">Filters</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="audit-filter-action" className="block text-xs text-slate-400 mb-1">Action</label>
+              <label htmlFor="audit-filter-action" className="block text-xs text-ink-soft mb-1">Action</label>
               <select
                 id="audit-filter-action"
                 value={filters.action}
                 onChange={(e) => setFilters((f) => ({ ...f, action: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white"
+                className="w-full bg-veil border border-line rounded px-3 py-2 text-sm text-ink"
               >
                 {AUDIT_ACTIONS.map((a) => (
                   <option key={a} value={a}>{a || "All actions"}</option>
@@ -236,12 +236,12 @@ export default function AuditPage(): JSX.Element {
             </div>
 
             <div>
-              <label htmlFor="audit-filter-outcome" className="block text-xs text-slate-400 mb-1">Outcome</label>
+              <label htmlFor="audit-filter-outcome" className="block text-xs text-ink-soft mb-1">Outcome</label>
               <select
                 id="audit-filter-outcome"
                 value={filters.outcome}
                 onChange={(e) => setFilters((f) => ({ ...f, outcome: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white"
+                className="w-full bg-veil border border-line rounded px-3 py-2 text-sm text-ink"
               >
                 {OUTCOMES.map((o) => (
                   <option key={o} value={o}>{o || "All outcomes"}</option>
@@ -250,48 +250,48 @@ export default function AuditPage(): JSX.Element {
             </div>
 
             <div>
-              <label htmlFor="audit-filter-actor-id" className="block text-xs text-slate-400 mb-1">Actor ID</label>
+              <label htmlFor="audit-filter-actor-id" className="block text-xs text-ink-soft mb-1">Actor ID</label>
               <input
                 id="audit-filter-actor-id"
                 type="text"
                 value={filters.actor_id}
                 onChange={(e) => setFilters((f) => ({ ...f, actor_id: e.target.value }))}
                 placeholder="User UUID"
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white placeholder-slate-500"
+                className="w-full bg-veil border border-line rounded px-3 py-2 text-sm text-ink placeholder-ink-faint"
               />
             </div>
 
             <div>
-              <label htmlFor="audit-filter-target-id" className="block text-xs text-slate-400 mb-1">Target ID</label>
+              <label htmlFor="audit-filter-target-id" className="block text-xs text-ink-soft mb-1">Target ID</label>
               <input
                 id="audit-filter-target-id"
                 type="text"
                 value={filters.target_id}
                 onChange={(e) => setFilters((f) => ({ ...f, target_id: e.target.value }))}
                 placeholder="Resource UUID"
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white placeholder-slate-500"
+                className="w-full bg-veil border border-line rounded px-3 py-2 text-sm text-ink placeholder-ink-faint"
               />
             </div>
 
             <div>
-              <label htmlFor="audit-filter-since" className="block text-xs text-slate-400 mb-1">Since</label>
+              <label htmlFor="audit-filter-since" className="block text-xs text-ink-soft mb-1">Since</label>
               <input
                 id="audit-filter-since"
                 type="datetime-local"
                 value={filters.since}
                 onChange={(e) => setFilters((f) => ({ ...f, since: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white"
+                className="w-full bg-veil border border-line rounded px-3 py-2 text-sm text-ink"
               />
             </div>
 
             <div>
-              <label htmlFor="audit-filter-until" className="block text-xs text-slate-400 mb-1">Until</label>
+              <label htmlFor="audit-filter-until" className="block text-xs text-ink-soft mb-1">Until</label>
               <input
                 id="audit-filter-until"
                 type="datetime-local"
                 value={filters.until}
                 onChange={(e) => setFilters((f) => ({ ...f, until: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-white"
+                className="w-full bg-veil border border-line rounded px-3 py-2 text-sm text-ink"
               />
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function AuditPage(): JSX.Element {
             <button
               onClick={handleSearch}
               disabled={isLoading}
-              className="bg-white text-slate-950 text-sm px-4 py-2 rounded hover:bg-slate-200 disabled:opacity-50"
+              className="bg-white text-ink text-sm px-4 py-2 rounded hover:bg-line disabled:opacity-50"
             >
               {isLoading ? "Loading..." : "Search"}
             </button>
@@ -309,16 +309,16 @@ export default function AuditPage(): JSX.Element {
 
         {/* Error */}
         {error && (
-          <p className="text-slate-400 text-sm">{error}</p>
+          <p className="text-ink-soft text-sm">{error}</p>
         )}
 
         {/* Results table */}
         {events.length > 0 && (
-          <div className="bg-slate-900 rounded-xl overflow-hidden">
+          <div className="bg-white rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 text-xs">
+                  <tr className="border-b border-line text-ink-soft text-xs">
                     <th className="px-4 py-3">Timestamp</th>
                     <th className="px-4 py-3">Actor</th>
                     <th className="px-4 py-3">Action</th>
@@ -329,25 +329,25 @@ export default function AuditPage(): JSX.Element {
                 </thead>
                 <tbody>
                   {events.map((event) => (
-                    <tr key={event.id} className="border-b border-slate-800 hover:bg-slate-800/50">
-                      <td className="px-4 py-3 text-slate-300 whitespace-nowrap">
+                    <tr key={event.id} className="border-b border-line hover:bg-veil">
+                      <td className="px-4 py-3 text-ink-deep whitespace-nowrap">
                         {new Date(event.ts).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-slate-300">
+                      <td className="px-4 py-3 text-ink-deep">
                         {event.actor.display_name ?? event.actor.id ?? "System"}
                         {event.actor.role && (
-                          <span className="text-slate-500 text-xs ml-1">({event.actor.role})</span>
+                          <span className="text-ink-soft text-xs ml-1">({event.actor.role})</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-200 font-mono text-xs">
+                      <td className="px-4 py-3 text-ink-deep font-mono text-xs">
                         {event.action}
                       </td>
-                      <td className="px-4 py-3 text-slate-400 text-xs">
+                      <td className="px-4 py-3 text-ink-soft text-xs">
                         {event.target_type && <span>{event.target_type}</span>}
                         {event.target_id && <span className="ml-1 font-mono">{event.target_id.slice(0, 8)}…</span>}
                       </td>
-                      <td className="px-4 py-3 text-slate-300 text-xs">{event.outcome}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs font-mono max-w-xs truncate">
+                      <td className="px-4 py-3 text-ink-deep text-xs">{event.outcome}</td>
+                      <td className="px-4 py-3 text-ink-soft text-xs font-mono max-w-xs truncate">
                         {JSON.stringify(event.metadata_json)}
                       </td>
                     </tr>
@@ -361,7 +361,7 @@ export default function AuditPage(): JSX.Element {
                 <button
                   onClick={handleLoadMore}
                   disabled={isLoading}
-                  className="text-sm text-slate-400 hover:text-white disabled:opacity-50"
+                  className="text-sm text-ink-soft hover:text-ink disabled:opacity-50"
                 >
                   Load more
                 </button>
@@ -371,7 +371,7 @@ export default function AuditPage(): JSX.Element {
         )}
 
         {!isLoading && events.length === 0 && !error && (
-          <p className="text-slate-500 text-sm">Run a search to view audit events.</p>
+          <p className="text-ink-soft text-sm">Run a search to view audit events.</p>
         )}
       </div>
     </div>

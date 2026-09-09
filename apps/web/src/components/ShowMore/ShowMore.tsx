@@ -47,7 +47,7 @@ export function ShowMoreButton({
       type="button"
       onClick={state.toggle}
       aria-expanded={state.expanded}
-      className="mt-2 text-sm text-slate-400 hover:text-white transition-colors"
+      className="mt-2 inline-flex items-center gap-1 rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-ink-soft hover:text-ink hover:border-line-strong transition-colors"
     >
       {state.expanded
         ? "Show fewer"

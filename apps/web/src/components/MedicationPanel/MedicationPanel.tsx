@@ -43,18 +43,18 @@ export default function MedicationPanel({
   const rows = useShowMore(medications, INITIAL_ROWS);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6">
-      <h2 className="text-base font-semibold text-white mb-4">Medications</h2>
+    <div className="bg-white border border-line rounded-[18px] shadow-card p-6">
+      <h2 className="text-base font-semibold text-ink mb-4">Medications</h2>
 
       {isLoading ? (
-        <p className="text-sm text-slate-500">Loading medications...</p>
+        <p className="text-sm text-ink-soft">Loading medications...</p>
       ) : medications.length === 0 ? (
         <EmptyState message="No medications documented" />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-slate-400 border-b border-slate-700">
+              <tr className="text-left text-ink-soft border-b border-line">
                 <th className="pb-2 pr-4 font-medium">Medication</th>
                 <th className="pb-2 pr-4 font-medium">Dose</th>
                 <th className="pb-2 pr-4 font-medium">Route</th>
@@ -65,19 +65,19 @@ export default function MedicationPanel({
             </thead>
             <tbody>
               {rows.visible.map((med) => (
-                <tr key={med.id} className="border-b border-slate-800 last:border-0">
-                  <td className="py-2 pr-4 text-white">
+                <tr key={med.id} className="border-b border-line last:border-0">
+                  <td className="py-2 pr-4 text-ink">
                     {med.medication_display ?? med.code ?? "Unknown"}
                   </td>
                   {/* dir=ltr isolates "20 mg"-style values in RTL layouts */}
-                  <td className="py-2 pr-4 text-white">
+                  <td className="py-2 pr-4 text-ink">
                     <span dir="ltr">{med.dose ?? "—"}</span>
                   </td>
-                  <td className="py-2 pr-4 text-white">{med.route ?? "—"}</td>
-                  <td className="py-2 pr-4 text-white">{med.frequency ?? "—"}</td>
+                  <td className="py-2 pr-4 text-ink">{med.route ?? "—"}</td>
+                  <td className="py-2 pr-4 text-ink">{med.frequency ?? "—"}</td>
                   {/* Status shown as plain text — no color coding */}
-                  <td className="py-2 pr-4 text-slate-300">{med.status ?? "—"}</td>
-                  <td className="py-2 pr-4 text-slate-400 whitespace-nowrap">
+                  <td className="py-2 pr-4 text-ink-deep">{med.status ?? "—"}</td>
+                  <td className="py-2 pr-4 text-ink-soft whitespace-nowrap">
                     <span dir="ltr">{formatDate(med.started_at)}</span>
                   </td>
                 </tr>

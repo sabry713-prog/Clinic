@@ -50,9 +50,9 @@ function Field({
   readonly mono?: boolean;
 }): JSX.Element {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-slate-800 py-2">
-      <span className="shrink-0 text-[11px] uppercase tracking-wide text-slate-500">{label}</span>
-      <span className={`text-right text-xs text-slate-100 ${mono ? "font-mono" : ""}`}>{value}</span>
+    <div className="flex items-baseline justify-between gap-4 border-b border-line py-2">
+      <span className="shrink-0 text-[11px] uppercase tracking-wide text-ink-soft">{label}</span>
+      <span className={`text-right text-xs text-ink ${mono ? "font-mono" : ""}`}>{value}</span>
     </div>
   );
 }
@@ -93,23 +93,23 @@ export default function PreAuthModal({
         if (e.key === "Escape" && !submitting) onClose();
       }}
     >
-      <div className="w-full max-w-lg rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
-        <header className="flex items-center gap-2 border-b border-slate-800 px-5 py-3">
-          <h2 className="text-sm font-semibold text-white">Pre-authorisation request</h2>
+      <div className="w-full max-w-lg rounded-xl border border-line bg-white shadow-2xl">
+        <header className="flex items-center gap-2 border-b border-line px-5 py-3">
+          <h2 className="text-sm font-semibold text-ink">Pre-authorisation request</h2>
           <button
             ref={closeRef}
             type="button"
             onClick={onClose}
             disabled={submitting}
             aria-label="Close"
-            className="ms-auto rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-white disabled:opacity-40"
+            className="ms-auto rounded-md p-1 text-ink-soft hover:bg-veil hover:text-ink disabled:opacity-40"
           >
             <X className="h-4 w-4" />
           </button>
         </header>
 
         <div className="px-5 py-3">
-          <p className="mb-3 text-[11px] leading-relaxed text-slate-400">
+          <p className="mb-3 text-[11px] leading-relaxed text-ink-soft">
             These values are sent to NPHIES exactly as shown. Codes are the ones already
             confirmed for this order — nothing here is generated or substituted.
           </p>
@@ -130,21 +130,21 @@ export default function PreAuthModal({
 
           <div className="mt-3">
             <div className="mb-1 flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
-              <span className="text-[11px] uppercase tracking-wide text-slate-500">
+              <FileText className="h-3.5 w-3.5 text-ink-soft" aria-hidden="true" />
+              <span className="text-[11px] uppercase tracking-wide text-ink-soft">
                 Attached clinical justification
               </span>
             </div>
             <pre
               data-testid="clinical-justification"
-              className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-md border border-slate-800 bg-slate-950 p-2.5 text-[11px] leading-relaxed text-slate-300"
+              className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-md border border-line bg-wash p-2.5 text-[11px] leading-relaxed text-ink-deep"
             >
               {fields.clinicalDocument}
             </pre>
           </div>
 
           {disabledReason && (
-            <p className="mt-3 flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-300">
+            <p className="mt-3 flex items-start gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-status-pend">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               {disabledReason}
             </p>
@@ -157,12 +157,12 @@ export default function PreAuthModal({
           )}
         </div>
 
-        <footer className="flex items-center justify-end gap-2 border-t border-slate-800 px-5 py-3">
+        <footer className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 disabled:opacity-40"
+            className="rounded-md border border-line px-3 py-1.5 text-xs text-ink-deep hover:bg-veil disabled:opacity-40"
           >
             Cancel
           </button>
@@ -170,7 +170,7 @@ export default function PreAuthModal({
             type="button"
             onClick={handleSubmit}
             disabled={submitting || Boolean(disabledReason)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-full bg-grad-accent shadow-pill px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitting ? (
               <>

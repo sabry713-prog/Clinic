@@ -67,8 +67,8 @@ function NavItem({ icon, label, active = false, collapsed, onClick }: NavItemPro
       onClick={onClick}
       title={collapsed ? label : undefined}
       className={`
-        w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
-        ${active ? "bg-slate-800 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800/60"}
+        w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors
+        ${active ? "bg-grad-accent text-white shadow-nav font-semibold" : "text-ink-deep hover:text-ink hover:bg-veil"}
         ${collapsed ? "justify-center" : ""}
       `}
     >
@@ -148,21 +148,36 @@ export default function AppShell(): JSX.Element {
   const isNurse = user?.roles.includes("nurse") ?? false;
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-wash">
       <aside
         className={`
           sticky top-0 h-screen z-40 flex flex-col
-          bg-slate-900 border-e border-slate-800
+          bg-white border-e border-line
           transition-[width] duration-150
           ${collapsed ? "w-16" : "w-60"}
         `}
       >
         {/* Brand */}
-        <div className={`flex items-center gap-2 px-4 h-14 border-b border-slate-800 ${collapsed ? "justify-center px-0" : ""}`}>
+        <div className={`flex items-center gap-2 px-4 h-14 border-b border-line ${collapsed ? "justify-center px-0" : ""}`}>
           <img src="/logo-icon.png" alt="" className="w-7 h-7 shrink-0" />
           {!collapsed && (
-            <span className="text-sm font-semibold text-white truncate">{t("shell.brand")}</span>
+            <span className="text-sm font-semibold text-ink truncate">{t("shell.brand")}</span>
           )}
+        </div>
+
+        {/* Demo-mode chip — always visible (mockup §E "global demo chip").
+            Sidebar-top placement: this shell has no top bar; the sidebar is
+            the one surface present on every authenticated page. */}
+        <div className={`px-3 pt-3 ${collapsed ? "flex justify-center" : ""}`}>
+          <span
+            className={`inline-flex items-center gap-2 rounded-full border border-demo-line bg-demo-chip px-3 py-1.5 text-[11px] font-semibold text-demo-text ${
+              collapsed ? "px-2" : ""
+            }`}
+            title={t("shell.demoMode")}
+          >
+            <span className="h-2 w-2 shrink-0 rounded-full bg-demo-pulse shadow-[0_0_0_3px_rgba(245,158,11,0.18)] animate-pulse" />
+            {!collapsed && <span className="truncate">{t("shell.demoMode")}</span>}
+          </span>
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
@@ -190,11 +205,11 @@ export default function AppShell(): JSX.Element {
             <>
               <div className={`pt-4 pb-1 ${collapsed ? "text-center" : "px-3"}`}>
                 {!collapsed ? (
-                  <p className="text-xs text-slate-500 uppercase tracking-wide truncate" title={activePatientName ?? ""}>
+                  <p className="text-[9.5px] text-ink-faint uppercase tracking-[0.14em] font-extrabold truncate" title={activePatientName ?? ""}>
                     {activePatientName ?? t("shell.patientFile")}
                   </p>
                 ) : (
-                  <div className="mx-auto w-6 border-t border-slate-700" />
+                  <div className="mx-auto w-6 border-t border-line" />
                 )}
               </div>
               {PATIENT_VIEWS.map((view) => (
@@ -272,7 +287,7 @@ export default function AppShell(): JSX.Element {
               <>
                 <button
                   onClick={toggleMore}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-sm font-medium text-ink-deep hover:text-ink hover:bg-veil transition-colors"
                   aria-expanded={moreOpen}
                 >
                   <span className="flex items-center gap-3">
@@ -309,9 +324,9 @@ export default function AppShell(): JSX.Element {
             <>
               <div className={`pt-4 pb-1 ${collapsed ? "text-center" : "px-3"}`}>
                 {!collapsed ? (
-                  <p className="text-xs text-slate-500 uppercase tracking-wide">{t("shell.admin")}</p>
+                  <p className="text-[9.5px] text-ink-faint uppercase tracking-[0.14em] font-extrabold">{t("shell.admin")}</p>
                 ) : (
-                  <div className="mx-auto w-6 border-t border-slate-700" />
+                  <div className="mx-auto w-6 border-t border-line" />
                 )}
               </div>
               <NavItem
@@ -368,9 +383,9 @@ export default function AppShell(): JSX.Element {
         </nav>
 
         {/* Footer: user + collapse */}
-        <div className="border-t border-slate-800 px-2 py-3 space-y-1">
+        <div className="border-t border-line px-2 py-3 space-y-1">
           {!collapsed && user && (
-            <p className="px-3 pb-1 text-xs text-slate-500 truncate" title={user.displayName}>
+            <p className="px-3 pb-1 text-xs text-ink-faint truncate" title={user.displayName}>
               {user.displayName}
             </p>
           )}

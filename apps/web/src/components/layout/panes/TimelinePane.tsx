@@ -76,37 +76,44 @@ export default function TimelinePane(): JSX.Element {
     : null;
 
   return (
-    <section className="flex h-full flex-col overflow-y-auto bg-slate-950" aria-label="Patient timeline and orders">
+    <section className="flex h-full flex-col overflow-y-auto bg-wash" aria-label="Patient timeline and orders">
       {/* Master timeline */}
-      <div className="border-b border-slate-800 p-5">
+      <div className="border-b border-line p-5">
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-white">Patient master timeline</h2>
+          <h2 className="text-sm font-semibold text-ink">Patient master timeline</h2>
           {timelineLoading && (
-            <span className="text-[11px] text-slate-500">loading…</span>
+            <span className="text-[11px] text-ink-soft">loading…</span>
           )}
         </div>
         {timelineError && (
-          <p role="status" className="mb-2 text-[11px] leading-relaxed text-amber-300/90">
+          <p role="status" className="mb-2 text-[11px] leading-relaxed text-status-pend">
             {timelineError}
           </p>
         )}
         <ol
           data-testid="timeline-feed"
-          className="relative max-h-[22rem] space-y-3 overflow-y-auto border-s border-slate-800 ps-5 pe-1"
+          className="relative max-h-[22rem] space-y-3 overflow-y-auto ps-5 pe-1"
         >
+          {/* Rail drawn INSIDE the padding box: the scroll container clips
+              both axes, so dots hung on an outer border (the old border-s)
+              were half-cut. Rail at 15px, dot centers at 15px. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-2 start-[15px] w-px bg-line"
+          />
           {timeline.map((entry) => {
             const Icon = TIMELINE_ICONS[entry.kind];
             return (
               <li key={entry.id} className="relative">
-                <span className="absolute -start-[27px] top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-800 ring-4 ring-slate-950">
-                  <Icon className="h-2.5 w-2.5 text-slate-300" aria-hidden="true" />
+                <span className="absolute -start-[13px] top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-veil ring-4 ring-line">
+                  <Icon className="h-2.5 w-2.5 text-ink-deep" aria-hidden="true" />
                 </span>
-                <div className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2">
+                <div className="rounded-lg border border-line bg-white px-3 py-2">
                   <div className="flex items-baseline justify-between gap-3">
-                    <p className="text-xs font-medium text-slate-100">{entry.title}</p>
-                    <time className="shrink-0 font-mono text-[11px] text-slate-500">{entry.at}</time>
+                    <p className="text-xs font-medium text-ink">{entry.title}</p>
+                    <time className="shrink-0 font-mono text-[11px] text-ink-soft">{entry.at}</time>
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-400">{entry.detail}</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">{entry.detail}</p>
                 </div>
               </li>
             );
@@ -117,12 +124,12 @@ export default function TimelinePane(): JSX.Element {
       {/* Order entry */}
       <div className="p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Clinical order entry</h2>
+          <h2 className="text-sm font-semibold text-ink">Clinical order entry</h2>
           <button
             type="button"
             onClick={openOrderEntry}
             title="Opens the full order-entry panel in the workspace view"
-            className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+            className="inline-flex items-center gap-1 rounded-md border border-line px-2 py-1 text-xs text-ink-deep hover:bg-veil"
           >
             <Plus className="h-3.5 w-3.5" /> New order
           </button>
@@ -140,8 +147,8 @@ export default function TimelinePane(): JSX.Element {
                 onClick={() => setCategoryFilter(active ? null : id)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
                   active
-                    ? "border-blue-500 bg-blue-600/20 text-white"
-                    : "border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-600 hover:text-white"
+                    ? "border-transparent bg-grad-accent text-white shadow-pill"
+                    : "border-line bg-white text-ink-deep hover:border-line-strong hover:text-ink"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" /> {label}
@@ -160,12 +167,12 @@ export default function TimelinePane(): JSX.Element {
             return (
               <li
                 key={order.id}
-                className="flex items-start gap-3 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5"
+                className="flex items-start gap-3 rounded-lg border border-line bg-white px-3 py-2.5"
               >
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ink-soft" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium text-slate-100">{order.display}</p>
-                  <p className="mt-0.5 font-mono text-[11px] text-slate-500">
+                  <p className="truncate text-xs font-medium text-ink">{order.display}</p>
+                  <p className="mt-0.5 font-mono text-[11px] text-ink-soft">
                     {order.codeSystem} {order.code}
                   </p>
                 </div>
@@ -194,7 +201,7 @@ export default function TimelinePane(): JSX.Element {
             );
           })}
           {visibleOrders.length === 0 && (
-            <li className="rounded-lg border border-dashed border-slate-800 px-3 py-4 text-center text-xs text-slate-500">
+            <li className="rounded-lg border border-dashed border-line px-3 py-4 text-center text-xs text-ink-soft">
               No {categoryFilter} orders on this encounter.
             </li>
           )}

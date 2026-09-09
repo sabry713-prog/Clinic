@@ -12,16 +12,16 @@ import { api, type ClaimSimulationReport, type SimulatorPatientVerdict, type Sim
 import EvidenceChainPopover from "../ai-team/EvidenceChainPopover";
 
 const VERDICT_STYLE: Record<SimulatorVerdict, { cls: string; key: string }> = {
-  send: { cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", key: "claimSim.verdictSend" },
-  fix_before_send: { cls: "bg-amber-500/15 text-amber-300 border-amber-500/30", key: "claimSim.verdictFix" },
-  do_not_send: { cls: "bg-red-500/15 text-red-300 border-red-500/30", key: "claimSim.verdictDoNotSend" },
+  send: { cls: "bg-status-ok-bg text-status-ok border-status-ok-line", key: "claimSim.verdictSend" },
+  fix_before_send: { cls: "bg-status-pend-bg text-status-pend border-status-pend-line", key: "claimSim.verdictFix" },
+  do_not_send: { cls: "bg-status-rej-bg text-status-rej border-status-rej-line", key: "claimSim.verdictDoNotSend" },
 };
 
 const NECESSITY_STYLE: Record<NecessityStatus, string> = {
-  GREEN: "text-emerald-400",
-  YELLOW: "text-amber-400",
-  RED: "text-red-400",
-  UNAVAILABLE: "text-slate-500",
+  GREEN: "text-status-ok",
+  YELLOW: "text-status-pend",
+  RED: "text-status-rej",
+  UNAVAILABLE: "text-ink-soft",
 };
 
 /** The graph's own chain, or null — the popover is only offered when the
@@ -42,10 +42,10 @@ function PatientRow({ patient }: { readonly patient: SimulatorPatientVerdict }):
   const verdict = VERDICT_STYLE[patient.verdict];
   return (
     <>
-      <tr className="border-t border-slate-800 hover:bg-slate-800/40">
-        <td className="px-3 py-2 font-mono text-xs text-slate-300">{patient.mrn ?? "—"}</td>
-        <td className="px-3 py-2 text-sm text-slate-200">{patient.display_name ?? "—"}</td>
-        <td className="px-3 py-2 text-xs text-slate-400">
+      <tr className="border-t border-line hover:bg-veil/60">
+        <td className="px-3 py-2 font-mono text-xs text-ink-deep">{patient.mrn ?? "—"}</td>
+        <td className="px-3 py-2 text-sm text-ink-deep">{patient.display_name ?? "—"}</td>
+        <td className="px-3 py-2 text-xs text-ink-soft">
           {patient.historical_rejections}/{patient.historical_claims}
         </td>
         <td className="px-3 py-2">
@@ -53,7 +53,7 @@ function PatientRow({ patient }: { readonly patient: SimulatorPatientVerdict }):
             {t(verdict.key)}
           </span>
         </td>
-        <td className="px-3 py-2 text-xs text-slate-400">
+        <td className="px-3 py-2 text-xs text-ink-soft">
           {patient.necessity.length === 0
             ? "—"
             : patient.necessity.map((n) => {
@@ -80,7 +80,7 @@ function PatientRow({ patient }: { readonly patient: SimulatorPatientVerdict }):
             onClick={() => {
               setOpen(!open);
             }}
-            className="text-xs text-slate-400 hover:text-white underline"
+            className="text-xs text-ink-soft hover:text-ink underline"
             aria-expanded={open}
           >
             {open ? t("claimSim.hideChecks") : t("claimSim.showChecks")}
@@ -88,25 +88,25 @@ function PatientRow({ patient }: { readonly patient: SimulatorPatientVerdict }):
         </td>
       </tr>
       {open && (
-        <tr className="border-t border-slate-800 bg-slate-900/60">
+        <tr className="border-t border-line bg-white">
           <td colSpan={6} className="px-3 py-2">
-            <p className="text-xs text-slate-400 mb-1">
+            <p className="text-xs text-ink-soft mb-1">
               {t("claimSim.readinessLabel")}: <span className="font-mono">{patient.readiness_overall}</span>
             </p>
             {patient.failed_checks.length > 0 && (
-              <p className="text-xs text-red-300 mb-1">
+              <p className="text-xs text-status-rej mb-1">
                 {t("claimSim.failedChecks")}: <span className="font-mono">{patient.failed_checks.join(", ")}</span>
               </p>
             )}
             {patient.warning_checks.length > 0 && (
-              <p className="text-xs text-amber-300 mb-1">
+              <p className="text-xs text-status-pend mb-1">
                 {t("claimSim.warningChecks")}: <span className="font-mono">{patient.warning_checks.join(", ")}</span>
               </p>
             )}
             {patient.necessity
               .filter((n) => n.suggested_codes.length > 0)
               .map((n) => (
-                <p key={`sug-${n.order_id}-${n.icd10_code}`} className="text-xs text-slate-400">
+                <p key={`sug-${n.order_id}-${n.icd10_code}`} className="text-xs text-ink-soft">
                   {t("claimSim.suggestedDx", { code: `${n.icd10_code}→${n.sbs_code}` })}:{" "}
                   <span className="font-mono">{n.suggested_codes.map((s) => s.icd10).join(", ")}</span>
                 </p>
@@ -160,18 +160,18 @@ export default function ClaimSimulator(): JSX.Element {
   }, [t]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 space-y-4">
+    <div className="bg-white border border-line rounded-2xl shadow-card p-6 space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-base font-semibold text-white">{t("claimSim.title")}</h2>
-          <p className="text-xs text-slate-500">{t("claimSim.subtitle")}</p>
+          <h2 className="text-base font-semibold text-ink">{t("claimSim.title")}</h2>
+          <p className="text-xs text-ink-soft">{t("claimSim.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => void run()}
             disabled={busy}
-            className="text-sm px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 disabled:opacity-50"
+            className="text-sm px-3 py-1.5 rounded bg-white hover:bg-veil border border-line text-ink-deep disabled:opacity-50"
           >
             {busy ? t("claimSim.running") : report ? t("claimSim.rerun") : t("claimSim.run")}
           </button>
@@ -179,7 +179,7 @@ export default function ClaimSimulator(): JSX.Element {
             type="button"
             onClick={() => void syncQueue()}
             disabled={syncing || report === null}
-            className="text-sm px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50"
+            className="text-sm px-4 py-1.5 rounded-full bg-grad-accent hover:brightness-110 text-white font-semibold shadow-pill disabled:opacity-50 disabled:shadow-none transition-all"
             title={report === null ? t("claimSim.syncDisabledHint") : undefined}
           >
             {syncing ? t("claimSim.syncing") : t("claimSim.syncQueue")}
@@ -187,43 +187,43 @@ export default function ClaimSimulator(): JSX.Element {
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-300">{error}</p>}
-      {message && <p className="text-sm text-emerald-300">{message}</p>}
+      {error && <p className="text-sm text-status-rej">{error}</p>}
+      {message && <p className="text-sm text-status-ok">{message}</p>}
 
       {report && (
         <div className="space-y-4">
           {!report.graph_available && (
-            <p className="text-xs text-amber-300 border border-amber-500/30 rounded p-2">
+            <p className="text-xs text-status-pend border border-amber-500/30 rounded p-2">
               {t("claimSim.graphUnavailable")}
             </p>
           )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-slate-800/60 rounded p-3">
-              <p className="text-xs text-slate-400">{t("claimSim.cardChecked")}</p>
-              <p className="text-xl font-semibold text-white">{report.summary.patients_checked}</p>
+            <div className="bg-veil rounded p-3">
+              <p className="text-xs text-ink-soft">{t("claimSim.cardChecked")}</p>
+              <p className="text-xl font-semibold text-ink">{report.summary.patients_checked}</p>
             </div>
-            <div className="bg-slate-800/60 rounded p-3">
-              <p className="text-xs text-slate-400">{t("claimSim.cardFlagged")}</p>
-              <p className="text-xl font-semibold text-amber-300">
+            <div className="bg-veil rounded p-3">
+              <p className="text-xs text-ink-soft">{t("claimSim.cardFlagged")}</p>
+              <p className="text-xl font-semibold text-status-pend">
                 {report.summary.fix_before_send + report.summary.do_not_send}
               </p>
             </div>
-            <div className="bg-slate-800/60 rounded p-3">
-              <p className="text-xs text-slate-400">{t("claimSim.cardRed")}</p>
-              <p className="text-xl font-semibold text-red-300">{report.summary.orders_red}</p>
+            <div className="bg-veil rounded p-3">
+              <p className="text-xs text-ink-soft">{t("claimSim.cardRed")}</p>
+              <p className="text-xl font-semibold text-status-rej">{report.summary.orders_red}</p>
             </div>
-            <div className="bg-slate-800/60 rounded p-3">
-              <p className="text-xs text-slate-400">{t("claimSim.cardSar")}</p>
-              <p className="text-xl font-semibold text-white">
-                {formatSar(report.summary.estimated_sar_at_risk)} <span className="text-xs text-slate-400">SAR</span>
+            <div className="bg-veil rounded p-3">
+              <p className="text-xs text-ink-soft">{t("claimSim.cardSar")}</p>
+              <p className="text-xl font-semibold text-ink">
+                {formatSar(report.summary.estimated_sar_at_risk)} <span className="text-xs text-ink-soft">SAR</span>
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-slate-800 rounded">
+          <div className="overflow-x-auto border border-line rounded">
             <table className="w-full text-start">
               <thead>
-                <tr className="text-xs text-slate-500 bg-slate-800/40">
+                <tr className="text-xs text-ink-soft bg-veil/60">
                   <th className="px-3 py-2 text-start font-medium">{t("claimSim.colMrn")}</th>
                   <th className="px-3 py-2 text-start font-medium">{t("claimSim.colPatient")}</th>
                   <th className="px-3 py-2 text-start font-medium">{t("claimSim.colHistory")}</th>
@@ -240,10 +240,10 @@ export default function ClaimSimulator(): JSX.Element {
             </table>
           </div>
 
-          <p className="text-xs text-slate-600">{report.disclaimer}</p>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-ink-faint">{report.disclaimer}</p>
+          <p className="text-xs text-ink-faint">
             {t("claimSim.sarNote", { value: formatSar(report.summary.average_claim_value_sar) })}{" "}
-            <a className="underline hover:text-slate-400" href="/admin/rejection-cost">
+            <a className="underline hover:text-ink-soft" href="/admin/rejection-cost">
               {t("claimSim.rejectionCostLink")}
             </a>
           </p>
