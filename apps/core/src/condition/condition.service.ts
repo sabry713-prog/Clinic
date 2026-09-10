@@ -3,7 +3,7 @@ import type { Pool } from "pg";
 import { v4 as uuidv4 } from "uuid";
 import { PG_POOL } from "../database/database.module";
 import { PatientScopeService } from "../patient/patient-scope.service";
-import { suggestCodes, type CodedTerm } from "./snomed-picklist";
+import { suggestCodes, suggestSpellings, type CodedTerm } from "./snomed-picklist";
 
 export interface AddedCondition {
   readonly id: string;
@@ -23,6 +23,11 @@ export class ConditionService {
   /** AI suggests coded terms for the clinician's diagnosis text (they confirm). */
   suggest(query: string): CodedTerm[] {
     return suggestCodes(query);
+  }
+
+  /** Closest vocabulary terms by spelling when the text matched nothing. */
+  spellingSuggestions(query: string): CodedTerm[] {
+    return suggestSpellings(query);
   }
 
   /**

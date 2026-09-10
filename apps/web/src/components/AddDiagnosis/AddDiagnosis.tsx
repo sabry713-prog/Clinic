@@ -24,6 +24,7 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [didYouMean, setDidYouMean] = useState<readonly CodedTerm[]>([]);
 
   const suggest = useCallback(() => {
     if (!text.trim()) return;
@@ -32,7 +33,10 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
       .then((r) => {
         setSuggestions(r.suggestions);
         setSelected(r.suggestions[0] ?? null);
-        if (r.suggestions.length === 0) setMsg("No code match — refine the wording or enter the code manually.");
+        setDidYouMean(r.did_you_mean ?? []);
+        if (r.suggestions.length === 0 && (r.did_you_mean ?? []).length === 0) {
+          setMsg("No code match — refine the wording or enter the code manually.");
+        }
       })
       .catch((e) => setError(e instanceof ApiError ? e.message : "Suggest failed"));
   }, [text]);
@@ -48,7 +52,7 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
     })
       .then(() => {
         setMsg(`Added "${selected.code_display}" to the problem list.`);
-        setText(""); setSuggestions([]); setSelected(null); setOnset("");
+        setText(""); setSuggestions([]); setSelected(null); setOnset(""); setDidYouMean([]);
         onAdded?.();
       })
       .catch((e) => setError(e instanceof ApiError ? e.message : "Add failed"))
@@ -114,6 +118,24 @@ export default function AddDiagnosis({ patientId, onAdded }: AddDiagnosisProps):
         </div>
       )}
 
+      {didYouMean.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5" data-testid="did-you-mean">
+          <span className="text-xs text-ink-soft">Did you mean:</span>
+          {didYouMean.map((t) => (
+            <button
+              key={t.code}
+              type="button"
+              onClick={() => {
+                setText(t.code_display);
+                setSuggestions([]); setSelected(null); setDidYouMean([]); setMsg(null);
+              }}
+              className="text-xs px-2.5 py-1 rounded-full border border-line bg-white text-ink-deep hover:border-brand-indigo hover:text-ink transition-colors"
+            >
+              {t.code_display}
+            </button>
+          ))}
+        </div>
+      )}
       {msg && <p className="text-sm text-status-ok">{msg}</p>}
       {error && <p className="text-sm text-ink-soft">{error}</p>}
     </div>

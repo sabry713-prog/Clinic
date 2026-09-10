@@ -37,7 +37,12 @@ export class ConditionController {
   @Get("conditions/suggest")
   @ApiOperation({ summary: "Suggest SNOMED coded terms for a diagnosis (clinician confirms)" })
   suggest(@Query("q") q: string) {
-    return { suggestions: this.conditions.suggest((q ?? "").toString()) };
+    const query = (q ?? "").toString();
+    const suggestions = this.conditions.suggest(query);
+    // Spelling assist: offer the closest terms from the same curated
+    // vocabulary when the clinician's wording matched nothing.
+    const did_you_mean = suggestions.length === 0 ? this.conditions.spellingSuggestions(query) : [];
+    return { suggestions, ...(did_you_mean.length > 0 ? { did_you_mean } : {}) };
   }
 
   @Post("patients/:id/conditions")
