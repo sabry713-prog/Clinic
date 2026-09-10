@@ -73,3 +73,54 @@ export function suggestCodes(query: string, limit = 5): CodedTerm[] {
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, limit).map((s) => s.term);
 }
+
+
+/** Levenshtein edit distance — deterministic, no dependencies. */
+function editDistance(a: string, b: string): number {
+  const prev = new Array<number>(b.length + 1);
+  const curr = new Array<number>(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      curr[j] = Math.min(
+        prev[j]! + 1,
+        curr[j - 1]! + 1,
+        prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = curr[j]!;
+  }
+  return prev[b.length]!;
+}
+
+function normalize(text: string): string {
+  return text.toLowerCase().replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Spelling assistance for the diagnosis entry box: when the clinician's text
+ * matches no picklist term, offer the closest terms from the SAME curated
+ * vocabulary by edit distance. This corrects spelling only — it never
+ * introduces new terms or codes, and the clinician still picks and confirms.
+ */
+export function suggestSpellings(query: string, limit = 3): CodedTerm[] {
+  const q = normalize(query);
+  if (q.length < 4) return [];
+  const scored: { term: CodedTerm; d: number }[] = [];
+  for (const term of SNOMED_PICKLIST) {
+    const d = normalize(term.code_display);
+    // distance of the whole query vs the whole term, and vs its best token
+    const whole = editDistance(q, d);
+    let bestToken = Number.POSITIVE_INFINITY;
+    for (const t of d.split(" ")) {
+      if (Math.abs(t.length - q.length) > 3) continue;
+      bestToken = Math.min(bestToken, editDistance(q, t));
+    }
+    const distance = Math.min(whole, bestToken);
+    // normalized threshold: allow ~40% edits for short words, tighter for long
+    if (distance / Math.max(q.length, 3) <= 0.4) scored.push({ term, d: distance });
+  }
+  scored.sort((a, b) => a.d - b.d);
+  return scored.slice(0, limit).map((x) => x.term);
+}

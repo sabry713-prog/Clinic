@@ -1115,7 +1115,9 @@ export const api = {
       request<{ data: DraftSummary[] }>(`/api/v1/patients/${id}/drafts`),
 
     suggestCodes: (q: string) =>
-      request<{ suggestions: CodedTerm[] }>(`/api/v1/conditions/suggest?q=${encodeURIComponent(q)}`),
+      request<{ suggestions: CodedTerm[]; did_you_mean?: CodedTerm[] }>(
+        `/api/v1/conditions/suggest?q=${encodeURIComponent(q)}`,
+      ),
 
     addCondition: (id: string, body: { code: string; code_display: string; status: string; onset_date?: string }) =>
       request<{ id: string; code: string; code_display: string; status: string }>(
