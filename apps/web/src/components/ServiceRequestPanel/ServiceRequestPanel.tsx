@@ -115,6 +115,30 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
   const [existing, setExisting] = useState<ServiceRequestItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [candidatesSource, setCandidatesSource] = useState<"notes" | "soap">("notes");
+  // This encounter's unsaved SOAP draft, mirrored by the encounter shell
+  // (SullyContext session survival). The note extractor only reads the
+  // medical record, so without this the draft's plan (e.g. "colonoscopy")
+  // never reaches order matching.
+  const [soapDraft, setSoapDraft] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(`sully.scribe.${patientId}`);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        soap?: Partial<Record<"subjective" | "objective" | "assessment" | "plan", string>>;
+      };
+      const note = parsed.soap;
+      if (!note) return;
+      const text = [note.subjective, note.objective, note.assessment, note.plan]
+        .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+        .join(" ");
+      if (text.trim()) setSoapDraft(text);
+    } catch {
+      // No draft (or unreadable) — the button simply stays hidden.
+    }
+  }, [patientId]);
 
   const refresh = useCallback(() => {
     api.patients.serviceRequests(patientId).then((r) => setExisting(r.data)).catch(() => { /* silent */ });
@@ -127,12 +151,29 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
     try {
       const { data } = await api.patients.serviceRequestCandidates(patientId);
       setCandidates(data);
+      setCandidatesSource("notes");
       setDismissed(new Set());
       setExpanded(new Set());
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to extract requested services");
     } finally { setBusy(false); }
   }, [patientId]);
+
+  /** Same deterministic catalog match as quick entry, run over the
+   * clinician's own SOAP draft for this encounter. */
+  const matchFromSoap = useCallback(async () => {
+    if (!soapDraft) return;
+    setBusy(true); setError(null);
+    try {
+      const { data } = await api.patients.matchQuickEntry(patientId, soapDraft);
+      setCandidates(data);
+      setCandidatesSource("soap");
+      setDismissed(new Set());
+      setExpanded(new Set());
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to match services from the SOAP draft");
+    } finally { setBusy(false); }
+  }, [patientId, soapDraft]);
 
   const confirmOne = useCallback(async (c: ServiceCandidate) => {
     const k = keyOf(c);
@@ -270,14 +311,27 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
 
       {/* Extraction + confirmation queue */}
       {candidates === null ? (
-        <button
-          type="button"
-          onClick={() => void extract()}
-          disabled={busy}
-          className="text-sm px-3 py-1.5 rounded bg-white hover:bg-veil border border-line text-ink-deep disabled:opacity-50"
-        >
-          {busy ? "Reading orders…" : "Extract requested services from notes"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void extract()}
+            disabled={busy}
+            className="text-sm px-3 py-1.5 rounded bg-white hover:bg-veil border border-line text-ink-deep disabled:opacity-50"
+          >
+            {busy ? "Reading orders…" : "Extract requested services from notes"}
+          </button>
+          {soapDraft && (
+            <button
+              type="button"
+              onClick={() => void matchFromSoap()}
+              disabled={busy}
+              title="Matches this encounter's SOAP draft (unsaved) against the service catalog — same confirm-first flow"
+              className="text-sm px-3 py-1.5 rounded-full bg-grad-accent hover:brightness-110 shadow-pill text-white font-semibold disabled:opacity-50"
+            >
+              Suggest orders from this encounter's SOAP draft
+            </button>
+          )}
+        </div>
       ) : visible !== null && visible.length === 0 ? (
         <div className="flex items-center gap-3">
           <p className="text-sm text-ink-soft">
@@ -296,7 +350,9 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-ink-soft">
-            Each card is a verbatim extraction from the doctor's own documentation. Review the source, then confirm or dismiss — nothing is created without confirmation.
+            {candidatesSource === "soap"
+              ? "Each card was matched from this encounter's SOAP draft (still unsaved). Review, then confirm or dismiss — nothing is created without confirmation."
+              : "Each card is a verbatim extraction from the doctor's own documentation. Review the source, then confirm or dismiss — nothing is created without confirmation."}
           </p>
           <ul className="space-y-2">
             {visible?.map((c) => {

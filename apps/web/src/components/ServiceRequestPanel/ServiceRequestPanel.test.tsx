@@ -135,3 +135,51 @@ describe("ServiceRequestPanel — quick order entry", () => {
     expect(mockCreateServiceRequests).not.toHaveBeenCalled();
   });
 });
+
+describe("ServiceRequestPanel — SOAP draft suggestions", () => {
+  const SOAP_STORE = {
+    soap: {
+      subjective: "patient suffered from severe abdominal pain",
+      objective: "patient with stomach bloating",
+      assessment: "intestinal obstruction",
+      plan: "colonoscopy and some labs test before operation",
+    },
+  };
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    vi.clearAllMocks();
+    vi.mocked(api.patients.serviceRequests).mockResolvedValue({ data: [] });
+  });
+
+  it("shows the SOAP-suggest button when an encounter SOAP draft exists", () => {
+    sessionStorage.setItem("sully.scribe.pt-1", JSON.stringify(SOAP_STORE));
+    render(<ServiceRequestPanel patientId="pt-1" />);
+    expect(screen.getByRole("button", { name: /Suggest orders from this encounter's SOAP draft/i })).toBeInTheDocument();
+  });
+
+  it("hides the button when there is no draft", () => {
+    render(<ServiceRequestPanel patientId="pt-1" />);
+    expect(screen.queryByRole("button", { name: /SOAP draft/i })).not.toBeInTheDocument();
+  });
+
+  it("matches candidates from the SOAP text and labels the queue honestly", async () => {
+    sessionStorage.setItem("sully.scribe.pt-1", JSON.stringify(SOAP_STORE));
+    const candidate: ServiceCandidate = {
+      code: "abc", code_display: "Colonoscopy", category: "procedure",
+      source_type: "dictated_quick_entry", source_excerpt: "colonoscopy",
+    } as unknown as ServiceCandidate;
+    vi.mocked(api.patients.matchQuickEntry).mockResolvedValue({ data: [candidate] });
+
+    render(<ServiceRequestPanel patientId="pt-1" />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /Suggest orders from this encounter's SOAP draft/i }));
+
+    await waitFor(() => {
+      expect(api.patients.matchQuickEntry).toHaveBeenCalledWith("pt-1", expect.stringContaining("colonoscopy"));
+    });
+    expect(await screen.findByText(/matched from this encounter's SOAP draft/i)).toBeInTheDocument();
+    expect(screen.getByText("Colonoscopy")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Confirm", exact: true })).toBeInTheDocument();
+  });
+});
