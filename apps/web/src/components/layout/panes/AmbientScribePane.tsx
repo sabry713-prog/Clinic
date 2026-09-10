@@ -44,7 +44,7 @@ function Waveform({ active }: { readonly active: boolean }): JSX.Element {
 
 export default function AmbientScribePane(): JSX.Element {
   const {
-    recording, elapsedSeconds, transcript, soap, checklist,
+    recording, elapsedSeconds, transcript, soap, soapError, soapLoading, checklist,
     toggleRecording, updateSoap, toggleChecklistItem,
     dictationMode, patientId, transcribing, dictationError,
     setDictationMode, appendTranscriptLine, setTranscribing, setDictationError,
@@ -210,9 +210,24 @@ export default function AmbientScribePane(): JSX.Element {
 
         {/* SOAP draft */}
         <div className="border-b border-line p-4">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
+          <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
             Draft SOAP note
+            {soapLoading && (
+              <span className="flex items-center gap-1 font-normal normal-case text-ink-faint" data-testid="soap-generating">
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" /> generating…
+              </span>
+            )}
           </h2>
+          {soapError && (
+            <p
+              role="status"
+              data-testid="soap-error"
+              className="mb-2 flex items-start gap-2 rounded-xl border border-status-pend-line bg-status-pend-bg px-3 py-2 text-[11px] leading-relaxed text-status-pend"
+            >
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              {soapError}
+            </p>
+          )}
           <div className="space-y-3">
             {SOAP_SECTIONS.map(({ field, label }) => (
               <label key={field} className="block">

@@ -154,6 +154,11 @@ interface SullyState {
   setTranscribing: (value: boolean) => void;
   setDictationError: (message: string | null) => void;
   readonly soap: SoapNote;
+  /** Set when automatic live SOAP generation failed — surfaced in the
+   * scribe pane so a dead network is visible instead of silent. */
+  readonly soapError: string | null;
+  /** True while the live SOAP auto-generation round-trip is in flight. */
+  readonly soapLoading: boolean;
   readonly checklist: readonly ChecklistItem[];
   readonly timeline: readonly TimelineEntry[];
   /** True while the real timeline is loading (Phase 2 / audit M-4). */
@@ -647,6 +652,7 @@ export function SullyProvider({
   // Null until the first successful generation. Stays null in demo mode.
   const [liveSoap, setLiveSoap] = useState<SoapNote | null>(null);
   const [soapLoading, setSoapLoading] = useState(false);
+  const [soapError, setSoapError] = useState<string | null>(null);
 
   /** Draft the post-encounter package for the routed patient. */
   const refreshPostCare = useCallback(async () => {
@@ -867,6 +873,7 @@ export function SullyProvider({
     if (dictationMode !== "live" || !patientId || transcriptText.split("\n").length < 3) return;
     const timer = setTimeout(() => {
       setSoapLoading(true);
+      setSoapError(null);
       api.aiTeam
         .generateSoap(patientId, transcriptText)
         .then((result) => {
@@ -880,8 +887,12 @@ export function SullyProvider({
           soapRef.current = note;
         })
         .catch(() => {
-          // Silently fail — the canned fallback or manual edits still work.
-          // The user can retry via the "Regenerate SOAP note" action.
+          // Manual edits and the "Regenerate SOAP note" action still work;
+          // the notice tells the clinician why the draft stopped updating
+          // instead of failing silently (network drops were invisible).
+          setSoapError(
+            "Couldn't generate the SOAP note — the AI service was unreachable. Your transcript is safe; retry from the AI Team drawer (Regenerate SOAP).",
+          );
         })
         .finally(() => setSoapLoading(false));
     }, 2_000);
@@ -1115,6 +1126,8 @@ export function SullyProvider({
       elapsedSeconds,
       transcript,
       soap,
+      soapError,
+      soapLoading,
       checklist,
       timeline: patientId && liveTimeline.length > 0 ? liveTimeline : MOCK_TIMELINE,
       timelineLoading,
