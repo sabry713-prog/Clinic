@@ -654,6 +654,46 @@ export function SullyProvider({
   const [soapLoading, setSoapLoading] = useState(false);
   const [soapError, setSoapError] = useState<string | null>(null);
 
+  // Session survival for live dictation: a page reload (dev HMR, refresh,
+  // navigation) used to wipe an in-progress recording — the transcript was
+  // pure in-memory state and unrecoverable. Mirror it to sessionStorage,
+  // scoped to the patient and the browser tab's lifetime. Session scope
+  // only (not localStorage): the recording stays on the clinician's own
+  // workstation for the current tab session, matching the pane's
+  // "nothing is written to the record from here" contract.
+  const scribeKey = patientId ? `sully.scribe.${patientId}` : null;
+
+  // Restore once per patient mount, before any new lines arrive.
+  useEffect(() => {
+    if (!scribeKey) return;
+    try {
+      const raw = sessionStorage.getItem(scribeKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { lines?: TranscriptLine[]; soap?: SoapNote | null };
+      if (Array.isArray(parsed.lines) && parsed.lines.length > 0) {
+        setLiveTranscript(parsed.lines);
+        if (parsed.soap) {
+          setLiveSoap(parsed.soap);
+          soapRef.current = parsed.soap;
+        }
+      }
+    } catch {
+      // Corrupted cache -- start fresh rather than crash the encounter.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scribeKey]);
+
+  // Mirror on every change so the latest words always survive a reload.
+  useEffect(() => {
+    if (!scribeKey) return;
+    try {
+      if (liveTranscript.length === 0 && liveSoap == null) return;
+      sessionStorage.setItem(scribeKey, JSON.stringify({ lines: liveTranscript, soap: liveSoap ?? null }));
+    } catch {
+      // Storage full or blocked -- in-memory recording still works.
+    }
+  }, [scribeKey, liveTranscript, liveSoap]);
+
   /** Draft the post-encounter package for the routed patient. */
   const refreshPostCare = useCallback(async () => {
     if (!patientId) return;

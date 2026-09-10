@@ -99,6 +99,28 @@ describe("Ambient scribe — live SOAP failure notice", () => {
     expect(notice.textContent).toContain("unreachable");
   }, 10_000);
 
+  it("restores the transcript after a reload (session survival)", async () => {
+    // first mount: dictation lines arrive
+    generateSoapMock.mockRejectedValue(new Error("network down"));
+    const first = renderScribe();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_600);
+    });
+    expect(screen.getByText(/chest tightness on exertion/)).toBeInTheDocument();
+    first.unmount();
+
+    // second mount (same patient, no new dictation): the recording is back
+    render(
+      <MemoryRouter>
+        <SullyProvider patientId="pt-1" autoStream={false}>
+          <AmbientScribePane />
+        </SullyProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/chest tightness on exertion/)).toBeInTheDocument();
+    expect(screen.getByText(/148 over 92/)).toBeInTheDocument();
+  }, 10_000);
+
   it("keeps the transcript visible while the notice is shown", async () => {
     generateSoapMock.mockRejectedValue(new Error("network down"));
     renderScribe();
