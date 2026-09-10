@@ -8,7 +8,7 @@
  * areas and nothing is written to the record from here.
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, Square, ListChecks, FileText, Loader2, AlertTriangle } from "lucide-react";
 import { useSully, type SoapField } from "../SullyContext";
 import { useDictation, type DictationResult } from "../../../hooks/useDictation";
@@ -70,6 +70,23 @@ export default function AmbientScribePane(): JSX.Element {
   // Live capture is only offered when there is a patient to post audio against.
   const canRecordLive = liveMode && Boolean(patientId);
   const isRecording = liveMode ? dictation.recording : recording;
+
+  // Pull the eye to the SOAP result: when a regeneration lands (soap
+  // object identity changes) while not actively recording, scroll the
+  // draft into view and ring it briefly — otherwise the result updates a
+  // pane away from where Run was pressed and looks like nothing happened.
+  const soapSectionRef = useRef<HTMLDivElement>(null);
+  const [soapFlash, setSoapFlash] = useState(false);
+  const prevSoap = useRef(soap);
+  useEffect(() => {
+    if (prevSoap.current === soap) return;
+    prevSoap.current = soap;
+    if (isRecording) return;
+    soapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setSoapFlash(true);
+    const t = window.setTimeout(() => setSoapFlash(false), 1600);
+    return () => window.clearTimeout(t);
+  }, [soap, isRecording]);
 
   const handleRecordClick = useCallback(() => {
     if (!liveMode) {
@@ -209,7 +226,12 @@ export default function AmbientScribePane(): JSX.Element {
         </div>
 
         {/* SOAP draft */}
-        <div className="border-b border-line p-4">
+        <div
+          ref={soapSectionRef}
+          className={`border-b border-line p-4 rounded-xl transition-all duration-500 ${
+            soapFlash ? "ring-2 ring-brand-indigo/50 bg-ev-pill-bg/40" : ""
+          }`}
+        >
           <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
             Draft SOAP note
             {soapLoading && (
