@@ -23,7 +23,7 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
   const [status, setStatus] = useState<CodingStatus | null>(null);
   const [orderStatus, setOrderStatus] = useState<OrderCodingStatus | null>(null);
   const [linkage, setLinkage] = useState<LinkageStatus | null>(null);
-  const [linkChoice, setLinkChoice] = useState<Record<string, string>>({});
+
   const [busy, setBusy] = useState(false);
   const [rowBusy, setRowBusy] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -281,7 +281,6 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
               <ul className="space-y-2">
                 {linkage.orders.map((o) => {
                   const isBusy = rowBusy.has(`link-${o.service_request_id}`);
-                  const choice = linkChoice[o.service_request_id] ?? "";
                   return (
                     <li key={o.service_request_id} className="border border-line bg-white rounded-xl px-4 py-3 space-y-2">
                       <p className="text-sm text-ink" dir="ltr">
@@ -308,30 +307,26 @@ export default function CodingQueue({ patientId }: { readonly patientId: string 
                           ))}
                         </ul>
                       )}
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={choice}
-                          onChange={(e) => setLinkChoice((prev) => ({ ...prev, [o.service_request_id]: e.target.value }))}
-                          className="text-xs bg-veil border border-line rounded-lg px-2 py-1.5 text-ink-deep max-w-72"
-                          dir="ltr"
-                        >
-                          <option value="">Select documented diagnosis…</option>
-                          {linkage.available_conditions
-                            .filter((c) => !o.linked.some((l) => l.condition_id === c.condition_id))
-                            .map((c) => (
-                              <option key={c.condition_id} value={c.condition_id}>
-                                {c.condition_display ?? "Unknown"} ({formatDate(c.onset_date)})
-                              </option>
-                            ))}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => choice && void withRow(`link-${o.service_request_id}`, () => api.patients.linkDiagnosis(patientId, o.service_request_id, choice))}
-                          disabled={isBusy || !choice}
-                          className="text-xs px-2.5 py-1.5 rounded-lg bg-grad-accent hover:brightness-110 shadow-pill text-white disabled:opacity-50"
-                        >
-                          {isBusy ? "Linking…" : "Link"}
-                        </button>
+                      {/* Visible one-click chips: a closed <select> hid the
+                          documented diagnoses behind a "Select…" placeholder and
+                          testers could not find them. One click links (Remove
+                          undoes); the system still suggests nothing. */}
+                      <div className="flex flex-wrap items-center gap-1.5" dir="ltr">
+                        <span className="text-[11px] text-ink-faint">Link to:</span>
+                        {linkage.available_conditions
+                          .filter((c) => !o.linked.some((l) => l.condition_id === c.condition_id))
+                          .map((c) => (
+                            <button
+                              key={c.condition_id}
+                              type="button"
+                              onClick={() => void withRow(`link-${o.service_request_id}`, () => api.patients.linkDiagnosis(patientId, o.service_request_id, c.condition_id))}
+                              disabled={isBusy}
+                              className="text-xs px-2.5 py-1 rounded-full border border-line bg-white text-ink-deep hover:border-brand-indigo hover:text-ink disabled:opacity-50 transition-colors"
+                            >
+                              {c.condition_display ?? "Unknown"}
+                              <span className="text-ink-faint"> ({formatDate(c.onset_date)})</span>
+                            </button>
+                          ))}
                       </div>
                     </li>
                   );

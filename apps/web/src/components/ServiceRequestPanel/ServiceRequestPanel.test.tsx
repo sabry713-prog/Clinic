@@ -180,6 +180,6 @@ describe("ServiceRequestPanel — SOAP draft suggestions", () => {
     });
     expect(await screen.findByText(/matched from this encounter's SOAP draft/i)).toBeInTheDocument();
     expect(screen.getByText("Colonoscopy")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Confirm", exact: true })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Confirm$/ })).toBeInTheDocument();
   });
 });
