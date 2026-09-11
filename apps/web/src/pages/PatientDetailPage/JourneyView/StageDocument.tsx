@@ -31,7 +31,7 @@ export default function StageDocument({ patientId, onDone }: StageDocumentProps)
           Record (or play the demo transcript) — the SOAP note drafts itself as you speak. Edit any field; your edits are final and survive regeneration.
         </p>
       </header>
-      <div className="rounded-2xl border border-line overflow-hidden max-h-[480px] bg-wash">
+      <div className="rounded-2xl border border-line overflow-hidden h-[480px] bg-wash">
         <SullyProvider patientId={patientId} autoStream>
           <CompletionProbe onDone={onDone} />
           <AmbientScribePane />
