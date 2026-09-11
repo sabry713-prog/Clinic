@@ -267,6 +267,21 @@ async def soap_endpoint(body: dict[str, Any]) -> dict[str, str]:
     return await generate_soap(body)
 
 
+@app.post("/api/v1/agents/checklist", response_class=JSONResponse)
+async def checklist_endpoint(body: dict[str, Any]) -> dict[str, Any]:
+    """Extract the clinician's own stated action items from the transcript.
+
+    Extraction-only: the model lifts items the clinician explicitly said;
+    each item's supporting quote is verified verbatim against the
+    transcript before it is returned (verify_checklist_items), so a
+    hallucinated item never reaches the clinician.
+    """
+    from model_router import generate_checklist
+
+    transcript = str(body.get("transcript", "") or "")
+    return {"items": await generate_checklist(transcript)}
+
+
 def main() -> None:
     import uvicorn
 

@@ -182,4 +182,41 @@ export class AiTeamController {
 
     return result;
   }
+
+  /**
+   * Extract the clinician's own stated action items from the transcript
+   * (LLM-assisted smart-checklist proposals). Extraction-only: the model
+   * lifts items the clinician explicitly said; the orchestrator verifies
+   * each item's supporting quote verbatim against the transcript before
+   * returning it, so hallucinated items never reach the clinician.
+   */
+  @Post("checklist")
+  @ApiOperation({
+    summary:
+      "Extract the clinician's stated action items from the encounter " +
+      "transcript for smart-checklist suggestions (extraction-only, quote-verified).",
+  })
+  async extractChecklist(
+    @Param("id") patientId: string,
+    @Body() body: { transcript: string },
+    @Req() req: Request,
+  ): Promise<{ items: readonly { label: string; supporting_quote: string }[] }> {
+    const userId = getRequestingUserId(req);
+    await this.scopeService.assertPatientInScope(userId, patientId);
+
+    const result = await this.aiTeamService.extractChecklist(patientId, body.transcript);
+
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as import("@clinical-copilot/shared-types").UserId,
+      actor_role: null,
+      action: "AI_TEAM_CHECKLIST_EXTRACTED",
+      target_type: "patient",
+      target_id: patientId as import("@clinical-copilot/shared-types").PatientId,
+      outcome: "SUCCESS",
+      metadata_json: { item_count: result.items.length },
+      request_id: (req.headers["x-request-id"] as string | undefined ?? null) as import("@clinical-copilot/shared-types").RequestId | null,
+    });
+
+    return result;
+  }
 }

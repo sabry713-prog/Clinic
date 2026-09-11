@@ -8,9 +8,27 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useEffect } from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { proposeChecklist, SullyProvider, useSully } from "./SullyContext";
+import { proposeChecklist, mergeChecklistItems, SullyProvider, useSully, type ChecklistItem } from "./SullyContext";
+import { api } from "../../lib/api";
+
+vi.mock("../../lib/api", () => ({
+  api: {
+    aiTeam: {
+      generateSoap: vi.fn().mockRejectedValue(new Error("offline")),
+      extractChecklist: vi.fn().mockResolvedValue({ items: [] }),
+    },
+    patients: {
+      encounters: vi.fn().mockResolvedValue({ data: [] }),
+      observations: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+      medications: vi.fn().mockResolvedValue({ data: [] }),
+      serviceRequests: vi.fn().mockResolvedValue({ data: [] }),
+      postCare: vi.fn().mockResolvedValue(null),
+    },
+  },
+  ApiError: class ApiError extends Error {},
+}));
 import AmbientScribePane from "./panes/AmbientScribePane";
 
 describe("proposeChecklist — deterministic derivation", () => {
@@ -77,14 +95,15 @@ describe("Smart checklist auto-proposal — wiring (SullyProvider)", () => {
 
   beforeEach(() => {
     vi.stubGlobal("EventSource", FakeEventSource as unknown as typeof EventSource);
-    vi.mock("../../lib/api", () => ({
-      api: { aiTeam: { generateSoap: vi.fn().mockRejectedValue(new Error("offline")) } },
-      ApiError: class ApiError extends Error {},
-    }));
+    // clearAllMocks in the previous teardown also clears implementations
+    // registered via mockResolvedValue — re-prime the defaults each test.
+    vi.mocked(api.aiTeam.extractChecklist).mockResolvedValue({ items: [] });
   });
   afterEach(() => {
     vi.unstubAllGlobals();
-    vi.restoreAllMocks();
+    // clear calls only — restoreAllMocks would wipe the factory-level
+    // mockResolvedValue implementations the next test depends on.
+    vi.clearAllMocks();
   });
 
   it("adds suggested entries as dictation mentions them, and removal dismisses", async () => {
@@ -107,5 +126,48 @@ describe("Smart checklist auto-proposal — wiring (SullyProvider)", () => {
     });
     // the others remain
     expect(screen.getByRole("button", { name: "Remove suggested item: Review lipid profile" })).toBeInTheDocument();
+  });
+
+});
+
+describe("mergeChecklistItems — LLM-proposal merge (pure)", () => {
+  const TEMPLATE: readonly ChecklistItem[] = [
+    { id: "c1", label: "Record vital signs", done: true },
+    { id: "c4", label: "Order ECG", done: false },
+  ];
+
+  it("adds LLM-extracted items (e.g. paraphrased imaging) as suggested entries", () => {
+    const merged = mergeChecklistItems(TEMPLATE, [
+      { id: "llm-0-image-the-chest", label: "Image the chest", done: false, proposed: true },
+    ], new Set());
+    expect(merged).not.toBeNull();
+    const added = merged!.find((i) => i.label === "Image the chest");
+    expect(added?.proposed).toBe(true);
+    expect(added?.done).toBe(false);
+  });
+
+  it("tags an existing template row instead of duplicating it", () => {
+    const merged = mergeChecklistItems(TEMPLATE, [
+      { id: "llm-1-order-ecg", label: "Order ECG", done: false, proposed: true },
+    ], new Set());
+    expect(merged!.filter((i) => i.label === "Order ECG")).toHaveLength(1);
+    expect(merged!.find((i) => i.label === "Order ECG")?.proposed).toBe(true);
+  });
+
+  it("never resurrects a dismissed suggestion", () => {
+    const merged = mergeChecklistItems(TEMPLATE, [
+      { id: "llm-0-image-the-chest", label: "Image the chest", done: false, proposed: true },
+    ], new Set(["llm-0-image-the-chest"]));
+    expect(merged).toBeNull();
+  });
+
+  it("returns null when nothing changes (idempotent re-merge)", () => {
+    const once = mergeChecklistItems(TEMPLATE, [
+      { id: "llm-0-image-the-chest", label: "Image the chest", done: false, proposed: true },
+    ], new Set())!;
+    const twice = mergeChecklistItems(once, [
+      { id: "llm-0-image-the-chest", label: "Image the chest", done: false, proposed: true },
+    ], new Set());
+    expect(twice).toBeNull();
   });
 });

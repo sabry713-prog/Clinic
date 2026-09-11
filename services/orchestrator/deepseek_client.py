@@ -37,6 +37,8 @@ _SOAP_SYSTEM_PROMPT = load_prompt("soap-format-prompt.md")
 
 _AGENT_SYSTEM_PROMPT = load_prompt("agent-prose-prompt.md")
 
+_CHECKLIST_SYSTEM_PROMPT = load_prompt("checklist-extract-prompt.md")
+
 
 class DeepSeekError(RuntimeError):
     """Raised when the DeepSeek API call or response is unusable."""
@@ -142,6 +144,49 @@ def _extract_json_object(text: str) -> dict[str, Any]:
     if not isinstance(obj, dict):
         raise DeepSeekError(f"Expected a JSON object, got {type(obj).__name__}")
     return obj
+
+
+def _normalize_for_match(text: str) -> str:
+    """Lowercase and collapse whitespace so quote verification is robust
+    to line breaks and speaker prefixes, but still verbatim-anchored."""
+    return " ".join(text.lower().split())
+
+
+async def extract_checklist(
+    transcript: str,
+    *,
+    client: Optional[httpx.AsyncClient] = None,
+) -> list[dict[str, str]]:
+    """Extract the clinician's own stated action items from a transcript.
+
+    Extraction-only (CLAUDE.md Principle 1): the model lifts items the
+    clinician explicitly said; it never recommends. Every item carries a
+    supporting_quote the caller must verify against the transcript (see
+    model_router.verify_checklist_items) before showing it to a clinician.
+    """
+    if not transcript or not transcript.strip():
+        return []
+
+    raw = await _chat_completion(
+        _CHECKLIST_SYSTEM_PROMPT,
+        f"TRANSCRIPT:\n{transcript.strip()}",
+        temperature=0.0,
+        response_format={"type": "json_object"},
+        client=client,
+    )
+    obj = _extract_json_object(raw)
+    items = obj.get("items")
+    if not isinstance(items, list):
+        return []
+    cleaned: list[dict[str, str]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get("label", "") or "").strip()
+        quote = str(item.get("supporting_quote", "") or "").strip()
+        if label and quote:
+            cleaned.append({"label": label[:80], "supporting_quote": quote[:400]})
+    return cleaned
 
 
 async def generate_soap_note(

@@ -173,4 +173,20 @@ export class AiTeamService {
       transcript,
     });
   }
+
+  /**
+   * Extract the clinician's own stated action items from the transcript
+   * (LLM-assisted smart-checklist proposals). The orchestrator verifies
+   * each item's supporting quote against the transcript before returning
+   * it; items are extraction-only, never recommendations.
+   */
+  async extractChecklist(
+    patientId: string,
+    transcript: string,
+  ): Promise<{ items: readonly { label: string; supporting_quote: string }[] }> {
+    return this.postToOrchestrator("/api/v1/agents/checklist", {
+      patient_id: patientId,
+      transcript,
+    });
+  }
 }

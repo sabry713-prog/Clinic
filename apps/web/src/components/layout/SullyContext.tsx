@@ -187,6 +187,8 @@ interface SullyState {
   toggleChecklistItem: (id: string) => void;
   /** Remove a suggested checklist entry for this encounter (the deselect). */
   removeChecklistItem: (id: string) => void;
+  /** Supporting transcript quote for an LLM-derived suggestion, if any. */
+  checklistQuote: (id: string) => string | undefined;
   setActiveAgent: (agent: AgentId) => void;
   toggleDrawer: () => void;
   runAgentAction: (action: AgentAction) => void;
@@ -263,6 +265,33 @@ export function proposeChecklist(
     }
   }
   return hits;
+}
+
+/** Pure: merge suggested entries into a checklist. Returns null when
+ * nothing changed (lets React skip the re-render). Matches by label
+ * (case-insensitive) so a suggestion about an existing row tags it
+ * instead of duplicating; dismissed ids never return. */
+export function mergeChecklistItems(
+  prev: readonly ChecklistItem[],
+  suggestions: readonly ChecklistItem[],
+  dismissedIds: ReadonlySet<string>,
+): readonly ChecklistItem[] | null {
+  let changed = false;
+  const next = [...prev];
+  for (const sug of suggestions) {
+    if (dismissedIds.has(sug.id)) continue;
+    const byLabel = next.findIndex((item) => item.label.toLowerCase() === sug.label.toLowerCase());
+    if (byLabel >= 0) {
+      if (next[byLabel]!.proposed !== true) {
+        next[byLabel] = { ...next[byLabel]!, proposed: true };
+        changed = true;
+      }
+      continue;
+    }
+    next.push(sug);
+    changed = true;
+  }
+  return changed ? next : null;
 }
 
 const MOCK_CHECKLIST: readonly ChecklistItem[] = [
@@ -660,6 +689,8 @@ export function SullyProvider({
   const [soapOverride, setSoapOverride] = useState<Partial<SoapNote>>({});
   const [checklist, setChecklist] = useState<readonly ChecklistItem[]>(MOCK_CHECKLIST);
   const dismissedChecklistIds = useRef<ReadonlySet<string>>(new Set());
+  /** Supporting quotes for LLM-derived suggestions (tooltip provenance). */
+  const checklistQuotes = useRef<ReadonlyMap<string, string>>(new Map());
   const [activeAgent, setActiveAgentState] = useState<AgentId>("scribe");
   const [messages, setMessages] = useState<readonly AgentMessage[]>(INITIAL_MESSAGES);
   const [drawerOpen, setDrawerOpen] = useState(true);
@@ -951,29 +982,54 @@ export function SullyProvider({
   // tagged as suggested. They arrive unchecked (tasks to complete);
   // removal dismisses them for the encounter. Matching an existing
   // template row marks that row suggested instead of duplicating it.
+  // Two derivation layers, same merge:
+  //   1. deterministic keyword matcher — always on, works offline;
+  //   2. LLM extraction (live mode, ≥3 lines, debounced) — catches
+  //      paraphrases the catalog misses. The orchestrator verifies each
+  //      LLM item's supporting quote against the transcript before it
+  //      reaches us, so only the clinician's own stated plans arrive.
+  const mergeSuggestions = useCallback((suggestions: readonly ChecklistItem[], quotes?: ReadonlyMap<string, string>) => {
+    if (suggestions.length === 0) return;
+    setChecklist((prev) =>
+      mergeChecklistItems(prev, suggestions, dismissedChecklistIds.current) ?? prev,
+    );
+    if (quotes && quotes.size > 0) {
+      checklistQuotes.current = new Map([...checklistQuotes.current, ...quotes]);
+    }
+  }, []);
+
   useEffect(() => {
     const soapText = soapRef.current ? Object.values(soapRef.current).join(" ") : "";
     const suggestions = proposeChecklist(transcriptText, soapText);
-    if (suggestions.length === 0) return;
-    setChecklist((prev) => {
-      let changed = false;
-      const next = [...prev];
-      for (const sug of suggestions) {
-        if (dismissedChecklistIds.current.has(sug.id)) continue;
-        const byLabel = next.findIndex((item) => item.label.toLowerCase() === sug.label.toLowerCase());
-        if (byLabel >= 0) {
-          if (next[byLabel]!.proposed !== true) {
-            next[byLabel] = { ...next[byLabel]!, proposed: true };
-            changed = true;
-          }
-          continue;
-        }
-        next.push(sug);
-        changed = true;
-      }
-      return changed ? next : prev;
-    });
-  }, [transcriptText]);
+    mergeSuggestions(suggestions);
+  }, [transcriptText, mergeSuggestions]);
+
+  // LLM-assisted extraction (layer 2) — debounced like the SOAP generation
+  // so both share the transcript-growth cadence.
+  useEffect(() => {
+    if (dictationMode !== "live" || !patientId || transcriptText.split("\n").length < 3) return;
+    const timer = setTimeout(() => {
+      api.aiTeam
+        .extractChecklist(patientId, transcriptText)
+        .then((r) => {
+          const items = (r.items ?? []).map((item, i) => ({
+            id: `llm-${i}-${item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 30)}`,
+            label: item.label,
+            done: false,
+            proposed: true,
+          }));
+          const quotes = new Map((r.items ?? []).map((item, i) => {
+            const id = items[i]!.id;
+            return [id, item.supporting_quote] as const;
+          }));
+          mergeSuggestions(items, quotes);
+        })
+        .catch(() => {
+          // Keyword layer already covers the catalog; LLM layer is additive.
+        });
+    }, 2_200);
+    return () => clearTimeout(timer);
+  }, [dictationMode, patientId, transcriptText, mergeSuggestions]);
 
   useEffect(() => {
     if (dictationMode !== "live" || !patientId || transcriptText.split("\n").length < 3) return;
@@ -1125,6 +1181,11 @@ export function SullyProvider({
     setSoapOverride((prev) => ({ ...prev, [field]: value }));
   }, []);
 
+  const checklistQuote = useCallback(
+    (id: string): string | undefined => checklistQuotes.current.get(id),
+    [],
+  );
+
   const removeChecklistItem = useCallback((id: string) => {
     dismissedChecklistIds.current = new Set([...dismissedChecklistIds.current, id]);
     setChecklist((prev) => prev.filter((item) => item.id !== id));
@@ -1266,6 +1327,7 @@ export function SullyProvider({
       updateSoap,
       toggleChecklistItem,
       removeChecklistItem,
+      checklistQuote,
       setActiveAgent,
       toggleDrawer,
       runAgentAction,
