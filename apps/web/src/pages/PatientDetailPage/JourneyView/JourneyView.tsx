@@ -52,7 +52,7 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
   const stageIndex = JOURNEY_STAGES.indexOf(stage);
 
   return (
-    <div className="space-y-4" data-testid="journey-view">
+    <div className="max-w-6xl mx-auto space-y-4" data-testid="journey-view">
       {/* Identity + guardrail strip */}
       <div className="bg-white border border-line rounded-[18px] shadow-card px-5 py-3.5 flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1">
@@ -72,7 +72,10 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
 
       <div className="flex gap-4 items-start">
         {/* Stage rail */}
-        <nav aria-label="Journey stages" className="w-52 shrink-0 bg-white border border-line rounded-[18px] shadow-card p-3 space-y-1.5">
+        <nav
+          aria-label="Journey stages"
+          className="w-52 shrink-0 self-start sticky top-6 bg-white border border-line rounded-[18px] shadow-card p-3 space-y-1.5"
+        >
           {JOURNEY_STAGES.map((id, i) => {
             const isCurrent = id === stage;
             const isDone = completed.has(id);
@@ -110,7 +113,7 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
         </nav>
 
         {/* Stage panel */}
-        <div className="min-w-0 flex-1 bg-white border border-line rounded-[18px] shadow-card p-5">
+        <div className="min-w-0 flex-1 min-h-[520px] bg-white border border-line rounded-[18px] shadow-card p-6">
           {stage === "document" && <StageDocument patientId={patient.id} onDone={(d) => markCompleted("document", d)} />}
           {stage === "diagnose" && (
             <StageDiagnose patient={patient} onDone={(d) => markCompleted("diagnose", d)} onChanged={bumpRefresh} />
