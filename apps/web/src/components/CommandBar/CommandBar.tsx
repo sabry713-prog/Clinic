@@ -89,6 +89,12 @@ export default function CommandBar({ open, onClose }: CommandBarProps): JSX.Elem
       run: () => void navigate(`/patients/${activePatientId}?view=workspace&open=${card}`),
     }));
     items.push({
+      id: "journey",
+      label: "Encounter journey",
+      hint: activePatientName ?? undefined,
+      run: () => void navigate(`/patients/${activePatientId}?view=journey`),
+    });
+    items.push({
       id: "chart",
       label: t("shell.patientFile"),
       hint: activePatientName ?? undefined,

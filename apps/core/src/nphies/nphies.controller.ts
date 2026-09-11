@@ -20,6 +20,7 @@ import { ClaimReadinessService } from "./claim-readiness.service";
 import { IcdCodingService } from "./icd-coding.service";
 import { SbsCodingService } from "./sbs-coding.service";
 import { LinkageService } from "./linkage.service";
+import { LinkageVerdictsService } from "./linkage-verdicts.service";
 import { NphiesConnectorService } from "./connector.service";
 import { RejectionRiskService } from "./rejection-risk.service";
 import { PatientScopeService } from "../patient/patient-scope.service";
@@ -42,6 +43,7 @@ export class NphiesController {
     private readonly coding: IcdCodingService,
     private readonly sbsCoding: SbsCodingService,
     private readonly linkage: LinkageService,
+    private readonly linkageVerdicts: LinkageVerdictsService,
     private readonly connector: NphiesConnectorService,
     private readonly rejectionRisk: RejectionRiskService,
     private readonly preAuth: PreAuthService,
@@ -161,6 +163,21 @@ export class NphiesController {
   async linkageStatus(@Req() req: Request, @Param("id") patientId: string) {
     const result = await this.linkage.status(uid(req), patientId);
     await this.audit(req, "NPHIES_LINKAGE_VIEW", patientId, { orders: result.orders.length });
+    return result;
+  }
+
+  @Get("patients/:id/nphies/linkage/verdicts")
+  @RequirePermission("patient:read")
+  @ApiOperation({
+    summary:
+      "Payer-rulebook verdicts for candidate order→diagnosis pairs (informational — the system still does not suggest linkages)",
+  })
+  async linkageVerdictList(@Req() req: Request, @Param("id") patientId: string) {
+    const result = await this.linkageVerdicts.verdicts(uid(req), patientId);
+    await this.audit(req, "NPHIES_LINKAGE_VERDICTS_VIEW", patientId, {
+      pairs: result.pairs.length,
+      graph_available: result.graph_available,
+    });
     return result;
   }
 

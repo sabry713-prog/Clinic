@@ -51,7 +51,7 @@ function Icon({ name, className = "w-5 h-5" }: { readonly name: string; readonly
   );
 }
 
-const PATIENT_VIEWS = ["workspace", "chart", "encounter"] as const;
+const PATIENT_VIEWS = ["journey", "workspace", "chart", "encounter"] as const;
 
 interface NavItemProps {
   readonly icon: string;
@@ -120,7 +120,16 @@ export default function AppShell(): JSX.Element {
   }, []);
 
   const onPatientPage = activePatientId !== null && location.pathname === `/patients/${activePatientId}`;
-  const currentView = onPatientPage ? (searchParams.get("view") === "chart" ? "chart" : "workspace") : null;
+  const viewParam = onPatientPage ? searchParams.get("view") : null;
+  const currentView = onPatientPage
+    ? viewParam === "chart"
+      ? "chart"
+      : viewParam === "encounter"
+        ? "encounter"
+        : viewParam === "journey"
+          ? "journey"
+          : "workspace"
+    : null;
   const openCardParam = onPatientPage ? searchParams.get("open") : null;
 
   const goToView = useCallback(
@@ -215,13 +224,15 @@ export default function AppShell(): JSX.Element {
               {PATIENT_VIEWS.map((view) => (
                 <NavItem
                   key={view}
-                  icon={view === "workspace" ? "copilot" : view === "chart" ? "overview" : "encounter"}
+                  icon={view === "journey" ? "claimCheck" : view === "workspace" ? "copilot" : view === "chart" ? "overview" : "encounter"}
                   label={
-                    view === "workspace"
-                      ? t("shell.copilot")
-                      : view === "chart"
-                        ? t("shell.patientFile")
-                        : t("shell.encounter")
+                    view === "journey"
+                      ? "Journey"
+                      : view === "workspace"
+                        ? t("shell.copilot")
+                        : view === "chart"
+                          ? t("shell.patientFile")
+                          : t("shell.encounter")
                   }
                   active={currentView === view}
                   collapsed={collapsed}

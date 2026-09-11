@@ -200,6 +200,21 @@ export interface OrderLinkage {
   }[];
 }
 
+export interface LinkagePairVerdict {
+  readonly order_id: string;
+  readonly condition_id: string;
+  /** GREEN | YELLOW | RED | UNAVAILABLE — payer rulebook only, never clinical. */
+  readonly status: string;
+  readonly pre_auth_required: boolean | null;
+}
+
+export interface LinkageVerdicts {
+  readonly patient_id: string;
+  readonly pairs: readonly LinkagePairVerdict[];
+  readonly graph_available: boolean;
+  readonly disclaimer: string;
+}
+
 export interface LinkageStatus {
   readonly patient_id: string;
   readonly orders: readonly OrderLinkage[];
@@ -1279,6 +1294,11 @@ export const api = {
 
     linkageStatus: (patientId: string) =>
       request<LinkageStatus>(`/api/v1/patients/${patientId}/nphies/linkage`),
+
+    /** Payer-rulebook verdicts for candidate order→diagnosis pairs —
+     * informational only; the system never suggests the clinician's link. */
+    linkageVerdicts: (patientId: string) =>
+      request<LinkageVerdicts>(`/api/v1/patients/${patientId}/nphies/linkage/verdicts`),
 
     linkDiagnosis: (patientId: string, orderId: string, conditionId: string) =>
       request<{ ok: boolean }>(
