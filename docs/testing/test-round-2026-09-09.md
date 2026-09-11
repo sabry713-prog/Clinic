@@ -116,3 +116,25 @@ Re-test after the fix: as `physician1`, open `/admin/audit` → expect the
 access-denied card (not the audit page). As `admin1` → the page and Verify
 work as recorded in section F. Guard covered by
 `RequireRoles.test.tsx` (allow / deny / no-user).
+
+
+## G. Encounter Journey wizard — acceptance run (2026-09-11, live on MRN-010)
+
+The new one-screen wizard (`?view=journey`, sidebar "Journey") completed
+Ahmad Fakename-Al-Bishi end-to-end after the record already carried his
+orders; clicks from finished note to submitted claim:
+
+1. Stage 1 Document — demo playback recorded; SOAP auto-filled ✓
+2. Stage 2 Diagnose — "On file: 8 documented" shown; nothing to add ✓
+3. Stage 3 Order — candidates matched, ALL already on record → "nothing
+   new to create" ✓
+4. Stage 4 Code & link — ONE click "Approve selected codes (4)" → all
+   SBS confirmed ✓; 5 single taps linked each order to the clinician's
+   chosen diagnosis (chips carry payer-rulebook verdict dots) ✓
+5. Stage 5 Submit — eligibility auto-ran on entry (eligible) ✓;
+   readiness live ✓; ONE click "Submit claim" → accepted (stub payer) ✓
+
+Total explicit approvals: 7 (1 code batch + 5 link taps + 1 submit).
+Screenshots: docs/design/shots/wizard-1…6.png. Governance: linkage is
+never pre-selected (LinkageService boundary respected — verdicts inform,
+the clinician associates).

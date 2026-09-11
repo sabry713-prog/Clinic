@@ -12,8 +12,9 @@ import { useCopilot } from "../../context/CopilotContext";
 import PatientWorkspace from "./PatientWorkspace";
 import PatientFilePage from "./PatientFilePage";
 import SullyShell from "../../components/layout/SullyShell";
+import JourneyView from "./JourneyView/JourneyView";
 
-type ViewId = "workspace" | "chart" | "encounter";
+type ViewId = "workspace" | "chart" | "encounter" | "journey";
 type CardId = "qa" | "diagnosis" | "narrative" | "handoff" | "draft" | "orders" | "claims" | "search" | "interpreter" | "ambient";
 const CARD_IDS: readonly CardId[] = ["qa", "diagnosis", "narrative", "handoff", "draft", "orders", "claims", "search", "interpreter", "ambient"];
 
@@ -34,7 +35,10 @@ export default function PatientDetailPage(): JSX.Element {
   const patientId = id ?? "";
   const viewParam = searchParams.get("view");
   const view: ViewId =
-    viewParam === "chart" ? "chart" : viewParam === "encounter" ? "encounter" : "workspace";
+    viewParam === "chart" ? "chart"
+      : viewParam === "encounter" ? "encounter"
+      : viewParam === "journey" ? "journey"
+      : "workspace";
   const openParam = searchParams.get("open");
   const initialOpen: readonly CardId[] = openParam && (CARD_IDS as readonly string[]).includes(openParam)
     ? [openParam as CardId]
@@ -118,6 +122,10 @@ export default function PatientDetailPage(): JSX.Element {
 
   if (!patient) return <></>;
 
+  // The journey wizard shares the document-style page chrome (it is a
+  // guided flow, not a fixed-geometry shell).
+  const journeyView = view === "journey";
+
   // The encounter shell is a full-height 3-pane workspace (mockup §B): it
   // fills the main area instead of scrolling inside the content column, so
   // its wrapper swaps the padded/max-width page chrome for a definite-height
@@ -159,6 +167,11 @@ export default function PatientDetailPage(): JSX.Element {
           />
         )}
         {view === "chart" && <PatientFilePage patient={patient} />}
+        {view === "journey" && (
+          <div className={journeyView ? "" : ""}>
+            <JourneyView patient={patient} encounterId={activeEncounterId} />
+          </div>
+        )}
         {view === "encounter" && (
           <div className="min-h-0 flex-1 px-3 pb-3">
             <SullyShell
