@@ -45,7 +45,7 @@ function Waveform({ active }: { readonly active: boolean }): JSX.Element {
 export default function AmbientScribePane(): JSX.Element {
   const {
     recording, elapsedSeconds, transcript, soap, soapError, soapLoading, checklist,
-    toggleRecording, updateSoap, toggleChecklistItem, removeChecklistItem,
+    toggleRecording, updateSoap, toggleChecklistItem, removeChecklistItem, checklistQuote,
     dictationMode, patientId, transcribing, dictationError,
     setDictationMode, appendTranscriptLine, setTranscribing, setDictationError,
   } = useSully();
@@ -304,7 +304,9 @@ export default function AmbientScribePane(): JSX.Element {
                     type="button"
                     onClick={() => removeChecklistItem(item.id)}
                     aria-label={`Remove suggested item: ${item.label}`}
-                    title="Remove this suggested item"
+                    title={checklistQuote(item.id)
+                      ? `From your dictation: “${checklistQuote(item.id)}” — click × to remove`
+                      : "Remove this suggested item"}
                     className="mt-0.5 shrink-0 rounded-full border border-line bg-white px-1.5 text-[10px] text-ink-soft hover:border-status-rej-line hover:text-status-rej transition-colors"
                   >
                     ×

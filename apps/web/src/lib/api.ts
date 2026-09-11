@@ -1363,6 +1363,14 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ transcript }),
       }),
+
+    /** LLM-assisted smart-checklist proposals — extraction-only: items the
+     * clinician stated, each verified against the transcript server-side. */
+    extractChecklist: (patientId: string, transcript: string) =>
+      request<{ items: readonly { label: string; supporting_quote: string }[] }>(
+        `/api/v1/patients/${patientId}/ai-team/checklist`,
+        { method: "POST", body: JSON.stringify({ transcript }) },
+      ),
   },
 
   drafts: {

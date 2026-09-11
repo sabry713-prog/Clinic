@@ -194,3 +194,47 @@ async def generate_soap_note(
     if provider == _LOCAL:
         return await _soap_via_local(transcript, patient_id=patient_id)
     return await deepseek_client.generate_soap_note(transcript, client=client)
+
+
+def _normalize_for_match(text: str) -> str:
+    return " ".join(text.lower().split())
+
+
+def verify_checklist_items(
+    transcript: str,
+    items: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    """Deterministic gate on LLM-extracted checklist proposals.
+
+    An item survives only if its supporting_quote is actually present in
+    the transcript (whitespace/case-insensitive, still verbatim-anchored).
+    A hallucinated or paraphrased quote drops the whole item — the model
+    proposing checklist content is never trusted on its own word.
+    """
+    haystack = _normalize_for_match(transcript)
+    verified: list[dict[str, str]] = []
+    for item in items:
+        quote = _normalize_for_match(item.get("supporting_quote", ""))
+        if quote and quote in haystack:
+            verified.append(item)
+    return verified
+
+
+async def generate_checklist(
+    transcript: str,
+    *,
+    patient_id: Optional[str] = None,
+    client: Optional[httpx.AsyncClient] = None,
+) -> list[dict[str, str]]:
+    """Extract the clinician's own stated action items (extraction-only).
+
+    Returns items verified against the transcript; stub mode returns an
+    empty list (the web keyword matcher is the offline fallback).
+    """
+    if not transcript or not transcript.strip():
+        return []
+    provider = resolve_provider()
+    if provider == _STUB:
+        return []
+    items = await deepseek_client.extract_checklist(transcript, client=client)
+    return verify_checklist_items(transcript, items)
