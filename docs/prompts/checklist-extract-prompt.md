@@ -1,7 +1,7 @@
 # Checklist Extraction Prompt Template
 
 **Version:** v1.0
-**Status:** Proposed — pending CTO + Clinical Advisor sign-off (new generation path; CLAUDE.md §6)
+**Status:** Authoritative — signed off by the product owner (CTO), 2026-09-11; Clinical Advisor + Regulatory Consultant countersignatures pending per CLAUDE.md §6
 
 ## Purpose
 
@@ -27,3 +27,4 @@ You are a medical scribe assistant. You are given a raw ambient consultation tra
 | Version | Date | Change |
 |---|---|---|
 | v1.0 | 2026-09-11 | Initial extraction-only template for LLM-assisted smart-checklist proposals. |
+| v1.0 | 2026-09-11 | Status → Authoritative: signed off by the product owner (CTO) in session. |
