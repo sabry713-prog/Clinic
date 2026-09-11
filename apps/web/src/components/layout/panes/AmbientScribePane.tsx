@@ -45,7 +45,7 @@ function Waveform({ active }: { readonly active: boolean }): JSX.Element {
 export default function AmbientScribePane(): JSX.Element {
   const {
     recording, elapsedSeconds, transcript, soap, soapError, soapLoading, checklist,
-    toggleRecording, updateSoap, toggleChecklistItem,
+    toggleRecording, updateSoap, toggleChecklistItem, removeChecklistItem,
     dictationMode, patientId, transcribing, dictationError,
     setDictationMode, appendTranscriptLine, setTranscribing, setDictationError,
   } = useSully();
@@ -275,10 +275,15 @@ export default function AmbientScribePane(): JSX.Element {
               {doneCount}/{checklist.length}
             </span>
           </h2>
+          {checklist.some((item) => item.proposed) && (
+            <p className="mb-1.5 text-[10px] text-ink-faint" data-testid="checklist-proposal-note">
+              · suggested from your dictation — check when done, × to remove
+            </p>
+          )}
           <ul className="space-y-1.5">
             {checklist.map((item) => (
-              <li key={item.id}>
-                <label className="flex cursor-pointer items-start gap-2 text-xs">
+              <li key={item.id} className="flex items-start gap-2">
+                <label className="flex cursor-pointer items-start gap-2 text-xs min-w-0 flex-1">
                   <input
                     type="checkbox"
                     checked={item.done}
@@ -287,8 +292,24 @@ export default function AmbientScribePane(): JSX.Element {
                   />
                   <span className={item.done ? "text-ink-soft line-through" : "text-ink-deep"}>
                     {item.label}
+                    {item.proposed && (
+                      <span className="ms-1.5 rounded-full border border-ev-pill-line bg-ev-pill-bg px-1.5 py-0.5 text-[9px] font-semibold text-ev-pill" data-testid="checklist-suggested-tag">
+                        suggested
+                      </span>
+                    )}
                   </span>
                 </label>
+                {item.proposed && (
+                  <button
+                    type="button"
+                    onClick={() => removeChecklistItem(item.id)}
+                    aria-label={`Remove suggested item: ${item.label}`}
+                    title="Remove this suggested item"
+                    className="mt-0.5 shrink-0 rounded-full border border-line bg-white px-1.5 text-[10px] text-ink-soft hover:border-status-rej-line hover:text-status-rej transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
               </li>
             ))}
           </ul>

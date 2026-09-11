@@ -54,6 +54,9 @@ export interface ChecklistItem {
   readonly id: string;
   readonly label: string;
   readonly done: boolean;
+  /** True when auto-derived from the clinician's own dictation (the
+   * Sully-style suggestion). Removable — removal is the deselect. */
+  readonly proposed?: boolean;
 }
 
 export type OrderCategory = "medication" | "lab" | "imaging" | "procedure";
@@ -182,6 +185,8 @@ interface SullyState {
   toggleRecording: () => void;
   updateSoap: (field: SoapField, value: string) => void;
   toggleChecklistItem: (id: string) => void;
+  /** Remove a suggested checklist entry for this encounter (the deselect). */
+  removeChecklistItem: (id: string) => void;
   setActiveAgent: (agent: AgentId) => void;
   toggleDrawer: () => void;
   runAgentAction: (action: AgentAction) => void;
@@ -228,6 +233,37 @@ const SOAP_STAGES: readonly SoapNote[] = [
     plan: "ECG. Review lipid profile. Follow up in one week.",
   },
 ];
+
+/** Checklist suggestion catalog — deterministic keyword matches over the
+ * clinician's own words. An item is only ever suggested because the
+ * clinician (or the SOAP drafted from their words) mentioned it — the
+ * system recommends nothing beyond their own stated plan. */
+const CHECKLIST_CATALOG: readonly { keywords: readonly string[]; id: string; label: string }[] = [
+  { id: "c-vitals", keywords: ["vital signs", "blood pressure", "heart rate", "saturation"], label: "Record vital signs" },
+  { id: "c-ecg", keywords: ["ecg", "electrocardiogram", "ekg"], label: "Order ECG" },
+  { id: "c-lipid", keywords: ["lipid"], label: "Review lipid profile" },
+  { id: "c-followup", keywords: ["follow up", "follow-up", "followup"], label: "Arrange follow-up" },
+  { id: "c-labs", keywords: ["blood test", "blood work", "laboratory panel"], label: "Review lab results" },
+  { id: "c-xray", keywords: ["x-ray", "xray", "radiograph"], label: "Order imaging" },
+  { id: "c-referral", keywords: ["referral", "refer to"], label: "Arrange referral" },
+  { id: "c-meds", keywords: ["medication", "medications"], label: "Review medications" },
+];
+
+/** Pure: derive suggested checklist entries from encounter text. */
+export function proposeChecklist(
+  transcriptText: string,
+  soapText: string,
+): readonly ChecklistItem[] {
+  const haystack = `${transcriptText} ${soapText}`.toLowerCase();
+  if (haystack.trim().length === 0) return [];
+  const hits: ChecklistItem[] = [];
+  for (const entry of CHECKLIST_CATALOG) {
+    if (entry.keywords.some((k) => haystack.includes(k))) {
+      hits.push({ id: entry.id, label: entry.label, done: false, proposed: true });
+    }
+  }
+  return hits;
+}
 
 const MOCK_CHECKLIST: readonly ChecklistItem[] = [
   { id: "c1", label: "Document onset and duration", done: true },
@@ -623,6 +659,7 @@ export function SullyProvider({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [soapOverride, setSoapOverride] = useState<Partial<SoapNote>>({});
   const [checklist, setChecklist] = useState<readonly ChecklistItem[]>(MOCK_CHECKLIST);
+  const dismissedChecklistIds = useRef<ReadonlySet<string>>(new Set());
   const [activeAgent, setActiveAgentState] = useState<AgentId>("scribe");
   const [messages, setMessages] = useState<readonly AgentMessage[]>(INITIAL_MESSAGES);
   const [drawerOpen, setDrawerOpen] = useState(true);
@@ -909,6 +946,35 @@ export function SullyProvider({
     [transcript],
   );
 
+  // Smart checklist auto-proposal (Sully-style): entries the clinician
+  // actually mentioned in dictation join the checklist automatically,
+  // tagged as suggested. They arrive unchecked (tasks to complete);
+  // removal dismisses them for the encounter. Matching an existing
+  // template row marks that row suggested instead of duplicating it.
+  useEffect(() => {
+    const soapText = soapRef.current ? Object.values(soapRef.current).join(" ") : "";
+    const suggestions = proposeChecklist(transcriptText, soapText);
+    if (suggestions.length === 0) return;
+    setChecklist((prev) => {
+      let changed = false;
+      const next = [...prev];
+      for (const sug of suggestions) {
+        if (dismissedChecklistIds.current.has(sug.id)) continue;
+        const byLabel = next.findIndex((item) => item.label.toLowerCase() === sug.label.toLowerCase());
+        if (byLabel >= 0) {
+          if (next[byLabel]!.proposed !== true) {
+            next[byLabel] = { ...next[byLabel]!, proposed: true };
+            changed = true;
+          }
+          continue;
+        }
+        next.push(sug);
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [transcriptText]);
+
   useEffect(() => {
     if (dictationMode !== "live" || !patientId || transcriptText.split("\n").length < 3) return;
     const timer = setTimeout(() => {
@@ -1059,6 +1125,11 @@ export function SullyProvider({
     setSoapOverride((prev) => ({ ...prev, [field]: value }));
   }, []);
 
+  const removeChecklistItem = useCallback((id: string) => {
+    dismissedChecklistIds.current = new Set([...dismissedChecklistIds.current, id]);
+    setChecklist((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
   const toggleChecklistItem = useCallback((id: string) => {
     setChecklist((items) =>
       items.map((i) => (i.id === id ? { ...i, done: !i.done } : i)),
@@ -1194,6 +1265,7 @@ export function SullyProvider({
       toggleRecording,
       updateSoap,
       toggleChecklistItem,
+      removeChecklistItem,
       setActiveAgent,
       toggleDrawer,
       runAgentAction,
