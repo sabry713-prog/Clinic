@@ -106,12 +106,18 @@ async def pharmacist_agent(
     if interactions or dose_safety:
         prose = await format_agent_prose(facts, agent_role="Pharmacist", patient_id=patient_id)
 
+    # C05 (readiness assessment): propagate the engine's own completeness
+    # signals -- overall_defer, evidence_gaps, and necessity coverage --
+    # alongside the findings. Absence of findings must never be confused
+    # with evaluated safety; the defer flag says why the engine held back.
     return {
         "agent": "pharmacist",
         "patient_id": patient_id,
         "prose": prose,
         "findings": facts,
         "evidence_chains": _collect_evidence_chains(interactions, dose_safety),
+        "overall_defer": evaluation.get("overall_defer", False),
+        "evidence_gaps": evaluation.get("evidence_gaps", []),
     }
 
 
@@ -141,6 +147,9 @@ async def consultant_agent(
         "prose": prose,
         "findings": facts,
         "evidence_chains": _collect_evidence_chains(interactions, dose_safety, necessity),
+        # C05: propagate the engine's completeness signals.
+        "overall_defer": evaluation.get("overall_defer", False),
+        "evidence_gaps": evaluation.get("evidence_gaps", []),
     }
 
 

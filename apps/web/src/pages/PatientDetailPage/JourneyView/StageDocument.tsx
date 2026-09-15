@@ -2,15 +2,31 @@
  * Stage 1 — Document. Record (live mic or demo playback); the SOAP note
  * drafts itself from the transcript (existing debounced generation) and
  * the clinician edits the final word. Completion = any note content.
+ *
+ * C10 (readiness assessment): the reviewed note now persists to the
+ * record. When the SOAP has content, a "Save note to record" button
+ * creates a SOAP draft via the existing drafts API — the note becomes
+ * reachable from later journey stages and the patient's record, not
+ * just the browser session.
  */
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SullyProvider, useSully } from "../../../components/layout/SullyContext";
 import AmbientScribePane from "../../../components/layout/panes/AmbientScribePane";
+import { api, type DocumentDraft, ApiError } from "../../../lib/api";
 
 interface StageDocumentProps {
   readonly patientId: string;
   readonly onDone: (done: boolean) => void;
+}
+
+function soapToText(soap: { subjective: string; objective: string; assessment: string; plan: string }): string {
+  return [
+    soap.subjective.trim() && `S: ${soap.subjective.trim()}`,
+    soap.objective.trim() && `O: ${soap.objective.trim()}`,
+    soap.assessment.trim() && `A: ${soap.assessment.trim()}`,
+    soap.plan.trim() && `P: ${soap.plan.trim()}`,
+  ].filter(Boolean).join("\n\n");
 }
 
 function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void }): null {
@@ -20,6 +36,68 @@ function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void 
     onDone(hasNote);
   }, [hasNote, onDone]);
   return null;
+}
+
+function SaveToRecord({ patientId }: { readonly patientId: string }): JSX.Element | null {
+  const { soap, transcript } = useSully();
+  const [saved, setSaved] = useState<DocumentDraft | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const hasNote = Boolean(soap.subjective.trim() || soap.objective.trim() || soap.assessment.trim() || soap.plan.trim());
+
+  const save = useCallback((): void => {
+    if (!hasNote || busy) return;
+    setBusy(true); setError(null);
+    const noteText = soapToText(soap);
+    const transcriptText = transcript.map((l) => `${l.speaker}: ${l.text}`).join("\n");
+    api.patients
+      .createDraft(patientId, "encounter_note", "en", "general", {
+        transcript: transcriptText,
+        sections: [
+          { key: "subjective", text: soap.subjective },
+          { key: "objective", text: soap.objective },
+          { key: "assessment", text: soap.assessment },
+          { key: "plan", text: soap.plan },
+        ].filter((s) => s.text.trim().length > 0),
+      })
+      .then((draft) => {
+        setSaved(draft);
+      })
+      .catch((e) => setError(e instanceof ApiError ? e.message : "Failed to save note"))
+      .finally(() => setBusy(false));
+  }, [patientId, soap, transcript, hasNote, busy]);
+
+  if (!hasNote) return null;
+
+  if (saved) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-status-ok-line bg-status-ok-bg px-3 py-2" data-testid="note-saved">
+        <span className="text-sm font-semibold text-status-ok">✓ Note saved to record</span>
+        <span className="text-xs text-ink-soft">
+          Draft {saved.id.slice(0, 8)} — review and sign from the Drafts card.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={save}
+        disabled={busy}
+        data-testid="save-note-to-record"
+        className="px-4 py-2 rounded-full bg-grad-accent text-white text-sm font-semibold shadow-pill hover:brightness-110 disabled:opacity-50 transition-all"
+      >
+        {busy ? "Saving…" : "Save note to record"}
+      </button>
+      <span className="text-[11px] text-ink-faint">
+        Creates a draft in the patient&apos;s record — review and sign before it becomes clinical documentation.
+      </span>
+      {error && <span className="text-xs text-status-rej" role="alert">{error}</span>}
+    </div>
+  );
 }
 
 export default function StageDocument({ patientId, onDone }: StageDocumentProps): JSX.Element {
@@ -37,6 +115,9 @@ export default function StageDocument({ patientId, onDone }: StageDocumentProps)
           <AmbientScribePane />
         </SullyProvider>
       </div>
+      <SullyProvider patientId={patientId} autoStream={false}>
+        <SaveToRecord patientId={patientId} />
+      </SullyProvider>
     </section>
   );
 }

@@ -36,6 +36,9 @@ export interface PharmacistResult {
     readonly dose_safety: readonly unknown[];
   };
   readonly evidence_chains: readonly EvidenceChain[];
+  /** C05: NSCRE's completeness signals — true when the engine held back. */
+  readonly overall_defer?: boolean;
+  readonly evidence_gaps?: readonly string[];
 }
 
 export interface ConsultantResult {
@@ -48,6 +51,9 @@ export interface ConsultantResult {
     readonly necessity: readonly unknown[];
   };
   readonly evidence_chains: readonly EvidenceChain[];
+  /** C05: NSCRE's completeness signals. */
+  readonly overall_defer?: boolean;
+  readonly evidence_gaps?: readonly string[];
 }
 
 export type NphiesStatus = "GREEN" | "YELLOW" | "RED";

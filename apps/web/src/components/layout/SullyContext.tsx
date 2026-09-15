@@ -829,12 +829,17 @@ export function SullyProvider({
       ...findingsFrom(pharmacist.findings.drug_interactions, "ddi"),
       ...findingsFrom(pharmacist.findings.dose_safety, "dose"),
     ];
+    // C05: absence of findings is NOT evaluated safety — the defer signal
+    // from the engine states why it held back (evidence gaps).
+    const gapNote = pharmacist.overall_defer === true
+      ? ` Evaluation deferred: ${pharmacist.evidence_gaps?.length ?? 0} evidence gap(s) — missing data, not a clean result.`
+      : "";
     setMessages((prev) => [
       ...prev,
       {
         id: `m-live-pharmacist-${messageSeq.current}`,
         from: "pharmacist",
-        text: pharmacist.prose || "No drug-interaction or dose-safety findings.",
+        text: pharmacist.prose || `No drug-interaction or dose-safety findings.${gapNote}`,
         at: "now",
         ...(pharmacist.evidence_chains[0] ? { evidenceChain: pharmacist.evidence_chains[0] } : {}),
         ...(findings.length > 0 ? { findings } : {}),
@@ -850,12 +855,15 @@ export function SullyProvider({
       ...findingsFrom(consultant.findings.dose_safety, "dose"),
       ...findingsFrom(consultant.findings.necessity, "necessity"),
     ];
+    const gapNote = consultant.overall_defer === true
+      ? ` Evaluation deferred: ${consultant.evidence_gaps?.length ?? 0} evidence gap(s) — missing data, not a clean result.`
+      : "";
     setMessages((prev) => [
       ...prev,
       {
         id: `m-live-consultant-${messageSeq.current}`,
         from: "consultant",
-        text: consultant.prose || "No additional clinical considerations.",
+        text: consultant.prose || `No additional clinical considerations.${gapNote}`,
         at: "now",
         ...(consultant.evidence_chains[0] ? { evidenceChain: consultant.evidence_chains[0] } : {}),
         ...(findings.length > 0 ? { findings } : {}),
