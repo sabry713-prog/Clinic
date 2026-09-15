@@ -109,13 +109,15 @@ export default function StageDocument({ patientId, onDone }: StageDocumentProps)
           Record (or play the demo transcript) — the SOAP note drafts itself as you speak. Edit any field; your edits are final and survive regeneration.
         </p>
       </header>
-      <div className="rounded-2xl border border-line overflow-hidden h-[480px] bg-wash">
-        <SullyProvider patientId={patientId} autoStream>
+      {/* ONE SullyProvider wraps everything: the scribe pane, the
+          completion probe, AND the save-to-record button all share the
+          same SOAP/transcript state. A second provider here would create
+          an isolated context whose SOAP is always empty. */}
+      <SullyProvider patientId={patientId} autoStream>
+        <div className="rounded-2xl border border-line overflow-hidden h-[480px] bg-wash">
           <CompletionProbe onDone={onDone} />
           <AmbientScribePane />
-        </SullyProvider>
-      </div>
-      <SullyProvider patientId={patientId} autoStream={false}>
+        </div>
         <SaveToRecord patientId={patientId} />
       </SullyProvider>
     </section>
