@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: app
       POSTGRES_DB: clinical_copilot
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -30,7 +30,7 @@ services:
       # redirect URLs use the public https host (remote testing during build).
       KC_PROXY_HEADERS: xforwarded
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - ./infra/keycloak/realm-dev.json:/opt/keycloak/data/import/realm-dev.json:ro
       - keycloak_data:/opt/keycloak/data
@@ -52,8 +52,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -68,9 +68,9 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "4317:4317"    # OTLP gRPC
-      - "4318:4318"    # OTLP HTTP
+      - "127.0.0.1:16686:16686"  # Jaeger UI
+      - "127.0.0.1:4317:4317"    # OTLP gRPC
+      - "127.0.0.1:4318:4318"    # OTLP HTTP
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
       interval: 5s
@@ -81,8 +81,8 @@ services:
     image: axllent/mailpit:latest
     container_name: cc-mailpit
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - "127.0.0.1:1025:1025"  # SMTP
+      - "127.0.0.1:8025:8025"  # Web UI
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025/"]
       interval: 5s
@@ -97,8 +97,8 @@ services:
       NEO4J_AUTH: neo4j/veritas-dev-password
       NEO4J_server_memory_heap_max__size: 512M
     ports:
-      - "7474:7474"  # HTTP browser
-      - "7687:7687"  # Bolt
+      - "127.0.0.1:7474:7474"  # HTTP browser
+      - "127.0.0.1:7687:7687"  # Bolt
     volumes:
       - neo4j_data:/data
     healthcheck:

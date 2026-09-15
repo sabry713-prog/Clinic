@@ -40,9 +40,15 @@ export class DevSessionController {
     @Body() body: DevSessionDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ session_id: string }> {
+    // C07 (readiness assessment): this endpoint mints a fully-authorized
+    // session from a known subject with zero authentication. It now
+    // requires an explicit opt-in flag (DEV_SESSION_ENABLED=true) in
+    // addition to not being production — a demo build that forgets to
+    // set the flag fails closed instead of minting sessions silently.
     const env = this.config.get<string>("NODE_ENV") ?? "development";
-    if (env === "production") {
-      throw new ForbiddenException("Dev session endpoint disabled in production");
+    const explicitlyEnabled = this.config.get<string>("DEV_SESSION_ENABLED") === "true";
+    if (env === "production" || !explicitlyEnabled) {
+      throw new ForbiddenException("Dev session endpoint disabled (set DEV_SESSION_ENABLED=true in development)");
     }
 
     // Look up the user by external_subject

@@ -692,14 +692,20 @@ export function SullyProvider({
   /** Supporting quotes for LLM-derived suggestions (tooltip provenance). */
   const checklistQuotes = useRef<ReadonlyMap<string, string>>(new Map());
   const [activeAgent, setActiveAgentState] = useState<AgentId>("scribe");
-  const [messages, setMessages] = useState<readonly AgentMessage[]>(INITIAL_MESSAGES);
+  // C02 (readiness assessment): synthetic and live datasets are mutually
+  // exclusive. With a patient routed in, the stream starts empty and fills
+  // only with real agent results; mock orders/messages/timeline appear only
+  // in the offline demo (patientId == null), never as a fallback for a real
+  // patient whose data is loading, empty, or failed.
+  const [messages, setMessages] = useState<readonly AgentMessage[]>(
+    patientId ? [] : INITIAL_MESSAGES,
+  );
   const [drawerOpen, setDrawerOpen] = useState(true);
-  const [orders, setOrders] = useState<readonly OrderLine[]>(MOCK_ORDERS);
+  const [orders, setOrders] = useState<readonly OrderLine[]>(
+    patientId ? [] : MOCK_ORDERS,
+  );
   const messageSeq = useRef(0);
 
-  // Audit H-3: real dictation when a patient is routed in, canned playback
-  // otherwise. Defaulting to `demo` without a patientId keeps the offline
-  // demo working exactly as before rather than showing a mic that cannot work.
   const [dictationMode, setDictationMode] = useState<DictationMode>(patientId ? "live" : "demo");
   const [liveTranscript, setLiveTranscript] = useState<readonly TranscriptLine[]>([]);
   const [transcribing, setTranscribing] = useState(false);
@@ -714,7 +720,7 @@ export function SullyProvider({
   const [liveHandoffs, setLiveHandoffs] = useState<readonly AgentHandoff[]>([]);
   const seenHandoffs = useRef<Set<string>>(new Set());
   const soapRef = useRef<SoapNote>(EMPTY_SOAP);
-  const ordersRef = useRef<readonly OrderLine[]>(MOCK_ORDERS);
+  const ordersRef = useRef<readonly OrderLine[]>(patientId ? [] : MOCK_ORDERS);
 
   // Live SOAP note from the orchestrator's DeepSeek formatting engine.
   // Null until the first successful generation. Stays null in demo mode.
@@ -1301,7 +1307,10 @@ export function SullyProvider({
       soapError,
       soapLoading,
       checklist,
-      timeline: patientId && liveTimeline.length > 0 ? liveTimeline : MOCK_TIMELINE,
+      // C02: with a patient routed in, the timeline IS the live data --
+      // empty while loading, honestly empty when the record has none.
+      // MOCK_TIMELINE renders only in the offline demo (no patientId).
+      timeline: patientId ? liveTimeline : MOCK_TIMELINE,
       timelineLoading,
       timelineError,
       orders,

@@ -119,6 +119,17 @@ export default function TimelinePane(): JSX.Element {
             );
           })}
         </ol>
+        {!timelineLoading && !timelineError && timeline.length === 0 && (
+          <div
+            className="rounded-xl border border-dashed border-line-strong bg-mist px-4 py-3 text-center"
+            data-testid="timeline-empty-live"
+          >
+            <p className="text-xs font-semibold text-ink-deep">No documented history for this patient yet</p>
+            <p className="mt-0.5 text-[11px] text-ink-soft">
+              The timeline fills from the patient&apos;s record — nothing is simulated.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Order entry */}
