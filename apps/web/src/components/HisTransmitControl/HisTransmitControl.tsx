@@ -83,6 +83,9 @@ export default function HisTransmitControl({
       <span className="text-xs text-ink-soft bg-veil rounded px-1.5 py-0.5">
         {STATUS_LABEL[transmission.status] ?? transmission.status}
       </span>
+      <span className="text-[10px] text-demo-text bg-demo-chip border border-demo-line rounded-full px-1.5 py-0.5" title="Simulated hospital-system connector — no real HIS endpoint attached">
+        simulated
+      </span>
       {transmission.backend_reason_text && (
         <button type="button" onClick={() => setShowReason((v) => !v)} className="text-xs text-ink-soft hover:text-ink-deep underline">
           {showReason ? "Hide reason" : "Review reason"}
