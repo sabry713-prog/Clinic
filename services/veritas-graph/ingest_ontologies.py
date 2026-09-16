@@ -45,19 +45,41 @@ CONSTRAINTS = [
     "CREATE CONSTRAINT atc_class_code IF NOT EXISTS FOR (a:AtcClass) REQUIRE a.code IS UNIQUE",
 ]
 
-MERGE_DIAGNOSIS = """
-MERGE (d:Diagnosis {code: $code})
-SET d.display = $display, d.chapter = $chapter, d.system = 'ICD-10-AM'
+# M06 (readiness assessment): lineage metadata stamped on every ingested
+# node — when it was ingested, from which reference release. Freshness
+# and reproducibility are now queryable directly from the graph.
+import json as _json
+from datetime import datetime, timezone as _tz
+from pathlib import Path as _Path
+
+def _release_metadata() -> dict[str, str]:
+    """Read the reference-release manifest for lineage stamping."""
+    manifest_path = _Path(__file__).resolve().parent.parent.parent / "data" / "reference-release-manifest.json"
+    try:
+        manifest = _json.loads(manifest_path.read_text(encoding="utf-8"))
+        return {
+            "release_version": manifest.get("version", "unknown"),
+            "ingested_at": datetime.now(_tz.utc).isoformat(),
+        }
+    except Exception:
+        return {"release_version": "unknown", "ingested_at": datetime.now(_tz.utc).isoformat()}
+
+_LINEAGE = _release_metadata()
+_LINEAGE_SET = f", n.release_version = $release_version, n.ingested_at = $ingested_at"
+
+MERGE_DIAGNOSIS = f"""
+MERGE (d:Diagnosis {{code: $code}})
+SET d.display = $display, d.chapter = $chapter, d.system = 'ICD-10-AM'{_LINEAGE_SET.replace('n.', 'd.')}
 """
 
-MERGE_SERVICE = """
-MERGE (s:Service {code: $code})
-SET s.display = $display, s.category = $category, s.system = $system
+MERGE_SERVICE = f"""
+MERGE (s:Service {{code: $code}})
+SET s.display = $display, s.category = $category, s.system = $system{_LINEAGE_SET.replace('n.', 's.')}
 """
 
-MERGE_MEDICATION = """
-MERGE (m:Medication {code: $code})
-SET m.display = $display, m.form = $form, m.atc = $atc, m.system = 'SFDA'
+MERGE_MEDICATION = f"""
+MERGE (m:Medication {{code: $code}})
+SET m.display = $display, m.form = $form, m.atc = $atc, m.system = 'SFDA'{_LINEAGE_SET.replace('n.', 'm.')}
 """
 
 # ATC class hierarchy — first 3 characters of the ATC code form the
@@ -136,6 +158,7 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
             code=node["code"].strip().upper(),
             display=node.get("display", ""),
             chapter=node.get("chapter", ""),
+            **_LINEAGE,
         )
         counts["diagnoses"] += 1
 
@@ -146,6 +169,7 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
             display=node.get("display", ""),
             category=node.get("category", ""),
             system=node.get("system", "SBS"),
+            **_LINEAGE,
         )
         counts["services"] += 1
 
@@ -156,6 +180,7 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
             display=node.get("display", ""),
             form=node.get("form", ""),
             atc=node.get("atc", ""),
+            **_LINEAGE,
         )
         counts["medications"] += 1
 

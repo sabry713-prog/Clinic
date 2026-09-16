@@ -1,0 +1,107 @@
+{
+  "version": "2026-09-15.1",
+  "generated_at": "2026-09-15T00:00:00.000Z",
+  "description": "M11 governed reference-release manifest. Each entry is checksummed; the graph-seed step verifies checksums before ingesting. 'illustrative-dev-subset' means the data is not a licensed release and must not be used for clinical decisions — production requires governed licensed releases with named approvers.",
+  "entries": [
+    {
+      "file": "ontologies/icd10am_diagnoses.json",
+      "sha256": "649a3cc63f0f624c7c011f2138e7ff4da1c1701b16e2217073293f9bd5567bf9",
+      "size_bytes": 2462,
+      "ontology": "ICD-10-AM",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/nphies_diagnoses.json",
+      "sha256": "27e5e8f5ba95aabaa0343a75a4723fb6f81d56803171ba0d354552c0c72c477d",
+      "size_bytes": 800,
+      "ontology": "NPHIES Diagnosis (ICD-10)",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/nphies_drugs.json",
+      "sha256": "8356c72f2ce96a2d0604d13195b213265bac57245357bf323eeeb37c3cac20e7",
+      "size_bytes": 563,
+      "ontology": "NPHIES Drug (SFDA)",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/nphies_services.json",
+      "sha256": "5a732ce3f6c60bf21d27767bac1784c9596e1ab1dc50d11ddbdbf004b7105377",
+      "size_bytes": 1135,
+      "ontology": "NPHIES Service (SBS / ACHI)",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/nscre_contraindications.json",
+      "sha256": "3f2bb6ad9355e3bf4026e9e2fb276e6b0a51efa67be59c5c3c4500a11dadecfc",
+      "size_bytes": 1754,
+      "ontology": "NSCRE Drug-Drug Contraindications",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/nscre_renal_dose_limits.json",
+      "sha256": "e352edfd058ebc04509ae66f5ef9ce455754c0edea895c1807ba7ebc973d3b7b",
+      "size_bytes": 866,
+      "ontology": "NSCRE Renal Dose-Safety Rules",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/sbs_achi_services.json",
+      "sha256": "f6422adcd1f5576a0b59ae38c13cb346fab0b5b066b7ca6642d15806af8eff3c",
+      "size_bytes": 1801,
+      "ontology": "SBS / ACHI",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/sfda_medications.json",
+      "sha256": "585e08d0a0b631b2e2fc0060025483ffadc30366a59e02648ce641bf3b47fbf1",
+      "size_bytes": 1585,
+      "ontology": "SFDA",
+      "licensed": false,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/nphies_necessity_map.csv",
+      "sha256": "73d9cbc20bd77542e63d263006ef93a8f564f2ab5fc0b45feecba68e462c942a",
+      "size_bytes": 3664,
+      "ontology": "",
+      "licensed": null,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/nphies_preauth_necessity_map.csv",
+      "sha256": "6a234246fbbba02a6da8d07f2a2475b7608f509c0fefbfcce956131991e0dfc6",
+      "size_bytes": 858,
+      "ontology": "",
+      "licensed": null,
+      "effective_date": "2026-09-15",
+      "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    }
+  ]
+}

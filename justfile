@@ -38,7 +38,9 @@ seed-demo:
 # NPHIES_JUSTIFIES pre-auth necessity edges). Idempotent (MERGE-based), so it
 # is safe to rerun. Without this, validate_order_necessity has no edges to
 # look up and every claim-simulator necessity verdict is RED-by-default.
+# M11: verifies reference-data checksums against the release manifest first.
 graph-seed:
+    cd services/veritas-graph && uv run python verify_reference_release.py
     cd services/veritas-graph && uv run python ingest_ontologies.py
     cd services/veritas-graph && uv run python ingest_nphies_rules.py
 

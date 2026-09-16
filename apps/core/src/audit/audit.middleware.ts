@@ -61,27 +61,51 @@ export class AuditMiddleware implements NestMiddleware {
       const traceId =
         trace.getActiveSpan()?.spanContext().traceId ?? null;
 
-      void writeAuditEvent(this.pool, {
-        actor_id: (req.authenticatedUserId as UserId | undefined) ?? null,
-        actor_role: (req.authenticatedUserRole as UserRole | undefined) ?? null,
-        action,
-        target_type: null,
-        target_id: null,
-        outcome,
-        metadata_json: {
-          method,
-          status_code: res.statusCode,
-          trace_id: traceId,
-          // Never include query params, body, or any PHI
-        },
-        request_id: requestId as RequestId,
-      }).catch((err: unknown) => {
-        // Audit write errors must never crash the request
-        this.logger.error(
-          { event: "audit_write_error", request_id: requestId, err },
-          "AuditMiddleware",
-        );
-      });
+      // M08 (readiness assessment): generic audit writes previously
+      // failed open — a lost write was only logged, the event gone.
+      // Now: bounded retry with backoff; on final failure, the event
+      // is dead-lettered to stderr so it's recoverable from logs.
+      const attempt = async (retries: number): Promise<void> => {
+        try {
+          await writeAuditEvent(this.pool, {
+            actor_id: (req.authenticatedUserId as UserId | undefined) ?? null,
+            actor_role: (req.authenticatedUserRole as UserRole | undefined) ?? null,
+            action,
+            target_type: null,
+            target_id: null,
+            outcome,
+            metadata_json: {
+              method,
+              status_code: res.statusCode,
+              trace_id: traceId,
+              // Never include query params, body, or any PHI
+            },
+            request_id: requestId as RequestId,
+          });
+        } catch (err) {
+          if (retries > 0) {
+            await new Promise((r) => setTimeout(r, 50 * (4 - retries)));
+            return attempt(retries - 1);
+          }
+          this.logger.error(
+            { event: "audit_write_dead_letter", request_id: requestId, action, err },
+            "AuditMiddleware",
+          );
+          process.stderr.write(
+            JSON.stringify({
+              dead_letter: "audit_event",
+              ts: new Date().toISOString(),
+              request_id: requestId,
+              action,
+              method,
+              status_code: res.statusCode,
+              actor_id: (req.authenticatedUserId as string | undefined) ?? null,
+            }) + "\n",
+          );
+        }
+      };
+
+      void attempt(3);
     });
 
     next();
