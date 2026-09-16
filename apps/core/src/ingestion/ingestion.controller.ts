@@ -28,7 +28,7 @@ export class IngestionController {
     const sessionId = req.cookies["session_id"] as string | undefined;
     if (!sessionId) throw new ForbiddenException("Unauthenticated");
 
-    const session = this.sessionService.get(sessionId);
+    const session = await this.sessionService.get(sessionId);
     if (!session) throw new ForbiddenException("Session expired");
 
     const isAdmin =

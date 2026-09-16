@@ -92,11 +92,11 @@ export class AuthController {
   @Get("me")
   @ApiCookieAuth("session_id")
   @ApiOperation({ summary: "Return current authenticated user" })
-  me(@Req() req: Request): unknown {
+  async me(@Req() req: Request): Promise<unknown> {
     const sessionId = req.cookies["session_id"] as string | undefined;
     if (!sessionId) throw new UnauthorizedException("No session");
 
-    const session = this.sessionService.get(sessionId);
+    const session = await this.sessionService.get(sessionId);
     if (!session) throw new UnauthorizedException("Session expired or invalid");
 
     // Attach to request for audit middleware
@@ -110,7 +110,7 @@ export class AuthController {
   @HttpCode(204)
   @ApiCookieAuth("session_id")
   @ApiOperation({ summary: "Refresh session -- 204 No Content" })
-  refresh(@Req() req: Request): void {
+  async refresh(@Req() req: Request): Promise<void> {
     const sessionId = req.cookies["session_id"] as string | undefined;
     if (!sessionId) throw new UnauthorizedException("No session");
     const session = this.sessionService.get(sessionId);

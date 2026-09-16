@@ -3,6 +3,10 @@
  * before allowing a route through.
  *
  * Usage: @UseGuards(RbacGuard) @RequirePermission('patient:read')
+ *
+ * M02: the session check is now async — it queries the user's live
+ * DB state (enabled + current roles) so a disabled user or a role
+ * change revokes access immediately, not at session expiry.
  */
 
 import {
@@ -29,7 +33,7 @@ export class RbacGuard implements CanActivate {
     private readonly sessions: SessionService,
   ) {}
 
-  canActivate(ctx: ExecutionContext): boolean {
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const requiredPerm = this.reflector.getAllAndOverride<Permission | undefined>(
       REQUIRE_PERMISSION_KEY,
       [ctx.getHandler(), ctx.getClass()],
@@ -40,7 +44,7 @@ export class RbacGuard implements CanActivate {
 
     if (!sessionId) throw new UnauthorizedException("No session");
 
-    const session = this.sessions.get(sessionId);
+    const session = await this.sessions.get(sessionId);
     if (!session) throw new UnauthorizedException("Session expired or invalid");
 
     // Attach to request for downstream use

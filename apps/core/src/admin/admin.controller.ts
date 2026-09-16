@@ -127,10 +127,10 @@ export class AdminController {
     private readonly wormExport: WormExportService,
   ) {}
 
-  private assertAdmin(req: Request): string {
+  private async assertAdmin(req: Request): Promise<string> {
     const sessionId = req.cookies["session_id"] as string | undefined;
     if (!sessionId) throw new ForbiddenException("Unauthenticated");
-    const session = this.sessions.get(sessionId);
+    const session = await this.sessions.get(sessionId);
     if (!session) throw new ForbiddenException("Session expired");
     const isAdmin =
       session.roles.includes("hospital_admin") ||
@@ -146,7 +146,7 @@ export class AdminController {
   @Get("quarantine")
   @ApiOperation({ summary: "List open quarantine records" })
   async listQuarantine(@Req() req: Request) {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
 
     const result = await this.pool.query(
       `SELECT id, candidate_a_id, candidate_b_id, confidence,
@@ -168,7 +168,7 @@ export class AdminController {
     @Param("id") id: string,
     @Body() body: ResolveQuarantineDto,
   ): Promise<{ message: string }> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const requestId = uuidv4() as RequestId;
 
     const existing = await this.pool.query<{ id: string; status: string }>(
@@ -214,7 +214,7 @@ export class AdminController {
     @Query("cursor") cursor?: string,
     @Query("limit") limitStr?: string,
   ) {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
     const limit = Math.min(parseInt(limitStr ?? "20", 10) || 20, 100);
 
     let rows;
@@ -262,7 +262,7 @@ export class AdminController {
     @Req() req: Request,
     @Body() body: CreateUserDto,
   ) {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const requestId = uuidv4() as RequestId;
 
     const result = await this.pool.query<{ id: string }>(
@@ -304,7 +304,7 @@ export class AdminController {
     @Param("id") targetId: string,
     @Body() body: UpdateUserRolesDto,
   ): Promise<{ message: string }> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const requestId = uuidv4() as RequestId;
 
     const existing = await this.pool.query<{ id: string }>(
@@ -339,7 +339,7 @@ export class AdminController {
     @Req() req: Request,
     @Param("id") targetId: string,
   ): Promise<{ message: string }> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const requestId = uuidv4() as RequestId;
 
     const existing = await this.pool.query<{ id: string; disabled_at: Date | null }>(
@@ -375,7 +375,7 @@ export class AdminController {
   @Get("audit")
   @ApiOperation({ summary: "Search audit log" })
   async searchAudit(@Req() req: Request, @Query() query: AuditQueryDto) {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const requestId = uuidv4() as RequestId;
 
     const limit = Math.min(parseInt(query.limit ?? "50", 10) || 50, 200);
@@ -471,14 +471,14 @@ export class AdminController {
   @HttpCode(200)
   @ApiOperation({ summary: "Verify audit log hash-chain integrity" })
   async verifyAudit(@Req() req: Request) {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
     return this.auditVerify.verifyChain();
   }
 
   @Get("audit/summary")
   @ApiOperation({ summary: "DPO compliance summary — audit aggregates for a date range" })
   async auditSummary(@Req() req: Request, @Query() query: AuditQueryDto) {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
 
     const conds: string[] = [];
     const params: unknown[] = [];
@@ -523,7 +523,7 @@ export class AdminController {
   @HttpCode(200)
   @ApiOperation({ summary: "Manually trigger yesterday's WORM audit export" })
   async exportWorm(@Req() req: Request): Promise<{ message: string }> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     await this.wormExport.exportYesterday();
     // A manual export trigger is itself an audited admin action (S4.3) --
     // previously this endpoint wrote no audit event, unlike audit search.
@@ -543,7 +543,7 @@ export class AdminController {
   @Get("audit/export")
   @ApiOperation({ summary: "Export audit log as NDJSON stream" })
   async exportAudit(@Req() req: Request, @Query() query: AuditQueryDto, @Res() res: Response) {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
 
     res.setHeader("Content-Type", "application/x-ndjson");
     res.setHeader("Transfer-Encoding", "chunked");
@@ -582,7 +582,7 @@ export class AdminController {
   @Get("nphies/rejection-analytics")
   @ApiOperation({ summary: "Factual dashboard of NPHIES claim outcomes and rejection codes over time" })
   async nphiesRejectionAnalytics(@Req() req: Request, @Query() query: AuditQueryDto) {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
 
     const conds: string[] = [];
     const params: unknown[] = [];
@@ -637,7 +637,7 @@ export class AdminController {
   @Get("config")
   @ApiOperation({ summary: "Get hospital configuration" })
   async getConfig(@Req() req: Request) {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
 
     const result = await this.pool.query<{ config_json: Record<string, unknown> }>(
       `SELECT config_json FROM app.tenant LIMIT 1`,
@@ -652,7 +652,7 @@ export class AdminController {
     @Req() req: Request,
     @Body() body: Record<string, unknown>,
   ): Promise<{ message: string }> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const requestId = uuidv4() as RequestId;
 
     await this.pool.query(

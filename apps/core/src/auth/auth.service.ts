@@ -163,7 +163,7 @@ export class AuthService {
   }
 
   async buildLogoutUrl(sessionId: string): Promise<string> {
-    const session = this.sessions.get(sessionId);
+    const session = await this.sessions.get(sessionId);
     this.sessions.delete(sessionId);
 
     const client = await this.getClient();

@@ -61,11 +61,11 @@ export class ClaimIntegrityController {
 
   /** Same guard as AdminController.assertAdmin — the RCM/coder surface is
    * hospital_admin / sysadmin until a dedicated coder role exists. */
-  private assertAdmin(req: Request): string {
+  private async assertAdmin(req: Request): Promise<string> {
     const cookies = req.cookies as Record<string, string | undefined>;
     const sessionId = cookies.session_id;
     if (!sessionId) throw new ForbiddenException("Unauthenticated");
-    const session = this.sessions.get(sessionId);
+    const session = await this.sessions.get(sessionId);
     if (!session) throw new ForbiddenException("Session expired");
     const isAdmin =
       session.roles.includes("hospital_admin") || session.roles.includes("sysadmin");
@@ -101,7 +101,7 @@ export class ClaimIntegrityController {
       "(readiness + coding + necessity verdicts; nothing is submitted)",
   })
   async runSimulation(@Req() req: Request): Promise<ClaimSimulationReport> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const report = await this.simulator.simulateBatch(userId);
     await this.audit(req, "NPHIES_CLAIM_SIMULATOR_RUN", null, {
       patients_checked: report.summary.patients_checked,
@@ -119,7 +119,7 @@ export class ClaimIntegrityController {
       "Re-run the claim simulation and rebuild the coder review queue from its flagged findings",
   })
   async syncQueue(@Req() req: Request): Promise<CoderQueueSyncResult> {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
     const report = await this.simulator.simulateBatch(uid(req));
     const result = this.queue.sync(report);
     await this.audit(req, "NPHIES_CODER_QUEUE_SYNC", null, {
@@ -133,7 +133,7 @@ export class ClaimIntegrityController {
   @Get("coder-queue")
   @ApiOperation({ summary: "List coder review queue items (pending first)" })
   async listQueue(@Req() req: Request): Promise<{ items: readonly CoderQueueItem[] }> {
-    this.assertAdmin(req);
+    await this.assertAdmin(req);
     const items = this.queue.list();
     await this.audit(req, "NPHIES_CODER_QUEUE_VIEW", null, { count: items.length });
     return { items };
@@ -143,7 +143,7 @@ export class ClaimIntegrityController {
   @HttpCode(200)
   @ApiOperation({ summary: "Mark a queue item as in review by the current user" })
   async claimItem(@Req() req: Request, @Param("itemId") itemId: string): Promise<CoderQueueItem> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const item = this.queue.claim(itemId, userId);
     // target_id must be a UUID (audit schema); the queue item's composite id
     // (patient:order:reason) rides in metadata_json instead.
@@ -162,7 +162,7 @@ export class ClaimIntegrityController {
     @Param("itemId") itemId: string,
     @Body() body: ResolveQueueItemDto,
   ): Promise<CoderQueueItem> {
-    const userId = this.assertAdmin(req);
+    const userId = await this.assertAdmin(req);
     const item = this.queue.resolve(itemId, userId, body.note);
     await this.audit(req, "NPHIES_CODER_QUEUE_RESOLVE", null, {
       item_id: itemId,
