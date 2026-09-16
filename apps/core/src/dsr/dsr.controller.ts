@@ -16,6 +16,7 @@ import {
   HttpCode,
 } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import { RequirePermission } from "../rbac/rbac.guard";
 import { IsString, MinLength } from "class-validator";
 import type { Request } from "express";
 import { DsrService } from "./dsr.service";
@@ -75,5 +76,29 @@ export class DsrController {
   @ApiOperation({ summary: "Get DSR request status" })
   async getStatus(@Param("id") id: string) {
     return this.dsrService.getStatus(id);
+  }
+
+  /**
+   * M07: Execute a pending erasure request. Admin-only (the DPO or a
+   * delegated privacy officer triggers the actual erasure workflow —
+   * not automatic on request receipt, because clinical records have
+   * retention obligations that require human review per request).
+   */
+  @Post(":id/execute")
+  @RequirePermission("user:manage")
+  @ApiOperation({
+    summary:
+      "Execute a pending DSR erasure request — anonymizes clinical records, " +
+      "removes identifiers, deletes the Neo4j projection (admin-triggered, audited)",
+  })
+  async executeErase(@Param("id") id: string, @Req() req: Request) {
+    const userId = (req as { authenticatedUserId?: string }).authenticatedUserId;
+    const userRole = (req as { authenticatedUserRole?: string }).authenticatedUserRole;
+    return this.dsrService.executeErase(
+      id,
+      userId ?? "unknown",
+      userRole ?? null,
+      (req.headers["x-request-id"] as string | undefined ?? null) as never,
+    );
   }
 }
