@@ -3,11 +3,12 @@
  * keywrap (not a no-op stub) using a platform-controlled master key from
  * ENCRYPTION_MASTER_KEY — genuinely protects data at the application layer,
  * it just isn't hospital-controlled (see CustomerKeyProviderService for
- * that). Same secret-handling class as SESSION_SECRET/OIDC_CLIENT_SECRET
- * already in this project's .env: a fixed dev-only default, expected to be
- * replaced by a real per-environment secret outside dev (docs/architecture/05-security.md
- * "Master keys never exposed to application code" — this dev provider is
- * the one deliberate exception, clearly named as such).
+ * that).
+ *
+ * M03 (readiness assessment): the known development master-key fallback
+ * is now production-gated. Outside explicit development/test mode, a
+ * missing key OR the known dev-default key is rejected — encryption
+ * must never silently degrade to a guessable key in a deployed build.
  */
 
 import { randomBytes, createCipheriv, createDecipheriv } from "crypto";
@@ -15,7 +16,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { KeyProvider, WrappedKey } from "./key-provider";
 
-const DEV_DEFAULT_MASTER_KEY = "de".repeat(32); // 64 hex chars (0xdede...) — dev only, never used outside local
+const DEV_DEFAULT_MASTER_KEY = "de".repeat(32); // 64 hex chars (0xdede...) — dev only
 const KEY_ID = "local:v1";
 
 @Injectable()
@@ -25,8 +26,23 @@ export class LocalKeyProviderService implements KeyProvider {
   constructor(private readonly config: ConfigService) {}
 
   private masterKey(): Buffer {
-    const hex = this.config.get<string>("ENCRYPTION_MASTER_KEY") ?? DEV_DEFAULT_MASTER_KEY;
-    const key = Buffer.from(hex, "hex");
+    const hex = this.config.get<string>("ENCRYPTION_MASTER_KEY");
+
+    // M03: outside development/test, reject both a missing key and the
+    // known dev-default. Encryption must never silently degrade.
+    const env = this.config.get<string>("NODE_ENV") ?? "development";
+    const isTest = this.config.get<string>("ALLOW_DEV_KEYS") === "true";
+    if (env !== "development" && !isTest) {
+      if (!hex || hex === DEV_DEFAULT_MASTER_KEY) {
+        throw new Error(
+          "ENCRYPTION_MASTER_KEY is missing or is the known development default. " +
+          "Set a real 32-byte key (64 hex chars) before running outside development.",
+        );
+      }
+    }
+
+    const resolved = hex ?? DEV_DEFAULT_MASTER_KEY;
+    const key = Buffer.from(resolved, "hex");
     if (key.length !== 32) {
       throw new Error("ENCRYPTION_MASTER_KEY must be 32 bytes (64 hex characters)");
     }
