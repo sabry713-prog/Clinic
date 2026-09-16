@@ -5,6 +5,7 @@ Fills prompts, calls model, verifies blocklist, extracts sources.
 from __future__ import annotations
 
 import json
+import re
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
 logger = structlog.get_logger()
 
-PROMPT_TEMPLATE_VERSION = "qa-answer-v1.0"
+PROMPT_TEMPLATE_VERSION = "qa-answer-v2.0"
 
 QA_SYSTEM_PROMPT = load_prompt("qa-answer-prompt.md", "System prompt")
 
@@ -69,14 +70,24 @@ def fill_qa_prompt(
     patient_id: str,
     attempt: int = 0,
 ) -> str:
-    # Compact JSON (no indent) of only the needed fields — keeps the prompt
-    # inside the local model's context window for records with many facts.
+    # M10: numbered facts — each fact carries its [N] index. The model
+    # is instructed to append [N] citations to sentences it used that
+    # fact for, making the source mapping deterministic (the model chose
+    # to cite it) instead of heuristic (keyword overlap).
     slim = [_project_chunk(c) for c in chunks]
+    for i, s in enumerate(slim):
+        s["_fact_num"] = i + 1
     base = QA_USER_PROMPT_TEMPLATE.format(
         patient_id=patient_id,
         language=language,
         question=question,
         retrieved_chunks_json=json.dumps(slim, ensure_ascii=False, separators=(",", ":")),
+    )
+    base += (
+        "\n\nIMPORTANT: After each sentence, append the fact number(s) that "
+        "support it in square brackets, e.g. [1] or [2,3]. Only cite facts "
+        "whose values you actually used. If no retrieved fact supports a "
+        "sentence, do not write that sentence."
     )
     if attempt > 0:
         base += (
@@ -84,6 +95,68 @@ def fill_qa_prompt(
             "Restate only the literal values."
         )
     return base
+
+
+# Regex to find [N] or [N,M] citations in the model's output
+_CITE_RE: re.Pattern[str] = re.compile(r"\[(\d+(?:\s*,\s*\d+)*)\]")
+
+
+def extract_cited_sources(
+    answer_text: str,
+    chunks: list[dict[str, Any]],
+) -> list[AnswerSource]:
+    """M10: extract sources from [N] citations in the model's output.
+
+    The model was instructed to append fact-number citations; this parses
+    them and maps back to the actual source chunks deterministically.
+    Falls back to the old heuristic only when no citations are found
+    (e.g., an older model version that ignored the instruction).
+    """
+    cited_nums: set[int] = set()
+    for match in _CITE_RE.finditer(answer_text):
+        for num_str in match.group(1).split(","):
+            try:
+                num = int(num_str.strip())
+                if 1 <= num <= len(chunks):
+                    cited_nums.add(num)
+            except ValueError:
+                continue
+
+    if cited_nums:
+        sources: list[AnswerSource] = []
+        seen_ids: set[str] = set()
+        for num in sorted(cited_nums):
+            chunk = chunks[num - 1]
+            sid = str(chunk.get("source_id", ""))
+            if sid not in seen_ids:
+                seen_ids.add(sid)
+                sources.append(chunk_to_source(chunk))
+        return sources
+
+    # No citations found — fall back to the heuristic linker (the
+    # model may not have followed the citation instruction)
+    return extract_sources_heuristic(answer_text, chunks)
+
+
+def extract_sources_heuristic(
+    answer_text: str,
+    chunks: list[dict[str, Any]],
+) -> list[AnswerSource]:
+    """Legacy keyword-overlap linker — fallback only (M10)."""
+    sources: list[AnswerSource] = []
+    seen_ids: set[str] = set()
+    for chunk in chunks:
+        content = str(chunk.get("content_text", "")).lower()
+        answer_lower = answer_text.lower()
+        words = content.split()
+        relevant_words = [w for w in words if len(w) > 4]
+        matched = sum(1 for w in relevant_words if w in answer_lower)
+        if matched >= 1 or len(relevant_words) == 0:
+            sid = str(chunk.get("source_id", ""))
+            if sid not in seen_ids:
+                seen_ids.add(sid)
+                sources.append(chunk_to_source(chunk))
+    return sources if sources else [chunk_to_source(c) for c in chunks[:3]]
 
 
 def chunk_to_source(chunk: dict[str, Any]) -> AnswerSource:
@@ -200,8 +273,13 @@ async def synthesize(
             continue  # retry with stricter prompt
 
         # Passed the blocklist gate
-        sources = extract_sources(raw, chunks)
-        return raw, sources, blocklist_triggered
+        sources = extract_cited_sources(raw, chunks)
+        # Strip [N] citations from the display text — they were only for
+        # source mapping, not for the clinician to read
+        display_text = _CITE_RE.sub("", raw).strip()
+        # Clean up double spaces left by citation removal
+        display_text = re.sub(r"  +", " ", display_text)
+        return display_text, sources, blocklist_triggered
 
     # All retries exhausted — return chunk fallback
     logger.error("qa_synthesis_all_retries_exhausted")
