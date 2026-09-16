@@ -154,6 +154,12 @@ interface SullyState {
   setDictationMode: (mode: DictationMode) => void;
   /** Append a real transcribed utterance to the live transcript. */
   appendTranscriptLine: (text: string) => void;
+  /** Who is currently speaking — set by the clinician via the toggle.
+   * Single-mic recording has no diarization; the clinician explicitly
+   * indicates the speaker because misattributing a symptom to the wrong
+   * speaker is a clinical error the system must never make on its own. */
+  readonly activeSpeaker: "clinician" | "patient";
+  setActiveSpeaker: (speaker: "clinician" | "patient") => void;
   setTranscribing: (value: boolean) => void;
   setDictationError: (message: string | null) => void;
   readonly soap: SoapNote;
@@ -707,6 +713,8 @@ export function SullyProvider({
   const messageSeq = useRef(0);
 
   const [dictationMode, setDictationMode] = useState<DictationMode>(patientId ? "live" : "demo");
+  const [activeSpeaker, setActiveSpeakerState] = useState<"clinician" | "patient">("clinician");
+  const activeSpeakerRef = useRef<"clinician" | "patient">("clinician");
   const [liveTranscript, setLiveTranscript] = useState<readonly TranscriptLine[]>([]);
   const [transcribing, setTranscribing] = useState(false);
   const [dictationError, setDictationError] = useState<string | null>(null);
@@ -794,15 +802,15 @@ export function SullyProvider({
     const trimmed = text.trim();
     if (!trimmed) return;
     transcriptSeq.current += 1;
+    const speaker = activeSpeakerRef.current;
     setLiveTranscript((prev) => [
       ...prev,
       {
         id: `live-${transcriptSeq.current}`,
-        // The transcription service returns one utterance without speaker
-        // attribution -- labelling it "clinician" would be an invented fact,
-        // so dictated lines are attributed to the person holding the mic only
-        // because that is who pressed record.
-        speaker: "clinician",
+        // Speaker is set by the clinician's explicit toggle — the
+        // transcription service has no diarization, and inferring who
+        // spoke from content would risk clinical misattribution.
+        speaker,
         text: trimmed,
         at: new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
       },
@@ -986,8 +994,11 @@ export function SullyProvider({
 
   // Auto-generate live SOAP when transcript grows (debounced, live mode only).
   // Demo mode never calls this — the canned stages handle demo playback.
+  // Speaker labels are included so the LLM can separate the patient's
+  // subjective report from the clinician's objective findings — this is
+  // the core S/O split the SOAP formatter depends on.
   const transcriptText = useMemo(
-    () => transcript.map((l) => l.text).join("\n"),
+    () => transcript.map((l) => `${l.speaker}: ${l.text}`).join("\n"),
     [transcript],
   );
 
@@ -1212,6 +1223,11 @@ export function SullyProvider({
   }, []);
 
   const setActiveAgent = useCallback((agent: AgentId) => setActiveAgentState(agent), []);
+
+  const setActiveSpeaker = useCallback((speaker: "clinician" | "patient") => {
+    activeSpeakerRef.current = speaker;
+    setActiveSpeakerState(speaker);
+  }, []);
   const toggleDrawer = useCallback(() => setDrawerOpen((o) => !o), []);
 
   const runAgentAction = useCallback(
@@ -1235,7 +1251,7 @@ export function SullyProvider({
           }
           setSoapLoading(true);
           addMessage("Regenerating SOAP note…");
-          const text = transcript.map((l) => l.text).join("\n");
+          const text = transcript.map((l) => `${l.speaker}: ${l.text}`).join("\n");
           api.aiTeam
             .generateSoap(patientId, text)
             .then((result) => {
@@ -1338,6 +1354,8 @@ export function SullyProvider({
       dictationError,
       setDictationMode,
       appendTranscriptLine,
+      activeSpeaker,
+      setActiveSpeaker,
       setTranscribing,
       setDictationError,
       toggleRecording,

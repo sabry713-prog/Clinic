@@ -48,6 +48,7 @@ export default function AmbientScribePane(): JSX.Element {
     toggleRecording, updateSoap, toggleChecklistItem, removeChecklistItem, checklistQuote,
     dictationMode, patientId, transcribing, dictationError,
     setDictationMode, appendTranscriptLine, setTranscribing, setDictationError,
+    activeSpeaker, setActiveSpeaker,
   } = useSully();
   const feedRef = useRef<HTMLDivElement>(null);
 
@@ -142,6 +143,55 @@ export default function AmbientScribePane(): JSX.Element {
             {isRecording && <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" />}
             <span className="font-mono">{formatElapsed(elapsedSeconds)}</span>
           </span>
+        </div>
+
+        {/* Speaker toggle: single-mic recording has no diarization — the
+            clinician explicitly indicates who is speaking. Misattributing a
+            symptom to the wrong speaker is a clinical error the system must
+            never make on its own (the same principle as the evidence chain:
+            no inference without a deterministic source). */}
+        <div
+          role="radiogroup"
+          aria-label="Active speaker"
+          className="mt-2 flex items-center gap-1.5"
+        >
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Speaking:</span>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={activeSpeaker === "clinician"}
+            aria-label="Doctor speaking"
+            onClick={() => setActiveSpeaker("clinician")}
+            data-testid="speaker-clinician"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+              activeSpeaker === "clinician"
+                ? "bg-agent-cons text-white shadow-pill"
+                : "border border-line bg-white text-ink-soft hover:text-ink"
+            }`}
+          >
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            Doctor
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={activeSpeaker === "patient"}
+            aria-label="Patient speaking"
+            onClick={() => setActiveSpeaker("patient")}
+            data-testid="speaker-patient"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition-colors ${
+              activeSpeaker === "patient"
+                ? "bg-agent-pharm text-white shadow-pill"
+                : "border border-line bg-white text-ink-soft hover:text-ink"
+            }`}
+          >
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+            </svg>
+            Patient
+          </button>
         </div>
 
         {/* Capture-source toggle. Explicit rather than implicit, so nobody
