@@ -17,6 +17,7 @@ import {
 } from "../SullyContext";
 import EvidenceChainPopover from "../../ai-team/EvidenceChainPopover";
 import ReceptionistTab from "../../ai-team/ReceptionistTab";
+import { areClinicalProsePathsEnabled } from "../../../lib/demoContainment";
 
 /** Agent identity hues (mockup §B/§E) — same color for tabs, avatars, dots. */
 const AGENT_HUE_TEXT: Record<AgentId, string> = {
@@ -82,7 +83,19 @@ export default function AiTeamDrawer(): JSX.Element {
     );
   }
 
-  const actions = agentActions(activeAgent);
+  // C04 demo containment: clinical prose agent actions (differential
+  // diagnosis, dose recommendations, alternative-medication suggestions)
+  // are hidden in the specialist-demo build. Only administrative checks
+  // and the Scribe's formatting-only SOAP generation remain.
+  const clinicalProseActionIds = new Set([
+    "a-cons-1", // Summarise prior encounters (differential prose)
+    "a-cons-2", // Show related results (clinical prose)
+    "a-pharm-2", // Check formulary tier (clinical recommendation)
+  ]);
+  const allActions = agentActions(activeAgent);
+  const actions = areClinicalProsePathsEnabled()
+    ? allActions
+    : allActions.filter((a) => !clinicalProseActionIds.has(a.id));
 
   return (
     <aside

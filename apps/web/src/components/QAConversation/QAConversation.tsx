@@ -13,6 +13,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../lib/api";
 import type { QAResponse, AnswerSource } from "../../lib/api";
+import { isQuestionInDemoScope, DEMO_SCOPE_MESSAGE } from "../../lib/demoContainment";
 
 // Plain-language refusal categories (neutral, non-alarming) — E4 trust surface.
 // Describes the KIND of question, not a severity. Clinical facts are still
@@ -103,6 +104,39 @@ export default function QAConversation({
   const submit = useCallback(async (override?: string) => {
     const question = (override ?? input).trim();
     if (!question || loading) return;
+
+    // C03 demo containment: in the specialist-demo build, only validated
+    // question patterns go through the retrieval pipeline. Anything else
+    // gets an honest scope message, never a heuristic-linked answer.
+    if (!isQuestionInDemoScope(question)) {
+      setTurns((prev) => [
+        ...prev,
+        {
+          id: `scope-${Date.now()}`,
+          question,
+          response: {
+            interaction_id: "",
+            patient_id: patientId,
+            conversation_id: "",
+            question,
+            classification: "REFUSED",
+            classifier_confidence: 1.0,
+            refusal_category: "demo_scope",
+            rule_matches: [],
+            language,
+            answer_text: DEMO_SCOPE_MESSAGE,
+            sources: [],
+            model_version: "",
+            prompt_template_version: "",
+            latency_ms: 0,
+            disclaimer: "",
+            blocklist_triggered: false,
+          },
+        },
+      ]);
+      setInput("");
+      return;
+    }
 
     setInput("");
     setLoading(true);
