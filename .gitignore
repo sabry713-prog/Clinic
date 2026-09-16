@@ -64,3 +64,23 @@ storybook-static/
 
 # ZCode agent session state
 .zcode/
+
+# H07 (readiness assessment): backup/archive hygiene — these patterns
+# prevent accidental commits of database dumps, key exports, and other
+# sensitive artifacts regardless of where they're placed in the tree.
+# Backups belong OUTSIDE the repo, encrypted.
+*.sql.gz
+*.dump
+*.pgdump
+*.sql.dump
+*.backup
+*.bak
+*.secret
+*.key.pem
+*.pem.key
+env-backup/
+backups/
+*.env.backup
+*.env.bak
+secrets/
+

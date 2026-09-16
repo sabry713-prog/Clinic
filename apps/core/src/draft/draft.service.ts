@@ -202,7 +202,7 @@ export class DraftService {
    */
   private async validateCondensation(condensedText: string, sourceText: string, language: string): Promise<boolean> {
     const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
-    const res = await fetch(`${url}/validate-condensation`, {
+    const res = await fetch(`${url}/validate-condensation`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ condensed_text: condensedText, source_text: sourceText, language }),
@@ -227,7 +227,7 @@ export class DraftService {
   private async translateSection(text: string, sourceLanguage: string): Promise<string | null> {
     const url = process.env["NARRATIVE_SERVICE_URL"] ?? "http://localhost:5001";
     try {
-      const res = await fetch(`${url}/narrative/interpret`, {
+      const res = await fetch(`${url}/narrative/interpret`, { signal: AbortSignal.timeout(30_000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, source_language: sourceLanguage, target_language: "en" }),
@@ -248,7 +248,7 @@ export class DraftService {
   async transcribe(userId: string, patientId: string, audioBase64: string, language: string): Promise<{ text: string; raw_text: string; engine: string; reformat: string }> {
     await this.scope.assertPatientInScope(userId, patientId);
     const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
-    const res = await fetch(`${url}/transcribe`, {
+    const res = await fetch(`${url}/transcribe`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ audio_base64: audioBase64, language }),
@@ -261,7 +261,7 @@ export class DraftService {
   async reformat(userId: string, patientId: string, text: string, language: string): Promise<{ text: string; raw_text: string; reformat: string }> {
     await this.scope.assertPatientInScope(userId, patientId);
     const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
-    const res = await fetch(`${url}/reformat`, {
+    const res = await fetch(`${url}/reformat`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, language }),

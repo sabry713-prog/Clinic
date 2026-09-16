@@ -48,12 +48,17 @@ export class AiTeamService {
 
       void (async () => {
         let response: Response;
+        // H03: 15s connect timeout for the SSE stream (the stream itself
+        // is long-lived once connected; only the initial connect is bounded)
+        const connectTimer = setTimeout(() => controller.abort(), 15_000);
         try {
           response = await fetch(
             `${this.orchestratorUrl}/api/v1/agents/stream?patient_id=${encodeURIComponent(patientId)}`,
             { signal: controller.signal },
           );
+          clearTimeout(connectTimer);
         } catch (err) {
+          clearTimeout(connectTimer);
           this.logger.error("ai_team_orchestrator_unreachable", {
             error: err instanceof Error ? err.message : String(err),
           });
@@ -108,6 +113,9 @@ export class AiTeamService {
    * Same failure contract as streamAgents: an unreachable or erroring
    * orchestrator surfaces as ORCHESTRATOR_SERVICE_UNAVAILABLE rather than
    * leaking a raw fetch error to the browser.
+   *
+   * H03 (readiness assessment): bounded with a 30-second timeout so a hung
+   * model call surfaces as an error instead of freezing the request forever.
    */
   private async postToOrchestrator<T>(path: string, body: unknown): Promise<T> {
     let response: Response;
@@ -116,14 +124,22 @@ export class AiTeamService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(30_000),
       });
     } catch (err) {
+      const isTimeout = err instanceof Error && err.name === "TimeoutError";
       this.logger.error("ai_team_orchestrator_unreachable", {
         path,
+        timed_out: isTimeout,
         error: err instanceof Error ? err.message : String(err),
       });
       throw new ServiceUnavailableException({
-        error: { code: "ORCHESTRATOR_SERVICE_UNAVAILABLE", message: "Agent orchestrator is unreachable" },
+        error: {
+          code: "ORCHESTRATOR_SERVICE_UNAVAILABLE",
+          message: isTimeout
+            ? "Agent orchestrator timed out (30s) — the model may be slow or overloaded"
+            : "Agent orchestrator is unreachable",
+        },
       });
     }
     if (!response.ok) {

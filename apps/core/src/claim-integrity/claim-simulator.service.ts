@@ -284,7 +284,7 @@ export class ClaimSimulatorService {
   ): Promise<ParsedNecessity | null> {
     let response: Response;
     try {
-      response = await fetch(`${this.graphUrl}/api/v1/nphies/validate-necessity`, {
+      response = await fetch(`${this.graphUrl}/api/v1/nphies/validate-necessity`, { signal: AbortSignal.timeout(30_000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ icd10_code: icd10Code, service_or_drug_code: sbsCode }),

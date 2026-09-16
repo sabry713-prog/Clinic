@@ -53,7 +53,7 @@ export class AmbientService {
     sections: readonly SectionSpecInput[],
     language: string,
   ): Promise<SegmentResult> {
-    const res = await fetch(`${this.transcriptionServiceUrl}/segment`, {
+    const res = await fetch(`${this.transcriptionServiceUrl}/segment`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, sections, language }),
@@ -84,7 +84,7 @@ export class AmbientService {
    * returns (docs/prompts/ambient-condensation-prompt.md).
    */
   async condense(sectionKey: string, text: string, language: string): Promise<CondenseResult> {
-    const res = await fetch(`${this.transcriptionServiceUrl}/condense`, {
+    const res = await fetch(`${this.transcriptionServiceUrl}/condense`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ section_key: sectionKey, text, language }),
@@ -112,7 +112,7 @@ export class AmbientService {
    * section, never trusting a client-supplied "this passed" claim.
    */
   async validateCondensation(condensedText: string, sourceText: string, language: string): Promise<boolean> {
-    const res = await fetch(`${this.transcriptionServiceUrl}/validate-condensation`, {
+    const res = await fetch(`${this.transcriptionServiceUrl}/validate-condensation`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ condensed_text: condensedText, source_text: sourceText, language }),
@@ -144,7 +144,7 @@ export class AmbientService {
    * docs/prompts/ambient-term-extraction-prompt.md).
    */
   async extractTerms(text: string, language: string): Promise<ExtractTermsResult> {
-    const res = await fetch(`${this.transcriptionServiceUrl}/extract-terms`, {
+    const res = await fetch(`${this.transcriptionServiceUrl}/extract-terms`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, language }),

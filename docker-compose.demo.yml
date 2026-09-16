@@ -1,0 +1,216 @@
+# H01 (readiness assessment): Full demo stack — one command.
+#
+# Usage:
+#   docker compose -f docker-compose.demo.yml up -d
+#   # Wait for healthy, then:
+#   just dev  # start the app services
+#
+# This file extends docker-compose.dev.yml with the Python AI services
+# so the entire infrastructure runs in one command. The application
+# processes (core, web) still run on the host via `just dev` because
+# they need hot-reload for development; a fully-containerized demo
+# is the Phase 3 L01 item.
+#
+# Every service port is bound to 127.0.0.1 only (C07 containment).
+
+version: "3.9"
+
+services:
+  # --- Infrastructure (same as docker-compose.dev.yml) ---
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: cc-postgres
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: clinical_copilot
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d clinical_copilot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: cc-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_PROXY_HEADERS: xforwarded
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./infra/keycloak/realm-dev.json:/opt/keycloak/data/import/realm-dev.json:ro
+      - keycloak_data:/opt/keycloak/data
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q ''UP'' <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  neo4j:
+    image: neo4j:5
+    container_name: cc-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/veritas-dev-password
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:7474 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  minio:
+    image: minio/minio:latest
+    container_name: cc-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cc-mailpit
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: cc-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+
+  # --- AI Services (H01: previously launched manually) ---
+  # These run on the host network so they can reach the infrastructure
+  # services on 127.0.0.1. They use the same Python environments via uv.
+
+  narrative:
+    build:
+      context: ./apps/narrative
+      dockerfile: Dockerfile.demo
+    container_name: cc-narrative
+    ports:
+      - "127.0.0.1:5001:5001"
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5001/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  qa:
+    build:
+      context: ./apps/qa
+      dockerfile: Dockerfile.demo
+    container_name: cc-qa
+    ports:
+      - "127.0.0.1:5002:5002"
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5002/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  transcription:
+    build:
+      context: ./apps/transcription
+      dockerfile: Dockerfile.demo
+    container_name: cc-transcription
+    ports:
+      - "127.0.0.1:5003:5003"
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5003/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  veritas-graph:
+    build:
+      context: ./services/veritas-graph
+      dockerfile: Dockerfile.demo
+    container_name: cc-veritas-graph
+    ports:
+      - "127.0.0.1:5004:5004"
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5004/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  orchestrator:
+    build:
+      context: ./services/orchestrator
+      dockerfile: Dockerfile.demo
+    container_name: cc-orchestrator
+    ports:
+      - "127.0.0.1:5005:5005"
+    env_file: .env
+    depends_on:
+      veritas-graph:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5005/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  nphies-engine:
+    build:
+      context: ./services/nphies-engine
+      dockerfile: Dockerfile.demo
+    container_name: cc-nphies-engine
+    ports:
+      - "127.0.0.1:5006:5006"
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5006/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  postgres_data:
+  keycloak_data:
+  neo4j_data:
+  minio_data:
