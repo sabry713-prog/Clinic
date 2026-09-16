@@ -121,7 +121,7 @@ export class ClaimIntegrityController {
   async syncQueue(@Req() req: Request): Promise<CoderQueueSyncResult> {
     await this.assertAdmin(req);
     const report = await this.simulator.simulateBatch(uid(req));
-    const result = this.queue.sync(report);
+    const result = await this.queue.sync(report);
     await this.audit(req, "NPHIES_CODER_QUEUE_SYNC", null, {
       queue_size: result.queue_size,
       added: result.added,
@@ -134,7 +134,7 @@ export class ClaimIntegrityController {
   @ApiOperation({ summary: "List coder review queue items (pending first)" })
   async listQueue(@Req() req: Request): Promise<{ items: readonly CoderQueueItem[] }> {
     await this.assertAdmin(req);
-    const items = this.queue.list();
+    const items = await this.queue.list();
     await this.audit(req, "NPHIES_CODER_QUEUE_VIEW", null, { count: items.length });
     return { items };
   }
@@ -144,7 +144,7 @@ export class ClaimIntegrityController {
   @ApiOperation({ summary: "Mark a queue item as in review by the current user" })
   async claimItem(@Req() req: Request, @Param("itemId") itemId: string): Promise<CoderQueueItem> {
     const userId = await this.assertAdmin(req);
-    const item = this.queue.claim(itemId, userId);
+    const item = await this.queue.claim(itemId, userId);
     // target_id must be a UUID (audit schema); the queue item's composite id
     // (patient:order:reason) rides in metadata_json instead.
     await this.audit(req, "NPHIES_CODER_QUEUE_CLAIM", null, {
@@ -163,7 +163,7 @@ export class ClaimIntegrityController {
     @Body() body: ResolveQueueItemDto,
   ): Promise<CoderQueueItem> {
     const userId = await this.assertAdmin(req);
-    const item = this.queue.resolve(itemId, userId, body.note);
+    const item = await this.queue.resolve(itemId, userId, body.note);
     await this.audit(req, "NPHIES_CODER_QUEUE_RESOLVE", null, {
       item_id: itemId,
       reason: item.reason,
