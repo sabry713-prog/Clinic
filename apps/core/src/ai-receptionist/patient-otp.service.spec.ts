@@ -6,7 +6,7 @@
  */
 import { Logger, BadRequestException } from "@nestjs/common";
 import { PatientOtpService } from "./patient-otp.service";
-import { PatientBookingSessionService } from "./patient-booking-session.service";
+import type { PatientBookingSessionService } from "./patient-booking-session.service";
 import type { Pool, QueryResult } from "pg";
 
 const PATIENT_ID = "patient-001";
@@ -36,21 +36,21 @@ function makeStatefulPool(matchPhone: boolean) {
     }
     if (sql.includes("SELECT id, patient_id, otp_hash, otp_salt")) {
       const phone = params![0] as string;
-      const candidates = rows.filter((r) => r["phone"] === phone && !r["consumed_at"]);
-      candidates.sort((a, b) => String(b["created_at"]).localeCompare(String(a["created_at"])));
+      const candidates = rows.filter((r) => r.phone === phone && !r.consumed_at);
+      candidates.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
       const row = candidates[0];
       return Promise.resolve({ rows: row ? [row] : [] } as unknown as QueryResult);
     }
     if (sql.includes("SET attempts = attempts + 1")) {
       const id = params![0] as string;
-      const row = rows.find((r) => r["id"] === id);
-      if (row) row["attempts"] = (row["attempts"] as number) + 1;
+      const row = rows.find((r) => r.id === id);
+      if (row) row.attempts = (row.attempts as number) + 1;
       return Promise.resolve({ rows: [] } as unknown as QueryResult);
     }
     if (sql.includes("SET consumed_at = now()")) {
       const id = params![0] as string;
-      const row = rows.find((r) => r["id"] === id);
-      if (row) row["consumed_at"] = new Date().toISOString();
+      const row = rows.find((r) => r.id === id);
+      if (row) row.consumed_at = new Date().toISOString();
       return Promise.resolve({ rows: [] } as unknown as QueryResult);
     }
     return Promise.resolve({ rows: [] } as unknown as QueryResult);
@@ -66,7 +66,7 @@ async function requestAndCaptureCode(pool: Pool): Promise<string> {
   const logSpy = jest.spyOn(Logger.prototype, "log").mockImplementation(() => undefined);
   const svc = new PatientOtpService(pool, makeBookingSessions());
   await svc.requestOtp(PHONE);
-  const call = logSpy.mock.calls.find(([arg]) => (arg as { event?: string })?.event === "otp_stub_delivered");
+  const call = logSpy.mock.calls.find(([arg]) => (arg as { event?: string }).event === "otp_stub_delivered");
   logSpy.mockRestore();
   return (call![0] as { code: string }).code;
 }
@@ -106,7 +106,7 @@ describe("PatientOtpService.verifyOtp", () => {
     const wrongCode = code === "000000" ? "111111" : "000000";
     const svc = new PatientOtpService(pool, makeBookingSessions());
     await expect(svc.verifyOtp(PHONE, wrongCode)).rejects.toThrow(BadRequestException);
-    expect(pool.rows[0]!["attempts"]).toBe(1);
+    expect(pool.rows[0]!.attempts).toBe(1);
   });
 
   it("rejects once the attempt cap is reached, even with the correct code", async () => {
@@ -123,7 +123,7 @@ describe("PatientOtpService.verifyOtp", () => {
   it("rejects an expired code even when correct", async () => {
     const pool = makeStatefulPool(true);
     const code = await requestAndCaptureCode(pool);
-    pool.rows[0]!["expires_at"] = new Date(Date.now() - 1000).toISOString();
+    pool.rows[0]!.expires_at = new Date(Date.now() - 1000).toISOString();
     const svc = new PatientOtpService(pool, makeBookingSessions());
     await expect(svc.verifyOtp(PHONE, code)).rejects.toThrow(BadRequestException);
   });

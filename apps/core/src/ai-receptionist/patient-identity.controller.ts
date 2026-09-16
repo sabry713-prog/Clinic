@@ -91,7 +91,7 @@ export class PatientIdentityController {
       const { sessionToken, patientId } = await this.otpSvc.verifyOtp(body.phone, body.code);
       res.cookie(BOOKING_SESSION_COOKIE, sessionToken, {
         httpOnly: true,
-        secure: process.env["NODE_ENV"] === "production",
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 25 * 60 * 1000,
       });

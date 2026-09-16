@@ -128,7 +128,7 @@ export class AdminController {
   ) {}
 
   private async assertAdmin(req: Request): Promise<string> {
-    const sessionId = req.cookies["session_id"] as string | undefined;
+    const sessionId = req.cookies.session_id as string | undefined;
     if (!sessionId) throw new ForbiddenException("Unauthenticated");
     const session = await this.sessions.get(sessionId);
     if (!session) throw new ForbiddenException("Session expired");
@@ -157,7 +157,7 @@ export class AdminController {
        LIMIT 100`,
     );
 
-    return result.rows;
+    return result.rows as Record<string, unknown>[];
   }
 
   @Post("quarantine/:id/resolve")
@@ -431,19 +431,19 @@ export class AdminController {
     );
 
     const data = result.rows.slice(0, limit).map((row: Record<string, unknown>) => ({
-      id: row["id"],
-      ts: row["ts"],
+      id: row.id,
+      ts: row.ts,
       actor: {
-        id: row["actor_id"],
-        display_name: row["actor_display_name"],
-        role: row["actor_role"],
+        id: row.actor_id,
+        display_name: row.actor_display_name,
+        role: row.actor_role,
       },
-      action: row["action"],
-      target_type: row["target_type"],
-      target_id: row["target_id"],
-      outcome: row["outcome"],
-      metadata_json: row["metadata_json"],
-      request_id: row["request_id"],
+      action: row.action,
+      target_type: row.target_type,
+      target_id: row.target_id,
+      outcome: row.outcome,
+      metadata_json: row.metadata_json,
+      request_id: row.request_id,
     }));
 
     const hasMore = result.rows.length > limit;

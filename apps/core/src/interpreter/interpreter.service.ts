@@ -31,7 +31,7 @@ export class InterpreterService {
 
   constructor() {
     this.narrativeServiceUrl =
-      process.env["NARRATIVE_SERVICE_URL"] ?? "http://localhost:5001";
+      process.env.NARRATIVE_SERVICE_URL ?? "http://localhost:5001";
   }
 
   async translate(

@@ -18,7 +18,7 @@ import { resolve } from "node:path";
 
 dotenv.config({ path: resolve(__dirname, "../../../../.env") });
 
-const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const IN_SCOPE_MRNS = ["MRN-006", "MRN-007", "MRN-008", "MRN-009", "MRN-010"];
 
 interface Chunk {
@@ -61,9 +61,9 @@ async function main(): Promise<void> {
         [pid],
       );
       for (const r of obs.rows) {
-        const val = r.value_numeric !== null ? `${r.value_numeric}${r.unit ? " " + r.unit : ""}` : (r.value_text ?? "");
+        const val = r.value_numeric !== null ? `${String(r.value_numeric)}${r.unit ? ` ${String(r.unit)}` : ""}` : (r.value_text ?? "");
         const ref = r.ref_range_low !== null && r.ref_range_high !== null
-          ? ` (ref: ${r.ref_range_low}-${r.ref_range_high}${r.unit ? " " + r.unit : ""})`
+          ? ` (ref: ${String(r.ref_range_low)}-${String(r.ref_range_high)}${r.unit ? ` ${String(r.unit)}` : ""})`
           : r.ref_range_text ? ` (ref: ${r.ref_range_text})` : "";
         chunks.push({
           source_type: "observation", source_id: r.id, language: "en",

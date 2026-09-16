@@ -86,9 +86,9 @@ function composeFeatureModules() {
     LoggerModule.forRoot({
       pinoHttp: {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-        transport: (process.env["NODE_ENV"] !== "production"
+        transport: (process.env.NODE_ENV !== "production"
           ? { target: "pino-pretty", options: { colorize: true } }
-          : undefined) as any,
+          : undefined) as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- pino transport type mismatch
         serializers: {
           req: (req: { id: unknown; method: unknown; url: unknown }) => ({
             id: req.id,

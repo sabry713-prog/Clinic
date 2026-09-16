@@ -3,10 +3,10 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 
 const sdk = new NodeSDK({
-  serviceName: process.env["OTEL_SERVICE_NAME"] ?? "clinical-copilot-core",
+  serviceName: process.env.OTEL_SERVICE_NAME ?? "clinical-copilot-core",
   traceExporter: new OTLPTraceExporter({
     url:
-      (process.env["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://localhost:4318") +
+      (process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? "http://localhost:4318") +
       "/v1/traces",
   }),
   instrumentations: [getNodeAutoInstrumentations()],
@@ -15,5 +15,5 @@ const sdk = new NodeSDK({
 sdk.start();
 
 process.on("SIGTERM", () => {
-  sdk.shutdown().finally(() => process.exit(0));
+  void sdk.shutdown().finally(() => process.exit(0));
 });

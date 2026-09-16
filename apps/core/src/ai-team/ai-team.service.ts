@@ -39,7 +39,7 @@ export class AiTeamService {
   private readonly orchestratorUrl: string;
 
   constructor() {
-    this.orchestratorUrl = process.env["ORCHESTRATOR_SERVICE_URL"] ?? "http://127.0.0.1:5005";
+    this.orchestratorUrl = process.env.ORCHESTRATOR_SERVICE_URL ?? "http://127.0.0.1:5005";
   }
 
   streamAgents(patientId: string): Observable<MessageEvent> {
@@ -50,7 +50,7 @@ export class AiTeamService {
         let response: Response;
         // H03: 15s connect timeout for the SSE stream (the stream itself
         // is long-lived once connected; only the initial connect is bounded)
-        const connectTimer = setTimeout(() => controller.abort(), 15_000);
+        const connectTimer = setTimeout(() => { controller.abort(); }, 15_000);
         try {
           response = await fetch(
             `${this.orchestratorUrl}/api/v1/agents/stream?patient_id=${encodeURIComponent(patientId)}`,
@@ -104,7 +104,7 @@ export class AiTeamService {
         }
       })();
 
-      return () => controller.abort();
+      return () => { controller.abort(); };
     });
   }
 

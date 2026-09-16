@@ -9,7 +9,7 @@
 import { LinkageVerdictsService } from "./linkage-verdicts.service";
 import type { PatientScopeService } from "../patient/patient-scope.service";
 
-type PoolLike = { query: unknown };
+interface PoolLike { query: unknown }
 
 function makeService(graphResponds: "ok" | "down" | "bad-shape"): {
   service: LinkageVerdictsService;

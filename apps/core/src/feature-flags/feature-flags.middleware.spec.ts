@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { FeatureFlagsMiddleware } from "./feature-flags.middleware";
-import { FeatureFlagsService } from "./feature-flags.service";
+import type { FeatureFlagsService } from "./feature-flags.service";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -65,7 +65,7 @@ describe("FeatureFlagsMiddleware", () => {
     mw.use(req as Request, res as Response, next);
 
     expect(ctx.statusCode).toBe(503);
-    expect((ctx.body as Record<string, unknown>)["flag"]).toBe("qa.allow_responses");
+    expect((ctx.body as Record<string, unknown>).flag).toBe("qa.allow_responses");
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -93,7 +93,7 @@ describe("FeatureFlagsMiddleware", () => {
     mw.use(req as Request, res as Response, next);
 
     expect(ctx.statusCode).toBe(503);
-    expect((ctx.body as Record<string, unknown>)["flag"]).toBe("narrative.enabled");
+    expect((ctx.body as Record<string, unknown>).flag).toBe("narrative.enabled");
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -109,7 +109,7 @@ describe("FeatureFlagsMiddleware", () => {
     mw.use(req as Request, res as Response, next);
 
     expect(ctx.statusCode).toBe(503);
-    expect((ctx.body as Record<string, unknown>)["flag"]).toBe("handoff.enabled");
+    expect((ctx.body as Record<string, unknown>).flag).toBe("handoff.enabled");
     expect(next).not.toHaveBeenCalled();
   });
 

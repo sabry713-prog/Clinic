@@ -7,9 +7,9 @@
  */
 
 import { HospitalSysConnectorService } from "./hospital-sys-connector.service";
-import { PatientScopeService } from "../patient/patient-scope.service";
+import type { PatientScopeService } from "../patient/patient-scope.service";
 import { NotFoundException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import type { Pool, QueryResult } from "pg";
 
 const mockScopeService = {
@@ -40,14 +40,14 @@ function makeStatefulPool() {
     }
     if (sql.includes("SELECT") && sql.includes("FROM app.his_order_transmission") && sql.includes("idempotency_key = $1")) {
       const key = params?.[0] as string;
-      const row = transmissions.find((t) => t["idempotency_key"] === key && ["pending", "accepted"].includes(t["status"] as string));
+      const row = transmissions.find((t) => t.idempotency_key === key && ["pending", "accepted"].includes(t.status as string));
       return Promise.resolve({ rows: row ? [row] : [] } as unknown as QueryResult);
     }
     if (sql.includes("INSERT INTO app.his_order_transmission")) {
       const [patientId, sourceType, sourceId, idempotencyKey, status, reasonCode, reasonText, mode, transmittedBy] = params!;
-      const existingIdx = transmissions.findIndex((t) => t["idempotency_key"] === idempotencyKey);
+      const existingIdx = transmissions.findIndex((t) => t.idempotency_key === idempotencyKey);
       const row = {
-        id: existingIdx >= 0 ? transmissions[existingIdx]!["id"] : `tx-${transmissions.length + 1}`,
+        id: existingIdx >= 0 ? transmissions[existingIdx]!.id : `tx-${transmissions.length + 1}`,
         patient_id: patientId,
         source_type: sourceType,
         source_id: sourceId,
@@ -88,7 +88,7 @@ describe("HospitalSysConnectorService.transmit — idempotency", () => {
     // are short-circuited by the pending/accepted pre-check; rejected rows
     // hit the upsert, which still keeps exactly one row per idempotency key).
     const rowsForOrder = (pool as unknown as { transmissions: Record<string, unknown>[] }).transmissions.filter(
-      (t) => t["source_id"] === "sr-1",
+      (t) => t.source_id === "sr-1",
     );
     expect(rowsForOrder).toHaveLength(1);
   });

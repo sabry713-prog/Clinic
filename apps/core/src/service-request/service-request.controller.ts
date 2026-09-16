@@ -87,7 +87,7 @@ export class ServiceRequestController {
   @RequirePermission("service_request:write")
   @ApiOperation({ summary: "Create service requests from clinician-confirmed candidates" })
   async create(@Req() req: Request, @Param("id") id: string, @Body() body: ConfirmDto) {
-    const created = await this.svc.confirmAndCreate(uid(req), id, body.items as ServiceCandidate[], body.adHocText);
+    const created = await this.svc.confirmAndCreate(uid(req), id, body.items, body.adHocText);
     await this.audit(req, "SERVICE_REQUEST_CREATED", id, {
       count: created.length,
       codes: created.map((c) => c.code_display),

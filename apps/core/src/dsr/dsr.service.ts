@@ -241,8 +241,8 @@ export class DsrService {
 
     // 4. Delete the Neo4j projection (rebuildable, no retention obligation)
     try {
-      const neo4jUri = process.env["NEO4J_URI"] ?? "";
-      const neo4jAuth = process.env["NEO4J_AUTH"] ?? "";
+      const neo4jUri = process.env.NEO4J_URI ?? "";
+      const neo4jAuth = process.env.NEO4J_AUTH ?? "";
       if (neo4jUri && neo4jAuth) {
         // Dynamic import with eval to avoid a hard TypeScript dependency
         // on neo4j-driver when it's not installed in this workspace
@@ -261,7 +261,7 @@ export class DsrService {
           auth: { basic: (u: string, p: string) => unknown };
         };
         const [user, password] = neo4jAuth.split("/");
-        const auth = neo4j.auth.basic(user ?? "", password ?? "") as unknown;
+        const auth = neo4j.auth.basic(user ?? "", password ?? "");
         const driver = neo4j.driver(neo4jUri, auth as Parameters<typeof neo4j.driver>[1]);
         const session = driver.session();
         try {

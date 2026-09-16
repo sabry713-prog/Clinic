@@ -88,7 +88,7 @@ export class HealthController {
       modules: activeModuleNames(),
       dependencies: checks,
       connector_modes: {
-        nphies: process.env["NPHIES_CONNECTOR"] ?? "stub",
+        nphies: process.env.NPHIES_CONNECTOR ?? "stub",
         profiles_verified: false,
       },
     };
@@ -120,7 +120,7 @@ export class HealthController {
     } catch { /* already reported */ }
 
     try {
-      const graphUrl = process.env["GRAPH_SERVICE_URL"] ?? "http://127.0.0.1:5004";
+      const graphUrl = process.env.GRAPH_SERVICE_URL ?? "http://127.0.0.1:5004";
       const resp = await fetch(`${graphUrl}/api/v1/nscre/evaluate-encounter`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -159,7 +159,7 @@ export class HealthController {
 
   private async checkGraphService(): Promise<DependencyCheck> {
     const start = Date.now();
-    const url = process.env["GRAPH_SERVICE_URL"] ?? "http://127.0.0.1:5004";
+    const url = process.env.GRAPH_SERVICE_URL ?? "http://127.0.0.1:5004";
     try {
       const resp = await fetch(`${url}/health`, { signal: AbortSignal.timeout(3000) });
       const latency = Date.now() - start;
@@ -179,7 +179,7 @@ export class HealthController {
 
   private async checkOrchestrator(): Promise<DependencyCheck> {
     const start = Date.now();
-    const url = process.env["ORCHESTRATOR_URL"] ?? "http://127.0.0.1:5005";
+    const url = process.env.ORCHESTRATOR_URL ?? "http://127.0.0.1:5005";
     try {
       const resp = await fetch(`${url}/health`, { signal: AbortSignal.timeout(3000) });
       const latency = Date.now() - start;

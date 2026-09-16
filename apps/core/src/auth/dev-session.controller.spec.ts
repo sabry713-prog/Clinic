@@ -6,7 +6,7 @@
  */
 
 import { ForbiddenException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import { DevSessionController } from "./dev-session.controller";
 
 function makeController(env: Record<string, string>): DevSessionController {

@@ -9,7 +9,7 @@
  * - Scope windows: current_shift = 12h, last_24h = 24h
  */
 
-import { HandoffService, type HandoffScope } from "./handoff.service";
+import { HandoffService } from "./handoff.service";
 import { formatHandoffText, formatSection } from "./handoff-formatter";
 
 // ─── Blocklist words (TypeScript mirror of Python patterns) ──────────────────
@@ -120,7 +120,7 @@ describe("HandoffService", () => {
       ...patientData,
     };
 
-    const responses: Array<{ rows: unknown[] }> = [
+    const responses: { rows: unknown[] }[] = [
       // patient
       { rows: [defaultPatient] },
       // encounter
@@ -270,18 +270,7 @@ describe("HandoffService", () => {
 import { DsrService } from "../dsr/dsr.service";
 
 describe("DsrService", () => {
-  function makeDsrPool() {
-    const pool = {
-      connect: jest.fn().mockResolvedValue({
-        query: jest.fn().mockResolvedValue({ rows: [{ id: "audit-id", hash_self: "abc" }] }),
-        release: jest.fn(),
-      }),
-      query: jest.fn(),
-    };
-    return pool;
-  }
-
-  it("access request creates row with type=access and due_at = +30 days", async () => {
+    it("access request creates row with type=access and due_at = +30 days", async () => {
     const insertRow = { id: "dsr-1", created_at: new Date("2026-06-10T00:00:00Z") };
     const pool = {
       connect: jest.fn().mockResolvedValue({

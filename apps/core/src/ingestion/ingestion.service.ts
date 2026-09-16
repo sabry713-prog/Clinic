@@ -302,7 +302,7 @@ export class IngestionService {
   private async findReconciliationCandidates(
     excludeId: string,
     row: PatientRow,
-  ): Promise<Array<{ id: string }>> {
+  ): Promise<{ id: string }[]> {
     // Find patients that share national_id_hash OR (same source + MRN)
     const result = await this.pool.query<{ id: string }>(
       `SELECT id FROM hospital.patient
@@ -363,7 +363,7 @@ export class IngestionService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fetcher: () => Promise<any>,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ): Promise<Array<{ resource?: any }>> => {
+    ): Promise<{ resource?: any }[]> => {
       try {
         const first = await fetcher();
         // M05: follow next links for all-page traversal
@@ -372,7 +372,7 @@ export class IngestionService {
         // for now we take the first page (client may not expose next
         // links — when it does, traverse here). The count is raised
         // to reduce silent truncation.
-        return allEntries;
+        return allEntries as { resource?: unknown }[];
       } catch (err) {
         partial_failures.push(name);
         this.logger.warn({

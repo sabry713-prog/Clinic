@@ -24,7 +24,7 @@ import { resolve } from "node:path";
 
 dotenv.config({ path: resolve(__dirname, "../../../../.env") });
 
-const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const SRC = "dev-seed-symptoms";
 
@@ -101,55 +101,55 @@ const CLINICS: Record<string, Clinic> = {
   cardiology: {
     name: "Cardiology Clinic",
     physician: "Dr. Salem Al-Harthi (Dev)",
-    symptoms: [SYMPTOMS["chestPain"]!, SYMPTOMS["palpitations"]!, SYMPTOMS["dyspnea"]!, SYMPTOMS["ankleSwelling"]!, SYMPTOMS["dizziness"]!],
+    symptoms: [SYMPTOMS.chestPain!, SYMPTOMS.palpitations!, SYMPTOMS.dyspnea!, SYMPTOMS.ankleSwelling!, SYMPTOMS.dizziness!],
     medication: { code: "318859000", display: "Bisoprolol 2.5mg", dose: "2.5 mg", route: "Oral", freq: "Once daily" },
   },
   endocrinology: {
     name: "Endocrinology Clinic",
     physician: "Dr. Maha Al-Saif (Dev)",
-    symptoms: [SYMPTOMS["fatigue"]!, SYMPTOMS["polydipsia"]!, SYMPTOMS["polyuria"]!, SYMPTOMS["tremor"]!, SYMPTOMS["paresthesia"]!],
+    symptoms: [SYMPTOMS.fatigue!, SYMPTOMS.polydipsia!, SYMPTOMS.polyuria!, SYMPTOMS.tremor!, SYMPTOMS.paresthesia!],
     medication: { code: "372567009", display: "Metformin 500mg", dose: "500 mg", route: "Oral", freq: "Twice daily" },
   },
   nephrology: {
     name: "Nephrology Clinic",
     physician: "Dr. Waleed Al-Amri (Dev)",
-    symptoms: [SYMPTOMS["ankleSwelling"]!, SYMPTOMS["fatigue"]!, SYMPTOMS["polyuria"]!, SYMPTOMS["nausea"]!],
+    symptoms: [SYMPTOMS.ankleSwelling!, SYMPTOMS.fatigue!, SYMPTOMS.polyuria!, SYMPTOMS.nausea!],
     medication: { code: "387165009", display: "Sodium bicarbonate 500mg", dose: "500 mg", route: "Oral", freq: "Twice daily" },
   },
   pulmonology: {
     name: "Pulmonology Clinic",
     physician: "Dr. Lama Al-Fadhli (Dev)",
-    symptoms: [SYMPTOMS["cough"]!, SYMPTOMS["wheezing"]!, SYMPTOMS["dyspnea"]!],
+    symptoms: [SYMPTOMS.cough!, SYMPTOMS.wheezing!, SYMPTOMS.dyspnea!],
     medication: { code: "108606002", display: "Salbutamol inhaler 100mcg", dose: "2 puffs", route: "Inhalation", freq: "As needed" },
   },
   ent: {
     name: "ENT Clinic",
     physician: "Dr. Faisal Al-Nasser (Dev)",
-    symptoms: [SYMPTOMS["soreThroat"]!, SYMPTOMS["nasalCongestion"]!, SYMPTOMS["earPain"]!, SYMPTOMS["dizziness"]!],
+    symptoms: [SYMPTOMS.soreThroat!, SYMPTOMS.nasalCongestion!, SYMPTOMS.earPain!, SYMPTOMS.dizziness!],
     medication: { code: "395726003", display: "Xylometazoline nasal spray 0.1%", dose: "1 spray", route: "Nasal", freq: "Twice daily" },
   },
   neurology: {
     name: "Neurology Clinic",
     physician: "Dr. Reema Al-Dakhil (Dev)",
-    symptoms: [SYMPTOMS["headache"]!, SYMPTOMS["dizziness"]!, SYMPTOMS["paresthesia"]!, SYMPTOMS["blurredVision"]!, SYMPTOMS["tremor"]!],
+    symptoms: [SYMPTOMS.headache!, SYMPTOMS.dizziness!, SYMPTOMS.paresthesia!, SYMPTOMS.blurredVision!, SYMPTOMS.tremor!],
     medication: { code: "108406007", display: "Sumatriptan 50mg", dose: "50 mg", route: "Oral", freq: "As needed" },
   },
   internalMedicine: {
     name: "Internal Medicine Clinic",
     physician: "Dr. Tariq Al-Mansouri (Dev)",
-    symptoms: [SYMPTOMS["fatigue"]!, SYMPTOMS["backPain"]!, SYMPTOMS["jointPain"]!, SYMPTOMS["insomnia"]!, SYMPTOMS["nausea"]!, SYMPTOMS["abdominalPain"]!],
+    symptoms: [SYMPTOMS.fatigue!, SYMPTOMS.backPain!, SYMPTOMS.jointPain!, SYMPTOMS.insomnia!, SYMPTOMS.nausea!, SYMPTOMS.abdominalPain!],
     medication: { code: "387517004", display: "Paracetamol 500mg", dose: "500 mg", route: "Oral", freq: "As needed" },
   },
   ophthalmology: {
     name: "Ophthalmology Clinic",
     physician: "Dr. Huda Al-Mutlaq (Dev)",
-    symptoms: [SYMPTOMS["blurredVision"]!, SYMPTOMS["eyePain"]!, SYMPTOMS["headache"]!],
+    symptoms: [SYMPTOMS.blurredVision!, SYMPTOMS.eyePain!, SYMPTOMS.headache!],
     medication: { code: "421026006", display: "Carmellose eye drops 0.5%", dose: "1 drop", route: "Ophthalmic", freq: "As needed" },
   },
   allergy: {
     name: "Allergy and Immunology Clinic",
     physician: "Dr. Nasser Al-Otaibi (Dev)",
-    symptoms: [SYMPTOMS["sneezing"]!, SYMPTOMS["itching"]!, SYMPTOMS["nasalCongestion"]!, SYMPTOMS["wheezing"]!],
+    symptoms: [SYMPTOMS.sneezing!, SYMPTOMS.itching!, SYMPTOMS.nasalCongestion!, SYMPTOMS.wheezing!],
     medication: { code: "330698001", display: "Loratadine 10mg", dose: "10 mg", route: "Oral", freq: "Once daily" },
   },
 };
@@ -157,15 +157,15 @@ const CLINICS: Record<string, Clinic> = {
 // Clinics each patient attends, matched to their seeded conditions
 const PATIENT_CLINICS: Record<string, readonly Clinic[]> = {
   // Hypertension + hypercholesterolemia
-  "MRN-006": [CLINICS["cardiology"]!, CLINICS["internalMedicine"]!, CLINICS["ophthalmology"]!],
+  "MRN-006": [CLINICS.cardiology!, CLINICS.internalMedicine!, CLINICS.ophthalmology!],
   // Asthma
-  "MRN-007": [CLINICS["pulmonology"]!, CLINICS["allergy"]!, CLINICS["ent"]!],
+  "MRN-007": [CLINICS.pulmonology!, CLINICS.allergy!, CLINICS.ent!],
   // Diabetes type 2 + CKD + hypertension
-  "MRN-008": [CLINICS["endocrinology"]!, CLINICS["nephrology"]!, CLINICS["cardiology"]!, CLINICS["ophthalmology"]!],
+  "MRN-008": [CLINICS.endocrinology!, CLINICS.nephrology!, CLINICS.cardiology!, CLINICS.ophthalmology!],
   // Migraine + hypothyroidism
-  "MRN-009": [CLINICS["neurology"]!, CLINICS["endocrinology"]!, CLINICS["ent"]!],
+  "MRN-009": [CLINICS.neurology!, CLINICS.endocrinology!, CLINICS.ent!],
   // Diabetes type 2 + atrial fibrillation + hypercholesterolemia
-  "MRN-010": [CLINICS["cardiology"]!, CLINICS["endocrinology"]!, CLINICS["internalMedicine"]!],
+  "MRN-010": [CLINICS.cardiology!, CLINICS.endocrinology!, CLINICS.internalMedicine!],
 };
 
 // 12 visits spread over the last 2 years (days ago)

@@ -4,7 +4,7 @@
  */
 
 import { AppointmentService } from "./appointment.service";
-import { PatientScopeService } from "../patient/patient-scope.service";
+import type { PatientScopeService } from "../patient/patient-scope.service";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import type { Pool, QueryResult } from "pg";
 

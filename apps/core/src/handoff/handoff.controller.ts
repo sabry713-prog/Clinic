@@ -16,7 +16,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { IsIn, IsOptional, IsString } from "class-validator";
+import { IsIn, IsOptional } from "class-validator";
 import type { Request } from "express";
 import { RbacGuard, RequirePermission } from "../rbac/rbac.guard";
 import { HandoffService, type HandoffScope } from "./handoff.service";

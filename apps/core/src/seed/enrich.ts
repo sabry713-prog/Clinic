@@ -22,7 +22,7 @@ import { resolve } from "node:path";
 
 dotenv.config({ path: resolve(__dirname, "../../../../.env") });
 
-const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const IN_SCOPE_MRNS = ["MRN-006", "MRN-007", "MRN-008", "MRN-009", "MRN-010"];
 
@@ -78,7 +78,7 @@ function round1(v: number): number {
 // "none documented" path.
 const PROCEDURES: Record<
   string,
-  Array<{ code: string; display: string; daysAgo: number; performer: string; note: string }>
+  { code: string; display: string; daysAgo: number; performer: string; note: string }[]
 > = {
   "MRN-006": [
     { code: "33367005", display: "Coronary angiography", daysAgo: 380, performer: "Dr. Salem Al-Harthi (Dev)", note: "Coronary angiography performed in the catheterization laboratory (cath lab). Findings documented in the procedure report." },
@@ -209,9 +209,9 @@ async function main(): Promise<void> {
 
     interface Profile {
       mrn: string;
-      conditions: Array<{ code: string; display: string; status: string; onsetDaysAgo: number }>;
-      medications: Array<{ code: string; display: string; dose: string; route: string; freq: string; status: string; startedDaysAgo: number; indication?: { code: string; display: string } }>;
-      allergies: Array<{ code: string; display: string; reaction: string; severity: string }>;
+      conditions: { code: string; display: string; status: string; onsetDaysAgo: number }[];
+      medications: { code: string; display: string; dose: string; route: string; freq: string; status: string; startedDaysAgo: number; indication?: { code: string; display: string } }[];
+      allergies: { code: string; display: string; reaction: string; severity: string }[];
     }
 
     const profiles: Profile[] = [

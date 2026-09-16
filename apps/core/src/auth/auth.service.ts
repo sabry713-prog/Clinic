@@ -6,7 +6,7 @@ import {
   type Client,
   type IssuerMetadata,
 } from "openid-client";
-import { type Pool } from "pg";
+import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { SessionService, type SessionData } from "./session.service";
 
@@ -33,7 +33,7 @@ export class AuthService {
     if (this.oidcClient) return this.oidcClient;
 
     const issuerUrl = this.config.getOrThrow<string>("OIDC_ISSUER_URL");
-    let issuer: Issuer<Client>;
+    let issuer: Issuer;
     try {
       issuer = await Issuer.discover(issuerUrl);
     } catch (err) {
@@ -113,7 +113,7 @@ export class AuthService {
     );
 
     const claims = tokenSet.claims();
-    const sub = claims["sub"];
+    const sub = claims.sub;
     if (!sub) throw new UnauthorizedException("No sub claim in token");
 
     const roles = this.extractRoles(claims);
@@ -146,10 +146,10 @@ export class AuthService {
       tenantId: "00000000-0000-0000-0000-000000000001",
       externalSubject: sub,
       displayName:
-        (claims["name"] as string | undefined) ??
-        (claims["preferred_username"] as string | undefined) ??
+        (claims.name) ??
+        (claims.preferred_username) ??
         sub,
-      email: (claims["email"] as string | undefined) ?? null,
+      email: (claims.email) ?? null,
       preferredLanguage: "ar",
       roles,
       accessToken: tokenSet.access_token ?? "",
@@ -170,7 +170,7 @@ export class AuthService {
     const issuerUrl = this.config.getOrThrow<string>("OIDC_ISSUER_URL");
     // Build end session URL
     const endSessionUrl =
-      client.issuer.metadata["end_session_endpoint"] as string | undefined ??
+      client.issuer.metadata.end_session_endpoint ??
       `${issuerUrl}/protocol/openid-connect/logout`;
 
     const postLogoutUri = `${this.config.get<string>("WEB_URL") ?? this.config.get<string>("VITE_API_BASE_URL") ?? "http://localhost:3000"}/`;
@@ -183,7 +183,7 @@ export class AuthService {
 
   private extractRoles(claims: Record<string, unknown>): string[] {
     // Keycloak stores realm roles in realm_access.roles
-    const realmAccess = claims["realm_access"] as
+    const realmAccess = claims.realm_access as
       | { roles?: string[] }
       | undefined;
     if (realmAccess?.roles) return realmAccess.roles;

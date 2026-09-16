@@ -16,19 +16,19 @@ import type { EncryptionService } from "../security/encryption.service";
 function makePool(overrides: Record<string, unknown[]> = {}) {
   const query = jest.fn().mockImplementation((sql: string, params?: unknown[]) => {
     if (typeof sql === "string" && sql.includes("FROM hospital.patient")) {
-      return Promise.resolve({ rows: overrides["identity"] ?? [{ display_name: "Test Patient", mrn: "MRN-1", date_of_birth: "1980-01-01", sex: "male" }] });
+      return Promise.resolve({ rows: overrides.identity ?? [{ display_name: "Test Patient", mrn: "MRN-1", date_of_birth: "1980-01-01", sex: "male" }] });
     }
     if (typeof sql === "string" && sql.includes("FROM hospital.condition")) {
-      return Promise.resolve({ rows: overrides["problems"] ?? [{ code_display: "Type 2 diabetes", status: "active", onset_date: "2020-01-01" }] });
+      return Promise.resolve({ rows: overrides.problems ?? [{ code_display: "Type 2 diabetes", status: "active", onset_date: "2020-01-01" }] });
     }
     if (typeof sql === "string" && sql.includes("FROM hospital.medication_request")) {
-      return Promise.resolve({ rows: overrides["medications"] ?? [{ medication_display: "Metformin", dose: "500mg", route: "oral", frequency: "BID" }] });
+      return Promise.resolve({ rows: overrides.medications ?? [{ medication_display: "Metformin", dose: "500mg", route: "oral", frequency: "BID" }] });
     }
     if (typeof sql === "string" && sql.includes("FROM hospital.observation")) {
-      return Promise.resolve({ rows: overrides["results"] ?? [] });
+      return Promise.resolve({ rows: overrides.results ?? [] });
     }
     if (typeof sql === "string" && sql.includes("FROM hospital.allergy_intolerance")) {
-      return Promise.resolve({ rows: overrides["allergies"] ?? [{ code_display: "Penicillin", reaction: "Rash", recorded_at: "2021-01-01" }] });
+      return Promise.resolve({ rows: overrides.allergies ?? [{ code_display: "Penicillin", reaction: "Rash", recorded_at: "2021-01-01" }] });
     }
     if (typeof sql === "string" && sql.includes("FROM hospital.document_reference")) {
       return Promise.resolve({ rows: [] });
@@ -62,7 +62,7 @@ describe("DraftService specialty templates", () => {
   it("general specialty keeps the base template titles unchanged", async () => {
     const service = new DraftService(makePool(), makeScope(), makeEncryption());
     const draft = await service.generate("user-1", "patient-1", "discharge_summary", "en", "general");
-    const sections = draft.sections_json as unknown as Array<{ key: string; title: string }>;
+    const sections = draft.sections_json as unknown as { key: string; title: string }[];
     expect(sections.map((s) => s.key)).toEqual(["identity", "problems", "medications", "results", "assessment", "plan"]);
     expect(sections.find((s) => s.key === "problems")?.title).toBe("Documented Problems");
   });
@@ -70,7 +70,7 @@ describe("DraftService specialty templates", () => {
   it("cardiology specialty overrides problem/medication/results titles only", async () => {
     const service = new DraftService(makePool(), makeScope(), makeEncryption());
     const draft = await service.generate("user-1", "patient-1", "discharge_summary", "en", "cardiology");
-    const sections = draft.sections_json as unknown as Array<{ key: string; title: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; title: string; text: string }[];
     expect(sections.find((s) => s.key === "problems")?.title).toBe("Cardiac Problem List");
     expect(sections.find((s) => s.key === "medications")?.title).toBe("Cardiac Medications");
     expect(sections.find((s) => s.key === "results")?.title).toBe("Cardiac & Laboratory Results");
@@ -81,7 +81,7 @@ describe("DraftService specialty templates", () => {
   it("non-general specialty inserts an Allergies section right after Identity", async () => {
     const service = new DraftService(makePool(), makeScope(), makeEncryption());
     const draft = await service.generate("user-1", "patient-1", "discharge_summary", "en", "orthopedics");
-    const sections = draft.sections_json as unknown as Array<{ key: string; title: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; title: string; text: string }[];
     const identityIdx = sections.findIndex((s) => s.key === "identity");
     expect(sections[identityIdx + 1]?.key).toBe("allergies");
     expect(sections.find((s) => s.key === "allergies")?.text).toContain("Penicillin");
@@ -90,14 +90,14 @@ describe("DraftService specialty templates", () => {
   it("general specialty does not insert an Allergies section", async () => {
     const service = new DraftService(makePool(), makeScope(), makeEncryption());
     const draft = await service.generate("user-1", "patient-1", "discharge_summary", "en", "general");
-    const sections = draft.sections_json as unknown as Array<{ key: string }>;
+    const sections = draft.sections_json as unknown as { key: string }[];
     expect(sections.some((s) => s.key === "allergies")).toBe(false);
   });
 
   it("resolves Arabic titles for both generic and specialty-overridden sections", async () => {
     const service = new DraftService(makePool(), makeScope(), makeEncryption());
     const draft = await service.generate("user-1", "patient-1", "discharge_summary", "ar", "cardiology");
-    const sections = draft.sections_json as unknown as Array<{ key: string; title: string }>;
+    const sections = draft.sections_json as unknown as { key: string; title: string }[];
     expect(sections.find((s) => s.key === "problems")?.title).toBe("قائمة المشاكل القلبية");
     expect(sections.find((s) => s.key === "allergies")?.title).toBe("الحساسيات");
   });
@@ -116,7 +116,7 @@ describe("DraftService ambient-capture prefill", () => {
         plan: "Start amoxicillin.",
       },
     });
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "chief_complaint")?.text).toBe("Patient reports a cough for three days.");
     expect(sections.find((s) => s.key === "assessment")?.text).toBe("I think this is bronchitis.");
     expect(sections.find((s) => s.key === "plan")?.text).toBe("Start amoxicillin.");
@@ -138,14 +138,14 @@ describe("DraftService ambient-capture prefill", () => {
       transcript: TRANSCRIPT,
       sections: { chief_complaint: "Patient reports a cough for three days." },
     });
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "history")?.text).toContain("Dictate or type");
   });
 
   it("no prefill behaves exactly like manual encounter_note drafting (dictate-fresh placeholders)", async () => {
     const service = new DraftService(makePool(), makeScope(), makeEncryption());
     const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general");
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "chief_complaint")?.text).toContain("Dictate or type");
   });
 });
@@ -166,7 +166,7 @@ describe("DraftService ambient-condensation prefill", () => {
       sections: { chief_complaint: "3-day cough." }, // NOT a verbatim substring of TRANSCRIPT
       condensedKeys: ["chief_complaint"],
     });
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "chief_complaint")?.text).toBe("3-day cough.");
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/validate-condensation"),
@@ -222,7 +222,7 @@ describe("DraftService ambient auto-translation prefill", () => {
       sections: { chief_complaint: AR_TRANSCRIPT },
       translatedKeys: ["chief_complaint"],
     });
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "chief_complaint")?.text).toBe("3-day cough.");
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/narrative/interpret"),
@@ -238,7 +238,7 @@ describe("DraftService ambient auto-translation prefill", () => {
       sections: { chief_complaint: AR_TRANSCRIPT },
       translatedKeys: ["chief_complaint"],
     });
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "chief_complaint")?.text).toBe(AR_TRANSCRIPT);
   });
 
@@ -250,7 +250,7 @@ describe("DraftService ambient auto-translation prefill", () => {
       sections: { assessment: AR_TRANSCRIPT },
       translatedKeys: ["assessment"], // TRANSLATABLE_SECTIONS does not include "assessment" -- must be ignored
     });
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "assessment")?.text).toBe(AR_TRANSCRIPT);
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -267,13 +267,13 @@ describe("DraftService ambient auto-translation prefill", () => {
       sections: { chief_complaint: enTranscript },
       translatedKeys: ["chief_complaint"],
     });
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "chief_complaint")?.text).toBe(enTranscript);
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it("condenses first, then translates the condensed text (both flags on the same section)", async () => {
-    const calls: Array<{ url: string; body: unknown }> = [];
+    const calls: { url: string; body: unknown }[] = [];
     global.fetch = jest.fn((url: string, opts: { body: string }) => {
       const body = JSON.parse(opts.body) as Record<string, unknown>;
       calls.push({ url: String(url), body });
@@ -294,7 +294,7 @@ describe("DraftService ambient auto-translation prefill", () => {
       translatedKeys: ["chief_complaint"],
     });
 
-    const sections = draft.sections_json as unknown as Array<{ key: string; text: string }>;
+    const sections = draft.sections_json as unknown as { key: string; text: string }[];
     expect(sections.find((s) => s.key === "chief_complaint")?.text).toBe("3-day cough (condensed+translated).");
     // Condensation validation happened before translation, and translation
     // was called with the (condensed) text, not the raw transcript.

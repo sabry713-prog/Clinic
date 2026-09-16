@@ -128,7 +128,7 @@ export class AiTeamController {
     const userId = getRequestingUserId(req);
     await this.scopeService.assertPatientInScope(userId, patientId);
 
-    const result = await this.aiTeamService.postCare(patientId, body?.discharge_order);
+    const result = await this.aiTeamService.postCare(patientId, body.discharge_order);
 
     await writeAuditEvent(this.pool, {
       actor_id: userId as import("@clinical-copilot/shared-types").UserId,
@@ -138,8 +138,8 @@ export class AiTeamController {
       target_id: patientId as import("@clinical-copilot/shared-types").PatientId,
       outcome: "SUCCESS",
       metadata_json: {
-        slot_count: Array.isArray(result["followup_slots"]) ? (result["followup_slots"] as unknown[]).length : 0,
-        payload_count: Array.isArray(result["dispatch_payloads"]) ? (result["dispatch_payloads"] as unknown[]).length : 0,
+        slot_count: Array.isArray(result.followup_slots) ? (result.followup_slots as unknown[]).length : 0,
+        payload_count: Array.isArray(result.dispatch_payloads) ? (result.dispatch_payloads as unknown[]).length : 0,
       },
       request_id: (req.headers["x-request-id"] as string | undefined ?? null) as import("@clinical-copilot/shared-types").RequestId | null,
     });

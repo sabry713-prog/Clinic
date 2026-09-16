@@ -19,7 +19,7 @@ import { resolve } from "node:path";
 
 dotenv.config({ path: resolve(__dirname, "../../../../.env") });
 
-const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const TARGET_MRN = "MRN-006";
 

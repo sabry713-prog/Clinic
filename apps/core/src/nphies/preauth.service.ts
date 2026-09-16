@@ -67,7 +67,7 @@ export class PreAuthService {
   private readonly engineUrl: string;
 
   constructor() {
-    this.engineUrl = process.env["NPHIES_ENGINE_URL"] ?? "http://127.0.0.1:5006";
+    this.engineUrl = process.env.NPHIES_ENGINE_URL ?? "http://127.0.0.1:5006";
   }
 
   async submitPreAuth(body: PreAuthSubmission): Promise<QueuedResult> {
@@ -167,7 +167,7 @@ export class PreAuthService {
         }
       })();
 
-      return () => controller.abort();
+      return () => { controller.abort(); };
     });
   }
 }

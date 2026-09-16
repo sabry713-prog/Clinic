@@ -133,9 +133,8 @@ export class CoderQueueService {
     );
     const existing = new Map(existingResult.rows.map((r) => [r.item_id, r]));
 
-    const now = new Date();
     let added = 0;
-    let updated = 0;
+    const updated = 0;
     let preserved = 0;
     const nextIds = new Set<string>();
 
@@ -218,7 +217,7 @@ export class CoderQueueService {
         error: { code: "CODER_QUEUE_ITEM_RESOLVED", message: "Item is already resolved" },
       });
     }
-    return rowToItem(result.rows[0]!);
+    return rowToItem(result.rows[0]);
   }
 
   /** Resolve an item with a note (what the coder did about it) — durable. */
@@ -234,7 +233,7 @@ export class CoderQueueService {
       [itemId, userId, note],
     );
     if (!result.rows[0]) throwItemNotFound(itemId);
-    return rowToItem(result.rows[0]!);
+    return rowToItem(result.rows[0]);
   }
 }
 

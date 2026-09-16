@@ -5,7 +5,7 @@
  */
 import { BadRequestException, ConflictException } from "@nestjs/common";
 import { AvailabilityService } from "./availability.service";
-import { AppointmentService, type AppointmentRow } from "../patient-engagement/appointment.service";
+import type { AppointmentService, AppointmentRow } from "../patient-engagement/appointment.service";
 import type { Pool, QueryResult } from "pg";
 
 const PATIENT_ID = "patient-001";

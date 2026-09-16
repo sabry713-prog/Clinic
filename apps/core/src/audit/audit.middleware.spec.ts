@@ -45,7 +45,7 @@ describe("AuditMiddleware", () => {
     expect(next).toHaveBeenCalled();
 
     // Trigger finish event
-    listeners["finish"]?.();
+    listeners.finish?.();
 
     // Wait for async audit write
     setTimeout(() => {
@@ -81,7 +81,7 @@ describe("AuditMiddleware", () => {
     } as unknown as import("express").Response;
 
     middleware.use(mockReq, mockRes, jest.fn());
-    listeners["finish"]?.();
+    listeners.finish?.();
 
     setTimeout(() => {
       expect(writeAuditEvent).not.toHaveBeenCalled();

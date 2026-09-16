@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
 
   // CORS -- allow the React dev server (port 3000) to call the API with cookies
   app.enableCors({
-    origin: process.env["WEB_URL"] ?? "http://localhost:3000",
+    origin: process.env.WEB_URL ?? "http://localhost:3000",
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -53,7 +53,7 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api/docs", app, document);
 
-  const port = parseInt(process.env["CORE_PORT"] ?? "4000", 10);
+  const port = parseInt(process.env.CORE_PORT ?? "4000", 10);
   await app.listen(port);
 
   const logger = app.get(Logger);

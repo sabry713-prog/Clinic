@@ -6,7 +6,7 @@
  * confirm it never fakes success.
  */
 
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import { EncryptionService } from "./encryption.service";
 import { LocalKeyProviderService } from "./local-key-provider.service";
 import { CustomerKeyProviderService } from "./customer-key-provider.service";

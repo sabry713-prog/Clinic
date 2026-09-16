@@ -13,7 +13,6 @@ import {
   type HandoffSections,
   type ProvenanceItem,
 } from "./handoff-formatter";
-import type { UserId } from "@clinical-copilot/shared-types";
 
 const HANDOFF_DISCLAIMER =
   "Reproduces documented information from the patient record. For clinician reference only. Not a clinical assessment.";

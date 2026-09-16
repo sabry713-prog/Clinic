@@ -48,7 +48,7 @@ function computeHash(row: {
 
 // Build a chain of N events
 function buildChain(n: number) {
-  const rows: Array<{
+  const rows: {
     id: string;
     ts: string;
     actor_id: string | null;
@@ -61,7 +61,7 @@ function buildChain(n: number) {
     request_id: string | null;
     hash_prev: string | null;
     hash_self: string;
-  }> = [];
+  }[] = [];
 
   let prevHash: string | null = null;
   for (let i = 0; i < n; i++) {

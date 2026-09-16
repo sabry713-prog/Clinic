@@ -16,7 +16,7 @@ import {
   ServiceUnavailableException,
   Inject,
 } from "@nestjs/common";
-import type { Pool, PoolClient } from "pg";
+import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 
 export interface GenerateNarrativeOptions {
@@ -64,7 +64,7 @@ export class NarrativeProxyService {
 
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {
     this.narrativeServiceUrl =
-      process.env["NARRATIVE_SERVICE_URL"] ?? "http://localhost:5001";
+      process.env.NARRATIVE_SERVICE_URL ?? "http://localhost:5001";
   }
 
   async generate(options: GenerateNarrativeOptions): Promise<NarrativeResponse> {
@@ -142,7 +142,7 @@ export class NarrativeProxyService {
       language,
       scope,
       latency_ms: latencyMs,
-      blocklist_triggered: serviceResponse["blocklist_triggered"] ?? false,
+      blocklist_triggered: serviceResponse.blocklist_triggered ?? false,
     });
 
     return this._toResponse(serviceResponse, narrativeId, patientId);
@@ -208,7 +208,7 @@ export class NarrativeProxyService {
     disclaimer: string;
   } | null> {
     const narrative = await this.getById(patientId, narrativeId);
-    if (!narrative || !narrative.text) return null;
+    if (!narrative?.text) return null;
 
     const res = await fetch(`${this.narrativeServiceUrl}/narrative/patient-recap`, {
       method: "POST",
@@ -310,17 +310,17 @@ export class NarrativeProxyService {
     language: string,
     scope: string,
   ): Promise<string> {
-    const text = typeof data["text"] === "string" ? data["text"] : null;
+    const text = typeof data.text === "string" ? data.text : null;
     const fallback = !text;
-    const provenance = data["provenance"] ?? [];
+    const provenance = data.provenance ?? [];
     const modelVersion =
-      typeof data["model_version"] === "string" ? data["model_version"] : null;
+      typeof data.model_version === "string" ? data.model_version : null;
     const promptVersion =
-      typeof data["prompt_template_version"] === "string"
-        ? data["prompt_template_version"]
+      typeof data.prompt_template_version === "string"
+        ? data.prompt_template_version
         : "v1.0";
     const blocklistRetries =
-      typeof data["blocklist_retries"] === "number" ? data["blocklist_retries"] : 0;
+      typeof data.blocklist_retries === "number" ? data.blocklist_retries : 0;
 
     const result = await this.pool.query<{ id: string }>(
       `INSERT INTO app.narrative_output
@@ -354,19 +354,19 @@ export class NarrativeProxyService {
       id: narrativeId,
       patient_id: patientId,
       generated_at: new Date().toISOString(),
-      language: typeof data["language"] === "string" ? data["language"] : "en",
-      scope: typeof data["scope"] === "string" ? data["scope"] : "full",
-      text: typeof data["text"] === "string" && data["text"] ? data["text"] : null,
+      language: typeof data.language === "string" ? data.language : "en",
+      scope: typeof data.scope === "string" ? data.scope : "full",
+      text: typeof data.text === "string" && data.text ? data.text : null,
       fallback_message:
-        typeof data["fallback_message"] === "string" && data["fallback_message"]
-          ? data["fallback_message"]
+        typeof data.fallback_message === "string" && data.fallback_message
+          ? data.fallback_message
           : null,
-      provenance: this._parseProvenance(data["provenance"]),
+      provenance: this._parseProvenance(data.provenance),
       model_version:
-        typeof data["model_version"] === "string" ? data["model_version"] : null,
+        typeof data.model_version === "string" ? data.model_version : null,
       prompt_template_version:
-        typeof data["prompt_template_version"] === "string"
-          ? data["prompt_template_version"]
+        typeof data.prompt_template_version === "string"
+          ? data.prompt_template_version
           : "v1.0",
       disclaimer: DISCLAIMER,
     };
@@ -376,19 +376,19 @@ export class NarrativeProxyService {
     if (!Array.isArray(raw)) return [];
     return raw.map((entry: unknown) => {
       const e = entry as Record<string, unknown>;
-      const sources = Array.isArray(e["sources"])
-        ? (e["sources"] as Array<Record<string, unknown>>).map((s) => ({
-            type: String(s["type"] ?? ""),
-            id: String(s["id"] ?? ""),
-            field: String(s["field"] ?? ""),
+      const sources = Array.isArray(e.sources)
+        ? (e.sources as Record<string, unknown>[]).map((s) => ({
+            type: String(s.type ?? ""),
+            id: String(s.id ?? ""),
+            field: String(s.field ?? ""),
           }))
         : [];
       const charStart =
-        typeof e["char_start"] === "number" ? e["char_start"] : 0;
-      const charEnd = typeof e["char_end"] === "number" ? e["char_end"] : 0;
+        typeof e.char_start === "number" ? e.char_start : 0;
+      const charEnd = typeof e.char_end === "number" ? e.char_end : 0;
       return {
         sentence_index:
-          typeof e["sentence_index"] === "number" ? e["sentence_index"] : 0,
+          typeof e.sentence_index === "number" ? e.sentence_index : 0,
         char_range: [charStart, charEnd] as const,
         sources,
       };

@@ -201,7 +201,7 @@ export class DraftService {
    * rather than introducing a new cross-module service dependency.
    */
   private async validateCondensation(condensedText: string, sourceText: string, language: string): Promise<boolean> {
-    const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
+    const url = process.env.TRANSCRIPTION_SERVICE_URL ?? "http://127.0.0.1:5003";
     const res = await fetch(`${url}/validate-condensation`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -225,7 +225,7 @@ export class DraftService {
    * rather than substituting an unreviewed/fallback string into the record.
    */
   private async translateSection(text: string, sourceLanguage: string): Promise<string | null> {
-    const url = process.env["NARRATIVE_SERVICE_URL"] ?? "http://localhost:5001";
+    const url = process.env.NARRATIVE_SERVICE_URL ?? "http://localhost:5001";
     try {
       const res = await fetch(`${url}/narrative/interpret`, { signal: AbortSignal.timeout(30_000),
         method: "POST",
@@ -247,7 +247,7 @@ export class DraftService {
    */
   async transcribe(userId: string, patientId: string, audioBase64: string, language: string): Promise<{ text: string; raw_text: string; engine: string; reformat: string }> {
     await this.scope.assertPatientInScope(userId, patientId);
-    const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
+    const url = process.env.TRANSCRIPTION_SERVICE_URL ?? "http://127.0.0.1:5003";
     const res = await fetch(`${url}/transcribe`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -260,7 +260,7 @@ export class DraftService {
   /** Faithfully polish text the clinician TYPED (same rules as dictation). */
   async reformat(userId: string, patientId: string, text: string, language: string): Promise<{ text: string; raw_text: string; reformat: string }> {
     await this.scope.assertPatientInScope(userId, patientId);
-    const url = process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
+    const url = process.env.TRANSCRIPTION_SERVICE_URL ?? "http://127.0.0.1:5003";
     const res = await fetch(`${url}/reformat`, { signal: AbortSignal.timeout(30_000),
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -412,13 +412,13 @@ export class DraftService {
   }
 
   // List this patient's drafts + signed documents (newest first).
-  async listForPatient(userId: string, patientId: string): Promise<Array<{ id: string; document_type: string; language: string; status: string; created_at: string; signed_at: string | null }>> {
+  async listForPatient(userId: string, patientId: string): Promise<{ id: string; document_type: string; language: string; status: string; created_at: string; signed_at: string | null }[]> {
     await this.scope.assertPatientInScope(userId, patientId);
     const res = await this.pool.query(
       `SELECT id, document_type, language, status, created_at::text, signed_at::text
          FROM app.document_draft WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
       [patientId]);
-    return res.rows;
+    return res.rows as DraftRow[];
   }
 
   async get(userId: string, draftId: string): Promise<DraftRow> {
@@ -511,7 +511,7 @@ export class DraftService {
            FROM hospital.observation WHERE patient_id=$1 AND category='laboratory' ORDER BY code, effective_at DESC LIMIT 20`, [patientId]);
       if (!r.rows.length) return none;
       return r.rows.map((o) => {
-        const v = o.value_numeric !== null ? `${o.value_numeric}${o.unit ? " " + o.unit : ""}` : (o.value_text ?? "—");
+        const v = o.value_numeric !== null ? `${String(o.value_numeric)}${o.unit ? ` ${String(o.unit)}` : ""}` : (o.value_text ?? "—");
         const ref = o.ref_range_low !== null && o.ref_range_high !== null
           ? (ar ? ` (المرجع: ${o.ref_range_low}-${o.ref_range_high})` : ` (ref: ${o.ref_range_low}-${o.ref_range_high})`)
           : "";

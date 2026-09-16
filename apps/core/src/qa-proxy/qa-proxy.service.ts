@@ -36,7 +36,7 @@ export class QAProxyService {
   private readonly qaServiceUrl: string;
 
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {
-    this.qaServiceUrl = process.env["QA_SERVICE_URL"] ?? "http://localhost:5002";
+    this.qaServiceUrl = process.env.QA_SERVICE_URL ?? "http://localhost:5002";
   }
 
   async ask(options: AskOptions): Promise<QAResponseDto> {
@@ -105,8 +105,8 @@ export class QAProxyService {
     this.logger.log("qa_interaction_completed", {
       interaction_id: interactionId,
       patient_id: patientId,
-      classification: serviceResponse["classification"],
-      refusal_category: serviceResponse["refusal_category"],
+      classification: serviceResponse.classification,
+      refusal_category: serviceResponse.refusal_category,
       latency_ms: latencyMs,
       // Do NOT log question text
     });
@@ -175,7 +175,7 @@ export class QAProxyService {
   ): Promise<{ data: QAInteractionSummaryDto[]; next_cursor: string | null; total: number | null }> {
     const effectiveLimit = Math.min(limit, 100);
 
-    let rows: Array<{
+    let rows: {
       id: string;
       conversation_id: string | null;
       patient_id: string;
@@ -183,7 +183,7 @@ export class QAProxyService {
       refusal_category: string | null;
       question_language: string;
       created_at: Date;
-    }>;
+    }[];
 
     if (cursor) {
       const res = await this.pool.query<{
@@ -285,23 +285,23 @@ export class QAProxyService {
     language: string,
     latencyMs: number,
   ): Promise<string> {
-    const classification = String(data["classification"] ?? "REFUSED");
-    const confidence = Number(data["classifier_confidence"] ?? 0);
-    const refusalCategory = data["refusal_category"]
-      ? String(data["refusal_category"])
+    const classification = String(data.classification ?? "REFUSED");
+    const confidence = Number(data.classifier_confidence ?? 0);
+    const refusalCategory = data.refusal_category
+      ? String(data.refusal_category)
       : null;
-    const ruleMatches = Array.isArray(data["rule_matches"])
-      ? (data["rule_matches"] as string[])
+    const ruleMatches = Array.isArray(data.rule_matches)
+      ? (data.rule_matches as string[])
       : [];
-    const answerText = typeof data["answer_text"] === "string" ? data["answer_text"] : null;
-    const sources = data["sources"] ?? [];
-    const modelVersion = typeof data["model_version"] === "string" ? data["model_version"] : null;
+    const answerText = typeof data.answer_text === "string" ? data.answer_text : null;
+    const sources = data.sources ?? [];
+    const modelVersion = typeof data.model_version === "string" ? data.model_version : null;
     const promptVersion =
-      typeof data["prompt_template_version"] === "string"
-        ? data["prompt_template_version"]
+      typeof data.prompt_template_version === "string"
+        ? data.prompt_template_version
         : "v1.0";
-    const blocklistRetries = typeof data["blocklist_triggered"] === "boolean"
-      ? (data["blocklist_triggered"] ? 1 : 0)
+    const blocklistRetries = typeof data.blocklist_triggered === "boolean"
+      ? (data.blocklist_triggered ? 1 : 0)
       : 0;
 
     const res = await this.pool.query<{ id: string }>(
@@ -344,26 +344,26 @@ export class QAProxyService {
       interaction_id: interactionId,
       patient_id: patientId,
       conversation_id: conversationId,
-      question: typeof data["question"] === "string" ? data["question"] : "",
-      classification: (data["classification"] as "ALLOWED" | "REFUSED") ?? "REFUSED",
-      classifier_confidence: Number(data["classifier_confidence"] ?? 0),
+      question: typeof data.question === "string" ? data.question : "",
+      classification: (data.classification as "ALLOWED" | "REFUSED") ?? "REFUSED",
+      classifier_confidence: Number(data.classifier_confidence ?? 0),
       refusal_category:
-        typeof data["refusal_category"] === "string" ? data["refusal_category"] : null,
-      rule_matches: Array.isArray(data["rule_matches"])
-        ? (data["rule_matches"] as string[])
+        typeof data.refusal_category === "string" ? data.refusal_category : null,
+      rule_matches: Array.isArray(data.rule_matches)
+        ? (data.rule_matches as string[])
         : [],
-      language: typeof data["language"] === "string" ? data["language"] : "en",
-      answer_text: typeof data["answer_text"] === "string" ? data["answer_text"] : "",
-      sources: this._parseSources(data["sources"]),
-      model_version: typeof data["model_version"] === "string" ? data["model_version"] : "",
+      language: typeof data.language === "string" ? data.language : "en",
+      answer_text: typeof data.answer_text === "string" ? data.answer_text : "",
+      sources: this._parseSources(data.sources),
+      model_version: typeof data.model_version === "string" ? data.model_version : "",
       prompt_template_version:
-        typeof data["prompt_template_version"] === "string"
-          ? data["prompt_template_version"]
+        typeof data.prompt_template_version === "string"
+          ? data.prompt_template_version
           : "v1.0",
-      latency_ms: typeof data["latency_ms"] === "number" ? data["latency_ms"] : 0,
+      latency_ms: typeof data.latency_ms === "number" ? data.latency_ms : 0,
       disclaimer: DISCLAIMER,
       blocklist_triggered:
-        typeof data["blocklist_triggered"] === "boolean" ? data["blocklist_triggered"] : false,
+        typeof data.blocklist_triggered === "boolean" ? data.blocklist_triggered : false,
     };
   }
 
@@ -372,12 +372,12 @@ export class QAProxyService {
     return raw.map((s: unknown) => {
       const src = s as Record<string, unknown>;
       return {
-        fact_segment: String(src["fact_segment"] ?? ""),
-        type: String(src["type"] ?? ""),
-        id: String(src["id"] ?? ""),
-        code: String(src["code"] ?? ""),
-        source_system: String(src["source_system"] ?? ""),
-        field: String(src["field"] ?? ""),
+        fact_segment: String(src.fact_segment ?? ""),
+        type: String(src.type ?? ""),
+        id: String(src.id ?? ""),
+        code: String(src.code ?? ""),
+        source_system: String(src.source_system ?? ""),
+        field: String(src.field ?? ""),
       };
     });
   }

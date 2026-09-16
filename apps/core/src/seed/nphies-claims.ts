@@ -37,7 +37,7 @@ import { resolve } from "node:path";
 
 dotenv.config({ path: resolve(__dirname, "../../../../.env") });
 
-const pool = new Pool({ connectionString: process.env["DATABASE_URL"] });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // Same deterministic PRNG as seed/dev.ts, seeded independently so this
 // script's output doesn't depend on run order relative to the other seeds.
@@ -61,11 +61,11 @@ const DEV_ADMIN_EXTERNAL_SUBJECT = "00000000-0000-0000-0000-000000000012";
 // into: eligibility, coding, necessity, documentation.
 type RejectionCategory = "eligibility" | "coding" | "necessity" | "documentation";
 
-const REJECTION_REASONS: ReadonlyArray<{
+const REJECTION_REASONS: readonly {
   code: string;
   display: string;
   category: RejectionCategory;
-}> = [
+}[] = [
   { code: "DEV-ELIG-01", display: "Eligibility not verified before submission", category: "eligibility" },
   { code: "DEV-COD-02", display: "Diagnosis code missing or unmapped", category: "coding" },
   { code: "DEV-COD-03", display: "Service code missing or unmapped", category: "coding" },
@@ -267,14 +267,14 @@ async function seed(): Promise<void> {
       [submittedBy, patients.rows.map((p) => p.id)],
     );
 
-    const SIMULATOR_CASES: ReadonlyArray<{
+    const SIMULATOR_CASES: readonly {
       mrn: string;
       conditionSnomed: string;
       orderId: string;
       orderCode: string;
       category: string;
       sbsCode: string;
-    }> = [
+    }[] = [
       // I10 (hypertension) -> ECG: documented rule, no pre-auth -> GREEN.
       { mrn: "MRN-006", conditionSnomed: "38341003", orderId: "00000000-0000-4000-8000-0000000000b1", orderCode: "29303009", category: "procedure", sbsCode: "11700-00-10" },
       // E11.9 (T2DM) -> HbA1c: documented rule, no pre-auth -> GREEN.

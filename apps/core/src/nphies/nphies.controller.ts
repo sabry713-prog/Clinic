@@ -325,7 +325,7 @@ export class NphiesController {
     @Param("id") patientId: string,
   ): Promise<Observable<MessageEvent>> {
     await this.scope.assertPatientInScope(uid(req), patientId);
-    const encounterId = String(req.query["encounter_id"] ?? "");
+    const encounterId = String(req.query.encounter_id ?? "");
     await this.audit(req, "NPHIES_PRE_AUTH_STREAM_OPENED", patientId, {
       encounter_id: encounterId,
     });

@@ -4,7 +4,7 @@
  */
 
 import { RefillRequestService } from "./refill-request.service";
-import { PatientScopeService } from "../patient/patient-scope.service";
+import type { PatientScopeService } from "../patient/patient-scope.service";
 import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import type { Pool, QueryResult } from "pg";
 

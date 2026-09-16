@@ -238,7 +238,7 @@ export class NphiesConnectorService {
       outcome: "complete",
       disposition: "Stub connector — canned acceptance, not a payer decision.",
     };
-    const itemCount = Array.isArray(draft.bundle["item"]) ? (draft.bundle["item"] as unknown[]).length : 0;
+    const itemCount = Array.isArray(draft.bundle.item) ? (draft.bundle.item as unknown[]).length : 0;
     const row = await this.pool.query<{ id: string; submitted_at: string }>(
       `INSERT INTO app.nphies_claim
          (patient_id, bundle_json, status, response_json, mode, submitted_by)

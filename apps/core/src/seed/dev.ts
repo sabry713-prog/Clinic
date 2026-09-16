@@ -20,7 +20,7 @@ import { resolve } from "node:path";
 dotenv.config({ path: resolve(__dirname, "../../../../.env") });
 
 const pool = new Pool({
-  connectionString: process.env["DATABASE_URL"],
+  connectionString: process.env.DATABASE_URL,
 });
 
 // Deterministic PRNG (mulberry32) so the "random" bits of the seed --
@@ -63,13 +63,13 @@ const DEV_PHARMACIST_EXTERNAL_SUBJECT = "8836c614-61d7-4a91-9f7b-a51955162aa8";
 const DEV_PHARMACIST_DISPLAY_NAME = "Huda Al-Qahtani (Dev Pharmacist)";
 
 // Synthetic patient data -- no real PHI
-const FAKE_PATIENTS: Array<{
+const FAKE_PATIENTS: {
   givenName: string;
   familyName: string;
   dob: string;
   sex: string;
   mrn: string;
-}> = [
+}[] = [
   { givenName: "Faris", familyName: "Fakename-Al-Otaibi", dob: "1975-03-15", sex: "male", mrn: "MRN-001" },
   { givenName: "Nora", familyName: "Fakename-Al-Zahrani", dob: "1982-07-22", sex: "female", mrn: "MRN-002" },
   { givenName: "Khalid", familyName: "Fakename-Al-Harbi", dob: "1968-11-08", sex: "male", mrn: "MRN-003" },

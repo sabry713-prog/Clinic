@@ -5,9 +5,9 @@
  * confirmed-contact precondition.
  */
 import { PatientEngagementConnectorService } from "./reminder-connector.service";
-import { PatientScopeService } from "../patient/patient-scope.service";
+import type { PatientScopeService } from "../patient/patient-scope.service";
 import { NotFoundException, BadRequestException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import type { Pool, QueryResult } from "pg";
 
 const mockScopeService = {

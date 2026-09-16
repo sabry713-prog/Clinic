@@ -40,7 +40,7 @@ export class RbacGuard implements CanActivate {
     );
 
     const req = ctx.switchToHttp().getRequest<Request>();
-    const sessionId = req.cookies["session_id"] as string | undefined;
+    const sessionId = req.cookies.session_id as string | undefined;
 
     if (!sessionId) throw new UnauthorizedException("No session");
 
@@ -56,7 +56,7 @@ export class RbacGuard implements CanActivate {
 
     const hasPermission = session.roles.some((role) => {
       const perms = ROLE_PERMISSIONS[role as UserRole];
-      return perms?.includes(requiredPerm) ?? false;
+      return perms.includes(requiredPerm) ?? false;
     });
 
     if (!hasPermission) {

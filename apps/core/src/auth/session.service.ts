@@ -15,7 +15,7 @@
 import { Injectable, Inject, Logger } from "@nestjs/common";
 import { v4 as uuidv4 } from "uuid";
 import type { Pool } from "pg";
-import type { AuthUser, UserId, TenantId } from "@clinical-copilot/shared-types";
+import type { AuthUser } from "@clinical-copilot/shared-types";
 import { asUserId, asTenantId } from "@clinical-copilot/shared-types";
 import { PG_POOL } from "../database/database.module";
 
@@ -108,8 +108,8 @@ export class SessionService {
   toAuthUser(session: SessionData): AuthUser {
     const roles = session.roles as AuthUser["roles"];
     return {
-      id: asUserId(session.userId) as UserId,
-      tenantId: asTenantId(session.tenantId) as TenantId,
+      id: asUserId(session.userId),
+      tenantId: asTenantId(session.tenantId),
       externalSubject: session.externalSubject,
       displayName: session.displayName,
       email: session.email,

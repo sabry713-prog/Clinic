@@ -55,7 +55,7 @@ export class DsrController {
     const requestId = uuidv4() as RequestId;
     const actorId = req.authenticatedUserId ?? null;
     const actorRole = req.authenticatedUserRole ?? null;
-    return this.dsrService.createAccess(body.subject_id, body.reason, actorId, actorRole as string | null, requestId);
+    return this.dsrService.createAccess(body.subject_id, body.reason, actorId, actorRole, requestId);
   }
 
   @Post("erase")
@@ -65,7 +65,7 @@ export class DsrController {
     const requestId = uuidv4() as RequestId;
     const actorId = req.authenticatedUserId ?? null;
     const actorRole = req.authenticatedUserRole ?? null;
-    const result = await this.dsrService.createErase(body.subject_id, body.reason, actorId, actorRole as string | null, requestId);
+    const result = await this.dsrService.createErase(body.subject_id, body.reason, actorId, actorRole, requestId);
     return {
       ...result,
       note: "Erasure request received. Processing is subject to medical record retention requirements.",

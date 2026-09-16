@@ -17,7 +17,7 @@ export interface SectionSpecInput {
 }
 
 export interface SegmentResult {
-  readonly sections: ReadonlyArray<{ key: string; text: string }>;
+  readonly sections: readonly { key: string; text: string }[];
   readonly unclassified_text: string;
   readonly retries: number;
 }
@@ -34,7 +34,7 @@ export interface ExtractedTerm {
 }
 
 export interface ExtractTermsResult {
-  readonly terms: ReadonlyArray<ExtractedTerm>;
+  readonly terms: readonly ExtractedTerm[];
   readonly retries: number;
 }
 
@@ -45,7 +45,7 @@ export class AmbientService {
 
   constructor() {
     this.transcriptionServiceUrl =
-      process.env["TRANSCRIPTION_SERVICE_URL"] ?? "http://127.0.0.1:5003";
+      process.env.TRANSCRIPTION_SERVICE_URL ?? "http://127.0.0.1:5003";
   }
 
   async segment(

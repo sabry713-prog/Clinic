@@ -85,7 +85,8 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
       "WORM export scheduled",
     );
 
-    this.timer = setTimeout(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- scheduled task, errors logged internally
+      this.timer = setTimeout(async () => {
       // A failed export must not crash the API process; log and continue so the
       // next day's export is still scheduled.
       try {
@@ -211,7 +212,7 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    const result = await client.send(cmd) as S3PutResult;
+    const result = await client.send(cmd);
 
     if (!result.ETag) {
       throw new Error(

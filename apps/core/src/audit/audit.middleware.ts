@@ -99,7 +99,7 @@ export class AuditMiddleware implements NestMiddleware {
               action,
               method,
               status_code: res.statusCode,
-              actor_id: (req.authenticatedUserId as string | undefined) ?? null,
+              actor_id: (req.authenticatedUserId) ?? null,
             }) + "\n",
           );
         }

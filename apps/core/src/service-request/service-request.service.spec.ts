@@ -6,7 +6,7 @@
  */
 
 import { ServiceRequestService } from "./service-request.service";
-import { PatientScopeService } from "../patient/patient-scope.service";
+import type { PatientScopeService } from "../patient/patient-scope.service";
 import type { EncryptionService } from "../security/encryption.service";
 import type { Pool, QueryResult } from "pg";
 

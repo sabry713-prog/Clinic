@@ -25,7 +25,7 @@ export class IngestionController {
   @HttpCode(202)
   @ApiOperation({ summary: "Manually trigger an ingestion run (admin only)" })
   async trigger(@Req() req: Request): Promise<{ run_id: string; message: string }> {
-    const sessionId = req.cookies["session_id"] as string | undefined;
+    const sessionId = req.cookies.session_id as string | undefined;
     if (!sessionId) throw new ForbiddenException("Unauthenticated");
 
     const session = await this.sessionService.get(sessionId);
@@ -45,7 +45,7 @@ export class IngestionController {
     });
 
     // Start async -- respond immediately with run ID
-    let runIdCapture = "";
+    const runIdCapture = "";
     this.ingestionService
       .runIngestion()
       .then((result: IngestionRunResult) => {

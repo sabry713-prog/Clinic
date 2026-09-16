@@ -7,7 +7,7 @@
  */
 
 import { ClaimReadinessService } from "./claim-readiness.service";
-import { PatientScopeService } from "../patient/patient-scope.service";
+import type { PatientScopeService } from "../patient/patient-scope.service";
 import type { Pool, QueryResult } from "pg";
 
 const mockScopeService = {

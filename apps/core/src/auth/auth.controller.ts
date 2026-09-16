@@ -54,8 +54,8 @@ export class AuthController {
 
     // Reconstruct current URL for openid-client callback validation
     const protocol = req.headers["x-forwarded-proto"] ?? req.protocol;
-    const host = req.headers["host"] ?? "localhost:4000";
-    const currentUrl = `${protocol}://${host}${req.originalUrl}`;
+    const host = req.headers.host ?? "localhost:4000";
+    const currentUrl = `${String(protocol)}://${String(host)}${req.originalUrl}`;
 
     const { sessionId, returnTo } = await this.authService.handleCallback(
       code,
@@ -65,14 +65,14 @@ export class AuthController {
 
     res.cookie("session_id", sessionId, {
       httpOnly: true,
-      secure: process.env["NODE_ENV"] === "production",
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 8 * 60 * 60 * 1000, // 8 hours
     });
 
     // VITE_API_BASE_URL must not be used here: it points at this API, not
     // the web app, and would bounce the user to a 404 after login.
-    const webUrl = process.env["WEB_URL"] ?? "http://localhost:3000";
+    const webUrl = process.env.WEB_URL ?? "http://localhost:3000";
     res.redirect(302, `${webUrl}${returnTo}`);
   }
 
@@ -83,7 +83,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ logout_url: string }> {
-    const sessionId = req.cookies["session_id"] as string | undefined;
+    const sessionId = req.cookies.session_id as string | undefined;
     const logout_url = await this.authService.buildLogoutUrl(sessionId ?? "");
     res.clearCookie("session_id");
     return { logout_url };
@@ -93,7 +93,7 @@ export class AuthController {
   @ApiCookieAuth("session_id")
   @ApiOperation({ summary: "Return current authenticated user" })
   async me(@Req() req: Request): Promise<unknown> {
-    const sessionId = req.cookies["session_id"] as string | undefined;
+    const sessionId = req.cookies.session_id as string | undefined;
     if (!sessionId) throw new UnauthorizedException("No session");
 
     const session = await this.sessionService.get(sessionId);
@@ -111,9 +111,10 @@ export class AuthController {
   @ApiCookieAuth("session_id")
   @ApiOperation({ summary: "Refresh session -- 204 No Content" })
   async refresh(@Req() req: Request): Promise<void> {
-    const sessionId = req.cookies["session_id"] as string | undefined;
+    const sessionId = req.cookies.session_id as string | undefined;
     if (!sessionId) throw new UnauthorizedException("No session");
     const session = this.sessionService.get(sessionId);
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- await already resolved
     if (!session) throw new UnauthorizedException("Session expired");
     // Token refresh implementation in Slice 1 (needs DB-backed sessions)
   }

@@ -3,7 +3,7 @@
  */
 
 import { PatientService } from "./patient.service";
-import { PatientScopeService } from "./patient-scope.service";
+import type { PatientScopeService } from "./patient-scope.service";
 import { NotFoundException } from "@nestjs/common";
 import type { Pool, QueryResult } from "pg";
 
