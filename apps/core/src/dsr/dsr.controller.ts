@@ -14,9 +14,10 @@ import {
   Body,
   Req,
   HttpCode,
+  UseGuards,
 } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { RequirePermission } from "../rbac/rbac.guard";
+import { RbacGuard, RequirePermission } from "../rbac/rbac.guard";
 import { IsString, MinLength } from "class-validator";
 import type { Request } from "express";
 import { DsrService } from "./dsr.service";
@@ -44,6 +45,12 @@ class DsrEraseDto {
 }
 
 @ApiTags("dsr")
+// @RequirePermission is only metadata -- without @UseGuards(RbacGuard) nothing
+// reads it, and this controller was reachable with no session at all: an
+// unauthenticated POST /api/v1/dsr/:id/execute ran the erasure path (verified:
+// 201 with no cookie). The guard requires a session for every route and the
+// declared permission where one is set.
+@UseGuards(RbacGuard)
 @Controller("dsr")
 export class DsrController {
   constructor(private readonly dsrService: DsrService) {}
@@ -96,7 +103,10 @@ export class DsrController {
     const userRole = (req as { authenticatedUserRole?: string }).authenticatedUserRole;
     return this.dsrService.executeErase(
       id,
-      userId ?? "unknown",
+      // actor_id is a UUID column: the literal "unknown" threw
+      // `invalid input syntax for type uuid` after the erasure had already
+      // committed, so the caller saw a 500 for work that had succeeded.
+      userId ?? null,
       userRole ?? null,
       (req.headers["x-request-id"] as string | undefined ?? null) as never,
     );

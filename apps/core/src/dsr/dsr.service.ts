@@ -53,11 +53,14 @@ export class DsrService {
     const subjectIdHash = this.hashSubjectId(subjectId);
     const dueAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const result = await this.pool.query<{ id: string; created_at: Date }>(
+    // app.dsr_request has no created_at column -- the request timestamp is
+    // requested_at, which defaults to now(). Selecting a column that does not
+    // exist made every DSR call fail with a 500.
+    const result = await this.pool.query<{ id: string; requested_at: Date }>(
       `INSERT INTO app.dsr_request
          (subject_id_hash, type, status, reason, due_at)
        VALUES ($1, 'access', 'pending', $2, $3)
-       RETURNING id, created_at`,
+       RETURNING id, requested_at`,
       [subjectIdHash, reason, dueAt],
     );
 
@@ -81,7 +84,7 @@ export class DsrService {
       type: "access",
       status: "pending",
       due_at: dueAt,
-      requested_at: row.created_at.toISOString(),
+      requested_at: row.requested_at.toISOString(),
     };
   }
 
@@ -95,11 +98,14 @@ export class DsrService {
     const subjectIdHash = this.hashSubjectId(subjectId);
     const dueAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    const result = await this.pool.query<{ id: string; created_at: Date }>(
+    // app.dsr_request has no created_at column -- the request timestamp is
+    // requested_at, which defaults to now(). Selecting a column that does not
+    // exist made every DSR call fail with a 500.
+    const result = await this.pool.query<{ id: string; requested_at: Date }>(
       `INSERT INTO app.dsr_request
          (subject_id_hash, type, status, reason, due_at)
        VALUES ($1, 'erase', 'pending', $2, $3)
-       RETURNING id, created_at`,
+       RETURNING id, requested_at`,
       [subjectIdHash, reason, dueAt],
     );
 
@@ -123,7 +129,7 @@ export class DsrService {
       type: "erase",
       status: "pending",
       due_at: dueAt,
-      requested_at: row.created_at.toISOString(),
+      requested_at: row.requested_at.toISOString(),
     };
   }
 
@@ -139,7 +145,7 @@ export class DsrService {
    */
   async executeErase(
     dsrRequestId: string,
-    actorId: string,
+    actorId: string | null,
     actorRole: string | null,
     requestId: RequestId,
   ): Promise<DsrRequest> {
@@ -187,27 +193,35 @@ export class DsrService {
     try {
       await client.query("BEGIN");
 
-      // Anonymize the patient record itself
+      // Anonymize the patient record itself.
+      // Only columns that exist are named: the previous statement set
+      // national_id/phone/email/address_json, none of which are on this table,
+      // so the erasure threw before it anonymized anything. national_id_hash,
+      // the name parts and fhir_resource_json ARE on it, and leaving them would
+      // mean reporting "identifiers removed" while the identifiers stayed.
       await client.query(
         `UPDATE hospital.patient SET
            display_name = 'ANONYMIZED',
            mrn = NULL,
+           national_id_hash = NULL,
+           family_name = NULL,
+           given_name = NULL,
            date_of_birth = NULL,
            sex = NULL,
-           national_id = NULL,
-           phone = NULL,
-           email = NULL,
-           address_json = NULL,
-           preferred_language = NULL
+           preferred_language = NULL,
+           fhir_resource_json = '{}'::jsonb
          WHERE id = $1`,
         [patientId],
       );
 
-      // Anonymize encounters (remove identifying context)
+      // Anonymize encounters (remove identifying context). The ward/bed columns
+      // are `ward` and `bed`; there is no `ward_id`.
       await client.query(
         `UPDATE hospital.encounter SET
            attending_user_id = NULL,
-           ward_id = NULL
+           ward = NULL,
+           bed = NULL,
+           fhir_resource_json = '{}'::jsonb
          WHERE patient_id = $1`,
         [patientId],
       );
@@ -315,9 +329,9 @@ export class DsrService {
       type: string;
       status: string;
       due_at: Date | null;
-      created_at: Date;
+      requested_at: Date;
     }>(
-      `SELECT id, type, status, due_at, created_at
+      `SELECT id, type, status, due_at, requested_at
        FROM app.dsr_request WHERE id = $1`,
       [requestId],
     );
@@ -330,7 +344,7 @@ export class DsrService {
       type: row.type as "access" | "erase",
       status: row.status,
       due_at: row.due_at?.toISOString() ?? null,
-      requested_at: row.created_at.toISOString(),
+      requested_at: row.requested_at.toISOString(),
     };
   }
 }

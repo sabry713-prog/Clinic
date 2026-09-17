@@ -271,7 +271,9 @@ import { DsrService } from "../dsr/dsr.service";
 
 describe("DsrService", () => {
     it("access request creates row with type=access and due_at = +30 days", async () => {
-    const insertRow = { id: "dsr-1", created_at: new Date("2026-06-10T00:00:00Z") };
+    // app.dsr_request has no created_at column -- the request timestamp is
+    // requested_at, which is what the service selects.
+    const insertRow = { id: "dsr-1", requested_at: new Date("2026-06-10T00:00:00Z") };
     const pool = {
       connect: jest.fn().mockResolvedValue({
         query: jest.fn().mockResolvedValue({ rows: [{ id: "audit-id", hash_self: "abc" }] }),
@@ -296,7 +298,7 @@ describe("DsrService", () => {
   });
 
   it("erase request creates row with type=erase", async () => {
-    const insertRow = { id: "dsr-2", created_at: new Date() };
+    const insertRow = { id: "dsr-2", requested_at: new Date() };
     const pool = {
       connect: jest.fn().mockResolvedValue({
         query: jest.fn().mockResolvedValue({ rows: [{ id: "audit-id", hash_self: "abc" }] }),
@@ -318,7 +320,7 @@ describe("DsrService", () => {
       type: "access",
       status: "in_progress",
       due_at: new Date("2026-07-10"),
-      created_at: new Date("2026-06-10"),
+      requested_at: new Date("2026-06-10"),
     };
     const pool = {
       query: jest.fn().mockResolvedValue({ rows: [row] }),
