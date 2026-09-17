@@ -88,7 +88,9 @@ describe("PatientDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Omar Fakename-Al-Dossary")).toBeInTheDocument();
     });
-    expect(screen.getByText("MRN-006")).toBeInTheDocument();
+    // The Journey header carries name · MRN · context in one line, so the MRN
+    // is part of that element rather than a standalone one.
+    expect(screen.getByText(/·\s*MRN-006\s*·/)).toBeInTheDocument();
   });
 
   it("shows PATIENT_OUT_OF_SCOPE message on 403", async () => {
@@ -137,8 +139,8 @@ describe("PatientDetailPage", () => {
       total: null,
     });
 
-    // Lab data only renders in the Patient File (chart) view — the
-    // default landing view is now the Copilot workspace.
+    // Lab data renders in the Patient File (chart) view. The default landing
+    // view is the Journey.
     renderWithRoute("patient-001", "?view=chart");
 
     await waitFor(() => {

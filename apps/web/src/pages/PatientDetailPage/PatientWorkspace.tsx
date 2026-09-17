@@ -63,6 +63,21 @@ const CHIPS: readonly ChipDef[] = [
   // The cards themselves (below) still render normally when opened that way.
 ];
 
+// --- The Copilot tool row ---------------------------------------------------
+// The Journey owns the encounter flow (Document → Diagnose → Order → Code &
+// link → Submit), so tools that duplicate one of its stages are no longer
+// chips. Nothing is deleted: every card still opens, from "More tools" here or
+// from the sidebar. The row keeps what the Journey does not cover — asking the
+// record, drafting and signing a document, searching it, interpreting it.
+//
+//   row:  Consultant · Draft · Search · Interpreter
+//   menu: Diagnosis · Orders · Scribe · Coder · Handoff · Refills · Researcher
+//         (Diagnosis/Orders/Scribe/Coder duplicate Journey stages 2/3/1/4-5;
+//          Handoff/Refills/Researcher are occasional, not per-encounter tools)
+const PRIMARY_CHIP_IDS = new Set<string>(["qa", "draft", "search", "interpreter"]);
+const PRIMARY_CHIPS = CHIPS.filter((chip) => PRIMARY_CHIP_IDS.has(chip.id));
+const MENU_CHIPS = CHIPS.filter((chip) => !PRIMARY_CHIP_IDS.has(chip.id));
+
 const CARD_LABEL: Record<CardId, string> = {
   qa: "Ask a factual question",
   diagnosis: "Add diagnosis to problem list",
@@ -87,6 +102,29 @@ function Icon({ path, className = "w-4 h-4" }: { readonly path: string; readonly
   );
 }
 
+function ChipButton({ chip, active, onClick }: {
+  readonly chip: ChipDef;
+  readonly active: boolean;
+  readonly onClick: () => void;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid={`copilot-tool-${chip.id}`}
+      className={`
+        inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border bg-white font-semibold transition-colors
+        ${active
+          ? "bg-grad-accent border-transparent text-white shadow-pill"
+          : "border-line text-ink-deep hover:text-ink hover:border-line-strong"}
+      `}
+    >
+      <Icon path={chip.icon} className={`w-3.5 h-3.5 ${active ? "" : chip.hue}`} />
+      {chip.label}
+    </button>
+  );
+}
+
 interface PatientWorkspaceProps {
   readonly patient: PatientDetail;
   readonly initialOpen: readonly CardId[];
@@ -105,6 +143,7 @@ export default function PatientWorkspace({ patient, initialOpen, openRequest, on
     initialOpen.length > 0 ? Array.from(new Set(initialOpen)) : [],
   );
   const [composerText, setComposerText] = useState("");
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [qaLanguage, setQaLanguage] = useState<"en" | "ar">("en");
   const [handoff, setHandoff] = useState<HandoffOutput | null>(null);
   const [isLoadingHandoff, setIsLoadingHandoff] = useState(false);
@@ -189,30 +228,60 @@ export default function PatientWorkspace({ patient, initialOpen, openRequest, on
             Ask
           </button>
         </form>
-        <div className="flex flex-wrap gap-1.5">
-          {CHIPS.map((chip) => (
-            <button
+        <div className="flex flex-wrap items-center gap-1.5">
+          {PRIMARY_CHIPS.map((chip) => (
+            <ChipButton
               key={chip.id}
-              type="button"
+              chip={chip}
+              active={openCards.includes(chip.id)}
               onClick={() => openCard(chip.id)}
-              className={`
-                inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border bg-white font-semibold transition-colors
-                ${openCards.includes(chip.id)
-                  ? "bg-grad-accent border-transparent text-white shadow-pill"
-                  : "border-line text-ink-deep hover:text-ink hover:border-line-strong"}
-              `}
-            >
-              <Icon path={chip.icon} className={`w-3.5 h-3.5 ${openCards.includes(chip.id) ? "" : chip.hue}`} />
-              {chip.label}
-            </button>
+            />
           ))}
+
+          {/* Everything that is either owned by a Journey stage or occasional.
+              Still one click away, so the row stops competing with the flow. */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setToolsOpen((open) => !open)}
+              aria-expanded={toolsOpen}
+              aria-haspopup="menu"
+              data-testid="copilot-more-tools"
+              className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full border border-line bg-white font-semibold text-ink-soft hover:text-ink hover:border-line-strong transition-colors"
+            >
+              <Icon path="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm6 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm6 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" className="w-3.5 h-3.5" />
+              More tools
+            </button>
+            {toolsOpen && (
+              <div
+                role="menu"
+                data-testid="copilot-more-tools-menu"
+                className="absolute z-20 mt-1.5 w-56 rounded-xl border border-line bg-white shadow-card p-1.5 space-y-0.5"
+              >
+                {MENU_CHIPS.map((chip) => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    role="menuitem"
+                    data-testid={`copilot-tool-${chip.id}`}
+                    onClick={() => { openCard(chip.id); setToolsOpen(false); }}
+                    className="w-full flex items-center gap-2 text-start text-xs px-2.5 py-2 rounded-lg text-ink-deep hover:bg-veil transition-colors"
+                  >
+                    <Icon path={chip.icon} className={`w-3.5 h-3.5 ${chip.hue}`} />
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Feed */}
       {openCards.length === 0 ? (
         <p className="text-sm text-ink-soft px-1">
-          Use the composer above to ask a question, add a diagnosis, generate a document, or review orders and claims.
+          Ask a question above, or open a tool. The encounter itself runs in the Journey — document it, confirm the
+          diagnoses, place the orders, code and submit from there.
         </p>
       ) : (
         <div className="space-y-4">

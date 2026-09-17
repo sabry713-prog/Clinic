@@ -106,9 +106,27 @@ export function useAgentOrchestrator(patientId: string | null): UseAgentOrchestr
 
     if (!patientId) return;
 
-    const source = new EventSource(`${API_BASE}/api/v1/patients/${patientId}/ai-team/stream`, {
-      withCredentials: true,
-    });
+    // SSE is an enhancement, not a prerequisite: everything above renders
+    // without it. Guard the constructor so an environment that has no
+    // EventSource -- jsdom in tests, a browser with SSE blocked, a proxy that
+    // strips text/event-stream -- degrades to "not connected" instead of
+    // throwing during mount and taking the whole view down with it. The
+    // Journey is the default landing view, so that failure mode was not
+    // theoretical.
+    if (typeof EventSource === "undefined") {
+      setError("Live AI Team stream is unavailable in this environment.");
+      return;
+    }
+
+    let source: EventSource;
+    try {
+      source = new EventSource(`${API_BASE}/api/v1/patients/${patientId}/ai-team/stream`, {
+        withCredentials: true,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Live AI Team stream is unavailable.");
+      return;
+    }
 
     source.addEventListener("open", () => setConnected(true));
 

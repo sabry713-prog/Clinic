@@ -58,7 +58,13 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
         <div className="min-w-0 flex-1">
           <p className="text-base font-bold text-ink truncate" dir="ltr">
             {patient.display_name ?? patient.mrn}
-            <span className="font-medium text-ink-soft text-sm"> · MRN {patient.mrn ?? "—"} · Encounter journey</span>
+            {/* Seeded MRNs already read "MRN-006", so only label the ones that
+                do not -- otherwise the header says "MRN MRN-006". */}
+            <span className="font-medium text-ink-soft text-sm">
+              {" · "}
+              {patient.mrn ? (/^MRN/i.test(patient.mrn) ? patient.mrn : `MRN ${patient.mrn}`) : "MRN —"}
+              {" · Encounter journey"}
+            </span>
           </p>
           <p className="text-[11px] text-ink-faint" dir="ltr">
             The system proposes — you approve. Nothing is created, coded, linked, or submitted without your confirmation.

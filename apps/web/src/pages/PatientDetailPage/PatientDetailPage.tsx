@@ -34,11 +34,13 @@ export default function PatientDetailPage(): JSX.Element {
 
   const patientId = id ?? "";
   const viewParam = searchParams.get("view");
+  // The Journey is the clinical flow the product is built around, so it is the
+  // default landing view; ?view= still addresses each of the others explicitly.
   const view: ViewId =
     viewParam === "chart" ? "chart"
       : viewParam === "encounter" ? "encounter"
-      : viewParam === "journey" ? "journey"
-      : "workspace";
+      : viewParam === "workspace" ? "workspace"
+      : "journey";
   const openParam = searchParams.get("open");
   const initialOpen: readonly CardId[] = openParam && (CARD_IDS as readonly string[]).includes(openParam)
     ? [openParam as CardId]
