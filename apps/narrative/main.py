@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Optional
@@ -180,7 +181,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host=os.environ.get("SERVICE_HOST", "127.0.0.1"),
         port=5001,
         reload=False,
         log_config=None,  # Use structlog

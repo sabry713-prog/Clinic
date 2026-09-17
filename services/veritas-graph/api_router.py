@@ -9,6 +9,7 @@ Usage:
         python services/veritas-graph/api_router.py
 """
 from __future__ import annotations
+import os
 
 import sys
 from pathlib import Path
@@ -157,4 +158,4 @@ async def alternative_candidates_route(body: AlternativeCandidatesRequest) -> di
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=5004)
+    uvicorn.run(app, host=os.environ.get("SERVICE_HOST", "127.0.0.1"), port=5004)

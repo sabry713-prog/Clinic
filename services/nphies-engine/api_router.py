@@ -10,6 +10,7 @@ Usage:
     NPHIES_CONNECTOR=stub python -m uvicorn api_router:app --port 5006
 """
 from __future__ import annotations
+import os
 
 import sys
 from pathlib import Path
@@ -131,7 +132,7 @@ async def nphies_stream(encounter_id: str) -> StreamingResponse:
 def main() -> None:
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=5006)
+    uvicorn.run(app, host=os.environ.get("SERVICE_HOST", "127.0.0.1"), port=5006)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 # --- workspace package resolution -------------------------------------------
 # The uv editable installs (.pth files under site-packages pointing at each
@@ -404,7 +405,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host=os.environ.get("SERVICE_HOST", "127.0.0.1"),
         port=5002,
         reload=False,
         log_config=None,

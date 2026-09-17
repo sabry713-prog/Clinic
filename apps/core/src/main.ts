@@ -54,7 +54,11 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup("api/docs", app, document);
 
   const port = parseInt(process.env.CORE_PORT ?? "4000", 10);
-  await app.listen(port);
+  // C07 (readiness assessment): bind loopback by default so the API and its
+  // patient-scoped routes are not reachable from other hosts on the network.
+  // Set CORE_HOST=0.0.0.0 explicitly when a container or tunnel needs it.
+  const host = process.env.CORE_HOST ?? "127.0.0.1";
+  await app.listen(port, host);
 
   const logger = app.get(Logger);
   logger.log(

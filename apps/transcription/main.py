@@ -7,6 +7,7 @@ service introduces no clinical content (CLAUDE.md §2). Dictated audio is PHI:
 it is never logged or persisted (CLAUDE.md §7), and the engine runs on-prem.
 """
 from __future__ import annotations
+import os
 
 import base64
 
@@ -197,4 +198,4 @@ async def extract_terms_route(body: ExtractTermsRequest) -> dict[str, object]:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=5003, reload=False, log_config=None)
+    uvicorn.run("main:app", host=os.environ.get("SERVICE_HOST", "127.0.0.1"), port=5003, reload=False, log_config=None)

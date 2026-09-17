@@ -5,9 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    // Bind all interfaces: without this Vite listens on IPv6 `::1` only and
-    // browsers that resolve `localhost` to 127.0.0.1 get connection-refused.
-    host: true,
+    // C07 (readiness assessment): loopback by default — the UI has no reason to
+    // be reachable from other hosts. `localhost` covers both IPv4/IPv6 loopback,
+    // which `127.0.0.1` alone would miss. Set WEB_HOST=0.0.0.0 for a tunnel demo.
+    host: process.env["WEB_HOST"] ?? "localhost",
     // Allow Cloudflare quick-tunnel hostnames so the app is reachable for
     // remote testing during the build (synthetic data only).
     allowedHosts: [".trycloudflare.com", "localhost"],

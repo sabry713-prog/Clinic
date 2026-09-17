@@ -294,7 +294,7 @@ async def checklist_endpoint(body: dict[str, Any]) -> dict[str, Any]:
 def main() -> None:
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=5005)
+    uvicorn.run(app, host=os.environ.get("SERVICE_HOST", "127.0.0.1"), port=5005)
 
 
 if __name__ == "__main__":
