@@ -84,7 +84,7 @@ The graph service declares **no authentication at all** (`securitySchemes: {}`, 
 
 **Fix:** bind all six services to `127.0.0.1` in dev/demo; add a service token or mTLS before any multi-host deployment.
 
-### B4 — C10: manually typed SOAP still never reaches Stage 2 **[P]** + **[W, proven by test]**
+### B4 — C10: manually typed SOAP still never reaches Stage 2 **[P]** + **[W, proven by test]** — **CLOSED 17 Sep, see §14**
 `SullyContext.tsx:769-777` persists only `liveSoap` and early-returns when `liveTranscript.length === 0 && liveSoap == null`. Manual edits go to `soapOverride` (`:1205-1207`); the merged `soap` (`:1092-1095`) is never persisted. `StageDiagnose.tsx:19-30` reads only `sully.scribe.<patientId>`.
 
 Workstream proof (scratch vitest, file removed after): `C10 EVIDENCE: sessionStorage['sully.scribe.pt-typed'] = null`. The same holds for `StageOrder.tsx:24` and `ServiceRequestPanel.tsx:127`. The `Save note to record` button (`StageDocument.tsx:41-100`) writes a *server draft* that no later stage reads. There is **no journey E2E spec** in `tests/e2e/`, and the four existing specs are skippable.
@@ -105,14 +105,14 @@ Reference layer is also thin: `NphiesDiagnosis` 6, `NphiesService` 5, `NPHIES_JU
 
 **Fix:** run `etl_pskg.py` for the demo cohort and add it to `just demo-setup`; assert manifest counts in the same recipe.
 
-### B6 — Demo images do not build **[W, real build run]**
+### B6 — Demo images do not build **[W, real build run]** — **FIXED 17 Sep, see §16**
 `docker build -f apps/qa/Dockerfile.demo apps/qa` → **exit 2**: `cannot normalize a relative path beyond the base directory: /app/../../packages/blocklist` (and `phi-guard`). Cause: build contexts remain app-dirs (`docker-compose.demo.yml:121,136,151,166,181,199`) while each pyproject declares path dependencies outside them (`apps/qa/pyproject.toml:29-33` and siblings). Control: `services/veritas-graph/Dockerfile.demo` (no path deps) built successfully — so the failure is exactly the context mismatch. No `.dockerignore` anywhere → 170 MB contexts.
 
 `docker-compose.demo.yml` also omits `core` and `web` (documented at `:9-12` as staying on the host), and **no justfile recipe invokes it** — `infra-up`, `demo-setup` and `demo` all use `docker-compose.dev.yml`.
 
 **Fix:** build from the repo root with `-f apps/qa/Dockerfile.demo .`, add `.dockerignore`, add a launcher recipe, and include core/web or state the two-process model explicitly in the manifest.
 
-### B7 — The frozen manifest contradicts the running system **[P]**
+### B7 — The frozen manifest contradicts the running system **[P]** — **CLOSED 17 Sep, see §16**
 | Manifest | Actual (17 Sep) |
 |---|---|
 | patients 50 | **12,533** |
@@ -124,7 +124,7 @@ Reference layer is also thin: `NphiesDiagnosis` 6, `NphiesService` 5, `NPHIES_JU
 
 `docs/DEMO_MANIFEST.md` also lacks encounter IDs, expected findings, and is unlink to the reference-release version; all checklist boxes are unchecked (no rehearsal evidence). **[W]**
 
-### B8 — Two pre-PHI gates are broken at the schema layer **[W]**
+### B8 — Two pre-PHI gates are broken at the schema layer **[W]** — **M02 and M07 CLOSED 17 Sep, see §12 and §15; M04/M08 remain**
 - **M02:** `session.service.ts:133` runs `SELECT u.enabled` → live error `column u.enabled does not exist`. `app."user"` has 9 columns with no `enabled` and no `roles`; admin writes to `roles` (`admin.controller.ts:317`) and `disabled_at` (`:355`) that the check never reads, while the check reads `app.user_role`. The spec passes only because it mocks the phantom column.
 - **M07:** the DSR service queries `subject_id_hash`/`completed_at`/`result_note` (`dsr.service.ts:57-61,99-104,152-155`) while the live table has `subject_id`/`fulfilled_at`/`notes`. Erasure would throw. Legal-hold handling exists only in a docstring; there is no ambient-consent enforcement anywhere in `apps/core`.
 - Both are downstream of B1 (migrations unapplied).
@@ -485,6 +485,151 @@ objective  [authored=true] BP 134/69, HR 72, SpO2 95%, Temp 37.1°C, RR 15/min.
 
 - The SMART checklist already proposes from both the transcript and typed SOAP text (`proposeChecklist(transcriptText, soapText)`), so that part of the requirement was met; the catalog still offers "Record vital signs", which is now the nurse's pre-encounter job rather than the doctor's — worth revisiting.
 - An `objective`/`subjective` key does not exist in any *document template*; the draft stores the clinician-authored sections alongside the template-derived ones by design (§14.3), which the Drafts card renders as-is.
+
+---
+
+## 15. M07 — the DSR feature, and an unauthenticated erasure endpoint (17 September)
+
+M07 was filed as *"the service queries columns that do not exist"*. Reproducing it
+against the live stack turned up **seven** defects, one of which is the most
+serious finding in this audit.
+
+### 15.1 The whole DSR controller was reachable with no session
+
+`@RequirePermission(...)` is only metadata -- something has to read it. This
+controller applied it but never applied `@UseGuards(RbacGuard)`, and there is no
+global `APP_GUARD`. Verified with **no cookie at all**:
+
+| Request | Before | After |
+|---|---|---|
+| `POST /api/v1/dsr/access` | **201** | 401 |
+| `POST /api/v1/dsr/erase` | **201** | 401 |
+| `GET /api/v1/dsr/:id` | **200** | 401 |
+| `POST /api/v1/dsr/:id/execute` | **201** — ran the erasure | 401 |
+
+Anyone who could reach the port could file an erasure for a patient and execute
+it, irreversibly anonymizing that patient's record. Combined with the `0.0.0.0`
+bindings fixed in §10, this was remotely reachable before this work. A physician
+(no `user:manage`) now gets **403** on execute, and only an admin can run it.
+
+### 15.2 Four schema defects
+
+| # | Defect | Consequence |
+|---|---|---|
+| 1 | No `subject_id_hash` column | every INSERT failed |
+| 2 | No `reason` column | every INSERT failed |
+| 3 | `pgcrypto` never enabled | the erasure's `digest()` patient lookup could not run |
+| 4 | No `completed_at` / `result_note` | the completion UPDATE failed (added by 1720300000000) |
+
+Migration `1720600000000_dsr-schema-alignment` adds the two columns, enables
+pgcrypto, and **drops three vestigial columns** written by nothing
+(`subject_id`, `fulfilled_at`, `notes`) -- two names for one concept is how this
+drifted to begin with. The table held 0 rows.
+
+### 15.3 Wrong column names, and an erasure that did not erase
+
+- The service selected a `created_at` column that does not exist (the request
+  timestamp is `requested_at`), so even the filing endpoints 500'd.
+- The anonymizer set `national_id`, `phone`, `email`, `address_json` -- **none of
+  which are on `hospital.patient`**. It should have been setting
+  `national_id_hash`, `family_name`, `given_name`, and it never touched
+  `fhir_resource_json`, which holds the FHIR source payload. Left as it was, the
+  service would have reported *"identifiers removed"* while the patient's name
+  sat in the record.
+
+### 15.4 The actor, and a 500 for work that had succeeded
+
+The controller passed the literal string `"unknown"` where a UUID was expected,
+so `writeAuditEvent` threw **after** the erasure had committed -- callers saw a
+500 for work that was already done. It now passes `null` when there is no
+session user, and because the guard runs, the audit chain records **who**:
+`DSR_RECEIVED` events previously carried a blank `actor_id` and `actor_role`.
+
+### 15.5 Verified end to end
+
+Unauthenticated -> 401 on all four routes; physician files a request (201) but
+gets 403 on execute; admin executes (201); the patient's name, MRN, name parts,
+national-id hash, date of birth, sex, language and FHIR payload are all cleared;
+the request reads `completed`; and `DSR_ERASE_COMPLETED` carries the admin's
+`actor_id` and role. The DSR unit tests encoded the phantom `created_at` column,
+which is why they passed; they now mirror the real schema. core: 215 tests pass.
+
+---
+
+## 16. B7 and B6 — manifest truth, and images that build and run (17 September)
+
+### 16.1 B7 — the manifest was fiction, and nothing checked it
+
+`docs/DEMO_MANIFEST.md` v1.0 declared:
+
+| Claim in v1.0 | Reality |
+|---|---|
+| `SELECT count(*) FROM app.audit_event` | **that table does not exist**; the audit chain is `audit.event` |
+| NphiesDiagnosis "100+" | **6** — and the committed file contains exactly 6 |
+| NphiesService "100+" | **5** — the file contains 5 |
+| NPHIES_JUSTIFIES "500+" | **8** — the CSV defines 8 rows |
+| demo patient `MRN-0017` "Fatimah Al-Sayed, CKD" | **never seeded**; no such patient exists |
+| "50 patients" | correct about the seed, but silent about the thousands of ingested records in the same table (13,599 and climbing), which is what made it read as a contradiction |
+
+The graph numbers were not evidence of a broken seed: the graph matches the
+committed reference files **exactly** (6 / 5 / 3 nodes, 41 and 8 rule edges).
+The expectations were aspirational figures that no one had ever measured.
+
+- `docs/DEMO_MANIFEST.md` is rewritten as v2.0: every asserted figure measured
+  against the running stack, the seeded cohort separated from ingested data, and
+  the graph checks expressed as equalities against the committed files.
+- `tools/verify_demo_data.py` + `just verify-demo-data` assert the schema names
+  the manifest relies on (the class of error behind `app.audit_event`, the
+  phantom `u.enabled` column and the DSR drift), the seeded cohort and demo
+  patients, and the graph reference counts. Live totals are printed but
+  deliberately **not** asserted -- ingestion moves them, so asserting them would
+  be a flaky failure rather than a real one.
+- `just demo-setup` now ends by running that check, so a clean reset proves
+  itself. Result: **56 passed, 0 failed**.
+- `etl_pskg.py` gained `--mrn-pattern` and `just graph-pskg` uses
+  `^MRN-[0-9]{3}$`: the previous `--mrn-prefix MRN-` also matched ingested
+  records whose MRNs look like `MRN-<hex>`, projecting 502 Patients where the
+  cohort is 50. The PSKG now holds exactly the 50 seeded patients.
+
+### 16.2 B6 — the demo images did not build, and would not have run
+
+Reproduced the build failure exactly:
+
+```
+error: Could not compute absolute path from workspace root and lockfile path
+  cause: cannot normalize a relative path beyond the base directory:
+         /app/../../packages/blocklist
+```
+
+Each Python `Dockerfile.demo` copied only its own directory, while the service
+declares its shared packages as path dependencies (`../../packages/<name>`).
+With an app-directory context those paths do not exist, so `uv sync` aborted.
+
+- The six Dockerfiles now take the **repository root** as context and reproduce
+  the repository layout (`packages/` alongside `apps/…` or `services/…`), which
+  is what `docker-compose.demo.yml` now declares.
+- **And they would still have crashed on startup.** With the path problem fixed
+  the image built and then died at import:
+
+```
+FileNotFoundError: Prompt template not found: /app/docs/prompts/interpreter-prompt.md
+```
+
+`packages/prompt_loader` resolves the prompt templates from the repository root
+by path, so the four services that use it (narrative, qa, transcription,
+orchestrator) also need `docs/prompts/` in the image.
+
+- Verified beyond the build: the narrative image was built and **run**, and it
+  served `{"status":"ok","service":"clinical-copilot-narrative"}` on `/health`.
+- `just demo-stack` / `just demo-stack-down` now invoke
+  `docker-compose.demo.yml` -- previously nothing in the justfile referenced it
+  at all, so the file was unreachable configuration.
+- Removed the obsolete `version:` key the compose parser warns about.
+
+**Still open, and deliberate:** `core` and `web` are not in the demo compose.
+That file's own header documents why -- they need hot-reload for development,
+and containerising them is the **L01** (long-term) item, not a Tier-1 blocker.
+It is recorded here so the omission reads as a decision rather than an oversight.
 
 ---
 

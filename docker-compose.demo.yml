@@ -13,8 +13,6 @@
 #
 # Every service port is bound to 127.0.0.1 only (C07 containment).
 
-version: "3.9"
-
 services:
   # --- Infrastructure (same as docker-compose.dev.yml) ---
   postgres:
@@ -118,8 +116,10 @@ services:
 
   narrative:
     build:
-      context: ./apps/narrative
-      dockerfile: Dockerfile.demo
+      # Repository root: the Python packages are path dependencies
+      # (../../packages/<name>) and a narrower context cannot resolve them.
+      context: .
+      dockerfile: apps/narrative/Dockerfile.demo
     container_name: cc-narrative
     ports:
       - "127.0.0.1:5001:5001"
@@ -133,8 +133,10 @@ services:
 
   qa:
     build:
-      context: ./apps/qa
-      dockerfile: Dockerfile.demo
+      # Repository root: the Python packages are path dependencies
+      # (../../packages/<name>) and a narrower context cannot resolve them.
+      context: .
+      dockerfile: apps/qa/Dockerfile.demo
     container_name: cc-qa
     ports:
       - "127.0.0.1:5002:5002"
@@ -148,8 +150,10 @@ services:
 
   transcription:
     build:
-      context: ./apps/transcription
-      dockerfile: Dockerfile.demo
+      # Repository root: the Python packages are path dependencies
+      # (../../packages/<name>) and a narrower context cannot resolve them.
+      context: .
+      dockerfile: apps/transcription/Dockerfile.demo
     container_name: cc-transcription
     ports:
       - "127.0.0.1:5003:5003"
@@ -163,8 +167,10 @@ services:
 
   veritas-graph:
     build:
-      context: ./services/veritas-graph
-      dockerfile: Dockerfile.demo
+      # Repository root: the Python packages are path dependencies
+      # (../../packages/<name>) and a narrower context cannot resolve them.
+      context: .
+      dockerfile: services/veritas-graph/Dockerfile.demo
     container_name: cc-veritas-graph
     ports:
       - "127.0.0.1:5004:5004"
@@ -178,8 +184,10 @@ services:
 
   orchestrator:
     build:
-      context: ./services/orchestrator
-      dockerfile: Dockerfile.demo
+      # Repository root: the Python packages are path dependencies
+      # (../../packages/<name>) and a narrower context cannot resolve them.
+      context: .
+      dockerfile: services/orchestrator/Dockerfile.demo
     container_name: cc-orchestrator
     ports:
       - "127.0.0.1:5005:5005"
@@ -196,8 +204,10 @@ services:
 
   nphies-engine:
     build:
-      context: ./services/nphies-engine
-      dockerfile: Dockerfile.demo
+      # Repository root: the Python packages are path dependencies
+      # (../../packages/<name>) and a narrower context cannot resolve them.
+      context: .
+      dockerfile: services/nphies-engine/Dockerfile.demo
     container_name: cc-nphies-engine
     ports:
       - "127.0.0.1:5006:5006"

@@ -1,7 +1,25 @@
+# Build context: the REPOSITORY ROOT (docker-compose.demo.yml sets `context: .`).
+#
+# Two things the image needs from the repository, both of which an app-directory
+# context cannot see:
+#   * the Python packages, which are path dependencies (../../packages/<name>);
+#     without them uv aborts with "cannot normalize a relative path beyond the
+#     base directory";
+#   * docs/prompts, because packages/prompt_loader resolves the prompt templates
+#     by path from the repository root, and without them the service dies at
+#     import with FileNotFoundError.
 FROM python:3.12-slim
+
 WORKDIR /app
-COPY pyproject.toml uv.lock* ./
-RUN pip install --no-cache-dir uv && uv sync --frozen --no-dev || uv sync --no-dev
-COPY . .
+RUN pip install --no-cache-dir uv
+
+COPY packages/ ./packages/
+COPY docs/prompts/ ./docs/prompts/
+COPY apps/narrative/ ./apps/narrative/
+
+WORKDIR /app/apps/narrative
+# --frozen uses the committed lockfile; the fallback re-resolves if it is stale.
+RUN uv sync --frozen --no-dev || uv sync --no-dev
+
 EXPOSE 5001
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001"]

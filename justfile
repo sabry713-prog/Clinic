@@ -53,6 +53,18 @@ graph-seed:
 graph-pskg:
     cd services/veritas-graph && uv run python etl_pskg.py --mrn-pattern '^MRN-[0-9]{3}$'
 
+# Bring up the full containerised demo stack (infrastructure + the six Python
+# AI services) from docker-compose.demo.yml. Core and web still run on the host
+# via `just dev`: they need hot-reload for development, and containerising them
+# is the L01 item -- the compose file says so in its own header. Until now
+# nothing in this file invoked that compose file at all.
+demo-stack:
+    docker compose -f docker-compose.demo.yml up -d --build
+
+# Stop the containerised demo stack (keeps volumes/data).
+demo-stack-down:
+    docker compose -f docker-compose.demo.yml down
+
 # Assert the running stack matches docs/DEMO_MANIFEST.md: the schema names the
 # manifest relies on, the seeded cohort, and the graph reference counts derived
 # from the committed ontology files. Reports live totals without asserting them
