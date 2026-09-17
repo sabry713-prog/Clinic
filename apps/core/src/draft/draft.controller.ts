@@ -54,6 +54,18 @@ class CreateDraftDto {
   @Type(() => PrefillSectionDto)
   prefill_sections?: PrefillSectionDto[];
 
+  // Ambient Scribe: the sections the reviewing clinician wrote/edited in the
+  // SOAP editor. Their own words rather than a transcript extract, so the
+  // service records them with `authored` provenance instead of running the
+  // verbatim-substring gate (see DraftService.generate). The draft still
+  // requires clinician sign-off before it becomes documentation.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => PrefillSectionDto)
+  authored_sections?: PrefillSectionDto[];
+
   // Ambient condensation (docs/prompts/ambient-condensation-prompt.md): which
   // prefill_sections keys were lightly condensed rather than verbatim-relocated.
   // Only honored server-side for keys in DraftService's CONDENSABLE_SECTIONS
@@ -136,20 +148,33 @@ export class DraftController {
   @HttpCode(201)
   @ApiOperation({ summary: "Generate a grounded document draft (unsigned)" })
   async create(@Req() req: Request, @Param("id") id: string, @Body() body: CreateDraftDto) {
-    const prefill = body.prefill_sections?.length && body.transcript
+    const namedSections = Object.fromEntries((body.prefill_sections ?? []).map((s) => [s.key, s.text]));
+    const authoredSections = Object.fromEntries((body.authored_sections ?? []).map((s) => [s.key, s.text]));
+    const clinicianAuthored = Object.keys(authoredSections).length > 0;
+    const prefill = clinicianAuthored
       ? {
-          transcript: body.transcript,
-          sections: Object.fromEntries(body.prefill_sections.map((s) => [s.key, s.text])),
+          // Ambient Scribe: the clinician's reviewed note supplies the sections.
+          transcript: body.transcript ?? "",
+          sections: { ...namedSections, ...authoredSections },
+          authored: authoredSections,
           condensedKeys: body.condensed_keys,
           translatedKeys: body.translated_keys,
         }
-      : undefined;
+      : body.prefill_sections?.length && body.transcript
+        ? {
+            transcript: body.transcript,
+            sections: namedSections,
+            condensedKeys: body.condensed_keys,
+            translatedKeys: body.translated_keys,
+          }
+        : undefined;
     const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en", body.specialty ?? "general", prefill);
     await this.audit(req, "DRAFT_GENERATED", draft.id, {
       document_type: draft.document_type,
       specialty: draft.specialty,
       patient_id: id,
       from_ambient_capture: !!prefill,
+      clinician_authored: clinicianAuthored,
     });
     return draft;
   }

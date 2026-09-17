@@ -25,6 +25,7 @@ import { useAgentOrchestrator, type EvidenceChain } from "../../hooks/useAgentOr
 import { useNphiesStatus } from "../../hooks/useNphiesStatus";
 import { usePatientTimeline } from "../../hooks/usePatientTimeline";
 import { api } from "../../lib/api";
+import { formatNurseVitals, mergeObjective, type NurseVitals } from "./vitals";
 import type { PostCarePackage } from "../ai-team/ReceptionistTab";
 import type { AgentHandoff } from "../../lib/api";
 
@@ -163,6 +164,9 @@ interface SullyState {
   setTranscribing: (value: boolean) => void;
   setDictationError: (message: string | null) => void;
   readonly soap: SoapNote;
+  /** Vitals the nurse recorded before this encounter, read from the record.
+   * Null when the record holds none -- nothing is inferred. */
+  readonly nurseVitals: NurseVitals | null;
   /** Set when automatic live SOAP generation failed — surfaced in the
    * scribe pane so a dead network is visible instead of silent. */
   readonly soapError: string | null;
@@ -217,26 +221,29 @@ const MOCK_TRANSCRIPT: readonly TranscriptLine[] = [
 
 const EMPTY_SOAP: SoapNote = { subjective: "", objective: "", assessment: "", plan: "" };
 
-/** SOAP text revealed progressively as the mock transcript streams in. */
+/** SOAP text revealed progressively as the mock transcript streams in.
+ * Deliberately carries no vital signs: those are recorded by the nurse before
+ * the encounter and read from the patient record (see vitals.ts), so baking
+ * numbers in here would put invented measurements in front of a clinician. */
 const SOAP_STAGES: readonly SoapNote[] = [
   EMPTY_SOAP,
   { ...EMPTY_SOAP, subjective: "Chest tightness on exertion for two weeks." },
   { ...EMPTY_SOAP, subjective: "Chest tightness on exertion for two weeks. No pain at rest." },
   {
     subjective: "Chest tightness on exertion for two weeks. No pain at rest.",
-    objective: "BP 148/92, HR 78, SpO2 98%.",
+    objective: "",
     assessment: "",
     plan: "",
   },
   {
     subjective: "Chest tightness on exertion for two weeks. No pain at rest.",
-    objective: "BP 148/92, HR 78, SpO2 98%. Heart sounds normal, no murmurs. Chest clear.",
+    objective: "Heart sounds normal, no murmurs. Chest clear.",
     assessment: "Known hypertension and type 2 diabetes.",
     plan: "",
   },
   {
     subjective: "Chest tightness on exertion for two weeks. No pain at rest.",
-    objective: "BP 148/92, HR 78, SpO2 98%. Heart sounds normal, no murmurs. Chest clear.",
+    objective: "Heart sounds normal, no murmurs. Chest clear.",
     assessment: "Known hypertension and type 2 diabetes.",
     plan: "ECG. Review lipid profile. Follow up in one week.",
   },
@@ -733,6 +740,8 @@ export function SullyProvider({
   // Live SOAP note from the orchestrator's DeepSeek formatting engine.
   // Null until the first successful generation. Stays null in demo mode.
   const [liveSoap, setLiveSoap] = useState<SoapNote | null>(null);
+  // Vitals the nurse recorded before this encounter (audit C10 follow-up).
+  const [nurseVitals, setNurseVitals] = useState<NurseVitals | null>(null);
   const [soapLoading, setSoapLoading] = useState(false);
   const [soapError, setSoapError] = useState<string | null>(null);
 
@@ -745,6 +754,34 @@ export function SullyProvider({
   // "nothing is written to the record from here" contract.
   const scribeKey = patientId ? `sully.scribe.${patientId}` : null;
 
+  // The nurse takes vitals before the patient sees the doctor. They are already
+  // observations on the record, so the Objective section is filled from them --
+  // read, never generated. A patient with no recorded vitals leaves Objective
+  // to the clinician rather than receiving invented numbers.
+  useEffect(() => {
+    if (!patientId) {
+      setNurseVitals(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const page = await api.patients.observations(patientId, {
+          category: "vital-signs",
+          limit: 50,
+        });
+        if (!cancelled) setNurseVitals(formatNurseVitals(page.data));
+      } catch {
+        // Vitals are a convenience: a record that cannot be read leaves the
+        // section empty and the note still works.
+        if (!cancelled) setNurseVitals(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [patientId]);
+
   // Restore once per patient mount, before any new lines arrive.
   useEffect(() => {
     if (!scribeKey) return;
@@ -752,12 +789,13 @@ export function SullyProvider({
       const raw = sessionStorage.getItem(scribeKey);
       if (!raw) return;
       const parsed = JSON.parse(raw) as { lines?: TranscriptLine[]; soap?: SoapNote | null };
-      if (Array.isArray(parsed.lines) && parsed.lines.length > 0) {
-        setLiveTranscript(parsed.lines);
-        if (parsed.soap) {
-          setLiveSoap(parsed.soap);
-          soapRef.current = parsed.soap;
-        }
+      // The note is restored independently of the transcript: a clinician who
+      // typed the SOAP without recording has no lines, and gating the note on
+      // `lines.length > 0` silently discarded their work (audit C10/B4).
+      if (Array.isArray(parsed.lines) && parsed.lines.length > 0) setLiveTranscript(parsed.lines);
+      if (parsed.soap && typeof parsed.soap === "object") {
+        setLiveSoap(parsed.soap);
+        soapRef.current = parsed.soap;
       }
     } catch {
       // Corrupted cache -- start fresh rather than crash the encounter.
@@ -765,16 +803,8 @@ export function SullyProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scribeKey]);
 
-  // Mirror on every change so the latest words always survive a reload.
-  useEffect(() => {
-    if (!scribeKey) return;
-    try {
-      if (liveTranscript.length === 0 && liveSoap == null) return;
-      sessionStorage.setItem(scribeKey, JSON.stringify({ lines: liveTranscript, soap: liveSoap ?? null }));
-    } catch {
-      // Storage full or blocked -- in-memory recording still works.
-    }
-  }, [scribeKey, liveTranscript, liveSoap]);
+  // The sessionStorage mirror lives further down, after `soap`, so it can
+  // persist the note the clinician actually reviewed -- see the C10 fix there.
 
   /** Draft the post-encounter package for the routed patient. */
   const refreshPostCare = useCallback(async () => {
@@ -1091,8 +1121,29 @@ export function SullyProvider({
   // In demo mode, the canned stages are preserved (no backend call).
   const soap = useMemo<SoapNote>(() => {
     const base = liveSoap ?? SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
-    return { ...base, ...soapOverride };
-  }, [liveSoap, lineCount, soapOverride]);
+    // Objective leads with the vitals the nurse recorded before the encounter.
+    // They are read from the record, and the clinician's own edits still win
+    // because soapOverride is applied last.
+    const merged: SoapNote = { ...base, objective: mergeObjective(nurseVitals, base.objective) };
+    return { ...merged, ...soapOverride };
+  }, [liveSoap, lineCount, soapOverride, nurseVitals]);
+
+  // Mirror the *effective* note on every change, so a reload and every later
+  // journey stage see exactly what the clinician reviewed. Persisting only the
+  // drafted text dropped every manual edit, and bailing out when there was no
+  // transcript dropped a typed note entirely (audit C10/B4).
+  useEffect(() => {
+    if (!scribeKey) return;
+    try {
+      const hasNote = Boolean(
+        soap.subjective.trim() || soap.objective.trim() || soap.assessment.trim() || soap.plan.trim(),
+      );
+      if (liveTranscript.length === 0 && !hasNote) return;
+      sessionStorage.setItem(scribeKey, JSON.stringify({ lines: liveTranscript, soap }));
+    } catch {
+      // Storage full or blocked -- in-memory recording still works.
+    }
+  }, [scribeKey, liveTranscript, soap]);
 
   // Phase 2: run the handoff chain and re-draft post-care when the clinical
   // picture changes -- order set or the SOAP assessment. Debounced so typing
@@ -1328,6 +1379,7 @@ export function SullyProvider({
       elapsedSeconds,
       transcript,
       soap,
+      nurseVitals,
       soapError,
       soapLoading,
       checklist,

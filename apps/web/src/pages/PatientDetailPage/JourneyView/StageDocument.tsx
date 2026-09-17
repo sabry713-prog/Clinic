@@ -18,15 +18,9 @@ import { api, type DocumentDraft, ApiError } from "../../../lib/api";
 interface StageDocumentProps {
   readonly patientId: string;
   readonly onDone: (done: boolean) => void;
-}
-
-function soapToText(soap: { subjective: string; objective: string; assessment: string; plan: string }): string {
-  return [
-    soap.subjective.trim() && `S: ${soap.subjective.trim()}`,
-    soap.objective.trim() && `O: ${soap.objective.trim()}`,
-    soap.assessment.trim() && `A: ${soap.assessment.trim()}`,
-    soap.plan.trim() && `P: ${soap.plan.trim()}`,
-  ].filter(Boolean).join("\n\n");
+  /** Called once the reviewed note is in the record, so the journey can move
+   * the clinician on to the next stage. */
+  readonly onAdvance?: () => void;
 }
 
 function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void }): null {
@@ -38,7 +32,7 @@ function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void 
   return null;
 }
 
-function SaveToRecord({ patientId }: { readonly patientId: string }): JSX.Element | null {
+function SaveToRecord({ patientId, onSaved }: { readonly patientId: string; readonly onSaved?: (() => void) | undefined }): JSX.Element | null {
   const { soap, transcript } = useSully();
   const [saved, setSaved] = useState<DocumentDraft | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,12 +43,18 @@ function SaveToRecord({ patientId }: { readonly patientId: string }): JSX.Elemen
   const save = useCallback((): void => {
     if (!hasNote || busy) return;
     setBusy(true); setError(null);
-    const noteText = soapToText(soap);
     const transcriptText = transcript.map((l) => `${l.speaker}: ${l.text}`).join("\n");
     api.patients
       .createDraft(patientId, "encounter_note", "en", "general", {
         transcript: transcriptText,
-        sections: [
+        sections: [],
+        // The SOAP note as the clinician reviewed it. These are their words, not
+        // a transcript extract, so they are sent as authored sections: a
+        // restructured note is never a verbatim substring of the transcript, and
+        // the containment gate rejected exactly that (400 on save) until this
+        // path existed. Provenance is recorded per section and sign-off is still
+        // required before the draft becomes documentation.
+        authoredSections: [
           { key: "subjective", text: soap.subjective },
           { key: "objective", text: soap.objective },
           { key: "assessment", text: soap.assessment },
@@ -63,10 +63,11 @@ function SaveToRecord({ patientId }: { readonly patientId: string }): JSX.Elemen
       })
       .then((draft) => {
         setSaved(draft);
+        onSaved?.();
       })
       .catch((e) => setError(e instanceof ApiError ? e.message : "Failed to save note"))
       .finally(() => setBusy(false));
-  }, [patientId, soap, transcript, hasNote, busy]);
+  }, [patientId, soap, transcript, hasNote, busy, onSaved]);
 
   if (!hasNote) return null;
 
@@ -100,7 +101,7 @@ function SaveToRecord({ patientId }: { readonly patientId: string }): JSX.Elemen
   );
 }
 
-export default function StageDocument({ patientId, onDone }: StageDocumentProps): JSX.Element {
+export default function StageDocument({ patientId, onDone, onAdvance }: StageDocumentProps): JSX.Element {
   return (
     <section aria-label="Stage: Document" data-testid="journey-stage-panel-document" className="space-y-3">
       <header>
@@ -118,7 +119,7 @@ export default function StageDocument({ patientId, onDone }: StageDocumentProps)
           <CompletionProbe onDone={onDone} />
           <AmbientScribePane />
         </div>
-        <SaveToRecord patientId={patientId} />
+        <SaveToRecord patientId={patientId} onSaved={onAdvance} />
       </SullyProvider>
     </section>
   );

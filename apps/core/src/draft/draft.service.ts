@@ -21,7 +21,12 @@ type Policy = "assembled_facts" | "clinician_authored_only";
 //  true  → reproduce the clinician's existing authored note verbatim
 //  false → start empty for the clinician to DICTATE this encounter's content
 interface SectionDef { key: string; title: string; policy: Policy; prefill?: boolean; }
-export interface DraftSection extends SectionDef { text: string; }
+export interface DraftSection extends SectionDef {
+  text: string;
+  /** True when the reviewing clinician authored this text in the ambient
+   * Scribe (audit C10) rather than it being derived verbatim from a transcript. */
+  authored?: boolean;
+}
 
 // Section templates per document type (mirrors docs/prompts/draft-prompt.md).
 const TEMPLATES: Record<DocumentType, SectionDef[]> = {
@@ -67,10 +72,25 @@ const TEMPLATES: Record<DocumentType, SectionDef[]> = {
   ],
 };
 
+/** Section titles for a clinician-authored ambient note (audit C10). An
+ * ambient encounter note IS the SOAP note the clinician reviewed, so its
+ * sections are their own words and need not appear in a document template. */
+const AUTHORED_SECTION_TITLES: Record<string, string> = {
+  subjective: "Subjective",
+  objective: "Objective",
+  assessment: "Assessment",
+  plan: "Plan",
+};
+
+/** Canonical reading order for clinician-authored ambient sections. */
+const AUTHORED_SECTION_ORDER = ["subjective", "objective", "assessment", "plan"];
+
 // Arabic section titles (values stay verbatim; only structure is localized).
 const TITLE_AR: Record<string, string> = {
   "Identity and Admission": "الهوية وبيانات الدخول",
   "Identity": "الهوية",
+  "Subjective": "الشكوى والتاريخ",
+  "Objective": "الفحص السريري والعلامات الحيوية",
   "Documented Problems": "المشاكل الموثقة",
   "Active Problems": "المشاكل النشطة",
   "Medications on Discharge": "الأدوية عند الخروج",
@@ -301,6 +321,26 @@ export class DraftService {
    *   unavailable translation silently keeps the original-language text
    *   rather than blocking draft creation.
    */
+  /** Section list for a clinician-authored ambient note: the assembled-facts
+   * identity block plus the sections the clinician actually wrote, in reading
+   * order. A key outside the canonical order keeps the order it arrived in. */
+  private authoredTemplate(baseTemplate: SectionDef[], keys: string[]): SectionDef[] {
+    const factsSections = baseTemplate.filter((s) => s.policy === "assembled_facts");
+    const ordered = [
+      ...AUTHORED_SECTION_ORDER.filter((k) => keys.includes(k)),
+      ...keys.filter((k) => !AUTHORED_SECTION_ORDER.includes(k)),
+    ];
+    return [
+      ...factsSections,
+      ...ordered.map((key) => ({
+        key,
+        title: AUTHORED_SECTION_TITLES[key] ?? `${key.charAt(0).toUpperCase()}${key.slice(1)}`,
+        policy: "clinician_authored_only" as Policy,
+        prefill: false as const,
+      })),
+    ];
+  }
+
   async generate(
     userId: string,
     patientId: string,
@@ -312,6 +352,8 @@ export class DraftService {
       sections: Record<string, string>;
       condensedKeys?: readonly string[] | undefined;
       translatedKeys?: readonly string[] | undefined;
+      /** Keys whose text the reviewing clinician authored (ambient Scribe). */
+      authored?: Record<string, string> | undefined;
     },
   ): Promise<DraftRow> {
     await this.scope.assertPatientInScope(userId, patientId);
@@ -323,14 +365,25 @@ export class DraftService {
     // missing from every generic template despite being universally relevant)
     // right after Identity — still a plain assembled-facts reproduction, same
     // as every other section.
-    const template: SectionDef[] = specialty === "general"
-      ? baseTemplate
-      : (() => {
-          const idx = baseTemplate.findIndex((s) => s.key === "identity");
-          const withAllergies = [...baseTemplate];
-          withAllergies.splice(idx + 1, 0, { key: "allergies", title: "Allergies", policy: "assembled_facts" });
-          return withAllergies;
-        })();
+    // Ambient Scribe (audit C10): when the clinician's reviewed note is
+    // supplied, that note IS the document -- the identity block of assembled
+    // facts plus the sections they actually wrote. Forcing it through the
+    // document template instead would drop their Subjective/Objective (no
+    // template carries those keys) and print dictate-fresh placeholders next
+    // to sections they had already filled in.
+    const authored = prefill?.authored;
+    const authoredKeys = new Set(Object.keys(authored ?? {}));
+
+    const template: SectionDef[] = authoredKeys.size > 0
+      ? this.authoredTemplate(baseTemplate, [...authoredKeys])
+      : specialty === "general"
+        ? baseTemplate
+        : (() => {
+            const idx = baseTemplate.findIndex((s) => s.key === "identity");
+            const withAllergies = [...baseTemplate];
+            withAllergies.splice(idx + 1, 0, { key: "allergies", title: "Allergies", policy: "assembled_facts" });
+            return withAllergies;
+          })();
 
     // Clinician-authored source (verbatim notes) — the only permitted content
     // for clinician-authored-only sections.
@@ -343,10 +396,19 @@ export class DraftService {
       const baseTitle = override?.en ?? def.title;
       const title = language === "ar" ? (override?.ar ?? TITLE_AR[baseTitle] ?? baseTitle) : baseTitle;
       const prefillText = def.policy === "clinician_authored_only" ? prefill?.sections[def.key] : undefined;
+      const isAuthored = authoredKeys.has(def.key);
       if (def.policy === "assembled_facts") {
         text = await this.assembleFacts(patientId, def.key, language);
       } else if (prefillText !== undefined) {
         text = prefillText;
+        if (isAuthored) {
+          // Audit C10: the clinician reviewed this text in the SOAP editor and
+          // is its author of record, so the transcript-containment gate does
+          // not apply -- a restructured note is never a verbatim substring.
+          // The text is also never machine-translated: replacing the words the
+          // clinician just reviewed would defeat that review. Sign-off remains
+          // required before any of this becomes clinical documentation.
+        } else {
         const claimedCondensed = prefill!.condensedKeys?.includes(def.key) ?? false;
         // Server-side CONDENSABLE_SECTIONS wins regardless of what the client
         // claims -- a section outside this set always falls through to the
@@ -373,6 +435,7 @@ export class DraftService {
           const translated = await this.translateSection(text, language);
           if (translated) text = translated;
         }
+        }
       } else if (def.prefill === false) {
         // Dictate-fresh: start empty so the clinician dictates THIS encounter's
         // content (e.g. a new visit's Assessment/Plan). No old notes bleed in.
@@ -388,7 +451,7 @@ export class DraftService {
           );
         }
       }
-      sections.push({ ...def, title, text });
+      sections.push({ ...def, title, text, ...(isAuthored ? { authored: true } : {}) });
     }
 
     const generated = sections.map((s) => `## ${s.title}\n${s.text}`).join("\n\n");

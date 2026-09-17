@@ -303,3 +303,81 @@ describe("DraftService ambient auto-translation prefill", () => {
     expect((calls[1]!.body as { text: string }).text).toBe("سعال ثلاثة أيام");
   });
 });
+
+describe("DraftService clinician-authored ambient note (audit C10)", () => {
+  const TRANSCRIPT =
+    "Known hypertension and type 2 diabetes. ECG. Review lipid profile. Follow up in one week.";
+
+  // Exactly what Stage 1's "Save note to record" posts: the SOAP note the
+  // clinician reviewed, including a line the model rewrote. The clinician is the
+  // author of record, so it is accepted and marked as authored rather than
+  // being refused by the transcript-containment gate.
+  const SOAP = {
+    subjective: "Known hypertension and type 2 diabetes.",
+    objective: "BP 134/69, HR 72. Heart sounds normal, chest clear.",
+    assessment: "Type 2 diabetes with hypertension, controlled on current therapy.",
+    plan: "ECG. Review lipid profile. Follow up in one week.",
+  };
+
+  it("keeps the SOAP sections, which no document template carries", async () => {
+    const service = new DraftService(makePool(), makeScope(), makeEncryption());
+    const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+      transcript: TRANSCRIPT,
+      sections: SOAP,
+      authored: SOAP,
+    });
+
+    const sections = draft.sections_json as unknown as {
+      key: string;
+      text: string;
+      authored?: boolean;
+    }[];
+    expect(sections.map((s) => s.key)).toEqual([
+      "identity",
+      "subjective",
+      "objective",
+      "assessment",
+      "plan",
+    ]);
+    // The restructured assessment is preserved verbatim as the clinician saw it.
+    expect(sections.find((s) => s.key === "assessment")?.text).toBe(SOAP.assessment);
+    expect(sections.find((s) => s.key === "objective")?.text).toContain("BP 134/69");
+  });
+
+  it("marks every clinician-written section as authored, and none of the assembled facts", async () => {
+    const service = new DraftService(makePool(), makeScope(), makeEncryption());
+    const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+      transcript: TRANSCRIPT,
+      sections: SOAP,
+      authored: SOAP,
+    });
+    const sections = draft.sections_json as unknown as { key: string; authored?: boolean }[];
+    for (const section of sections) {
+      if (section.key === "identity") expect(section.authored).toBeUndefined();
+      else expect(section.authored).toBe(true);
+    }
+  });
+
+  it("emits no dictate-fresh placeholder next to a section the clinician filled in", async () => {
+    const service = new DraftService(makePool(), makeScope(), makeEncryption());
+    const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+      transcript: TRANSCRIPT,
+      sections: SOAP,
+      authored: SOAP,
+    });
+    const sections = draft.sections_json as unknown as { text: string }[];
+    expect(sections.some((s) => s.text.includes("Dictate or type"))).toBe(false);
+  });
+
+  it("leaves the transcript-containment gate untouched for transcript-derived prefill", async () => {
+    // Same reworded text, but sent as transcript prefill (no `authored`) -- the
+    // original safety property still refuses it.
+    const service = new DraftService(makePool(), makeScope(), makeEncryption());
+    await expect(
+      service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+        transcript: TRANSCRIPT,
+        sections: { assessment: SOAP.assessment },
+      }),
+    ).rejects.toThrow(/verbatim substring/);
+  });
+});

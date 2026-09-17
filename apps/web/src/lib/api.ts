@@ -26,11 +26,26 @@ async function request<T>(
 
   if (!res.ok) {
     let code = "UNKNOWN_ERROR";
-    let message = res.statusText;
+    let message: string = res.statusText;
     try {
-      const body = (await res.json()) as { error?: { code?: string; message?: string } };
-      code = body.error?.code ?? code;
-      message = body.error?.message ?? message;
+      const body = (await res.json()) as {
+        code?: string;
+        message?: string | string[];
+        error?: { code?: string; message?: string } | string;
+      };
+      // Core answers with Nest's default exception shape
+      // ({ message, error, statusCode }) and installs no exception filter, so
+      // reading only `body.error.message` silently discarded every server
+      // message and the UI showed a bare "Bad Request" instead of the reason.
+      // Read the flat `message` too; the nested envelope is still honoured for
+      // any service that returns it.
+      const envelope = typeof body.error === "object" ? body.error : undefined;
+      const flatMessage = Array.isArray(body.message) ? body.message.join("; ") : body.message;
+      code = envelope?.code ?? body.code ?? code;
+      message =
+        envelope?.message ??
+        flatMessage ??
+        (typeof body.error === "string" ? body.error : message);
     } catch {
       // ignore parse errors
     }
@@ -1095,6 +1110,10 @@ export const api = {
         sections: readonly PrefillSection[];
         condensedKeys?: readonly string[];
         translatedKeys?: readonly string[];
+        /** Sections the reviewing clinician authored (ambient Scribe). Sent as
+         * `authored_sections` so the server records them with authored
+         * provenance instead of running the transcript-containment gate. */
+        authoredSections?: readonly PrefillSection[];
       },
     ) =>
       request<DocumentDraft>(`/api/v1/patients/${id}/drafts`, {
@@ -1107,6 +1126,7 @@ export const api = {
             ? {
                 transcript: prefill.transcript,
                 prefill_sections: prefill.sections,
+                authored_sections: prefill.authoredSections,
                 condensed_keys: prefill.condensedKeys,
                 translated_keys: prefill.translatedKeys,
               }

@@ -114,7 +114,13 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
 
         {/* Stage panel */}
         <div className="min-w-0 flex-1 min-h-[520px] bg-white border border-line rounded-[18px] shadow-card p-6">
-          {stage === "document" && <StageDocument patientId={patient.id} onDone={(d) => markCompleted("document", d)} />}
+          {stage === "document" && (
+            <StageDocument
+              patientId={patient.id}
+              onDone={(d) => markCompleted("document", d)}
+              onAdvance={() => setStage("diagnose")}
+            />
+          )}
           {stage === "diagnose" && (
             <StageDiagnose patient={patient} onDone={(d) => markCompleted("diagnose", d)} onChanged={bumpRefresh} />
           )}
