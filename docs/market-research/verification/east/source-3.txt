@@ -1,0 +1,49 @@
+# AWS to launch first cloud infrastructure region in the Kingdom of Saudi Arabia by December 2026
+
+AWS and HUMAIN deepen partnership with a commitment to deliver up to 50MW of capacity in Saudi’s first AI Zone by 2028.
+
+![About Amazon Hero-Saudi-Arabia-AI-humain-amazon-news](https://assets.aboutamazon.com/0e/20/3476c65a4ef9b46def8c8c3dba46/about-amazon-hero-saudi-arabia-ai-humain-amazon-news-ds-20260831.jpg)
+
+3 min read
+
+[Amazon Web Services](https://www.aboutamazon.com/news/tag/aws) (AWS) has announced at [LEAP](https://onegiantleap.com/) in Riyadh that its first AWS Cloud Infrastructure Region in the Kingdom of Saudi Arabia is on track to launch in December 2026.
+
+Together with [HUMAIN](https://www.humain.com/), a Public Investment Fund–owned company, AWS will also make up to 50 megawatts (MW) of capacity available in Saudi Arabia’s first AI Zone by 2028 as part of an expanded strategic collaboration.
+
+AWS is HUMAIN’s preferred [AI](https://www.aboutamazon.com/news/tag/artificial-intelligence) partner, driving AI [innovation](https://www.aboutamazon.com/news/tag/innovation) across the Kingdom and globally. The AI Zone capacity will include [AWS’s Trainium chips](https://www.aboutamazon.com/news/aws/aws-trainium-graviton-ai-chips-explained) and the latest [NVIDIA](https://www.aboutamazon.com/news/aws/amazon-aws-nvidia-collaboration) AI infrastructure for customers to run AI training and [inference](https://www.aboutamazon.com/news/aws/aws-ceo-ai-inference-transforms-developer-capabilities) workloads.
+
+Increased cloud and AI capacity is key to growing the Kingdom’s AI leadership and supporting public and private sector organizations to build a future-ready economy in line with [Saudi Arabia’s Vision 2030](https://www.pif.gov.sa/en/private-sector-hub/leadership-vision/?utm_source=google&utm_medium=cpc&utm_campaign=4422_sem_new_structure_pif_search_aware_us_cpc_responsivesearch_generic_en_08aug23_30dec23_7905_broad&utm_term=us_en&utm_content=vision_2030_rsa&gad_source=1&gad_campaignid=20449223923&gbraid=0AAAAABozKaS7LMYXV4flFY_i8XeBQ9mKT&gclid=CjwKCAjwy5rUBhB5EiwAIoAtCmBGifWOChNVsXvdFmDFkJELFMApuh8ZPuqyrkq0dRS_rsyVGMfsZBoCqgUQAvD_BwE).
+
+HUMAIN’s ALLAM Arabic large language model will soon be available through Amazon Bedrock, so customers can securely access advanced Arabic-language AI capabilities through a fully managed generative AI platform.
+
+The expanded collaboration also includes the availability of HUMAIN Fabric, HUMAIN’s AI-native data infrastructure and platform component of the HUMAIN ONE generative AI operating system, via AWS Marketplace.
+
+With the new Region, developers, startups, and enterprises will have greater choice for running their applications and serving end users from data centers located in Saudi Arabia.
+
+All AWS Regions are sovereign-by-design, formalized under the [AWS Digital Sovereignty Pledge](https://aws.amazon.com/blogs/security/aws-digital-sovereignty-pledge-control-without-compromise/) commitment to offering customers the most advanced sovereignty controls and features available in the cloud.
+
+“Saudi Arabia is home to some of the most ambitious and inventive builders, from startups and enterprises reimagining industries to public sector organizations deploying AI at scale, and the new AWS Region in the country will help them to continue to innovate,” said Matt Garman, CEO of AWS.
+
+“The launch of our new Region and our partnership with HUMAIN will deliver the full-stack cloud and AI infrastructure to help power new industries, create jobs, and accelerate the goals of Vision 2030.”
+
+“Saudi Arabia is building the computing power needed for the Intelligence Age and strengthening its position as a global computing partner. The launch of AWS’s new Region and its expanded partnership with HUMAIN will help accelerate AI innovation, enable new industries, and advance the goals of Saudi Vision 2030,” said His Excellency Engineer Abdullah Alswaha, Kingdom of Saudi Arabia Minister of Communications and Information Technology.
+
+The Region, first [announced](https://press.aboutamazon.com/2024/3/aws-to-launch-an-infrastructure-region-in-the-kingdom-of-saudi-arabia) in March 2024, represents more than $5.3 billion (19.88 billion Saudi riyal) in planned cloud infrastructure investment. This launch will expand the AWS Global Infrastructure to 40 Regions worldwide.
+
+According to an [IDC report](https://pages.awscloud.com/rs/112-TZM-766/images/AWS-Whitepaper-Potential-AI-Middle-East.pdf) commissioned by AWS, AI will contribute an estimated $130 billion to Saudi Arabia’s economy by 2030. The new Region will help accelerate this potential by empowering organizations to innovate faster and operate more cost-efficiently, while providing access to leading AI services like Amazon Bedrock.
+
+## Investing in Saudi Arabia's AI-powered future
+
+Saudi organizations including Abdul Latif Jameel, Almosafer, stc Group, Red Bull Mobile, and AWS Partners like ZainTECH, Accenture, and Tamkeen, will be running AI workloads on AWS.
+
+[stc Group](https://www.stc.com/), a major digital and telecommunications provider, has announced a strategic collaboration with AWS to accelerate the adoption of cloud and AI services in Saudi Arabia, while [ZainTECH](https://zaintech.com/en), a regional integrated digital solutions provider, has signed a multiyear agreement to help organizations adopt AWS solutions and strengthen their security and compliance readiness.
+
+## Building Saudi Arabia's digital workforce
+
+Beyond infrastructure, AWS is making a significant investment in Saudi Arabia’s workforce development.
+
+The Amazon Academy, launched with the Ministry of Communications and Information Technology (MCIT), provides free training in cloud computing, AI, logistics, and retail, aiming to train over 100,000 Saudi citizens for digital careers. AWS has also partnered with 11 higher education institutions in Saudi Arabia, and is training up to 10,000 women through the AWS Saudi Arabia Women's Skills Initiative at no charge.
+
+Across the Middle East, North Africa, and Turkey, AWS commits to reaching two million citizens with AI and cloud training by 2030 and has already served more than 680,000 individuals to date.
+
+Additionally, AWS is establishing two innovation centers in Saudi Arabia to provide technical mentorship and training to startups and entrepreneurs across the Region.

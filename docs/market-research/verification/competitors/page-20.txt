@@ -1,0 +1,21 @@
+# King's College Hospital London â Jeddah becomes the first hospital in Saudi Arabia to implement InterSystems IntelliCare | ZAWYA
+URL: https://www.zawya.com/en/press-release/companies-news/kings-college-hospital-london-jeddah-becomes-the-first-hospital-in-saudi-arabia-to-implement-intersystems-intellicare-482048
+Published: 2026-09-08
+
+King's College Hospital London â Jeddah becomes the first hospital in Saudi Arabia to implement InterSystems IntelliCare | ZAWYA
+
+The adoption of InterSystems IntelliCareâ¢ marks the next step in the hospital's digital journey. Image Courtesy: King's College Hospital London â Jeddah
+
+## A next-generation AI-native electronic health record
+
+ Press Release 
+
+JEDDAH, Saudi Arabia â King's College Hospital London â Jeddah (Kingâs Jeddah), one of the Kingdom of Saudi Arabiaâs most distinguished multispecialty hospitals, is set to become the first hospital in the EMEA region to go live with InterSystems IntelliCareâ¢, the next-generation electronic health record (EHR) platform with AI at its core. Marking this important milestone, Kingâs Jeddah has signed an agreement with InterSystems to transition from TrakCare to IntelliCare. Building on a longstanding and trusted relationship, this next step reflects Kingâs Jeddah's continued commitment to leveraging advanced technology to enhance patient care and uphold the highest international standards of healthcare delivery.
+
+Kingâs Jeddah was established as a unique extension of King's College Hospital London, a teaching institution founded in 1840 with a legacy of clinical firsts spanning nearly two centuries. Since opening its doors in Jeddah in 2025, the hospital has brought international protocols, academic oversight, and world-class multidisciplinary care to the heart of Saudi Arabia. With 130+ specialist consultants across 35 clinical specialties and 10 dedicated centers of excellence, Kingâs Jeddah is designed to deliver complex and critical care to patients across the Kingdom.
+
+The adoption of InterSystems IntelliCareâ¢ marks the next step in the hospital's digital journey. IntelliCare is purpose-built on the proven foundation of InterSystems TrakCare and designed for healthcare organizations seeking seamlessly connected, AI-powered solutions. Unlike platforms that treat artificial intelligence as an add-on, IntelliCare embeds AI directly into clinical workflows, from documentation and ordering to clinical decision support and patient communication, enabling clinicians to dedicate more time to patients and less to screens.
+
+For Kingâs Jeddah, the path to IntelliCare is built on confidence earned. Having successfully deployed TrakCare as the hospital's core EHR, the clinical and operational teams have developed a deep understanding of how InterSystems technology can be shaped to their needs. The transition to IntelliCare is therefore less a leap into the unknown and more a natural evolution, one that unlocks significantly greater intelligence and automation while preserving continuity of care.
+
+"At King's College Hospital Jeddah, our ambition has always been to bring the highest standards of international clinical practice to Saudi Arabia. Technology is not the destination; better patient outcomes are. Adopting InterSystems IntelliCare enables our teams to work with greater intelligence, reduce avoidable

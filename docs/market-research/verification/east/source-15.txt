@@ -1,0 +1,42 @@
+# [ir@purehealth.ae](mailto:ir@purehealth.ae)
+## Social
+* About Us
+Close About Us Open About Us
++ [About Us](https://purehealth.ae/about-us/)
++ Sustainability
++ [NetZero 2040](http://longevityoftheplanet.com)
++ [Sustainability Report](https://longevityoftheplanet.com/wp-content/uploads/2025/10/PureHealth-Sustainability-Report-2024.pdf)
+* [Our Portfolio](https://purehealth.ae/our-portfolio/)
+* [News & Insights](https://purehealth.ae/index.php/news-and-insights/)
+
+## PureHealth introduces pilot phase of Nada, an AI-based tool to assist doctors in documenting medical notes during patient visits
+Source: [Abu Dhabi Media Office](https://www.mediaoffice.abudhabi/en/health/purehealth-introduces-pilot-phase-of-nada-an-ai-based-tool-to-assist-doctors-in-documenting-medical-notes-during-patient-visits/)
+[PureHealth](https://www.mediaoffice.abudhabi/en/topic/purehealth/) has launched the pilot phase of Nada, an AI-powered service that functions as a secure digital assistant, supporting physicians by capturing
+and organising clinical notes from medical conversations in real time.
+The pilot has been rolled out across selected PureHealth healthcare facilities as part of the group’s efforts to enhance patient experience and improve the documentation and understanding of clinical
+information, through the deployment of advanced [artificial intelligence](https://www.mediaoffice.abudhabi/en/topic/artificial-intelligence-ai/) technologies within a framework that prioritises patient privacy,
+
+...
+
+The pilot phase of Nada has been developed specifically for use within clinical consultations.
+It enables physicians to focus fully on patients’ needs, in line with a human-centred model of care that responds to even the most nuanced requirements.
+At the same time, the service reduces the need for manual notetaking and documentation during consultations, while ensuring that medical records remain accurate, comprehensive, and clinically reliable.
+Shaista Asif, Group Chief Executive Officer of PureHealth, said: “Listening is the foundation of great healthcare.
+With Nada, we are strengthening the human connection at the heart of care by giving clinicians the freedom to truly engage with their patients.
+
+...
+
+By introducing Nada across our local and global hospitals, we are enhancing the patient experience at scale and reinforcing our commitment to delivering care that is attentive, accurate and deeply human.”
+The pilot phase of Nada follows a rigorous, multi-phase evaluation and testing process conducted across [SEHA’s](https://www.mediaoffice.abudhabi/en/topic/abu-dhabi-health-services-co-seha/) hospital network in
+the UAE, spanning high-volume primary care settings, specialist services and complex tertiary hospital environments.
+The pilot phase will enable physicians and healthcare providers using Nada to reduce the time spent on clinical documentation by more than 50 per cent, reclaiming an average of over two hours per clinician per
+
+...
+
+The technology demonstrated high levels of accuracy in capturing complex medical terminology and local dialects, supporting more precise clinical documentation and improving the quality and continuity of patient
+
+...
+
+For patients, the benefits are both tangible and immediate. Consultations become more personal and less transactional, with doctors able to maintain eye contact, listen more closely and engage more meaningfully.
+Patients experience clearer communication, fewer repeated explanations and greater confidence that their concerns, symptoms and care plans are accurately reflected throughout their healthcare journey.
+By integrating ambient AI that listens only within the clinical consultation and structures medical information instantly, PureHealth is moving beyond traditional digitisation towards a new era of cognitive

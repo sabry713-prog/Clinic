@@ -1,0 +1,153 @@
+Solventum™ Codefinder™ Software
+Intuitive coding and
+decision support
+
+Designed for expert and novice coders alike,
+the SolventumTM CodefinderTM Software 
+offers more of everything you expect from 
+the world’s most popular coding software. 
+
+With Solventum experts delivering consistent 
+regulatory updates and clients providing 
+continuous feedback, Codefinder works the 
+way coders work, with all the latest features 
+to address regulatory requirements and 
+operational demands.
+
+With easy-to-use menus, references and 
+prompts, Solventum Codefinder gives 
+coders the functionality they need to code 
+accurately and work productively.
+ 
+
+• Provides a sophisticated, easy-to-learn  
+ 
+solution for accurate,
+ 
+complete and compliant coding.
+• Easily deployed as a web-based
+ 
+application.
+• Delivers simplified ICD-10-AM, ACHI   
+ 
+and SBS coding via coding pathways
+ 
+utilising sophisticated expert decision  
+ 
+logic.
+
+Keeping up with the ever-changing rules and regulations of health care is difficult. Understanding and managing regulatory 
+updates, classification guidelines, payment methodologies and the increasing volume of data in the EMR are formidable 
+challenges.
+
+In addition, the work to increase the integrity of clinical documentation and the increased specificity required for health 
+data use have also become part of the coding landscape, adding to the complexity facing HIM professionals. These 
+responsibilities have become key factors in the decision-making processes that can affect every level of a healthcare 
+organisation.
+
+The challenge
+
+Decisions made to improve quality throughout the hospital are based largely on data supplied by the HIM department. New 
+technology and changing regulations have not altered the fact that medical record coding provides the basic foundation of 
+every organisation’s data. Today most hospitals depend on the functionality and reliability of Solventum’s coding software 
+to build that foundation.
+
+Solventum Codefinder is a sophisticated yet easy-to-use suite of tools that supports coders with powerful coding logic, 
+giving them the confidence by meeting their needs for accuracy and efficiency.
+
+The software is designed to provide appropriate support for novice to expert level coders. It guides the coder through the 
+coding process, covering the full range of situations from complex diabetes scenarios to repetitive or typical patient 
+encounters. At any time, the coder can view the selection of online references to clarify the situation and make appropriate 
+decisions.
+
+The Solventum solution 
+
+
+Today’s shortage of qualified coders requires 
+organisations to identify ways to maintain coding 
+accuracy and consistency. Solventum Codefinder gives 
+coders the support and confidence they need to follow 
+correct coding rules and guidelines.
+
+The following references are integrated into the software 
+right where coders need them to expedite the coding 
+process:
+• ICD-10-AM/ACHI Codebook
+•  Australian Coding Standards
+•  National Coding Advice
+•  Australian Refined Diagnosis related Groups
+•  Elsevier's Anatomy Plates
+•  SBS Alphabetical Index
+•  SBS Coding Standards
+•  SBS Summary of Changes
+
+ 
+
+With Solventum Codefinder, coders have a flexible tool that supports greater productivity allowing direct coding 
+for routine procedures yet employing consistent rules and expert logic to help address unique or complex coding 
+issues. For all of these reasons, Solventum will continue to use this flagship coding and reimbursement solution as 
+the coding engine for the Solventum™ 360 Encompass™ System as it begins being deployed in the region.
+
+ 
+
+Code editing is integrated seamlessly so that the codes assigned are continuously edited for quality. Codefinder edits are
+driven by our hosted Edit Engine and are based on the ICD-10-AM/ACHI coding classification, Saudi Billing System (SBS) Classification, 
+National Coding Advice, Australian Coding Standards and the AR-DRG grouper manual. In addition, there are Propriety Edits based on 
+Solventum Intellectual Property. The Edits provide real time on-screen feedback to coders to ensure compliance to standards and 
+advice. Errors corrected at the time of coding enhance the quality of the coding and prevent the record needing to be retrieved at a later 
+date for review and correction.
+
+Edits where and when you need them 
+
+Solventum delivering coder 
+confidence 
+For over 30 years, Solventum has been a leader in coding and 
+reimbursement solutions for Australian and New Zealand 
+organisations and has spent over a decade working with other 
+clients in the region. Let our expertise help you stay compliant and 
+efficient. With Solventum Codefinder Software your coders can:
+
+Solventum Works closely with: 
+• Access an integrated ICD-10-AM code book from  
+ 
+within the coding software
+• Receive estimated reimbursement values
+
+ 
+Solventum: The coding experts 
+
+•  Solventum™ Codefinder™ Software-Helps you manage the complex rules and terminology found in mandated rules,
+ 
+standards and guidelines.
+
+•  Solventum Grouping Software-Provides accurate AR-DRG grouping capabilities for national and state-based reimbursement  
+ 
+ 
+methodologies. DRGs are automatically computed during coding to help improve coder productivity, and multiple
+ 
+DRG versions can be calculated simultaneously.
+
+•  Reimbursement can be calculated including funding adjustments based on current requirements.
+
+•  Hospital Acquired Complications are flagged.
+
+Powerful components 
+
+Solventum
+Building 20, 3rd floor, 
+Dubai Internet City, 
+PO Box 500599 
+Dubai, United Arab Emirate
+
+ 
+ 
+
+©Solventum 2024. Solventum, the S logo and other trademarks are trademarks of Solventum or 
+its affiliates. 3M, the 3M logo and other 3M owned and/or licensed trademarks are trademarks 
+of 3M Company. Other trademarks are the property of their respective owners.
+
+Contact Us
+
+For more information on how Solventum solutions can assist your organization, email 
+info.his-mea@solventum.com or visit us online: www.solventum.com
+

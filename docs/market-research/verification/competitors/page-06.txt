@@ -1,0 +1,98 @@
+Solventum™ Revenue Integrity System for Prebill Review
+
+Reduce revenue leakage from your revenue cycle
+
+Key benefits of Solventum RIS 
+Prebill Review
+
+• Revenue protection: Catch coding and 
+
+documentation issues at the point of care. 
+Flag high-risk claims before submission, 
+helping maximize reimbursement and reduce 
+revenue leakage.
+
+• Unified collaboration: Bring CDI, coding, 
+
+billing and utilization review teams 
+together on a single platform. Streamline 
+communication, reduce administrative 
+burden and foster cross-functional 
+collaboration.
+
+• Continuous improvement: Continuously 
+
+monitor patterns in clinical and financial data, 
+updating recommendations in near real time 
+with machine learning. Stay ahead of payer 
+rule changes and regulatory updates without 
+manual intervention.
+
+Shift revenue integrity from 
+reactive to preventive
+
+The Solventum Revenue Integrity System 
+(RIS) is an AI-powered platform designed 
+to help healthcare organizations 
+proactively prevent claim denials, reduce 
+revenue leakage and optimize financial 
+performance. By integrating clinical, 
+coding and payment data, Solventum RIS 
+Prebill Review delivers real-time insights 
+and actionable recommendations, 
+transforming the revenue cycle from 
+a reactive process to a strategic, 
+preventive workflow.
+
+Prebill review: Providing functionality and value
+
+Integrated AI-driven workflow: RIS analyzes documentation and coding in real time, 
+flagging high-risk claims and providing targeted recommendations for intervention 
+before claims are submitted. This proactive approach shifts denial management 
+upstream, reducing rework and administrative costs.
+
+Real-time recommendations: Machine learning models surface actionable insights 
+within existing workflows, guiding staff to address gaps and mitigate risks as they arise. 
+This includes diagnosis-related group (DRG) validation, code suggestions and prompts 
+for missing documentation. 
+
+
+Comprehensive reporting: Advanced dashboards link upstream clinical activities to 
+downstream payment outcomes, enabling leaders to drill down by facility, provider or 
+DRG. This transparency supports operational decision-making and return on investment 
+(ROI) tracking. 
+
+Sustainability and scalability: As machine learning models retrain on local feedback,
+
+the system becomes more precise, reducing low-yield reviews and focusing resources 
+on the most impactful cases.
+
+Why Solventum?
+
+Solventum is trusted by over 5,000 healthcare organizations and is recognized for its leadership 
+in eliminating revenue cycle waste and driving value-based outcomes. By integrating AI across 
+connected workflows, Solventum empowers teams to move from chasing denials to preventing 
+them, delivering measurable financial gains, operational efficiency and improved patient experience. 
+
+For more information or to request a demo, explore the Solventum™ Revenue Integrity System on 
+our website.
+
+Contact Solventum today 
+
+For more information on how our software and services can assist 
+your organization, contact your Solventum sales representative, 
+call us at 800-367-2447, or visit us online at Solventum.com. 
+
+Solventum Corporation
+
+3M Center, Building 275
+
+2510 Conway Avenue East
+
+Maplewood, MN 55144
+
+© Solventum 2025. All rights reserved. Solventum and the S logo 
+are trademarks of Solventum or its affiliates. Other trademarks 
+are the property of their respective owners. Please recycle. 
+Printed in U.S.A. Published 11/25
+

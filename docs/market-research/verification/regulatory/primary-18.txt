@@ -1,0 +1,3 @@
+## Guide for Cloud Computing Service Providers
+
+This document issued to Implement the provisions of the “Cloud Computing Services Provisioning Regulations” (the regulations), and to clarify the registration procedures and requirements for cloud computing service providers operating in the Kingdom of Saudi Arabia.

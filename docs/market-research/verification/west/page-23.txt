@@ -1,0 +1,86 @@
+Health systems that use Suki’s ambient clinical artificial intelligence solution have seen measurable improvements in reducing documentation time, but they’ve also reported clear financial gains, generating incremental revenue from higher acuity coding.
+
+KLAS Research recently published a [validation study](https://klasresearch.com/report/suki-roi-validations-2026-cross-organizational-results-from-suki-s-clinical-intelligence-platform/3869) examining three large health systems’ adoption of Suki’s AI clinical intelligence and found that all three organizations experienced reduced documentation burden and after-hours work while also seeing clinician satisfaction and financial gains. The three health systems—FMOL Health, McLeod Health and Rush University System for Health—reported improved evaluation and management coding accuracy that led to monthly revenue gains.
+
+Additional benefits include improved provider satisfaction, enhanced patient care and a boost in patient satisfaction, according to the KLAS report.
+
+The hype around ambient AI technology has reached a fever pitch, but many solutions have struggled to show tangible value for health systems. As healthcare leaders evaluate the return on investment for AI scribe solutions, they often focus on more qualitative measures like reduction in clinical burnout and less time spent on paperwork. But organizations have faced challenges with moving beyond anecdotal feedback about its value to hard metrics in order to prove measurable operational and financial impact to justify the cost of the solutions.
+
+There's been an estimated $30 billion to $40 billion enterprise investment into generative AI to date, but most organizations are getting zero return, according to a July report published by MIT’s NANDA initiative. That report, which was not focused just on healthcare, found that just 5% of integrated AI pilots are extracting millions in value, while the vast majority remain stuck with no measurable P&L impact.
+
+KLAS' validation study provides hard metrics that Suki's AI clinical intelligence platform can alleviate physician burnout and improve financial viability. Across all three large health systems, there was a 35% to 65% reduction in after-hours documentation. The health systems reported a positive financial impact, without productivity pressure, with an average incremental revenue per provider per month of $1,223.
+
+The pilot projects were three to five months long and included a focused group of clinicians, and all three organizations have since expanded to more clinicians and specialties, the report said.
+
+"Healthcare leaders have been asking for independent proof that AI investments can deliver measurable outcomes. This KLAS validation across diverse health systems shows that Suki’s ambient clinical intelligence is no longer theoretical. It is delivering meaningful time savings, operational and financial impact and making a real difference in clinicians’ daily lives," Punit Soni, CEO and founder of Suki, told Fierce Healthcare.
+
+Most AI medical scribe tools work on a subscription model, and they are generally priced at a per provider per month rate between $49, for small practice solutions, to $300 or even higher for enterprise-grade solutions. If these solutions can pay for themselves, it would likely help boost adoption among providers.
+
+Some studies have found modest financial gains from the adoption of AI scribes. A [University of California, San Francisco study](https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2843524?resultClick=3), published in JAMA Network Open, analyzed nearly 1.2 million ambulatory encounters across 1,565 physicians over a two-year period and found that AI scribe adopters generated 1.81 more relative value units (RVUs) per week compared to non-adopters. This amounts to a 5.8% increase that translates to approximately $3,044 in additional annual revenue per physician based on 2025 Medicare payment rates, according to the study.
+
+At McLeod Health, clinical and technology leaders deployed Suki’s ambient AI solution, beginning with a phased pilot rollout in ambulatory clinics and the emergency department with physicians onboarded between late September and late October 2024. The gains were immediate and measurable, according to Bryon Frost, M.D., chief medical information officer at McLeod Health.
+
+The health system has since expanded the tech rollout from 40 outpatient clinicians to 249 active outpatient and ED users.
+
+Physicians reported lower documentation burden and time saved during paperwork, and there were improvements in evaluation and management (E/M) coding that led to notable financial benefits.
+
+“The patients love it, the doctors love it, and the CFO loves it. This has been a huge win, win, win for me, personally and professionally. It is one of the most significant projects I have led at our organization,” Frost told Fierce Healthcare in an interview.
+
+McLeod reported a 27% reduction in documentation time, leading to 3.6 hours of provider time saved per month post-pilot, and a net gain of $1,004 per provider per month due to improved coding.
+
+By using Suki’s technology, the system saw a shift in E/M coding. For established patients, level 3 codes dropped by 18.2%, while level 4 codes increased by 7.3% and level 5 codes by 5%, the KLAS evaluation found. For new patient encounters, level 3 codes were reduced by 3.2% while level 4 and level 5 codes increased by 7.2% and 2.3%, respectively.
+
+“What has essentially happened since we've moved to Suki is the notes are more complete, and that has caused the shift in CPT codes,” Frost said.
+
+The use of ambient AI enables doctors to capture more accurate clinical notes by documenting the full complexity of patient encounters, according to Suki.
+
+“That shift caused us to see higher revenue RVU per patient encounter that, combined with the 18% increase in patient volume, initially resulted in $1,004 net per provider per month, and that's after the subscription cost,” he said.
+
+Since the pilot, that financial gain has increased to $2,629 increase in revenue per provider per month.
+
+FMOL Health, based in Louisiana, reported a 21% decrease in time clinicians spend in notes, a 43% decrease in the number of notes open for more than seven days and improvements in coding accuracy. The health system saw a 6.5% increase in established level 4 patient visits, driving an incremental revenue of $862 per user per month, according to the KLAS report. It also saw an organic 22% increase in patient volume, without added pressure from organization, the report found.
+
+Rush University System for Health experienced a 4% reduction of time clinicians spend in notes and 4% reduction in after-hours work during the pilot. Improved documentation drove a modest $178 increase in monthly revenue per user. The health system has since expanded Suki's technology from 125 clinicians in 21 specialties to 243 active users across 35 specialties, and FMOL Health from 35 clinicians across primary care and key specialties to 132 users across 15 specialties, the KLAS report said.
+
+Some healthcare researchers caution that the use of ambient scribes for billing may have multiple negative unintended consequences, including higher healthcare spending and lower clinician satisfaction in the long term. In a [viewpoint article](https://jamanetwork.com/journals/jama-health-forum/fullarticle/2843723#) in JAMA Health Forum, researchers argue that ambient scribe vendors are expanding beyond transcription and summarization to focus on billing. Scribes can be used to code for higher-intensity services or to maximize the number and severity of diagnoses recorded during visits.
+
+"This can yield higher payments for organizations participating in value-based payment and/or higher payments from the government to Medicare Advantage plans," the researchers wrote. "Ambient scribes may proactively identify care gaps such as an overdue mammogram or colonoscopy, which themselves provide additional revenue if delivered within the health care delivery organization. In each scenario, spending increases and the scribe-adopting organization stands to capture much, if not all, of the additional spending."
+
+But other physician and tech leaders say focusing on financial ROI misses the key benefit of AI scribes: preventing clinical burnout and improving documentation, which can improve patient care.
+
+###
+Driving revenue recovery with AI scribe tech
+
+Pricing models and costs for the AI scribe solutions play a key role in achieving financial ROI, Frost asserts.
+
+McLeod Health negotiated with Suki to implement a utilization-based pricing model, where they pay a small fee per encounter with a cap, and that helped remove cost barriers.
+
+“Utilization-based pricing was a game changer for us. We only pay a small fee per encounter. The advantage is tremendous, because what it has done is it has allowed me to focus on being a CMIO and not have to worry about who I'm going to give it to, because commonly, you can't predict who is going to adopt the technology and who's not. By being on an encounter-based license, I provision licenses for every doctor in the entire organization. So tomorrow if a doctor wants to go live on the product, he's already got a license. If he only chooses to use it 10 times a month and finds satisfaction out of that, I'm not worrying about the cost. Other CMIOs do care, because they cannot afford if they're paying, let's say, $300 per license, and you only use it 10 times a month,” he explained.
+
+Frost stressed that boosting patient volume wasn’t the health system’s goal with adopting ambient AI.
+
+“The primary goal behind this initiative was all about mitigating physician burnout. If you've got a doctor who's seeing 30 patients a day, and you give them more time back in their day and all they do with that time is see more patients that perpetuates burnout. It just makes the wheels spin faster. Our goal is to get back to the joy of practicing medicine,” Frost said.
+
+Patients also reported higher satisfaction scores, he said. Based on patent-experience survey data, there was a 6.3% increase in “provider listening” and “trust in provider” as rated by patients, the KLAS report showed.
+
+McLeod Health, which serves 18 counties in North and South Carolina, operates seven hospitals and more than 100 physician locations.
+
+The health system took a unique approach and put ambient AI scribes to the test. McLeod leaders initiated a three-phase experiment to evaluate four leading AI vendors. The health system devised mock patient encounters using detailed patient scripts and brought in actors to play patients.
+
+“I had the vendors record the interactions with three real doctors—a surgeon, a family medicine doctor and a cardiologist—each of whom had five patient interactions in real time,” Frost said. The health system objectively evaluated the clinical note quality for each AI vendor with revenue cycle experts, physicians and patients rating the notes.
+
+For the second phase, the final two vendors were evaluated on the solution’s workflow embedded into the health system’s Epic electronic health record system.
+
+“The second phase in the experiment is where Suki really shined. It was the workflow that 90% of the physicians chose Suki over the next closest vendor,” Frost said.
+
+McLeod Health is now focused on expanding ambient AI adoption with an acute care pilot and plans to evaluate usability, documentation impact and financial returns for hospital-based clinicians.
+
+The health system also aims to**** capture long-term ROI metrics amid its systemwide expansion. McLeod Health plans to implement specialty-specific patient summaries to improve relevance and efficiency in both ambulatory and acute care settings.
+
+Suki functions more like a clinical assistant beyond just ambient documentation, Frost noted, and provides clinical decision support functionality.
+
+“Suki is nimble, and they can build workflows around different specialties. They are doing specialty-specific patient summaries because what my oncologist wants is very different than what my psychiatrist wants, which is very different than what the spine surgeon wants, as far as a summary of what's happened to that patient,” Frost said. “They've also got a really sound business model that goes well beyond just EMR documentation."
+
+Frost says he sees the promise of AI technology to improve healthcare beyond documentation and billing and coding to enhance patient care in tangible ways.
+
+"I fully believe that the day is coming very soon where the days of paternalistic medicine will be over. I think the day is going to be here where the patient, the doctor and the AI are in partnership. Imagine the setting where you're diagnosed with cancer, you're sitting in front of your oncologist and your oncologist gives you a treatment plan, but then looks over at the AI, and the patient does too and asks the AI ‘Is this a good plan?’ That the AI comes back and says, ‘Actually, there's two new studies that your patient would qualify for that we could get them enrolled in for this new treatment.’ That's the personalized medicine that I'm looking forward to that I think these ambient platforms are going to provide,” he noted.

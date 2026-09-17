@@ -1,0 +1,94 @@
+# Cloud locations
+Google Cloud offers AI-optimized infrastructure engineered for the age of inference. For over 25 years, this network has handled some of the most demanding cloud workloads for both Google and Google Cloud to enable fast, reliable, and agentic experiences for billions of users.
+
+...
+
+## Global geography and regions
+Providing secure, sustainable,
+and high-performing connectivity across 200+ countries and territories.
+10 million
+star-icon
+
+...
+
+### KMs of terrestrial and subsea fiber
+#### Countries available
+Access to globally available AI infrastructure, products and models, such as Gemini.
+130
+star-icon
+
+#### Zones
+Ensure high availability and reliability by distributing your workload across isolated
+and redundant data center clusters.
+43
+star-icon
+
+#### Regions *
+Deliver high performance applications with low latency, while ensuring that valuable data remains securely resident within country borders.
+*Regions consist of three or more zones housed in three or more physical data centers.
+The regions Stockholm, Mexico, Osaka, and Montreal have three zones within one or two physical data centers and are in the process of expanding to at least three physical data centers.
+For more information, please see the 'Global geography and regions' section below.
+
+...
+
+## Global infrastructure
+With Google Cloud, you can deploy workloads across 43 global regions and 130 zones for high performance foundational and agentic workloads at scale. SLA-backed regions let you innovate globally without compromising on data residency.
+Available across six continents, Google Cloud empowers you to optimize for latency, guarantee high availability, and price-performance.
+Documentation
+Global network
+Google global network
+The [Google global network](https://cloud.google.com/resources/google-global-network) connects over 200 countries via 10 million kilometers of fiber. This infrastructure minimizes latency and security risks for enterprise apps and AI training.
+
+...
+
+## Products available by region
+Deploy resources in specific zones, regions, and across multiple-regions.
+
+### Global
+Last Updated August 31, 2026
+At a minimum, all regions will offer the following products at launch: Compute Engine, Google Kubernetes Engine, Cloud Storage, Persistent Disk, Cloud SQL, Virtual Private Cloud, Cloud VPN, Key Management Service, Cloud Identity and Secret Manager.
+
+...
+
+Available products in the region will continue to evolve based on customer demand.
+Some services differentiate between regions using uppercase (e.g., "US") and lowercase (e.g., "us") letters. Please refer to the service's documentation for the precise multi-region format.
+
+## Pick your region
+The [Google Cloud Region Picker tool](https://cloud.withgoogle.com/region-picker/) helps you pick a Google Cloud region considering
+carbon footprint, price, and latency. Select your preferences.
+[Region Picker tool](https://cloud.withgoogle.com/region-picker/)
+
+## Cloud Location Finder
+For programmatic access to location data across clouds,
+consider using [Cloud Location Finder](https://docs.cloud.google.com/location-finder/docs) (CLF), an API which provides up-to-date location
+data across Google Cloud, Amazon Web Services (AWS), Azure, and Oracle Cloud
+Infrastructure (OCI).
+You can easily find locations, get specific location details, find
+nearby locations, and filter these based on criteria such as cloud provider, location
+type, territory, or carbon footprint.
+[Documentation](https://docs.cloud.google.com/location-finder/docs)
+CLF sustainability CLF global scale CLF AI data CLF global reach
+
+...
+
+## Get started
+### Our experts will help you build the right
+#### Find the right partner for your needs
+[Find a partner](https://cloud.google.com/find-a-partner)
+Services listed in Google Cloud Platform Services with Data Residency can be configured to use a specific data location.
+1. Service is offered with a global location option in addition to the region and multi-region locations denoted.
+2. Service is offered with multi-region location options in addition to region locations denoted. Check multi-region tab for details.
+3.
+Service is offered with varying functionality by region.
+4. Service is the next generation of Datastore. Available in either Datastore mode or Native mode.
+5. Service is available in all locations. Jobs are created in the locations listed in the documentation .
+6.
+Dammam region access is described in this document .
+7. Security Command Center locations are available in the [Preview launch stage](https://cloud.google.com/products?) .
+8. Resource locations for Cloud Spanner available here .
+9.
+
+...
+
+The Google Data Center Locations for SecOps Services (as described at https://cloud.google.com/terms/secops/services ) are listed separately on the SecOps Services Locations page, at https://cloud.google.com/terms/secops/data-residency .
+The hosting locations for Looker (original) are listed separately at https://docs.cloud.google.com/looker/docs/looker-original-locations .

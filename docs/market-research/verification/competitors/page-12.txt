@@ -1,0 +1,139 @@
+# Oracle Health Clinical AI Agent
+
+**AI-powered workflows supporting clinical and administrative roles**
+Oracle Health Clinical AI Agent helps limit manual effort and support clinicians, staff, and operations through intelligent automation. By drafting documentation, automating coding and scheduling, coordinating workflows, and connecting clinical and financial data, our solution supports informed decision-making and enhanced patient engagement—empowering users to focus on direct patient care and meaningful interactions, while applying their professional judgment.
+
+## Deliver AI-driven insights across healthcare workflows
+
+Oracle Health Clinical AI Agent is built on a unified, scalable architecture that integrates data and intelligence and enables workflow orchestration. It’s designed to deliver trustworthy AI insights across clinical, operational, and financial workflows to help inform decision-making and support meaningful patient care.
+
+- ### AI coordinates tasks across care and operations
+
+Synchronizes multiple AI agents to manage complex, context-aware workflows, adapting seamlessly to clinician and staff needs.
+- ### Connected data provides a comprehensive view of care
+
+Unifies clinical, operational, and financial information into one layer to enhance analytics and promote consistent, data-driven decision-making.
+- ### Workflow engine integrates insights into daily work
+
+Delivers AI-powered recommendations in near real time, embedding actionable insights directly within everyday workflows for enhanced efficiency and confidence.
+- ### Transparent framework supports user confidence
+
+Provides interpretable, explainable AI outputs, so users understand the basis for recommendations and can act with trust.
+
+## Intelligent automation that helps strengthen healthcare workflows
+
+Connect clinical, operational, and financial data across the care continuum. Automate tasks with specialized AI capabilities that can be deployed to help draft documentation, coordinate resources, support patient access, and streamline financial operations—creating consistent, connected experiences.
+
+#### Simplify front-office operations and coordination
+
+Streamline administrative tasks and communication across teams. Automate routine follow-ups, data entry, and information routing while presenting work in structured workflows so staff can efficiently manage patient care processes.
+
+##### Optimize scheduling
+
+Oracle Health Clinical AI Agent is planned to organize appointments, manage waitlists, and align provider schedules through guided workflows for patient access and staff coordination.
+
+##### Coordinate referrals
+
+Oracle Health Clinical AI Agent is planned to help track and organize follow-up care using structured workflows to document recommended services and manage completion across providers.
+
+##### Verify eligibility
+
+Oracle Health Clinical AI Agent is planned to help process insurance and benefits information automatically by providing coverage details at the point of service for registration and billing purposes.
+
+##### Manage intake
+
+Oracle Health Clinical AI Agent is planned to help automate registration and confirm key details before visits to support check-in and facilitate accurate data workflows.
+
+#### Support clinical decision-making
+
+Surface context-aware clinical insights and AI driven recommendations at the point of care, supporting documentation, decision-making, and patient interactions in inpatient, outpatient, and emergency settings.
+
+##### Draft documentation and charting
+
+Oracle Health Clinical AI Agent transforms clinician workflows by summarizing charts, highlighting critical information, drafting notes and orders, reviewing patient history within a unified patient record, and enabling nurses to use voice to capture charting details, supporting enhanced decision-making.
+
+##### Summarize charts
+
+Oracle Health Clinical AI Agent surfaces key patient insights through conversational search and visual summaries, delivering summaries at the point of care to support accurate and efficient clinical workflows.
+
+##### Track discharge readiness*
+
+Oracle Health Clinical AI Agent is planned to track patient readiness for discharge and prompt care teams with early discharge opportunities, supporting coordinated planning and smooth care transitions.
+
+#### Personalize and connect the patient journey
+
+Support patients through communication and guided next steps. Use AI insights to present educational resources and personalized guidance to maintain continuity throughout care.
+
+##### Support self-service scheduling
+
+Oracle Health Clinical AI Agent enables patients to manage appointments by presenting near real-time availability and booking options, enhancing access and convenience.
+
+##### Enhance financial transparency*
+
+Oracle Health Clinical AI Agent is planned to provide cost estimates and verified coverage details before services by presenting information in a clear, structured format, helping patients make informed financial decisions.
+
+##### Provide personalized navigation
+
+Oracle Health Clinical AI Agent delivers tailored responses using conversational AI and clinical knowledge, making it easy for patients to understand their care and act.
+
+##### Drive preventive and follow-up outreach
+
+Oracle Health Clinical AI Agent supports timely preventive and follow-up care by summarizing patient data in near real time, supporting enhanced patient engagement and care.
+
+#### Align financial operations through intelligent automation
+
+Streamline revenue cycle management by verifying coverage and eligibility, automating prior authorization requests, suggesting codes, and managing claims and denials efficiently.
+
+##### Draft prior authorizations*
+
+Oracle Health Clinical AI Agent is planned to streamline prior authorizations by gathering payer requirements and drafting submission requests through integration with payer systems, helping alleviate administrative burden.
+
+##### Manage denials proactively*
+
+Oracle Health Clinical AI Agent is planned to identify, organize, and track appeals and corrections by presenting financial tasks within structured, traceable workflows, enabling teams to address denials efficiently and minimize revenue risk.
+
+##### Recommend context-based coding
+
+Oracle Health Clinical AI Agent generates coding suggestions based on clinical documentation by analyzing conversations and care context, identifying charge codes, and presenting suggestions within the workflow to support coding accuracy and compliant claim submissions.
+
+##### Capture and validate charges*
+
+Oracle Health Clinical AI Agent is planned to group and verify charges by applying payer, contract, and coverage rules and tracking billing progress, supporting accurate claim submission and consistency in revenue cycle processes.
+
+> “Oracle Clinical AI Agent has allowed us to focus on improving the physicians’ lives by reducing the documentation and cognitive burden and allowing physicians to spend more time doing the things they love.”
+
+## Oracle Health Clinical AI Agent customer successes
+
+- [![atlanticare](/a/ocom/img/customerlogo-atlanticare-clr.svg)](/customers/atlanticare/)
+- [![beacon-health](/a/ocom/img/customerlogo-beacon-health-system-clr.svg)](/customers/beacon-health/)
+- [![covenant-health](/a/ocom/img/customerlogo-covenant-health-clr.svg)](/customers/covenant-health-clinical-ai-agent/)
+- [![hudson-physicians](/a/ocom/img/customerlogo-hudson-physicians-clr.svg)](/customers/hudson-physicians/)
+- [![milton-keynes-university-hospital](/a/ocom/img/customerlogo-milton-keynes-university-hospital-clr.svg)](/customers/milton-keynes-university-hospital-pioneers-ai/)
+- [![northern-arizona-healthcare-ai](/a/ocom/img/customerlogo-northern-arizona-health-clr.svg)](/customers/northern-arizona-healthcare-ai/)
+- [![sarah-bush-lincoln](/a/ocom/img/customerlogo-sarah-bush-lincoln-clr.svg)](/customers/sarah-bush-lincoln/)
+- [![st-johns-health](/a/ocom/img/customerlogo-st-johns-health-clr.svg)](/customers/st-johns-health/)
+- [![torrance-memorial](/a/ocom/img/customerlogo-torrance-memorial-physician-network-clr.svg)](/customers/torrance-memorial-physician-network/)
+
+## Oracle Health Clinical AI Agent resources
+
+- ### AI in Action: Intelligent AI at every point in care
+
+Discover how Oracle is putting AI into action to transform healthcare. We’ll showcase how Oracle Health Clinical AI Agent harnesses advanced AI to help automate routine administrative work, draft documentation, and proactively surface relevant insights for each user.
+- ### Beacon Health System’s Use of Oracle Health Clinical AI Agent
+
+Learn how Beacon Health System has improved providers’ EHR satisfaction, documentation quality, and downstream outcomes while setting a model for scalable AI adoption with Oracle Health Clinical AI Agent.
+- ### Giving nurses back time for their patients and themselves
+
+See how our nursing AI agent enables nurses to quickly capture discrete data in near real time, helping alleviate administrative tasks, enhance patient experiences, and free up time for direct care.
+- ### Oracle Health Clinical AI Agent listens so physicians can too
+
+See firsthand how AI-powered technology can help alleviate administrative burden, enhance patient experiences, and restore valuable time for physicians.
+- ### Oracle AI Agents for Fusion Applications
+
+Oracle AI agents for Fusion Applications help drive efficiencies, innovation, and growth across the enterprise. These powerful tools assist users via generative AI–powered services that are seamlessly embedded into everyday business processes and transactions.
+
+## Get started with Oracle Health
+
+The features and capabilities disclosed here which incorporate artificial intelligence (AI) can be used to assist users and help enhance product functionality. The nature and extent of AI assistance may evolve over time and is subject to change.
+
+*The content is intended to outline our general product direction. It is intended for information purposes only, and may not be incorporated into any contract. It is not a commitment to deliver any material, code or functionality, and should not be relied upon in making purchasing decisions. The development, release, timing, and pricing of any features or functionality described for Oracle’s products may change and remains at the sole discretion of Oracle Corporation. Not all features are currently offered for sale in the United States or elsewhere. Availability of some features may depend on any necessary regulatory approvals or clearance.

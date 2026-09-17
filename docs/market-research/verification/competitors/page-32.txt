@@ -1,0 +1,31 @@
+[Healthtech](https://arabianreseller.com/category/healthtech/)[News](https://arabianreseller.com/category/news/)[Saudi Arabia Focus](https://arabianreseller.com/category/saudi-arabia-focus/)
+
+# King’s Jeddah Selects InterSystems IntelliCare to Advance Digital Healthcare in Saudi Arabia
+
+ 2 minutes read
+
+![](https://arabianreseller.com/wp-content/uploads/2026/09/A7300724-Large-780x470.jpg)
+
+King’s College Hospital London – Jeddah (King’s Jeddah) is set to become the first hospital in Saudi Arabia to implement InterSystems IntelliCare, a next-generation electronic health record (EHR) platform designed with artificial intelligence embedded across clinical workflows.
+
+The hospital has signed an agreement with InterSystems to transition from TrakCare, building on an established technology relationship and its existing digital healthcare infrastructure. The move is part of King’s Jeddah’s wider strategy to use technology to improve clinical efficiency, patient outcomes and the delivery of international healthcare standards in Saudi Arabia.
+
+Established in Jeddah in 2025 as an extension of King’s College Hospital London, King’s Jeddah has more than 130 specialist consultants across 35 clinical specialties and 10 centres of excellence. The hospital brings the clinical protocols and academic oversight of the London institution to Saudi Arabia, with a focus on complex and critical care.
+
+The transition to IntelliCare builds on the hospital’s experience with TrakCare. Rather than introducing an entirely new EHR environment, King’s Jeddah will build on an existing platform and operational understanding while adding AI-driven capabilities and automation.
+
+InterSystems IntelliCare is designed to integrate AI directly into clinical workflows rather than relying on separate AI applications. Its capabilities include AI-assisted documentation, clinical workflow intelligence, decision support and patient communication.
+
+One of the key features is ambient clinical documentation, which uses AI to transform clinical conversations into structured medical records. This is intended to reduce the administrative burden on clinicians while supporting more complete and accurate documentation.
+
+The platform also incorporates intelligence into workflows covering areas such as ordering, prescribing, results review and messaging. Its interoperability capabilities include support for HL7 FHIR and SMART on FHIR, enabling integration with the wider digital healthcare ecosystem in Saudi Arabia.
+
+“At King’s College Hospital Jeddah, our ambition has always been to bring the highest standards of international clinical practice to Saudi Arabia. Technology is not the destination; better patient outcomes are,” said Dr Ibrahim Alharfi, Chief Executive Officer, King’s College Hospital London – Jeddah. “Adopting InterSystems IntelliCare enables our teams to work with greater intelligence, reduce avoidable delays, and keep the clinician’s attention where it belongs: on the patient in front of them.”
+
+According to Diaa Kamal, Chief Information Officer, King’s College Hospital London – Jeddah, the hospital’s experience with TrakCare provided the foundation for the transition.
+
+“IntelliCare takes that foundation and makes it exponentially smarter with AI that surfaces the right information at the right moment, documentation that happens naturally, and workflows that adapt to the clinician rather than the other way around,” he said.
+
+The implementation reflects the broader shift in healthcare IT towards platforms where AI is embedded within core clinical systems rather than added through standalone tools and integrations.
+
+Ali Abi Raad, Managing Director, InterSystems Middle East, India and South Africa, said the company was “proud to continue this journey” with King’s Jeddah, adding that the hospital was well positioned to realise the potential of IntelliCare following its TrakCare deployment.

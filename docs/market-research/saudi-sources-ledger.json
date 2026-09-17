@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://portal.nphies.sa/ig/introduction.html",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 2,
+      "url": "https://portal.nphies.sa/ig/support.html",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 3,
+      "url": "https://sdaia.gov.sa/Documents/RegulationonPersonalDataEN.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 4,
+      "url": "https://sfda.gov.sa/sites/default/files/2026-08/MDS-G027_0.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 5,
+      "url": "https://www.cst.gov.sa/en/regulations-and-licenses/decisions/Regulation-1482",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 6,
+      "url": "https://dga.gov.sa/sites/default/files/2024-03/Digital%20Government%20Policies%20-%20V2.0.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 7,
+      "url": "https://cdn.nca.gov.sa/api/files/public/upload/86e09090-44e4-481f-bc28-355673607654_ECC--2024-EN.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 8,
+      "url": "https://cdn.nca.gov.sa/api/files/public/upload/6d5408a3-d8e6-4e96-963b-2c7198e5b7c2_CCC-2-2024-EN-.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 9,
+      "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/PersonalDataProtectionLaw.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 10,
+      "url": "https://sdaia.gov.sa/en/SDAIA/about/Documents/ImplementingRegulationPersonalDataProtectionLaw.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 11,
+      "url": "https://www.chi.gov.sa/Rules/Education%20Training/CHI%20Clinical%20Documentation%20Improvement%20(CDI)%20Workshop%20Material.pdf",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 12,
+      "url": "https://www.chi.gov.sa/en/Rules/Pages/Saudi-Billing-Systems.aspx",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 13,
+      "url": "https://spa.gov.sa/en/N2429898",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 14,
+      "url": "https://moh.gov.sa/en/ministry/mediacenter/news/pages/news-2026-06-20-001.aspx",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 15,
+      "url": "https://www.stats.gov.sa/documents/20117/2435273/Healthcare%2BEstablishments%2Band%2BWorkforce%2BStatistics%2BPublication%2B2024%2BEN%2B%281%29.pdf/a9775b6f-5333-c2d7-4f32-dcb5d8c549b0",
+      "title": "",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 16,
+      "url": "https://cst.gov.sa/en/regulations-and-licenses/regulations/Document-1552",
+      "title": "",
+      "accessed": "2026-09-11"
+    }
+  ]
+}

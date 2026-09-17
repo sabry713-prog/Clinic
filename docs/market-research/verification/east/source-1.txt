@@ -1,0 +1,52 @@
+# Cloud Region Riyadh, Saudi Arabia | Oracle Saudi Arabia
+URL: https://www.oracle.com/sa/cloud/cloud-regions/riyadh/
+
+Cloud Region Riyadh, Saudi Arabia | Oracle Saudi Arabia
+
+# New Oracle Cloud Riyadh Region
+
+Following the launch of the first Oracle Cloud Region in Jeddah in 2020, Oracle is strengthening its commitment to Saudi Arabia with the new Cloud Region in Riyadh. This makes Oracle the first hyperscaler provider with two cloud regions in the country, making it even easier for businesses to increase performance, protect data, and get access to Oracle's full array of cloud services.
+
+Weâre rapidly building more new cloud regions to meet the current and future needs of our customersâproviding global, secure, high-performance environments to move, build, and run all your workloads, from Oracle Cloud Infrastructure to Oracle Cloud Applications.
+
+## See how Oracle Cloud Regions keep data local and secure
+
+The Oracle Cloud Riyadh Region is part of the fastest growing network of global data centers, with 49 cloud regions currently available globally. Oracle Cloud Regions deliver the performance, scalability, and innovative cloud services for transformationâwhile meeting your businessâs security and local data requirements in the cloud.
+
+## Oracle Cloud Riyadh Region launch event
+
+Get specific details about our latest cloud region, which will help companies of all sizes and sectors accelerate their journey to the cloud securely and in compliance with data residency regulations.
+
+## What the Oracle Cloud Riyadh Region means for businesses
+
+### Data compliance and local regulations
+
+Data remains in its country of origin, in accordance with local data regulations and data sovereignty.
+
+### Cloud platform and infrastructure services for every workload
+
+Saudi Arabia gains enhanced access to Oracleâs next-generation cloud infrastructure, offering more than 100 cloud services and growing, on a high-bandwidth backbone.
+
+### Reduce costs and improve performance
+
+Enterprises can take advantage of Oracle Cloudâs low, predictable costs and low latency thanks to Oracleâs on-premises presence.
+
+### High availability
+
+Businesses will benefit from increased application availability â an architecture designed to maximize performance and data security.
+
+### Cloud migration made easy
+
+Businesses will enjoy a simpler process for migrating all their IT workloads to the cloud.
+
+### Improved customer experience
+
+Enterprises gain private connectivity between their own facilities and our cloud regions using Oracle FastConnect, which is used for use cases such as data transfer or end-user access to cloud applications.
+
+### Reduce environmental impacts through sustainability-driven innovation
+
+Achieve higher utilization rates driven by state-of-the-art intelligent energy management.
+
+### Disaster Recovery
+
+Support for businesses to ensure business continuity through disaster recovery planning, avoiding downtime due to setbacks.

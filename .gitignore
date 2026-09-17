@@ -84,3 +84,12 @@ backups/
 *.env.bak
 secrets/
 
+
+# Generated report PDFs — regenerate with tools/md_report_to_html.py +
+# tools/html_reports_to_pdf.py (headless Chrome), then verify page counts.
+docs/reports/pdf/
+
+# Raw page dumps captured while researching the market reports. The citable
+# evidence lives in docs/market-research/verification/*/ (ledgers + quotes);
+# these are the re-fetchable extraction artifacts behind them.
+docs/market-research/*-evidence/

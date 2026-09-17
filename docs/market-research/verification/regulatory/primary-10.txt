@@ -1,0 +1,142 @@
+# (no title)
+URL: https://www.chi.gov.sa/Rules/Education%20Training/CHI%20Clinical%20Documentation%20Improvement%20(CDI)%20Workshop%20Material.pdf
+Author: Megan Clark
+
+Development & 
+Implementation of a 
+Comprehensive Clinical 
+Documentation 
+Improvement (CDI) Initiative
+2024-2025
+Section Slide #
+Introduction 3
+CDI Implementation Roadmap 8
+Gap Analysis 11
+CDI Mission Statement & Goals 17
+Technology Assessment 22
+Budget Analysis 27
+CDI Reporting Structure, Staffing Requirements, Training & Education 29
+CDI Key Performance Indicators (KPIs) 44
+Audits 48
+Data Analytics & Reporting 53
+CDI Expansion Considerations 57
+Keys to Success 59
+2
+Contents
+Introduction
+3
+4
+CHI Team
+Dr. Wail Yar
+Executive Director, Quality & 
+Medical Efficiency 
+10+ years expertise in health 
+systems and policy, spearheaded 
+value-based healthcare 
+implementation in the private 
+sectorâdesigning and 
+operationalizing outcome-driven 
+payment models that align 
+incentives with patient results and 
+drive measurable improvements in 
+quality, cost efficiency, and 
+population health. 
+Susan Young
+Senior Advisor, Health 
+Information Management 
+30+ years regional and 
+international experience in 
+Health Information Management 
+and Cancer Data Management 
+and hands-on experience in 
+implementing DRGs. Leading the 
+implementation and 
+maintenance of Saudi Billing 
+System, DRG Implementation, 
+Coding Audit Methodology
+Nasser Albluwi
+HIM & Coding Section Head
+20 years of HIM & Clinical coding 
+experience in the governmental 
+and private sector including 
+Training, Auditing and 
+implementation of VBHC.
+HIMAA CCC, CDS, Auditor & 
+Trainer.
+Experienced in RCM, EHR, Coding 
+and CDI tools.
+Fawaz Alomran
+Health Information Management 
+Analyst 1
+6 years experience in Health 
+Information Management, and 
+classification systems such as 
+DRGs, ICD-10, ACHI, SBS. 
+Experienced in health registries, and 
+CDI and RCM, EHR and EMR. 
+Saudi Billing System (V2)
+AR-DRG Implementation
+Cheryl Manchenton. 
+Manager, Inpatient 
+Quality Services
+Racha Naim
+HIM/HIS Clinical 
+Specialist, MEA
+Binu Paul
+HIM/HIS Clinical 
+Specialist
+Hadeel Harith
+Clinical Specialist 
+Khatoon Albahrani
+Clinical Specialist 
+5
+Solventum Team
+Khaled Al-Othman
+MEA Operation 
+Manager
+Simone GravesandeJoseph 
+Sr. Manager
+Raed Elyas
+Project Manager, MEA
+Dr. Anadil Assawi
+MEA Clinical & 
+Products Manager
+Arwa Alhilal
+MEA Government 
+Relations and Clinical 
+Advisor
+Value Based Health Care
+(VBHC)
+Saudi Market
+6
+CHI Vision Mission and Objectives
+â¢ Bring value to the Saudi market
+â¢ Incentivize the management of beneficiaries Vision
+â¢ Improve transparency
+â¢ Enable innovation
+â¢ Promote efficiency in the market
+Mission
+â¢ Develop a standardized framework and 
+guidelines for Clinical Documentation 
+Improvement 
+â¢ Assure data quality submitted to NPHIES
+â¢ Provide recommendations for improvement 
+of quality and processes.
+Objective
+7
+Project Objectives
+Current Status 
+Assessment 
+Gap/State Analysis 
+& 
+Recommendations 
+Benchmark
+Standardized CDI 
+Framework 
+(manual) and 
+Guidelines
+Scientific Paper 
+(White Paper) Market Education
+Objectives 
+CHI seeks to launch a strategic initiative to raise the quality 
+of health care

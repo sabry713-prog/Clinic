@@ -1,0 +1,115 @@
+NANO Health Suite
+
+# Health Information Technology
+
+Every encounter tells a story. We turn it into intelligence.
+
+A patient talks to a clinician. NANO Health turns that moment into a complete record, an accurate code, a clean claim and a national-scale insight — one connected platform for providers, payers and regulators across 30+ countries.
+
+![Every encounter tells a story. We turn it into intelligence.](/_next/image?url=https%3A%2F%2Fbackend.nanohealthsuite.com%2Fimg%2FCollaborative-Intelligence-1643716492.png&w=3840&q=75)
+
+40+ M
+
+annual claims processed
+
+10+ M
+
+patients & insured members
+
+30+
+
+covered countries
+
+22+
+
+years in service
+
+## From encounter to insight
+
+Three problems every health system fights. One connected answer for each.
+
+Product spotlight
+
+### NANO AI CDI 360 — with DoctorSense, the clinical copilot
+
+AI that reads every record the way an auditor would: extracting clinical data with 99% accuracy, validating documentation, suggesting ICD-10, CPT and DRG codes in real time — while DoctorSense turns the patient conversation itself into a structured note, in Arabic and English, before the doctor leaves the room.
+
+[Explore NANO AI CDI 360](/products-technologies-and-solutions/nhs-products/nano-cdi-360)
+
+**99%**extraction accuracy
+
+**−70%**documentation time
+
+**SDAIA**accredited copilot
+
+## Built for every side of healthcare
+
+Providers, payers and regulators read the same record differently. The suite serves each of them from one source of truth.
+
+Providers & clinicians
+
+Less time documenting, more time treating — with records that defend themselves at audit.
+
+Payers & insurers
+
+Adjudicate faster with coded, validated claims — and manage every class of policy on one system.
+
+Regulators & public health
+
+National-scale grouping, costing and compliance data for the decisions only governments can make.
+
+## What our clients say
+
+Health systems, insurers and regulators across the region, in their own words.
+
+> I have had the experience of using the Nano Health Suite's "Pharmacy Benefit Manager" since 2018 and needless to say, they have the best service and a great team to do the job for you. Nano Health Suite's development team did a very professional job in providing us with the best claims-handling software. We are satisfied with the solution and communication flow throughout the project development and deployment.
+
+> We have been using Nano Health Suite's "Electronic Medical Records" Software for more than 5 years now & the best part about the solution is the easy navigation between the medical, appointments, and electronic modules. Live customer support is a perfect 10 in resolving issues and promptness to help. Its integration with Riayati to send electronic claims is an added bonus. I would highly recommend this product and NHS team to all my contacts.
+
+> Luckily for Nano Health Suite, you have the best of both worlds, the best Insurance Management Solution, and Great Customer Service team. As a new client of your firm, I really appreciate your IMS software. But what I am most impressed with is the level of customer service your ever-ready-to-help staff has been providing. And it has not been just one person or a team, if I need to call out, from the start of the sales team approaching us for the demo of the product to the support team answering questions.
+
+“Healthcare data should work as hard as the people who create it. We build the systems that make that true.”
+
+— The NANO Health mission
+
+Watch
+
+## Healthcare AI, in practice
+
+See how NANO Health applies artificial intelligence across the record — from the moment of care to the insight a health system acts on.
+
+## Health information technology, answered
+
+### What is health information technology?
+
+Health information technology is the set of systems that capture, code, exchange and analyse clinical and administrative healthcare data. In practice it spans the electronic medical record, clinical coding and DRG grouping, revenue cycle and claims, patient-level costing, and the analytics that turn all of it into decisions. NANO Health Suite covers that span as one connected platform rather than a set of disconnected tools.
+
+### How does NANO Health support clinical coding and DRG grouping?
+
+NANO CSS provides AI-assisted coding support, NANO DRG performs grouping tuned to regional standards, and the Coding Rules Wizard lets teams encode and maintain their own compliance rules. Terminology management keeps code sets consistent across systems, so the same clinical concept means the same thing everywhere in the record.
+
+### Can NANO Health integrate with our existing EMR or hospital system?
+
+Yes. Integration is a first-class part of the platform: NANO Healthcare API Services expose the suite to other systems, the data management portfolio covers interoperability and integral care, and OMOP conversion maps existing data into a common research model. The platform is designed to sit alongside systems you already run rather than replace them.
+
+### Who uses NANO Health Suite?
+
+Three groups, from one source of truth: healthcare providers and clinicians who create the record; payers and insurers who adjudicate and reimburse against it; and regulators and public health authorities who need national-scale grouping, costing and compliance data. NANO Health has served these audiences for over 22 years across more than 30 countries.
+
+### What is NANO AI CDI 360?
+
+NANO AI CDI 360 is NANO Health's clinical documentation integrity platform: AI that extracts clinical data from records with 99% accuracy, validates documentation for gaps, suggests ICD-10, CPT and DRG codes in real time, and monitors compliance. Its clinician-facing copilot, DoctorSense — accredited by SDAIA and used by 30,000+ healthcare professionals — turns the patient conversation into a structured note in Arabic and English.
+
+### Is NANO Health Suite available in Arabic?
+
+Yes. The platform and this site are bilingual English and Arabic with full right-to-left support, and NANO Health has long-standing deployments across the MENA region including regulatory authorities in Saudi Arabia and health systems in the United Arab Emirates.
+
+## Let's start a conversation
+
+Your challenges are the interesting part. Tell us one.
+
+- Talk to an engineer, not a script
+- Demos tailored to your data, not slides
+- Present across 30+ countries
+
+No forms disappearing into the void — a NANO Health specialist reads every message and replies within one business day.

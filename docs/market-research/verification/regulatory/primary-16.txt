@@ -1,0 +1,1488 @@
+
+--- PDF page 1 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 1 | 43 
+Classified as /عامPublic 
+ 
+ 
+ 
+ 
+ 
+DRG IMPLEMENTATION 
+GUIDELINE 
+(Version 1.0)  
+Council of Health Insurance (CHI) 
+www.chi.gov.sa 
+
+
+--- PDF page 2 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 2 | 43 
+Classified as /عامPublic 
+Contents 
+Executive summary ...................................................................................................................... 6 
+Section 1: Introduction ................................................................................................................. 7 
+1.1 Purpose of This Guideline .................................................................................................... 7 
+1.2 Background and Strategic Context ....................................................................................... 7 
+1.3 Regulatory and Legal Basis .................................................................................................. 8 
+1.4 How to Use This Guideline ................................................................................................... 8 
+1.5 Document Governance ....................................................................................................... 9 
+Section 2: Overview of DRGs in Saudi Arabia ............................................................................... 10 
+2.1 What Are DRGs? ............................................................................................................... 10 
+2.2 The AR-DRG Grouping Process .......................................................................................... 10 
+2.3 The Role of Relative Weights .............................................................................................. 11 
+2.4 The Market Reference Price (MRP) ..................................................................................... 11 
+2.4.1 What the MRP Includes ............................................................................................... 11 
+2.4.2 What the MRP Excludes .............................................................................................. 11 
+2.5 DRG Implementation Timeline in Saudi Arabia ................................................................... 12 
+2.6 What DRGs Do Not Change ............................................................................................... 12 
+Section 3: Shadow Billing Requirements (2026–2027) .................................................................. 13 
+3.1 Definition and Purpose of Shadow Billing ........................................................................... 13 
+3.2 Shadow Billing Process Flow ............................................................................................. 13 
+3.3 Stakeholder Obligations During Shadow Billing .................................................................. 13 
+3.3.1 Providers and HISs...................................................................................................... 13 
+3.3.2 Payers and TPAs ......................................................................................................... 14 
+3.3.3 DRG Software Vendors ............................................................................................... 14 
+3.4 Shadow Billing Data Elements ........................................................................................... 14 
+3.5 Services Covered During Shadow Billing ............................................................................ 15 
+3.6 Dispute Resolution During Shadow Billing .......................................................................... 15 
+
+--- PDF page 3 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 3 | 43 
+Classified as /عامPublic 
+3.6.1 Purpose and Principles ............................................................................................... 15 
+3.6.2 Dispute Categories ..................................................................................................... 15 
+3.6.3 Workflow Steps .......................................................................................................... 16 
+3.6.4 Roles and Responsibilities .......................................................................................... 16 
+Section 4: Clinical Documentation and Coding Requirements ..................................................... 18 
+4.1 Importance of Clinical Documentation for DRG Accuracy ................................................... 18 
+4.2 Coding Standards ............................................................................................................. 18 
+4.2.1 Diagnosis Coding ....................................................................................................... 18 
+4.2.2 Procedure Coding ....................................................................................................... 18 
+4.2.3 Coding Quality Requirements ..................................................................................... 18 
+4.3 The Minimum Data Set (MDS) Requirements ...................................................................... 19 
+4.4 Clinical Documentation Improvement (CDI) Program ......................................................... 21 
+4.4.1 CDI Team Structure .................................................................................................... 21 
+4.4.2 CDI Processes ............................................................................................................ 22 
+4.4.3 CDI Metrics to Monitor ................................................................................................ 22 
+4.5 Training Requirements....................................................................................................... 22 
+Section 5: DRG Grouping Requirements ...................................................................................... 24 
+5.1 Certified Grouper Software ................................................................................................ 24 
+5.2 Grouper Integration with HIS and NPHIES .......................................................................... 24 
+5.3 DRG Error Management ..................................................................................................... 24 
+5.4 Length of Stay and DRG Adjustments ................................................................................. 25 
+Section 6: DRG Billing and Claims Requirements ........................................................................ 26 
+6.1 Claim Structure During Shadow Billing ............................................................................... 26 
+6.2 Claim Submission Requirements ....................................................................................... 26 
+6.3 Claim Validation by Payers and TPAs .................................................................................. 26 
+6.3.1 Technical Validation .................................................................................................... 26 
+6.3.2 Clinical Validation ...................................................................................................... 26 
+6.4 Items Billed Separately (Outside the DRG) ......................................................................... 27 
+
+--- PDF page 4 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 4 | 43 
+Classified as /عامPublic 
+Section 7: Market Reference Price (MRP) and Relative Weights .................................................... 28 
+7.1 Role of the MRP in DRG Contracting ................................................................................... 28 
+7.2 How the MRP Is Calculated ............................................................................................... 28 
+7.3 Using the MRP for Base Rate Negotiation ........................................................................... 28 
+7.3.1 Factors Influencing Base Rate Negotiations ................................................................. 28 
+7.3.2 How Providers Should Use the MRP ............................................................................. 29 
+7.3.3 How Payers Should Use the MRP ................................................................................. 29 
+7.4 Relative Weight Tables....................................................................................................... 29 
+7.5 Length-of-Stay Adjustments to Payment ............................................................................ 29 
+Section 8: Reporting Requirements ............................................................................................. 30 
+8.1 Overview of Reporting Obligations ..................................................................................... 30 
+8.2 Provider Reporting Obligations .......................................................................................... 30 
+8.4 Key Performance Indicators (KPIs) for Shadow Billing ......................................................... 31 
+8.5 CHI Market-Level Reporting ............................................................................................... 31 
+Section 9: Readiness Criteria for Full Implementation (2028) ....................................................... 32 
+9.1 Provider Readiness Criteria ............................................................................................... 32 
+9.1.1 Clinical Documentation and Coding ............................................................................ 32 
+9.1.2 Technical and System Readiness................................................................................. 32 
+9.1.3 Financial and Contracting Readiness .......................................................................... 32 
+9.1.4 Training and Change Management ............................................................................... 32 
+9.2 Payer and TPA Readiness Criteria ....................................................................................... 32 
+9.3 Vendor Readiness Criteria ................................................................................................. 33 
+9.4 Market Readiness Assessment Process ............................................................................. 33 
+Pillar 1 — Clinical Documentation & Coding Readiness ........................................................ 33 
+Pillar 2 — Data Quality & NPHIES Integration Readiness ....................................................... 33 
+Pillar 3 — Operational & Revenue Cycle Readiness ............................................................... 34 
+Pillar 4 — Clinical & Administrative Workforce Readiness ..................................................... 34 
+Pillar 5 — Governance, Compliance & Audit Readiness ........................................................ 35 
+
+--- PDF page 5 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 5 | 43 
+Classified as /عامPublic 
+Pillar 6 — Financial & Contracting Readiness ....................................................................... 35 
+Section 10: Governance and Subcommittees .............................................................................. 36 
+10.1 CHI's Authority ............................................................................................................ 36 
+10.2 Governance Structure .................................................................................................. 36 
+Appendix A: Glossary of Key Terms .............................................................................................. 37 
+Appendix B: Major Diagnostic Categories (MDC 00–23) ................................................................ 39 
+Appendix C: Shadow Billing Readiness Checklist ........................................................................ 41 
+Appendix D: Document Version History....................................................................................... 43 
+ 
+ 
+ 
+ 
+
+--- PDF page 6 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 6 | 43 
+Classified as /عامPublic 
+Executive summary  
+The Council of Health Insurance (CHI) is implementing Diagnosis -Related Groups (DRGs) as the 
+standard reimbursement methodology for inpatient and day-case services within the private health 
+insurance sector. This reform, approved by His Excellency the Minister of Health and Chairman of the 
+Saudi Health Council, forms a central component of the Health Sector Transformation Program. 
+The transition from the current fee-for-service (FFS) model to a DRG-based framework establishes a 
+standardized payment approach that aligns reimbursement with patient case mix  and resource 
+utilization. Under this model, clinical episodes are classified into groups with comparable clinical 
+characteristics and cost profiles, with payment determined through a defined base rate and relative 
+weight. 
+DRG Payment = Base Rate × Relative Weight (subject to applicable adjustments) 
+Implementation will proceed in three phases: 
+Market Preparedness (2022 –2025): Development of coding standards, NPHIES integration, and 
+market readiness 
+Shadow Billing (2026–2027): Parallel submission of DRG and FFS claims for validation and financial 
+modeling, without reimbursement impact 
+Full Implementation (from 1 January 2028): Mandatory adoption of DRG-based reimbursement for 
+all admitted care 
+This Guideline establishes the operational framework for the shadow billing phase and defines the 
+readiness requirements for full implementation across all stakeholders. 
+A key element of the model is the Market Reference Price (MRP), developed by CHI using national 
+claims data. The MRP provides a transparent benchmark to support structured and evidence-based 
+negotiations between providers and payers. 
+Stakeholders are expected to meet the following requirements: 
+Providers: Ensure accurate clinical documentation and coding, supported by audit and clinical 
+documentation improvement practices 
+Payers and TPAs:  Establish DRG validation processes, undertake financial modelling, and 
+implement structured contracting approaches 
+Vendors: Deliver certified DRG grouping solutions and ensure system integration with NPHIES 
+CHI: Provide regulatory oversight, market monitoring, and ongoing refinement of DRG parameters 
+The implementation of Diagnosis -Related Groups (DRGs) is intended  to strengthen financial 
+sustainability by improving coding accuracy, enabling case -mix–adjusted reimbursement, and 
+enhancing cost predictability and system -wide planning. DRGs provide a standardized basis for 
+measuring activity, complexity, and efficiency , while reducing unwarranted variation in payments. 
+This Guideline introduces a uniform payment framework and does not influence clinical decision -
+making, medical necessity determinations, or coverage policies. 
+
+--- PDF page 7 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 7 | 43 
+Classified as /عامPublic 
+Section 1: Introduction 
+1.1 Purpose of This Guideline 
+This Guideline has been developed by the Council of Health Insurance (CHI) to provide clear, 
+actionable, and standardized instructions for all stakeholders participating in the implementation of 
+Diagnosis-Related Groups (DRGs) in the Saudi private health insurance market. 
+The primary audience includes private -sector hospitals, day -case centers, payers, third -party 
+administrators (TPAs), health information system (HIS) vendors, coding companies, DRG software 
+vendors, clinicians, and clinical documentation improvement (CDI) teams. Each stakeholder group 
+will find within this document the specific obligations, processes, and technical requirements that 
+apply to their role. 
+This Guideline is the authoritative operational reference for the shadow billing phase (2026 –2027) 
+and serves as the readiness framework for full DRG-based reimbursement in 2028. It translates the 
+strategic direction published by CHI, together with its bro ader DRG implementation guidance, into 
+practical, day-to-day instructions. 
+ 
+1.2 Background and Strategic Context 
+Saudi Arabia’s private health insurance market has historically operated under a fee-for-service (FFS) 
+reimbursement model. While FFS is familiar to all participants, it has increasingly shown limitations: 
+it incentivizes volume over value, creates unpredictable costs, and lacks the transparency required 
+to support meaningful comparisons of provider performance. 
+As part of Vision 2030 and the Health Sector Transformation Program, CHI is spearheading a 
+structural transition toward value-based healthcare (VBHC). A central pillar of this transformation is 
+the adoption of Diagnosis-Related Groups (DRGs) as the payment methodology for all admitted care 
+in the private sector. 
+DRGs are internationally proven patient classification systems that group inpatient episodes based 
+on clinical diagnoses, procedures, age, comorbidities, and expected resource use. Each DRG carries 
+a relative weight that reflects the expected complexity an d cost of treatment. This ensures a 
+reimbursement model that is clinically meaningful, financially fair, and aligned with the actual needs 
+of patients rather than the volume of services delivered. 
+Saudi Arabia was among the first countries in the Gulf Cooperation Council (GCC) to introduce 
+Australian Refined DRGs (AR-DRGs) following the Saudi Health Council mandate to adopt the ICD -
+10-AM/ACHI/ACS coding system in 2009. AR -DRG has already been succes sfully implemented for 
+Article 11 care through NPHIES. The 2026 implementation builds on this foundation, extending DRG-
+based payment to the entire private insurance market. 
+ 
+ 
+ 
+
+--- PDF page 8 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 8 | 43 
+Classified as /عامPublic 
+ 
+ 
+1.3 Regulatory and Legal Basis 
+The implementation of DRGs is grounded in the following statutory and regulatory foundations: 
+• Council of Ministers Resolution No. 333 (19/10/1434 AH): Grants the National Center for 
+Health Information (NCHI) authority to license medical coding, approve national coding 
+standards, and supervise ICD implementation. 
+• Cooperative Health Insurance Law (Article 99): Requires the use of CHI-approved medical 
+coding systems for describing cases and submitting insurance claims. 
+• CHI Mandate under Article 5: Authorizes CHI to prepare executive regulations, issue 
+decisions governing implementation, and supervise the health insurance market. This 
+provision empowers CHI to mandate DRG adoption for all admitted care in the private 
+sector. 
+• Saudi Health Council Mandate: Designates AR-DRG version 9.0 as the national patient 
+classification system for admitted care. 
+ 
+1.4 How to Use This Guideline 
+This Guideline is organized into ten sections, each addressing a distinct area of DRG implementation. 
+Stakeholders shall refer to the sections applicable to their roles as outlined below: 
+Stakeholder Most Relevant Sections 
+Private-sector hospitals & day-case centers Sections 3, 4, 5, 6, 7, 8, 9 
+Payers (insurance companies) Sections 3, 6, 7, 8, 9, 10 
+Third-Party Administrators (TPAs) Sections 3, 5, 6, 8, 9, 10 
+HIS & DRG software vendors Sections 5, 6, 8, 9 
+Coding companies Section 4, 5 
+CDI teams Sections 4, 5 
+Clinicians  Section 4 
+ 
+NOTE: This Guideline does not alter clinical decision-making, coverage rules, or the contracting 
+freedom between providers and payers. DRGs change how admitted care is reimbursed, not 
+how care is delivered. 
+
+--- PDF page 9 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 9 | 43 
+Classified as /عامPublic 
+ 
+1.5 Document Governance 
+This Guideline is issued by CHI and will be reviewed and updated on an annual basis, or as required 
+by regulatory change, market feedback, or system enhancements. Feedback on this Guideline may 
+be submitted through CHI’s official communication channels. The version history is maintained at 
+the back of this document. 
+
+--- PDF page 10 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 10 | 43 
+Classified as /عامPublic 
+Section 2: Overview of DRGs in Saudi Arabia 
+2.1 What Are DRGs? 
+Diagnosis-Related Groups (DRGs) are a patient classification system that groups admitted hospital 
+episodes into clinically coherent categories based on the patient’s principal diagnosis, secondary 
+diagnoses, procedures performed, age, sex, birth weight, an d discharge status. The underlying 
+principle is that patients within each DRG consume similar types and amounts of hospital resources. 
+The Australian Refined DRG (AR-DRG) system, currently at version 9.0, is the classification mandated 
+by the Saudi Health Council and adopted by CHI for the private health insurance market. AR -DRG 
+v9.0 contains 803 DRGs organized into 399 Adjacent DRGs (ADR Gs) across 23 Major Diagnostic 
+Categories (MDCs). 
+ 
+2.2 The AR-DRG Grouping Process 
+When a patient is discharged from a hospital, the following clinical and administrative data from the 
+Minimum Data Set (MDS) is submitted and processed by the DRG grouper software: 
+1. Demographic and clinical edits: All submitted diagnoses and procedure codes are 
+validated. Errors result in assignment to one of three error DRGs (960Z, 961Z, or 963Z). 
+2. MDC Assignment: The principal diagnosis determines assignment to one of 23 Major 
+Diagnostic Categories, which are broadly organized by body system or condition type. 
+3. Pre-MDC Processing: High-cost or high-complexity episodes (e.g., long-term mechanical 
+ventilation, tracheostomy, ECMO, bone marrow transplants) may override the standard 
+MDC assignment. 
+4. ADRG Assignment: Each episode is assigned to an Adjacent DRG based on whether general 
+interventions (GI), specific interventions (SI), or only medical management was provided. 
+5. DCL and ECCS Scoring: Diagnosis Complexity Levels (DCLs, ranging 1–5) are assigned to 
+each diagnosis. These combine to form the Episode Clinical Complexity Score (ECCS, 
+ranging 0–31.25), which determines the final DRG split (A, B, C, D, or Z). 
+6. DRG Assignment: The final AR-DRG is assigned, representing the episode’s clinical and 
+resource classification. 
+ 
+NOTE: Accurate DRG assignment is only possible using certified DRG grouper software. Manual 
+classification is not permitted. The ICD-10-AM 10th Edition must be used for all diagnosis and 
+procedure coding. 
+ 
+ 
+ 
+ 
+
+--- PDF page 11 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 11 | 43 
+Classified as /عامPublic 
+2.3 The Role of Relative Weights 
+Each AR -DRG is assigned a relative weight (RW) that reflects the expected resource use of that 
+episode relative to the average inpatient episode. A relative weight of 1.00 represents the average; a 
+weight of 2.00 indicates a case expected to require twice the average resources; a weight of 0.50 
+indicates a simpler case. 
+Relative weights are the mechanism that ensures hospitals treating more complex patients receive 
+proportionally higher reimbursement. They are derived from national and international evidence on 
+how different patient groups consume hospital resources. 
+The core DRG payment formula is: 
+DRG Payment = Base Rate × Relative Weight (with length-of-stay adjustments where applicable) 
+2.4 The Market Reference Price (MRP) 
+The Market Reference Price (MRP) is a national benchmark developed by CHI to support fair, 
+evidence-based contracts between providers and payers.  It does not constitute a mandated 
+tariff; rather, it is a transparent reference point reflecting the typical cost of delivering care for each 
+DRG across the private sector. 
+The MRP was developed using NPHIES claims data, clinical coding outputs, and sector feedback. It 
+is composed of a base price multiplied by the relative weight of each DRG. 
+2.4.1 What the MRP Includes 
+The MRP covers all costs typically associated with an inpatient episode, including: 
+• Clinical staffing (physicians, nurses, allied health professionals) 
+• Diagnostics (laboratory, imaging, pathology) 
+• Consumables and medical supplies 
+• Medications administered during the admission 
+• Room and board  
+• Operating theatre and ICU services 
+• Indirect costs (administration, IT infrastructure, utilities, depreciation) 
+ 
+2.4.2 What the MRP Excludes 
+The following high-cost items are excluded from the MRP and must be billed separately under existing 
+billing rules: 
+• Prostheses and implants (e.g., pacemakers, stents, joint prostheses) 
+• Chemotherapy drugs 
+• Specialized devices 
+• Pre-admission emergency room services 
+
+--- PDF page 12 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 12 | 43 
+Classified as /عامPublic 
+• Follow-up care beyond 14 days post-discharge 
+2.5 DRG Implementation Timeline in Saudi Arabia 
+Phase Period Key Activity 
+Market Preparedness 2022–2025 Education, NPHIES integration, coding standards, 
+capacity building, pilot implementations 
+Shadow Billing 2026–2027 Parallel DRG claim submission alongside FFS; no 
+financial consequences; readiness validation 
+Full Implementation 2028 onwards DRG becomes mandatory payment model for all 
+admitted care in private health insurance 
+ 
+2.6 What DRGs Do Not Change 
+For clarity, the following are not impacted by DRG implementation: 
+• Clinical decision-making remains fully in the hands of physicians and treating teams. 
+• Providers continue to deliver care based on clinical need, not payment rules. 
+• Payers continue to perform medical necessity and coverage compliance reviews. 
+• NPHIES remains the national platform for all claims exchange. 
+• Contracting freedom between providers and payers is preserved; the MRP is a reference, 
+not a mandate. 
+• Quality and safety standards remain unchanged. 
+ 
+
+--- PDF page 13 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 13 | 43 
+Classified as /عامPublic 
+Section 3: Shadow Billing Requirements (2026–2027) 
+3.1 Definition and Purpose of Shadow Billing 
+Shadow billing is the process by which providers submit DRG -coded claims in parallel with their 
+standard FFS claims during the 2026 –2027 period. Payers and TPAs adjudicate  and validate the 
+assigned DRG code without this affecting the outcome of the FFS claim. No payment is made based 
+on DRGs during the shadow billing phase. 
+The purpose of shadow billing is to enable all stakeholders to validate systems, assess data quality, 
+and support financial and operational readiness for DRG -based processes without incurring 
+financial consequences. That constitutes a structured readiness program with defined operational 
+objectives. 
+ 
+3.2 Shadow Billing Process Flow 
+The shadow billing process follows these steps: 
+1. Provider shall submit a complete inpatient or day-case claim via NPHIES, including all 
+required MDS data fields, ICD-10-AM diagnoses, ACHI procedure codes, and other clinical 
+variables. 
+2. The DRG grouper software at the provider or system level assigns the AR-DRG code based 
+on submitted data. 
+3. The AR-DRG code and relative weight are appended to the claim submission as a parallel 
+data element. 
+4. The FFS claim proceeds through standard adjudication by the payer or TPA with no change 
+to the existing process. 
+5. The payer or TPA validates the DRG assignment (clinical plausibility, coding quality, data 
+completeness) and records the shadow DRG result. 
+6. Once a base rate has been agreed between provider and payer, both parties shall compare 
+the DRG-based payment amount with the FFS amount for analysis and planning purposes. 
+7. Discrepancies, errors, or disputes are flagged and reviewed through the governance 
+subcommittee structure described in Section 10. 
+ 
+3.3 Stakeholder Obligations During Shadow Billing 
+3.3.1 Providers and HISs  
+• Providers shall submit all admitted inpatient and day-case claims via NPHIES with 
+complete MDS data. 
+• Ensure all diagnoses are coded using ICD-10-AM 10th Edition and all interventions are 
+coded using SBS v3. 
+• Use CHI-certified DRG grouper software to generate the AR-DRG code prior to submission. 
+
+--- PDF page 14 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 14 | 43 
+Classified as /عامPublic 
+• Submit AR-DRG code, as per the latest mandated version (AR-DRG v9.0) for each inpatient 
+or day-case (same-day) transaction.  
+• Monitor DRG assignment rates, error DRG rates, and Case Mix Index (CMI) monthly. 
+• Identify and remediate documentation and coding gaps identified through shadow billing 
+results. 
+• Participate in CHI-organized shadow billing review sessions and workshops. 
+• Provide feedback on the shadow billing process, including operational challenges, 
+concerns, lessons learned, and recommendations for improvement. 
+ 
+3.3.2 Payers and TPAs 
+• Establish DRG validation capability within adjudication platforms before the shadow billing 
+start date. 
+• Validate the clinical plausibility of DRG assignments submitted by providers. 
+• Record and store shadow billing results for analysis and audit purposes. 
+• Use shadow billing data to compare DRG-based payments with current FFS payments and 
+prepare for contracting discussions. 
+• Provide feedback on the shadow billing process, including operational challenges, 
+concerns, lessons learned, and recommendations for improvement. 
+ 
+3.3.3 DRG Software Vendors 
+• Ensure all DRG grouper products are certified under AR-DRG v9.0 and SBS v3 before the 
+shadow billing start date. 
+• Support issue resolution and software updates identified during the shadow billing period. 
+ 
+3.4 Shadow Billing Data Elements 
+Every claim submitted during shadow billing must include the following DRG -specific data fields in 
+addition to existing NPHIES MDS requirements: 
+Data Element Description Mandatory 
+AR-DRG Code The assigned AR-DRG code (e.g., O60B, F62A) Yes 
+AR-DRG Description The descriptive text label corresponding to the AR-
+DRG code 
+Yes 
+
+--- PDF page 15 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 15 | 43 
+Classified as /عامPublic 
+ 
+3.5 Services Covered During Shadow Billing 
+Shadow billing applies to: 
+• All inpatient admissions (elective, emergency, and transfer) at private-sector hospitals. 
+• All day-case (same-day) admissions at private hospitals and licensed day-case centers. 
+• All clinical specialties and MDC categories covered by AR-DRG v9.0. 
+Shadow billing does not apply to: 
+• Outpatient or ambulatory care does not result in admission. 
+• Emergency room visits that do not lead to hospital admission. 
+• Rehabilitation or sub-acute episodes not classified under an inpatient admission. 
+ 
+3.6 Dispute Resolution During Shadow Billing 
+3.6.1 Purpose and Principles 
+Disagreements between providers and payers may arise during the shadow billing phase regarding 
+the assignment, documentation, or grouping of a DRG-coded claim. This section establishes a 
+structured, non-financial process for identifying and resolving such disputes. 
+Consistent with the purpose of shadow billing, this process is designed to build confidence and 
+surface gaps without financial consequence. No payment adjustments, penalties, or financial 
+liabilities arise from a dispute raised during the shadow billing phase. The goal is corrective, not 
+punitive: to identify documentation gaps, coding inconsistencies, grouping errors, or data quality 
+issues, and to resolve them collaboratively before full DRG-based reimbursement begins in 2028. 
+ 
+3.6.2 Dispute Categories 
+Disputes raised during shadow billing fall into one or more of the following categories: 
+Category Description 
+Documentation Clinical documentation is incomplete, ambiguous, or insufficient to 
+support the assigned diagnosis or procedure codes 
+Coding Disagreement over the ICD/SBS codes applied, code sequencing, or 
+principal diagnosis selection 
+Grouping Disagreement over the DRG assigned by the grouper based on the 
+submitted codes and case data 
+Data quality Errors or inconsistencies in Minimum Data Set (MDS) fields submitted 
+with the claim 
+
+--- PDF page 16 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 16 | 43 
+Classified as /عامPublic 
+3.6.3 Workflow Steps 
+Step 1: Issue identified. Either the provider or the payer may identify a potential discrepancy in a 
+DRG-coded claim submitted during shadow billing. 
+Step 2 Bilateral review. The provider and payer jointly review the disputed claim, examining: 
+• The medical record 
+• Coding and documentation 
+• Grouper output 
+• MDS data fields 
+This step is intended to resolve the majority of disputes directly between the two parties without 
+CHI involvement. 
+Step 3: Resolution check. 
+• If the issue is resolved bilaterally, the case is closed, and no further action is required. 
+• If the issue remains unresolved, it is escalated to CHI. 
+Step 4: Escalation to the CHI subcommittee. Unresolved disputes are escalated to the relevant 
+CHI subcommittee: 
+• The Coding Steering Committee for disputes concerning coding, documentation, or 
+principal diagnosis selection 
+• The Arbitration Subcommittee for disputes concerning grouping outcomes or claim-level 
+billing discrepancies 
+Step 5: Subcommittee review. The relevant subcommittee reviews the escalated dispute and 
+provides: 
+• Technical clarification on the correct application of coding or grouping rules 
+• Root cause analysis of why the discrepancy occurred 
+• Corrective actions for the provider, payer, or both 
+• Guidance to both parties to prevent recurrence 
+Step 6: CHI oversight. Beyond individual case resolution, CHI monitors dispute activity across the 
+market to: 
+• Monitor repeated or recurring issues across providers and payers 
+• Identify systemic gaps in coding standards, grouping logic, or MDS specifications 
+• Issue market-wide clarifications where a pattern is identified 
+• Update this Guideline where necessary to reflect lessons learned 
+ 
+3.6.4 Roles and Responsibilities 
+Stakeholder Role in the dispute process 
+Provider Raises or responds to disputes; participates in bilateral review; supplies 
+medical record and coding rationale; implements corrective actions 
+
+--- PDF page 17 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 17 | 43 
+Classified as /عامPublic 
+Payer Raises or responds to disputes; participates in bilateral review; supplies 
+adjudication and grouping rationale; implements corrective actions 
+CHI Coding Steering 
+Committee 
+Reviews escalated coding and documentation disputes; issues 
+technical clarification and corrective guidance 
+The Arbitration 
+Subcommittee  
+Reviews escalated grouping and billing disputes; issues technical 
+clarification and corrective guidance 
+CHI (oversight) Monitors systemic trends across all disputes; issues market-wide 
+clarifications; updates the Guideline as needed 
+ 
+ 
+ 
+Figure: Dispute resolution workflow during shadow billing 
+NOTE: During the shadow billing phase, disputed DRG assignments do not affect FFS claim 
+payment outcomes. 
+ 
+
+
+--- PDF page 18 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 18 | 43 
+Classified as /عامPublic 
+Section 4: Clinical Documentation and Coding 
+Requirements 
+4.1 Importance of Clinical Documentation for DRG Accuracy 
+DRG assignment is entirely dependent on the quality and completeness of clinical documentation. 
+Accurate documentation of the principal diagnosis, additional diagnoses, procedures, 
+complications, comorbidities, and other clinical variables directly determi nes which DRG is 
+assigned and therefore the relative weight associated with that episode. 
+Incomplete or imprecise documentation leads to DRG under -assignment (incorrect lower 
+complexity), which results in lower reimbursement than clinically appropriate. It also distorts Case 
+Mix Index calculations and hampers meaningful benchmarking. 
+Accurate and complete clinical documentation is a prerequisite for valid DRG assignment. 
+4.2 Coding Standards 
+4.2.1 Diagnosis Coding 
+• All diagnoses must be coded using ICD-10-AM 10th Edition as mandated by the Saudi 
+Health Council and CHI. 
+• The principal diagnosis shall be coded in accordance with ICD-10-AM and ACS 0001 
+(Principal Diagnosis) definitions. 
+• The principal diagnosis (reason for admission, determined after evaluation) must be clearly 
+identified and coded separately from additional diagnoses. 
+• All clinically significant additional diagnoses, complications, and comorbidities present 
+during the episode must be coded in accordance with ICD10-AM and ACS 0002 (Additional 
+Diagnoses) definitions. 
+• Unacceptable principal diagnoses (as defined in the AR-DRG Definitions Manual) must not 
+be used as the principal diagnosis; doing so results in error DRG 961Z. 
+ 
+4.2.2 Procedure Coding 
+• All clinical interventions must be coded using the Saudi Billing System V3, in accordance 
+with ACS. 
+• All general interventions (GIs) that may affect DRG assignment must be coded, including 
+those performed in operating theatres, procedure rooms, and ICUs. 
+• Same-day (day-case) procedures must be clearly distinguished from overnight admissions. 
+4.2.3 Coding Quality Requirements 
+• All inpatient coding must be performed by coders who hold or are progressing toward CHI-
+recognized coding certification. 
+•    Internal Coding Audits: 
+
+--- PDF page 19 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 19 | 43 
+Classified as /عامPublic 
+• All Healthcare Providers are required to implement and maintain a structured internal 
+coding audit program, conducted on a quarterly basis, to ensure ongoing monitoring and 
+improvement of coding quality. 
+• Internal audits must be performed using the standard audit template and guidelines issued 
+by CHI. 
+• Routine sampling for internal audits shall be conducted in accordance with the CHI Coding 
+Audit Methodology (Version 2), ensuring consistency, standardization, and comparability 
+across all providers. 
+• External Coding Audits: 
+• All Healthcare Providers are mandated to undergo an annual external coding audit by 
+contacting CHI-approved audit vendors, effective from 1 January 2027, to ensure 
+independent validation of coding quality and DRG compliance. 
+• External audits must be conducted using the standardized audit methodology and template 
+issued by CHI. 
+• Routine sampling for external audits shall also strictly follow the CHI Coding Audit 
+Methodology (Version 2) to ensure alignment with internal audit practices and sector 
+benchmarking standards. 
+• Error DRG rates (960Z, 961Z, 963Z) must not exceed 3% of total submitted episodes in any 
+reporting month for the shadow billing phase. Providers exceeding this threshold for two 
+consecutive months must implement a mandatory improvement action plan, including 
+targeted coder training, CDI review, and correction of HIS/NPHIES data quality issues. 
+ 
+4.3 The Minimum Data Set (MDS) Requirements 
+For AR-DRG grouping to function correctly, the following MDS variables must be accurately captured 
+and submitted for every inpatient episode: 
+All fields listed below are mandatory unless explicitly stated otherwise. 
+MDS Variable Description Notes 
+Principal Diagnosis Primary reason for admission 
+(ICD-10-AM) 
+Must reflect the condition 
+chiefly responsible for the 
+admission after evaluation. 
+Drives MDC assignment. 
+Incorrect PDx may trigger error 
+DRG 961Z 
+Additional Diagnoses All significant comorbidities and 
+complications (ICD-10-AM) 
+Must include all clinically 
+significant 
+comorbidities/complications 
+that affect treatment, 
+monitoring, or resource use. 
+Required for ECCS scoring and 
+DRG split (A/B/C/D). 
+
+--- PDF page 20 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 20 | 43 
+Classified as /عامPublic 
+MDS Variable Description Notes 
+Procedures All ACHI and SBS-coded 
+interventions 
+All interventions must be 
+coded. Drives ADRG 
+assignment. Certain 
+procedures trigger Pre-MDC 
+overrides (e.g., tracheostomy, 
+ECMO). Missing procedures 
+may incorrectly classify the 
+episode as medical instead of 
+surgical. 
+Age Age of patient at admission Age at admission determines 
+neonatal eligibility (≤28 days), 
+pediatric vs adult DRGs, and 
+specific age-dependent DRG 
+splits. Incorrect age may cause 
+MDC misassignment. 
+Sex Patient sex Required for sex-specific DRGs 
+(obstetrics, gynecology, 
+prostate, testicular). Incorrect 
+sex coding may cause grouping 
+errors or assignment to error 
+DRGs. 
+Date of Admission Admission date and time Used to calculate LOS. 
+Incorrect values distort 
+LOS-based adjustments 
+(short-stay/long-stay outliers) 
+and same-day separation logic. 
+Date of Discharge Discharge date and time Used to calculate LOS. Must 
+reflect actual discharge time. 
+Incorrect discharge date may 
+incorrectly trigger outlier flags 
+or same-day DRG variants. 
+Discharge Status Discharge destination (home, 
+transfer, death, etc.) 
+Required for transfer DRGs 
+(e.g., B70D, F60B), 
+death-related DRGs, and LOS 
+adjustments. Must match 
+clinical documentation. 
+
+--- PDF page 21 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 21 | 43 
+Classified as /عامPublic 
+MDS Variable Description Notes 
+Birth Weight For neonatal admissions only 
+(child under 1 year of age) 
+Mandatory for neonates (≤28 
+days). Determines DRG 
+assignment within MDC 15. 
+Missing or inconsistent values 
+trigger 963Z. 
+Mechanical Ventilation 
+Hours 
+Total hours of mechanical 
+ventilation 
+Required for Pre-MDC DRGs 
+involving ventilation (e.g., 
+A06A/B). Must reflect total 
+documented hours. Incorrect 
+values may prevent assignment 
+to ventilation DRGs. 
+Encounter Type Inpatient vs. same day Determines eligibility for DRG 
+grouping and whether 
+same-day DRG variants apply. 
+Incorrect classification may 
+misassign ADRG/DRG. 
+Leave Days  Total days the patient was 
+temporarily absent during the 
+admission 
+Reduces LOS for DRG outlier 
+logic. Must be recorded when 
+patient is temporarily absent 
+(e.g., home leave). Incorrect 
+leave days distort LOS-based 
+adjustments. 
+ 
+4.4 Clinical Documentation Improvement (CDI) Program 
+All private -sector hospitals submitting DRG claims must establish a Clinical Documentation 
+Improvement (CDI) program. The program must include the following minimum components: 
+4.4.1 CDI Team Structure 
+• Clinical Documentation Specialists (CDS) — credentialed clinical staff (e.g., RNs) or coders 
+with clinical documentation training, responsible for day-to-day concurrent review and 
+query generation. 
+• Collaboration structure between CDI team, attending clinicians, and the coding 
+department. 
+• Clear escalation pathway for documentation queries. 
+ 
+
+--- PDF page 22 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 22 | 43 
+Classified as /عامPublic 
+4.4.2 CDI Processes 
+• Initial assessment: Baseline evaluation of clinical documentation quality across the 
+organization (or target service lines) to identify gaps, risk areas, and opportunities prior to 
+program launch or major revision. 
+• Improvement plan/program: A formal CDI program plan defining scope, target 
+DRGs/service lines, staffing model, query templates, training plan, and success metrics. 
+• Concurrent review of inpatient records during the episode of care (not only at discharge). 
+• Query process for requesting clinician clarification on ambiguous, incomplete, or 
+contradictory documentation. 
+• All queries and responses must be documented in the medical record with clinician 
+signature. 
+• Retrospective record review for identified high-volume or high-cost DRGs. 
+• Quarterly reassessment: Recurring review of documentation quality and program 
+performance against the baseline, at minimum quarterly. 
+• Improvement metrics: Defined KPIs (e.g., query response rate, query agreement rate, 
+CC/MCC capture rate, case mix index impact, DRG mismatch rate, physician engagement 
+rate) tracked and reported to leadership on a regular cadence.  
+4.4.3 CDI Metrics to Monitor 
+• Query rate (number of queries issued per 100 admissions) 
+• Query response rate and response time 
+• DRG change rate following query response 
+• Case Mix Index (CMI) trend over time 
+• Error DRG rate 
+ 
+4.5 Training Requirements 
+The following training obligations apply during the shadow billing phase: 
+Role Required Training Minimum Frequency 
+Attending 
+physicians 
+DRG awareness: how documentation affects DRG 
+assignment, complication/comorbidity capture 
+Once before shadow 
+billing start; refresher 
+annually 
+Medical coders ICD-10-AM/ACHI 10th Edition, AR-DRG v9.0 logic, ECCS 
+scoring, MDS requirements 
+Before shadow billing 
+start; quarterly 
+refreshers 
+CDI coordinators CDI methodology, ACS documentation standards, query 
+management, DRG logic fundamentals, documentation 
+impact on DRG/CMI 
+Before shadow billing 
+start; annual refresher 
+
+--- PDF page 23 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 23 | 43 
+Classified as /عامPublic 
+Role Required Training Minimum Frequency 
+HIS/IT teams NPHIES DRG data elements, grouper integration, claim 
+transmission requirements 
+Before shadow billing 
+start; refresher after 
+any system update 
+Revenue cycle 
+managers 
+DRG-based financial modeling, MRP and base rate 
+concepts 
+Before shadow billing 
+start; annual refresher 
+ 
+
+--- PDF page 24 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 24 | 43 
+Classified as /عامPublic 
+Section 5: DRG Grouping Requirements 
+5.1 Certified Grouper Software 
+All AR -DRG assignments submitted during the shadow billing phase and for full implementation 
+must be generated by CHI-certified grouper software.  
+Certified grouper software must: 
+• Implement AR-DRG v9.0 logic as defined in the AR-DRG Definitions Manual published by 
+the Australian Consortium for Classification Development. 
+• Process all required MDS data elements as inputs. 
+• Produce the full grouping output including AR-DRG code, ADRG code, MDC, ECCS score, 
+Diagnosis Complexity Levels, and error flags. 
+ 
+5.2 Grouper Integration with HIS and NPHIES 
+The DRG grouper must be integrated within the provider’s workflow in a manner that ensures: 
+• Grouping occurs automatically at the point of claim submission, using the coded MDS data 
+from HIS. 
+• The AR-DRG output is attached to the NPHIES claim as a structured data field before 
+submission. 
+• Providers cannot manually override a DRG assignment generated by the certified grouper 
+without documented clinical justification reviewed by the CDS and Coding Specialist. 
+ 
+5.3 DRG Error Management 
+Error DRGs indicate data quality or coding problems and must be actively managed: 
+Error DRG Description 
+960Z – Ungroupable Episode cannot be assigned to an MDC 
+961Z – Unacceptable 
+PDx 
+Principal diagnosis is on the Unacceptable Principal Diagnosis list 
+963Z – Neonatal 
+Inconsistency 
+Neonatal diagnosis not consistent with patient age or birth weight 
+801 – GI Unrelated to 
+PDx 
+Procedure (GI) is not clinically related to the principal diagnosis 
+ 
+
+--- PDF page 25 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 25 | 43 
+Classified as /عامPublic 
+5.4 Length of Stay and DRG Adjustments 
+The AR-DRG system includes provisions for adjusting payments when a patient’s length of stay (LOS) 
+differs significantly from the norm for that DRG. These adjustments are handled automatically by the 
+certified grouper software and do not require manual calculation. The key concepts are: 
+• Same-day separation: Some ADRGs are partitioned to create a same-day DRG variant for 
+episodes that begin and end on the same calendar day. Providers must ensure the 
+encounter type (inpatient vs. same day) is accurately recorded. 
+• Short-stay outliers: Episodes with LOS significantly below the DRG trim point may attract a 
+reduced payment. The grouper will flag these automatically. 
+• Long-stay outliers: Episodes with LOS significantly above the DRG trim point may attract 
+additional payment. The grouper will flag these automatically. 
+• Transfer rules: Episodes transferred to another acute facility within a defined time period 
+(e.g., B70D, F60B: transfer within 5 days) are assigned to a specific DRG variant. Discharge 
+status must be accurately coded. 
+ 
+
+--- PDF page 26 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 26 | 43 
+Classified as /عامPublic 
+Section 6: DRG Billing and Claims Requirements 
+6.1 Claim Structure During Shadow Billing 
+During the shadow billing phase, providers submit one claim for every qualifying inpatient or Day -
+case (Same-day) episode including the following: 
+1. The standard FFS claim: submitted via NPHIES using the existing Saudi Billing System 
+(SBS) structure. This claim is adjudicated normally and is the basis for payment during 
+the shadow billing phase. 
+2. New field regarding the DRG shadow claim: submitted alongside the FFS claim as a 
+structured data attachment, including all DRG-specific data elements listed in Section 
+3.4. This part is validated but does not result in payment. 
+ 
+6.2 Claim Submission Requirements 
+All DRG claims submitted via NPHIES must comply with the following requirements: 
+• Completeness: All mandatory MDS fields must be populated. Incomplete claims shall be 
+rejected by the NPHIES validation engine. 
+• Coding accuracy: Diagnoses and procedures must be coded using ICD-10-AM 10th Edition, 
+and SBS v3. Invalid code submissions will be blocked. 
+• Timeliness: Claims must be submitted within the mandated and regulated timeframe.  
+• Version control: Claims must be submitted using AR-DRG v9.0. claims using other versions 
+will be blocked. 
+6.3 Claim Validation by Payers and TPAs 
+Payers and TPAs are required to validate DRG shadow claims using the following framework: 
+6.3.1 Technical Validation 
+• Confirm all mandatory DRG data fields are present and complete. 
+• Confirm no error DRGs (960Z, 961Z, 963Z) are present without an explanatory flag. 
+ 
+6.3.2 Clinical Validation 
+• Assess the clinical plausibility of the assigned DRG relative to the submitted diagnoses and 
+procedures. 
+• Flag cases where the DRG assignment appears inconsistent with the documented clinical 
+scenario. 
+ 
+ 
+
+--- PDF page 27 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 27 | 43 
+Classified as /عامPublic 
+ 
+6.4 Items Billed Separately (Outside the DRG) 
+The following items must be billed separately and will not be included in the DRG payment under full 
+implementation: 
+• Prostheses and implants 
+• Chemotherapy drugs 
+• Specialized devices 
+• Pre-admission emergency services 
+• Post-discharge follow-up 
+ 
+
+--- PDF page 28 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 28 | 43 
+Classified as /عامPublic 
+Section 7: Market Reference Price (MRP) and Relative 
+Weights 
+7.1 Role of the MRP in DRG Contracting 
+The Market Reference Price (MRP) is a nationally consistent reference point developed by CHI to 
+support transparent and evidence -based contracting between providers and payers. It is not a 
+mandated payment tariff. Providers and payers retain full freedom t o negotiate a base rate that 
+reflects their specific circumstances. 
+By providing a shared reference grounded in national cost data, the MRP reduces the information 
+asymmetry that has historically made tariff negotiations difficult and contentious. Both parties can 
+enter negotiations with a common understanding of what an a verage episode of care costs across 
+the private sector. 
+ 
+7.2 How the MRP Is Calculated 
+CHI develops the MRP through the following process: 
+• Collection of claims data from NPHIES, including clinical coding outputs and episode-level 
+resource use information. 
+• Application of the AR-DRG v9.0 grouper to classify all episodes. 
+• Calculation of the average resource consumption per DRG expressed as a relative weight 
+indexed to the market average case (RW = 1.00). 
+• Determination of a base price reflects the average total cost of an inpatient episode across 
+the private sector. 
+• MRP per DRG = Base Price × Relative Weight for that DRG. 
+ 
+7.3 Using the MRP for Base Rate Negotiation 
+The base rate is the single monetary value that anchors all DRG payments between a specific 
+provider and payer. The negotiated base rate is multiplied by the DRG -specific relative weight to 
+produce the payment for each admission. 
+7.3.1 Factors Influencing Base Rate Negotiations 
+Providers and payers may adjust the negotiated base rate above or below the MRP reference level 
+based on: 
+• Hospital characteristics (size, service mix, case complexity) 
+• Quality and patient safety performance indicators 
+• Geographic location and operational costs 
+• Efficiency metrics (LOS compared to norm, readmission rates) 
+
+--- PDF page 29 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 29 | 43 
+Classified as /عامPublic 
+• Historical utilization patterns and case mix profile 
+• Network strategy and volume commitments 
+• DRG high-quality performance increases transparency and reliability during negotiations 
+and confirms the CMI of the provider. 
+7.3.2 How Providers Should Use the MRP 
+• Benchmark internal episode costs against the MRP to identify efficiency gaps or areas of 
+cost advantage. 
+• Use Case Mix Index (CMI) data from shadow billing to demonstrate the complexity of their 
+patient population relative to market average. 
+• Use shadow billing financial analysis to model the revenue impact of different negotiated 
+base rates. 
+ 
+7.3.3 How Payers Should Use the MRP 
+• Evaluate whether proposed provider base rates are consistent with market norms for the 
+provider’s case complexity and service mix. 
+• Use DRG-based performance benchmarking (CMI, LOS, readmissions) to support value-
+based contracting strategies. 
+• Model DRG-based expenditure projections using shadow billing financial comparison data. 
+ 
+7.4 Relative Weight Tables 
+CHI publishes the complete AR-DRG v9.0 relative weight table for all 803 DRGs. Relative weight is a 
+key component of the DRG payment formula and reflects the expected resource use of each DRG 
+relative to the average inpatient episode. Providers and payers should refer to the relative weight 
+table published on the CHI website when conducting DRG-based financial analysis and contracting 
+discussions.  
+7.5 Length-of-Stay Adjustments to Payment 
+Under full DRG-based reimbursement, adjustments to the standard DRG payment may apply when 
+a patient’s length of stay deviates significantly from the norm (trim point) established for that DRG. 
+These adjustments ensure financial fairness for both providers  and payers when cases fall outside 
+the expected range. The specific trim points and adjustment formulas will be published prior to full 
+implementation in 2028. 
+ 
+
+--- PDF page 30 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 30 | 43 
+Classified as /عامPublic 
+Section 8: Reporting Requirements 
+8.1 Overview of Reporting Obligations 
+Regular and structured reporting is essential to monitor the progress of shadow billing, identify gaps, 
+and build the evidence base for full DRG implementation. The following reporting obligations apply 
+to all stakeholders during the shadow billing phase. 
+ 
+8.2 Provider Reporting Obligations 
+To minimize the reporting burden, CHI will extract and monitor most DRG activity and performance 
+indicators directly from SHIP and provide market-level insights through Daman Intelligence 
+dashboards. Monitored indicators include total admissions, DRG distribution, Case Mix Index 
+(CMI), error DRG rate, average LOS by DRG, LOS/outlier metrics, DRG vs. FFS variance, and 
+timeliness of DRG submissions. Providers are encouraged to calculate and monitor these 
+indicators internally. 
+Indicators Monitored via NPHIES/SHIP Extraction (No Submission Required) 
+Indicator Description 
+Total admissions Total number of admitted episodes submitted in the 
+reporting period 
+DRG distribution Breakdown of admitted episodes by assigned DRG 
+Case Mix Index (CMI) The average relative weight of all DRGs billed, 
+reflecting overall case complexity 
+Error DRG rate Proportion of episodes resulting in an error, 
+ungroupable, or unacceptable-principal-diagnosis 
+DRG 
+Average LOS by DRG Average length of stay for each DRG, compared 
+against expected norms 
+LOS / outlier metrics Identification of cases falling outside expected 
+length-of-stay ranges 
+DRG vs. FFS variance Comparison between the DRG-based payment 
+amount and the equivalent fee-for-service amount 
+for the same episode 
+Timeliness of DRG submissions Whether DRG-coded claims are submitted within 
+required timeframes 
+However, providers must submit audit results for the following two indicators, which require formal 
+audits carried out by providers and approved vendors: 
+Mandatory Reporting Requirements (via Audit) 
+Indicator Description 
+Coding accuracy Rate of correct code assignment, validated through 
+internal and external codingaudits 
+
+--- PDF page 31 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 31 | 43 
+Classified as /عامPublic 
+Indicator Description 
+CDI performance Indicators reflecting the effectiveness of the 
+provider's Clinical Documentation Improvement 
+program 
+Providers must also submit quarterly readiness reports and notify CHI of any critical system or data 
+issues within 5 working days. 
+All reporting must follow CHI's MDS definitions, AR-DRG v9.0, and ICD-10-AM/ACHI/ACS standards. 
+Reporting results will be used to assess provider and market readiness for full DRG implementation 
+in 2028. 
+ 
+8.4 Key Performance Indicators (KPIs) for Shadow Billing 
+KPIs for the shadow billing phase measure DRG data quality, coding/documentation accuracy, 
+operational timeliness, system integration performance, and payer validation accuracy. These KPIs 
+will be monitored monthly and used to assess provider and payer readiness for full DRG 
+implementation in 2028. 
+KPI Proposed target (pending CHI confirmation) 
+Error DRG rate ≤ 3% 
+First-pass coding accuracy ≥ 80% 
+Coding accuracy ≥ 80% 
+MDS completeness ≥ 98% 
+DRG submission timeliness ≥ 95% within 7 days 
+DRG mismatch rate ≤ 5% 
+ 
+8.5 CHI Market-Level Reporting 
+CHI will aggregate provider and payer submissions to produce quarterly market -level reports 
+covering: 
+• National Case Mix Index trends 
+• Top DRGs by volume and by total relative weight 
+• DRG error rates by facility type and region 
+• Aggregate DRG vs. FFS financial comparison 
+• Shadow billing readiness assessment by stakeholder category 
+These reports will be shared with market stakeholders through the CHI governance structure and will 
+inform readiness decisions ahead of the 2028 transition. 
+ 
+
+--- PDF page 32 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 32 | 43 
+Classified as /عامPublic 
+Section 9: Readiness Criteria for Full Implementation (2028) 
+9.1 Provider Readiness Criteria 
+9.1.1 Clinical Documentation and Coding 
+• Error DRG rate equal to or below X3% for three consecutive months prior to assessment. 
+• First-pass coding accuracy rate equal to or above 80X% or above, verified by internal audit. 
+• CDI program fully operational with designated CDI coordinator, documented query process, 
+and CMI monitoring. 
+• All coding staff shall hold current certification in ICD-10-AM / ACHI / ACS (10th Edition) from 
+a CHI-approved training provider or equivalent Certification must be renewed or refreshed 
+every 3 years, or earlier if CHI adopts a new edition of the classification. X. 
+ 
+9.1.2 Technical and System Readiness 
+• HIS integrated with a CHI-certified AR-DRG v9.0 grouper. 
+• NPHIES DRG submission tested and validated in the production environment. 
+• DRG reporting dashboards operational, providing CMI, LOS, DRG distribution, and error rate 
+analysis. 
+9.1.3 Financial and Contracting Readiness 
+• Financial modeling of DRG impact completed, using shadow billing data. 
+• Revenue cycle management processes updated to support DRG-based adjudication and 
+payment tracking. 
+• Internal budgeting and forecasting processes aligned with DRG revenue model. 
+ 
+9.1.4 Training and Change Management 
+• Clinician DRG awareness training completed for all admitting physicians. 
+• Coders and CDI staff must complete a mandatory refresher training within 3 months of DRG 
+shadow billing go-live. 
+• Administrative and finance staff must complete DRG-based revenue cycle training before 
+shadow billing go-live, with annual refreshers thereafter. Training must cover DRG 
+workflows, NPHIES requirements, DRG claim submission, and financial implications. . 
+ 
+9.2 Payer and TPA Readiness Criteria 
+• Claims adjudication systems updated to process DRG-based claims and apply relative 
+weight calculations. 
+• Major provider contracts renegotiated to align with the DRG base-rate reimbursement 
+structure. 
+
+--- PDF page 33 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 33 | 43 
+Classified as /عامPublic 
+• DRG validation rules are integrated into adjudication workflow. 
+• Clinical review teams trained in DRG validation methodology. 
+• Financial forecasting models updated to reflect DRG-based expenditure projections. 
+• Reporting capability in place to monitor DRG performance metrics (CMI, LOS, 
+readmissions, outliers). 
+ 
+9.3 Vendor Readiness Criteria 
+• AR-DRG v9.0 grouper certified by CHI and deployed in production environments for all client 
+hospitals. 
+• NPHIES DRG integration certified and tested in production. 
+• DRG analytics modules providing CMI, LOS, and coding quality dashboards available to 
+clients. 
+• CDI and coding audit tools available and deployed. 
+ 
+9.4 Market Readiness Assessment Process 
+To ensure a successful transition to the DRG reimbursement model, providers and payers must 
+meet measurable indicators across six foundational pillars prior to full implementation. 
+Pillar 1 — Clinical Documentation & Coding Readiness 
+KPI Recommended 
+Threshold 
+Rationale 
+Coding Accuracy (First Pass) ≥ 80% International benchmark is 90-95%; 
+KSA needs a realistic starting point. 
+Error DRG Rate (960Z, 961Z, 963Z) ≤ 3% Global best practice is <2%; 3% is 
+lenient but safe. 
+CDI Query Response Rate ≥ 85% Ensures physician engagement without 
+being overly strict. 
+Clinical Documentation Completeness 
+(PDx/ADx/Procedures) 
+≥ 90% Allows for variability in smaller 
+hospitals. 
+Neonatal & Ventilation Data Accuracy ≥ 95% Critical for MDC 15 and Pre MDC DRGs. 
+DRG Change Rate After CDI Monitored (no 
+threshold) 
+High variation expected early; use as a 
+trend indicator. 
+Readiness Pass Criteria: Provider meets 4 out of 6 KPIs, including coding accuracy and error DRG 
+rate. 
+Pillar 2 — Data Quality & NPHIES Integration Readiness 
+KPI Recommended 
+Threshold 
+Rationale 
+MDS Completeness ≥ 98% Mandatory for DRG grouping; high 
+threshold required. 
+
+--- PDF page 34 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 34 | 43 
+Classified as /عامPublic 
+KPI Recommended 
+Threshold 
+Rationale 
+NPHIES DRG Related Rejection 
+Rate 
+≤ 3% International best practice is <1%; 3% is 
+lenient for KSA. 
+Correct Grouper Version Usage 100% Non-negotiable. 
+Mapping Accuracy 
+(PDx/ADx/Procedures) 
+≥ 95% Allows for HIS variability across providers. 
+DRG Submission Timeliness (≤ 7 
+days) 
+≥ 90% International standard is 95-98%; 90% is 
+realistic for KSA. 
+System Error Resolution Time ≤ 7 working days Allows flexibility for smaller providers. 
+Readiness Pass Criteria: Provider meets 4 out of 6 KPIs, including MDS completeness and grouper 
+version compliance. 
+Pillar 3 — Operational & Revenue Cycle Readiness 
+KPI Recommended 
+Threshold 
+Rationale 
+DRG Workflow Implementation (HIS -> 
+Grouper -> NPHIES) 
+Fully implemented Mandatory. 
+Registration & Eligibility Accuracy ≥ 95% Needed for clean claims. 
+DRG Claim Submission Workflow 
+Compliance 
+≥ 90% Allows for operational variability. 
+Denial Management Process Maturity Documented & active Qualitative KPI. 
+CMI Stability (Month to Month) ± 10% variation International standard is ±5%; KSA 
+needs leniency. 
+Outlier Management Capability Documented process Qualitative KPI. 
+Readiness Pass Criteria: Provider meets 4 out of 6 KPIs, including workflow implementation. 
+Pillar 4 — Clinical & Administrative Workforce Readiness 
+KPI Recommended 
+Threshold 
+Rationale 
+Physician DRG Documentation 
+Training Completion 
+≥ 90% of admitting 
+physicians 
+International standard is 100%; 90% is 
+realistic for KSA. 
+Coder Certification (ICD 10 
+AM/ACHI/ACS) 
+100% of coding staff Mandatory. 
+CDI Coordinator Training Completion ≥ 90% Allows for staffing variability. 
+Admin/Finance DRG Revenue Cycle 
+Training 
+≥ 80% Lenient for smaller hospitals. 
+Post Go Live Refresher (within 3 
+months) 
+Completed Mandatory. 
+Annual Refresher Training 
+Compliance 
+≥ 80% Realistic for KSA. 
+Readiness Pass Criteria: Provider meets 4 out of 6 KPIs, including coder certification and physician 
+training. 
+
+--- PDF page 35 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 35 | 43 
+Classified as /عامPublic 
+Pillar 5 — Governance, Compliance & Audit Readiness 
+KPI Recommended 
+Threshold 
+Rationale 
+Internal (Quarterly) and External (Annually) Coding 
+Audit Program 
+Active & documented Mandatory. 
+Coding Audit Accuracy ≥ 80% Matches coding accuracy 
+KPI. 
+CDI Governance Structure Established Qualitative KPI. 
+DRG Compliance Policies Approved & 
+implemented 
+Mandatory. 
+Critical Incident Reporting (≤ 5 days) ≥ 90% compliance Allows for operational 
+variability. 
+Monitoring of DRG Shifts / Upcoding Risks Active monitoring Qualitative KPI. 
+Readiness Pass Criteria: Provider meets 4 out of 6 KPIs, including audit program and compliance 
+policies. 
+Pillar 6 — Financial & Contracting Readiness 
+KPI Recommended Threshold Rationale 
+DRG Revenue Modeling Capability Completed Mandatory. 
+Understanding of RW, Base Rate, MRP ≥ 80% of finance team trained Realistic for KSA. 
+Variance Analysis (DRG vs FFS) Performed monthly Mandatory. 
+Outlier Cost Monitoring Active Qualitative KPI. 
+Contracting Readiness for DRG Documented plan Mandatory. 
+Financial Risk Mitigation Plan Completed Mandatory. 
+Readiness Pass Criteria: Provider meets 4 out of 6 KPIs, including revenue modeling and variance 
+analysis. 
+ 
+ 
+
+--- PDF page 36 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 36 | 43 
+Classified as /عامPublic 
+Section 10: Governance and Subcommittees 
+10.1 CHI's Authority 
+CHI holds final authority over all DRG classification and policy determinations, consistent with its 
+statutory mandate under the Cooperative Health Insurance Law and its Article 5 regulatory powers. 
+ 
+10.2 Governance Structure 
+To be determined  
+
+--- PDF page 37 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 37 | 43 
+Classified as /عامPublic 
+Appendix A: Glossary of Key Terms 
+Term Definition 
+ADRG (Adjacent DRG) A broad clinical category that groups patient episodes before final DRG 
+split based on complexity level. 
+AR-DRG Australian Refined Diagnosis-Related Groups – the national patient 
+classification system mandated by the Saudi Health Council. 
+ACHI Australian Classification of Health Interventions – the procedure coding 
+system used alongside ICD-10-AM in Saudi Arabia. 
+Base Rate The negotiated monetary value per average episode that, when 
+multiplied by the DRG relative weight, determines the DRG payment. 
+Case Mix Index (CMI) The average relative weight of all DRGs assigned to a facility’s episodes 
+over a given period. Higher CMI = more complex patients. 
+CDI Clinical Documentation Improvement – a program to improve the 
+completeness and accuracy of clinical documentation for coding and 
+DRG purposes. 
+CHI Council of Health Insurance – the regulatory body governing health 
+insurance in Saudi Arabia. 
+DCL Diagnosis Complexity Level – a score (1–5) assigned to each coded 
+diagnosis reflecting its contribution to episode complexity. 
+DRG Diagnosis-Related Group – a classification of inpatient episodes into 
+groups sharing similar clinical characteristics and resource use. 
+ECCS / ECSL Episode Clinical Complexity Score – the sum of DCL scores for all 
+diagnoses in an episode; determines the final DRG split. 
+Error DRG One of three DRG codes (960Z, 961Z, 963Z) indicating a data quality or 
+coding problem preventing valid DRG assignment. 
+FFS Fee-for-Service – the current reimbursement model, being replaced by 
+DRGs. 
+GI (General Intervention) A surgical or procedural intervention that drives partition of an ADRG into 
+an interventional DRG. 
+
+--- PDF page 38 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 38 | 43 
+Classified as /عامPublic 
+Term Definition 
+ICD-10-AM International Statistical Classification of Diseases and Related Health 
+Problems, 10th Edition, Australian Modification – the diagnosis coding 
+system. 
+MDC Major Diagnostic Category – one of 23 broad clinical categories (MDC 
+00–23) to which episodes are first assigned based on principal diagnosis. 
+MDS Minimum Data Set – the set of clinical and administrative variables 
+required for AR-DRG grouping. 
+MRP Market Reference Price – CHI’s national benchmark price for each DRG, 
+equal to the base price multiplied by the relative weight. 
+NCHI National Center for Health Information – responsible for licensing and 
+supervising medical coding in Saudi Arabia. 
+NPHIES National Platform for Health Information Exchange Services – the 
+national claims submission and exchange platform. 
+Principal Diagnosis The diagnosis established after investigation to be chiefly responsible for 
+the patient’s admission to hospital. 
+Relative Weight (RW) A numerical value assigned to each DRG reflecting its expected resource 
+use relative to an average inpatient episode (RW 1.00 = average). 
+SBS Saudi Billing System – the national itemized billing schedule used 
+alongside ICD-10-AM/ACHI. 
+Shadow Billing The parallel submission of DRG-coded claims alongside FFS claims for 
+learning and readiness purposes, without financial consequences. 
+TPA Third-Party Administrator – an entity that administers health insurance 
+claims on behalf of payers. 
+VBHC Value-Based Healthcare – CHI’s strategic framework for aligning 
+healthcare incentives with quality, efficiency, and patient outcomes. 
+ 
+
+--- PDF page 39 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 39 | 43 
+Classified as /عامPublic 
+Appendix B: Major Diagnostic Categories (MDC 00–23) 
+MDC Code MDC Description 
+MDC 00 Unassignable to MDC 
+MDC 01 Diseases and Disorders of the Nervous System 
+MDC 02 Diseases and Disorders of the Eye 
+MDC 03 Diseases and Disorders of the Ear, Nose, Mouth and Throat 
+MDC 04 Diseases and Disorders of the Respiratory System 
+MDC 05 Diseases and Disorders of the Circulatory System 
+MDC 06 Diseases and Disorders of the Digestive System 
+MDC 07 Diseases and Disorders of the Hepatobiliary System and Pancreas 
+MDC 08 Diseases and Disorders of the Musculoskeletal System and Connective Tissue 
+MDC 09 Diseases and Disorders of the Skin, Subcutaneous Tissue and Breast 
+MDC 10 Endocrine, Nutritional and Metabolic Diseases and Disorders 
+MDC 11 Diseases and Disorders of the Kidney and Urinary Tract 
+MDC 12 Diseases and Disorders of the Male Reproductive System 
+MDC 13 Diseases and Disorders of the Female Reproductive System 
+MDC 14 Pregnancy, Childbirth and the Puerperium 
+MDC 15 Newborns and Other Neonates 
+MDC 16 Diseases and Disorders of the Blood and Blood Forming Organs and 
+Immunological Disorders 
+MDC 17 Neoplastic Disorders (Haematological and Solid Neoplasms) 
+MDC 18 Infectious and Parasitic Diseases 
+
+--- PDF page 40 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 40 | 43 
+Classified as /عامPublic 
+MDC Code MDC Description 
+MDC 19 Mental Diseases and Disorders 
+MDC 20 Alcohol/Drug Use and Alcohol/Drug Induced Organic Mental Disorder 
+MDC 21 Injuries, Poisoning and Toxic Effects of Drugs 
+MDC 22 Burns 
+MDC 23 Factors Influencing Health Status and Other Contacts with Health Services  
+ 
+
+--- PDF page 41 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 41 | 43 
+Classified as /عامPublic 
+Appendix C: Shadow Billing Readiness Checklist 
+Providers must complete this checklist before commencing shadow billing submissions. A 
+completed signed copy must be submitted to CHI via the DRG portal. 
+# Readiness Criterion Status (Yes/No/In 
+Progress) 
+Target 
+Date 
+1 CHI-certified AR-DRG v9.0 grouper procured and 
+installed 
+  
+2 Grouper integrated with HIS for automated claim 
+submission 
+  
+3 NPHIES DRG submission tested in sandbox 
+environment 
+  
+4 NPHIES DRG submission tested in production 
+environment 
+  
+5 ICD-10-AM 10th Edition coding system active in 
+HIS 
+  
+6 All mandatory MDS data fields populated in HIS 
+workflow 
+  
+7 CDI program established with designated CDI 
+coordinator 
+  
+8 Clinician DRG awareness training completed   
+9 Coding staff trained on AR-DRG v9.0 and 
+DCL/ECCS logic 
+  
+10 DRG reporting dashboard operational (CMI, error 
+rate, LOS) 
+  
+11 Error DRG rate below 5% on pilot submissions 
+(pre-shadow billing) 
+  
+12 Internal coding QA program documented and 
+active 
+  
+13 Finance team briefed on DRG payment formula 
+and MRP 
+  
+
+--- PDF page 42 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 42 | 43 
+Classified as /عامPublic 
+# Readiness Criterion Status (Yes/No/In 
+Progress) 
+Target 
+Date 
+14 Payer/TPA notified of shadow billing start date   
+ 
+
+--- PDF page 43 ---
+CHI DRG Implementation Guideline | Saudi Private Health Insurance Market  
+ 
+P a g e 43 | 43 
+Classified as /عامPublic 
+Appendix D: Document Version History 
+Version Date Summary of Changes Approved By 
+1.0 2026 Initial release for shadow billing phase CHI Secretary 
+General 
+ 
+ 

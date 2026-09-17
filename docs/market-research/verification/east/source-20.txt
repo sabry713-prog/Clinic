@@ -1,0 +1,153 @@
+## Introduction
+
+Healthcare systems worldwide are facing increasingly complex challenges in the areas of lack of manpower and rising healthcare costs. These challenges are even more apparent in Singapore, given the ageing population and significant increase in healthcare spending. Singapore will reach super-aged status by 2026. This is when the proportion of the population aged 65 years and above reaches the 21% mark. By 2030, around one in four Singaporeans will be aged 65 years and above, up from one in ten in 2010. Expenditure by Singapore’s Ministry of Health (MOH) is expected to surge by SGD 2.9 billion or 16.3% year on year.[1234]
+
+Yet at the same time, there are opportunities in the use of data science and artificial intelligence (AI) to improve productivity and optimise healthcare processes and systems. The shift towards Healthier SG, population health and capitation model aims to ‘bend the curve’ by reducing healthcare cost expenditures and improving the health outcomes of the population. Artificial intelligence and data science have been reported to achieve a significant reduction in manpower and improve hospital efficiency. Singapore’s Minister of Health, Mr Ong Ye Kung shared, “__The advent of artificial intelligence further promises major breakthroughs in healthcare. This has presented us with an unprecedented opportunity to transform healthcare for the better__”. The MOH will make a centralised push to scale AI use cases into national projects. This will include leveraging Generative AI for routine documentation of medical records, which will save considerable time for healthcare professionals. Additionally, AI imaging technology will be deployed across public hospitals for more accurate, error-free diagnoses. Health Empowerment through Advanced Learning and Intelligent eXchange (HEALIX), a cloud-based data infrastructure, will also be used to train AI and machine learning (ML) tools.[56]
+
+Several publications have highlighted the use of AI and data science to improve the productivity and efficiency of hospital operations in both inpatient and outpatient settings.[78910111213] To ensure successful adoption, the hospital’s digital transformation and infrastructure must be well established. This paper reviews the data-driven journey of a 1,000-bed smart hospital and public healthcare institution (PHI), highlighting the key strategies that enabled the successful establishment of an AI and digital ecosystem (AIDE) to achieve healthcare excellence.
+
+## BUILDING STRONG FOUNDATIONS IN DATA SCIENCE
+
+As Changi General Hospital (CGH) evolved into a data-centric organisation, data governance, conformance to regulatory requirements on data protection and analytics were recognised as strategically important drivers for organisational growth.[1415] A specialised department, Data Management and Informatics (DMI), was established in 2014 to manage data extraction, analysis and data sharing through a data clearing house and governance framework. It provided statistical reporting services to fulfil MOH, healthcare cluster and regulatory requirements, and supported senior management and key stakeholders in making informed decisions using business intelligence and analytical tools.
+
+The coronavirus disease 2019 (COVID-19) pandemic presented both challenges and opportunities across clinical, operational and administrative domains to ensure clinical quality and patient safety. Lessons from the pandemic included the need to improve healthcare data science and automation capabilities, such as predictive and prescriptive analytics, AI, ML and robotic process automation (RPA). These capabilities have the potential to improve patient safety and achieve productivity gains, including full-time equivalent (FTE) savings and greater hospital efficiency.
+
+Recognising the importance of AI and data science, we pivoted DMI in 2024 to form the new Data Science and Intelligence (DSI) team, including the establishment of an AI office. This reflects their expanded roles in strategic data and AI governance, decision support analytics and advanced data science. The DSI team is responsible for these functions across domains such as healthcare intelligence, AI, ML, deep learning (DL), data and AI literacy, RPA, data and AI governance, trusted third-party-based anonymisation and data management [Figure 1].
+
+Figure 1
+
+Role of the Data Science and Intelligence team at Changi General Hospital (CGH). CDP: career development programme, DL: deep learning, IPMOF: Institute Program Management Oversight Office, ML: machine learning, MOHH: Ministry of Health Holdings, NUS: National University of Singapore, PDPA: Personal Data Protection Act, PQ: parliamentary query, innovation and enterprise, RPA: robotic process automation, SHS: SingHealth Services, SMU: Singapore Management University, SUTD MM: Singapore University of Technology and Design ModularMasters, TP: Temasek Polytechnic, UAM: user acess matrix, WAU: weighted activity unit.
+
+## IMPLEMENTATION OF ROBOTIC PROCESS AUTOMATION
+
+Robotic process automation in healthcare can significantly enhance productivity, reduce errors and care gaps and improve process efficiency. It automates repetitive, rule-based tasks, freeing up staff to focus on high-value tasks. Our RPA journey began in 2017 through the development of automated scripts for data mining and reporting using open-source tools. Over the years, we have successfully implemented RPA to improve operational efficiency, including automating the tracking of medication orders, improving dispensing times and reducing medication errors, processing discharge summaries and optimising the e-financial counselling process. During the COVID-19 pandemic, we developed a novel automated contact tracing algorithm[16] enabled by RPA scripts that streamlined outpatient registrations, optimised appointment scheduling for safe-distancing compliance, improved laboratory processes and automated statutory case reporting. Recently, we successfully automated lab processes at the Shimadzu–CGH Clinomics Centre (SC3), which translated to significant productivity gains (approximately 0.4 FTE annualised with the opportunity to scale up the automation for other laboratory diagnostic tests). These success stories demonstrate the potential of RPA to transform healthcare, augment safety and improve enterprise productivity.
+
+## BUILDING STRONG DATA GOVERNANCE SYSTEMS
+
+As AI continues to transform healthcare, ensuring its responsible development and deployment is crucial. The CGH team developed an AI Governance Framework that integrates regulatory requirements, ethical considerations and technical standards. The framework is aligned with MOH’s Artificial Intelligence in Healthcare Guidelines,[17] the European Union’s Artificial Intelligence Act[18] and the Singapore Infocomm Media Development Authority (IMDA) Model AI Governance Framework. The CGH AI Governance Framework was developed with four key considerations [Box 1] and provides a comprehensive approach to ensuring trustworthy AI development and deployment using a risk-based approach [Figure 2].
+
+Box 1
+
+Key considerations in the development of the AI Governance Framework
+
+|1. Regulatory compliance: Ensures adherence to the AI Act’s requirements, including transparency, explainability and human oversight |
+| --- |
+|2. Ethics and values: Incorporates principles from the EU’s Ethics Guidelines[18] for trustworthy AI, such as respect for autonomy, fairness and human dignity |
+|3. Technical standards: Leverages industry-recognised standards, such as those provided by Dataiku’s Generative AI framework, to ensure technical robustness and reliability[19] |
+|4. Accountability and oversight: Establishes mechanisms for monitoring, reporting and addressing AI-related risks and incidents |
+
+AI: artificial intelligence, EU: European Union
+
+Figure 2
+
+The AI Governance Framework.
+
+## BUILDING STRONG INFORMATION TECHNOLOGY INFRASTRUCTURE
+
+Since the hospital’s establishment, it has undergone significant digital transformation, evolving from traditional information technology (IT) systems to a sophisticated AI-powered healthcare ecosystem. This journey has been driven by the need to enhance patient care, optimise hospital operations and ensure robust cybersecurity against emerging threats. The foundation of our digital transformation began with a structured IT roadmap, progressively integrating data analytics, cloud computing and AI capabilities into our healthcare system. The implementation of an enterprise cloud infrastructure facilitated secure data storage, AI model training and seamless interoperability between various digital health systems.
+
+A notable project in our IT evolution is the introduction of an integrated bed management solution. By leveraging radio frequency identification technology to track patient flow, update bed statuses and trigger housekeeping upon discharge, the system has digitalised the entire inpatient flow process, enhancing both efficiency and patient experience.
+
+Our hospital’s digital transformation journey has also been enabled by close collaboration with key partners and stakeholders within the national public healthcare ecosystem. Synapxe, the central IT provider for all PHIs in Singapore, played a critical role in co-developing and operationalising hospital-level digital solutions such as the enterprise cloud infrastructure, business and clinical systems enhancements and AI model deployment pipelines. In addition, within the SingHealth cluster, cross-institutional learning and shared infrastructure — such as participation in cluster-wide data lakes and digital governance working groups — have accelerated CGH’s adoption of smart hospital practices. We also actively engage in national efforts led by the MOH and Synapxe, contributing to initiatives such as the AI Medical Imaging platform for Singapore Healthcare (AIM.SG), National Analytics Platform, HEALIX, National Electronic Health Record and cybersecurity resilience programmes across clusters.
+
+Our electronic medical record (EMR) system has continuously evolved to support real-time clinical decision-making. Initially developed to digitise patient records, it has been enhanced with AI-driven automation, interoperability features and integration with national health databases. The implementation of ambient digital scribing tools, such as Note Buddy (a generative AI-powered solution) and Pair (a Singapore government AI chatbot assistant), has streamlined medical documentation, reducing the administrative burden on clinicians while ensuring data accuracy and compliance with privacy regulations.[20] In addition, we are aligning with the national initiative to adopt the __the Epic__ EMR system — developed by the international software company __Epic__ — with the aim of unifying the entire public health system on a common platform, a pioneering move globally. We have also deployed commercial AI radiology software on AIM.SG, a data platform integrated with the hospital’s picture archiving and communication system (PACS). Data platforms are essential for integrating AI software with hospital systems such as PACS, as they lower the barriers to adoption and ensure interoperability across existing hospital information systems.
+
+## BUILDING RESILIENT CYBERSECURITY SYSTEMS
+
+As digitalisation expanded, the need for a comprehensive cybersecurity strategy also grew. Recognising healthcare as a prime target for cyber threats, our hospital has prioritised enterprise risk management, AI governance and cybersecurity resilience. We have adopted a zero-trust security architecture, real-time threat detection and robust AI-driven anomaly detection systems. Lessons learned from global cyber incidents have underscored the importance of supply chain security, ransomware mitigation and regulatory compliance with national cybersecurity standards. Regular staff training in cybersecurity and risk management further ensures that all stakeholders understand and adhere to best practices in mitigating cyber risks.
+
+## DRIVING ARTIFICIAL INTELLIGENCE LITERACY
+
+There is a need to equip individuals with the knowledge and skills to understand, use and interact with AI responsibly and effectively. By establishing a fundamental understanding of AI, healthcare organisations can then unlock its full potential to drive innovation, efficiency and growth. This is a structured approach to Enterprise Data and AI Literacy.[21] By investing in AI literacy programmes, healthcare organisations can bridge the AI knowledge gap, foster a culture of AI-driven innovation and drive successful AI transformation.
+
+Our hospital offers three major programmes in AI literacy for staff catered to different levels of AI competency. At the foundation level, all staff — from executive and clerical to senior management — undergo a foundational AI literacy course conducted by AI Singapore, a national programme aimed at growing local AI talent and building an AI ecosystem. At the beginner level, the foundational course is complemented by intermediate skill acquisition programmes conducted by Duke-NUS and Singapore Institute of Technology. For practitioner-level users, the hospital partnered with Singapore University of Technology and Design to co-develop and conduct a ModularMaster certificate programme in Data Science and AI with a focus on healthcare. Having multiple partners in creating educational content allowed us to select and match the relevant modules to scale staff training in AI and tap on the strengths of the various partners. This was achieved by clearly defining the different levels of competencies.
+
+## ESTABLISHING A MULTIDISCIPLINARY TEAM
+
+We adopted an integrated multidisciplinary model by establishing an AI and Digital (AID) committee, comprising expertise from clinical teams (medicine, nursing and allied health), data and technology teams, research and innovation offices, along with other key stakeholders [Figure 3].[22]
+
+Figure 3
+
+Changi General Hospital’s AI and Digital ecosystem. AI: artificial intelligence, AID: AI and Digital, CHART: Centre for Healthcare Assistive and Robotics Technology, CIO: Chief Information Officer’s office, CT: Care Transformation, DSI: Data Science and Intelligence, HSR: Health Services Research, OOI: Office of Innovation, OOR: Office of Research, ORM: Office of Risk Management.
+
+The role of the AID committee is to drive the development and adoption of AI and digital solutions in healthcare [Figure 4]. A hospital AID portal was also established to allow users to contribute to use cases and learn from both success and ‘failure to launch’ stories. The incorporation of the Office of Risk Management was strategic to ensure that risks (including AI enterprise risks) are mitigated using the enterprise risk management framework. Strong support from the hospital leadership and management has also been crucial, providing funding and effective staff engagement through townhalls and webinars.
+
+Figure 4
+
+Role of Changi General Hospital’s AI and Digital (AID) committee. CHART: Center for Healthcare Assistive & Robotics Technology, CT: care transformation, DL: deep learning, DSI: data science & intelligence, HSR: Health Services Research, ITSC: Information Technology Steering Committee, ML: machine learning, MOH: Ministry of Health, OOI: Office of Innovation, OOR: Office Of Research, SHS: SingHealth Services.
+
+Integration with the Office of Innovation allowed us to leverage strong local, regional, and international partnerships with hospitals, institutions of higher learning, industry and start-ups. Building on these collaborations enabled the rapid establishment of the AIDE.
+
+## BUILDING AN INNOVATIVE AND COLLABORATIVE CULTURE
+
+Healthcare innovation is one of the key elements supporting a sustainable healthcare system, especially against the backdrop of a rapidly ageing population. In 2012, CGH was the first public hospital in Singapore to establish a Centre for Innovation (CFI), seeded by the Economic Development Board of Singapore as a super platform to support collaboration with industry and academic partners in healthcare innovation. The CGH Office of Innovation (OOI) was formed in 2015 to better coordinate and strategise the activities undertaken by CFI and other centres of excellence driving innovation. In 2015, CGH embarked on digital health, years ahead of its rapid development during the COVID-19 pandemic. A trial was conducted in partnership with industry to ascertain the effectiveness of telemonitoring for heart failure patients. The study concluded that telemonitoring was associated with lower all-cause and heart failure-related total bed days at 180 days, lower heart failure-related total bed days and total cost of care at 1 year compared to structured telephone support.[23]
+
+The need for digital health and AI-related technologies to augment clinical care and productivity grew during and after the COVID-19 pandemic. The OOI established a framework that supports the whole innovation life cycle — from identifying unmet needs and fostering collaborations with external partners to co-create solutions, to test-bedding these solutions in real-world settings as proof of concept or value, and finally facilitating early adoption and scaling. It took the centre stage in supporting the growing needs of digital health and AI projects in the research and development phase by providing seed funding and project management expertise. At the height of the COVID-19 pandemic, CGH developed a chest X-ray (CXR)-based AI model (Community-Acquired Pneumonia AI predictive Engine [CAPE]) and prospectively evaluated its discrimination for 30-day mortality. It was proven that CXR-based CAPE mortality risk score was comparable to traditional pneumonia severity scores and improved its discrimination when combined.[24] The challenges presented by the pandemic led to the search for more effective infection control and remote patient monitoring solutions. Clinicians also collaborated with Respiree Pte Ltd (a local start-up) and the Agency of Science and Technology and Research in the validation and deployment of real-time remote vital sign monitoring wearables.[25] Algorithms have been developed to better predict the deterioration of patients in general wards for early intervention and optimisation of healthcare resources.
+
+The OOI has played an important role as a control tower, facilitating partnerships between CGH innovators and external partners from institutions of higher learning and industry. With a mission to deliver value and transform care, CGH aims to collaborate closely with our partners to enable knowledge and technology transfer in healthcare digital innovation and AI. By fostering these collaborations, the translation of digital technologies and innovations into clinical adoption can be more effective and efficient, ultimately delivering better healthcare and economic outcomes. Figure 5 outlines the interface and synergy between the hospital’s Research, Innovation and Enterprise committee and the AID committee.
+
+Figure 5
+
+Interface and synergy between the Research, Innovation and Enterprise (RIE) committee and AI and Digital (AID) committee.
+
+## ACCELERATING DATA SCIENCE AND AI THROUGH RESEARCH AND INNOVATION
+
+
+[... middle omitted — see footer ...]
+
+
+Box 2
+
+Ten key recommendations for successful establishment of an AIDE.
+
+|1. Build a strong foundation in data management, informatics and data science |
+| --- |
+|2. Ensure strong data governance and cybersecurity systems |
+|3. Develop the talent pipeline of data analysts and data scientists |
+|4. Establish a transdisciplinary team |
+|5. Build strong partnerships and collaboration with industry, IHLs and other stakeholders as part of a larger AIDE |
+|6. Obtain strong support from leadership and management, including infrastructure and funding support, to catalyse adoption or implementation |
+|7. Drive AI and digital literacy in your healthcare organisation |
+|8. Focus on the adoption of AI and digital solutions, not just the development |
+|9. Adopt AI and digital solutions that are patient-focused, cost-effective and cyber-safe |
+|10. Adopt a robust AI governance framework and ERM system |
+
+AI: artificial intelligence, AIDE: AI and Digital Ecosystem, ERM: enterprise risk management, IHLs: institutions of higher learning
+
+## FUTURE OF ARTIFICIAL INTELLIGENCE
+
+Artificial intelligence is set to revolutionise medicine, from diagnostics to personalised treatment. Integrating AI into healthcare will improve efficiency, accuracy and patient outcomes. Changi General Hospital is contributing to the development of several major areas that will emerge as growth drivers in Singapore’s biomedical science sector, powered by AI. We highlight below some areas that will likely transform our healthcare practices in the future.
+
+### Workforce education and metacognitive training
+
+Integrating AI in healthcare requires a workforce skilled in AI technologies. The National Academy of Medicine highlights the need to promote an AI-competent healthcare workforce, including the incorporation of AI curricula in medical education.[35] Metacognitive training, which involves teaching clinicians to think about their own thinking processes, is crucial for the effective use of AI. This training helps clinicians to understand AI’s decision-making processes, thereby improving their ability to collaborate with the AI systems and make informed clinical decisions.[3637] At CGH, we have designed a framework for clinicians to understand cognitive biases and to apply metacognitive thinking when using AI.
+
+### Pandemic preparedness
+
+Artificial intelligence can greatly improve pandemic preparedness by enhancing disease surveillance, outbreak prediction and response strategies. Algorithms analyse data from various sources, including social media, health records and data registries, to detect early outbreak signs and forecast spread, enabling timely interventions and better resource allocation to reduce impact.[38] At CGH, we have developed an ensemble AI model that can automatically analyse CXRs to predict the probability of intensive care unit admission of patients with COVID-19, enabling early intervention of the sickest patients. We have also co-developed a 4D digital twin model of the built environment at inpatient wards with Singapore General Hospital to predict the spread of pathogens and enhance contact tracing within the hospital.
+
+### National AI medical imaging platform
+
+Robust IT infrastructure and reliable networking capabilities form the essential foundation for developing, training and deploying AI systems effectively, while ensuring they remain secure, accessible and robust without model decay. In 2019, the blueprint for a national IT platform (AIM.SG) was developed to enable public hospitals to access different imaging AI models through one single platform and to monitor their performance. This platform was operational in August 2023 at CGH and is now deployed across SingHealth.[39] This has enabled our hospital to test and validate CXR AI models using real-world information.[40]
+
+### Agentic AI and AI agents
+
+Agentic AI in healthcare refers to the use of AI systems that can autonomously perform tasks, make decisions and adapt to new situations, similar to a human agent in clinical and non-clinical settings. These agentic AI systems are designed for autonomy, agency, intentionality and flexibility. Applications in healthcare are diverse and not limited to clinical decision support, personalised medicine, predictive analytics, robot-assisted surgery and patient engagement. However, the deployment of AI agents and agentic AI workflows present challenges and limitations. These include the need for compliance with regulatory frameworks to ensure safety, efficacy and accountability; data quality and integration; explainability and transparency; and cybersecurity.[41] With the surge in open-source AI agents for specific tasks, a cautious, risk-based approach should be adopted to pilot AI agents in low-risk settings with a focus on administrative backend tasks. Additionally, a hybrid human-in-the-loop approach will be needed in moderate- to high-risk healthcare settings.[4243]
+
+## CONCLUSION
+
+The call to action is now. The AI and digital landscape will continue to evolve rapidly. As hospitals progress in developing and adopting AI and digital solutions, the pace of transformation and change management will differ across healthcare institutions. Strong leadership and management support, a robust ecosystem, and most importantly, a workforce skilled in data science and AI are critical success factors for driving a data-driven, thriving healthcare system towards excellence.[4445]
+
+### Conflicts of interest
+
+There are no conflicts of interest.
+
+### Supplemental digital content
+
+Appendix at http://links.lww.com/SGMJ/A236
+
+──────── [TRUNCATED] ────────
+Showing 19,296 chars (head) + 5,585 chars (tail) of 30,763 total clean characters.
+Full text saved to: C:\Users\MohamedSabry\AppData\Local\hermes\cache\web\pmc.ncbi.nlm.nih.gov-e2d1a01418.md
+To read the omitted middle: read_file path="C:\Users\MohamedSabry\AppData\Local\hermes\cache\web\pmc.ncbi.nlm.nih.gov-e2d1a01418.md" offset=95 limit=200  (the file is the complete page; raise/lower offset to page through it).
+─────────────────────────────

@@ -1,0 +1,17 @@
+In the process of transitioning in NPHIES project from inception phase to activation phase, we are introducing series of training courses, to enable the market and provide them with the essential skills to implement the change and to develop a more detailed understanding of NPHIES and to ease the adaptation of the platform.
+
+Note: All provided training sessions are considered mandatory for any entity to be certified to use NPHIES platform.
+
+# 1. Standard Coding Training:
+
+Standard Coding Training Courses focus on developing a high-level understanding of standard code sets in order to use them within the working environment. These codes are very important to simplify the processes and decrease the costs associated with every health care transaction.
+
+ 2. Business/Operational training:
+
+Business and Operational Training Courses will focus more on specific areas of the implementation process, it is anticipated that the onboarding orientation sessions will encompass all generic project overviews regarding objectives, approach, and desired outcomes.
+
+ 3. Technical Training:
+
+Technical Training Courses will be conducted using the integration tool kit (Material, guidelines, sample data, and web services) provided by NPHIES insurance core vendor. The course will provide details about NPHIES solution, registration, configuring, and utilization to perform the transaction, mapping, and communication.
+
+ Training sessions are held weekly for those who have been invited from healthcare providers and health insurance companies.

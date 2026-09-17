@@ -1,0 +1,167 @@
+![](https://cdn.prod.website-files.com/67c6ddc58c9e7b3f7d095cb3/6a10298c6f5aff0991545141_mankato.svg)
+
+# How Mankato Clinic Boosted Both Clinician Productivity and Patient Experience with Nabla
+
+![](https://cdn.prod.website-files.com/67c6ddc58c9e7b3f7d095cb3/6a103356a50ebb103c0a7007_mankato_clinic_ltd_cover.webp)
+
+Every clinician speciality that saw double-digit productivity gains also reported double-digit increases in patient satisfaction
+
+Mankato Clinic, one of Minnesota’s largest independent physician-owned healthcare organizations, has been serving its community for more than a century with a strong commitment to patient-centered care. Like many healthcare organizations, Mankato clinicians were burdened by extensive documentation requirements, which limited patient interaction time and contributed to provider fatigue. The clinic sought a solution that could simultaneously improve clinician productivity and enhance the patient experience.
+
+The study compared performance metrics for the twelve months before and after the adoption of Nabla, an advanced ambient AI technology used to support clinical documentation during patient encounters. Over 100 healthcare providers at Mankato Clinic in southern Minnesota used the technology more than 8,000 times to assist with visits.
+
+Between May 2024 and May 2025, Nabla was used by 102 clinicians in 8,208 patient encounters. Nearly half of the clinicians were heavy users, with 48 providers using the ambient technology in at least 100 encounters each.
+
+The clinicians using Nabla represented a wide range of ages, experience levels, and specialties. To be included in the study, clinicians had to meet two criteria: they must have used Nabla continuously for at least twelve months, and they must have been practicing at Mankato Clinic for at least twelve months prior to adoption.
+
+## Clinician Productivity
+
+Mankato Clinic saw an 8.15% year-over-year increase in Work Relative Value Units (wRVUs) across 23 specialties. The clinicians who experienced the strongest wRVU gains typically treated more complex cases or operated in documentation-heavy environments. Ten of the 23 specialties saw above-average productivity increases.
+
+Among the specialties with the largest improvements were:
+
+Diabetes Care
+
++30%
+
+wRVU
+
+Cardiology
+
++23%
+
+wRVU
+
+Psychiatry
+
++18%
+
+wRVU
+
+Family Practice
+
++13%
+
+wRVU
+
+Internal Medicine
+
++13%
+
+wRVU
+
+Psychology
+
++13%
+
+wRVU
+
+Gastrointestinal
+
++11%
+
+wRVU
+
+Senior Home Health Care
+
++10%
+
+wRVU
+
+Physical Therapy
+
++10%
+
+wRVU
+
+OB/GYN
+
++9%
+
+wRVU
+
+These gains reflect more complete and accurate documentation of visit content leading to appropriately higher coding levels.
+
+## Patient Experience
+
+To evaluate how ambient AI impacted patients, surveys were administered following visits that used Nabla.
+
+Mankato Clinic’s Net Promoter Score **increased by 7 points** during the first year of adoption, **rising from 87 to 94.**
+
+To be included in the analysis, specialties had to receive at least 40 patient responses. Gastrointestinal saw the greatest improvement in patient satisfaction, with a 44% increase, followed by Cardiology with a 15% increase.
+
+Patient Satisfaction Improvement by Specialty
+
+Gastrointestinal
+
++44.02%
+
+wRVU
+
+Cardiology
+
++15.19%
+
+wRVU
+
+Internal Medicine
+
++10.97%
+
+wRVU
+
+Family Medicine
+
++10.45%
+
+wRVU
+
+Physical Therapy
+
++6.98%
+
+wRVU
+
+Psychiatry
+
++6.13%
+
+wRVU
+
+Patients evaluated several aspects of the visit, but survey administrators attribute the overall improvement primarily to increased face-to-face time with clinicians.
+
+## Results After One Year:
+
+8%
+
+Average increase
+
+in clinician productivity (wRVU) across all clinicians
+
+Up to 30%
+
+**productivity gains**
+
+in documentation-heavy specialties
+
+9%
+
+**increase in NPS score**
+
+rising from 87 to 94
+
+2.4%
+
+**increase in patient satisfaction**
+
+was seen for every 1% increase in productivity amongst clinicians
+
+Taken together, these results demonstrate that Nabla’s advanced ambient AI technology can deliver measurable benefits at scale. By reducing administrative tasks, Nabla allowed Mankato clinicians to spend more time with patients. Clinicians experienced significant productivity gains, while patients reported higher satisfaction, often in the same specialties where efficiency improved the most.
+
+For Mankato Clinic, Nabla proved to be a transformative technology, empowering clinicians, elevating patient care, and delivering measurable ROI within the first year of use. Notably, every specialty that saw double-digit productivity gains with Nabla also reported double-digit increases in patient satisfaction, demonstrating a direct link between clinical efficiency and the patient experience.
+
+These findings provide evidence that AI-driven documentation support can enhance both provider efficiency and patient experience simultaneously. The results included measurable financial gains and a markedly improved patient experience.
+
+Access the case study
+
+Get instant access to this case study by filling out the form below.

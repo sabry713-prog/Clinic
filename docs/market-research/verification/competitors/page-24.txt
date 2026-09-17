@@ -1,0 +1,121 @@
+# The Intelligent
+Operating System
+for Health
+Automate claims processing, detect abnormal patterns in real time, enforce coding accuracy, and improve health outcomes — with generative, agentic, and predictive AI purpose-built for payers.
+Book a Demo See It in Action
+Money saved
+
+...
+
+## 0+B
+NPHIES Certified Certified for Saudi Arabia's National Platform for Health Information Exchange Services HL7 FHIR Supports the global standard for healthcare data interoperability and exchange ISO 27001 International standard for information security management systems ISO 22301 International standard for business continuity
+management systems SOC 2 Audited controls for security, availability, and confidentiality of customer data HITRUST Gold-standard security framework purpose-built for healthcare organizations HIPAA Compliant with US health data privacy and security regulations
+
+## What We Solve for Health Plans
+Three critical challenges every payer faces — and how TachyHealth's AI eliminates them
+
+
+### Stop Revenue Leakage
+AI-powered claims validation catches underpayments, missed denials, and coding errors before they cost you millions.
+40% less leakage
+
+
+### Eliminate Manual Bottlenecks
+Automate claims adjudication, prior auth, and coding workflows — freeing your team to focus on exceptions, not routine.
+3x faster processing
+
+
+### Detect Fraud in Real Time
+Multi-dimensional AI analysis identifies upcoding, unbundling, and suspicious billing patterns across your entire claims stream.
+$2.8M recovered/quarter
+
+## Measurable Impact on Payer Operations
+Health plans using TachyHealth see transformative results within the first 90 days
+40%
+Reduction in Claims Leakage
+AI-powered validation catches overpayments and billing errors before settlement
+3x
+Faster Claims Processing
+AI-powered adjudication accelerates end-to-end turnaround times
+$2.8M
+Avg. Fraud Recovered Per Quarter
+Multi-layered AI detection identifies waste, abuse, and fraud patterns
+97%
+Autonomous Coding Accuracy
+Clinical NLP achieves near-perfect ICD-10, CPT, and SBS code assignment
+
+## Agentic Products Built for Health Insurers
+Purpose-built AI modules that plug into your claims workflow — from intake to payment integrity
+* Claims Review
+* Fraud Detection
+* Pharmacy Benefits
+* Policy Intelligence
+* Medical Coding
+* Gazal AI
+
+### AiReview
+Automate Claims Adjudication & Medical Review
+Eliminate manual claims review bottlenecks. AiReview validates medical necessity, checks policy compliance, flags anomalies, and auto-adjudicates routine claims — reducing turnaround from days to minutes while maintaining 97%+ accuracy.
+70% less manual review
+Product details
+aiReview
+
+...
+
+## Go Live in Weeks, Not Months
+### Connect Your Systems
+Plug into your existing claims platform, EHR, and payer infrastructure via NPHIES, HL7 FHIR, or our REST APIs. No rip-and-replace required.
+02
+
+### Configure & Calibrate
+Our team calibrates AI models to your specific formulary, policy rules, and clinical protocols. Your compliance and medical teams validate every rule.
+03
+
+...
+
+## Why Health Insurers Choose TachyHealth
+### Extreme Accuracy
+Our multi-agent AI achieves 97%+ accuracy across medical coding, claims review, and fraud detection — exceeding human-level performance.
+
+### 100% Explainability
+Every AI decision comes with a complete audit trail and clinical rationale — no black boxes, full regulatory transparency.
+
+### Rapid Integration
+Deploy in weeks, not months. Seamless integration with existing claims systems, EHRs, and payer infrastructure via NPHIES, HL7, and FHIR.
+
+### Healthcare-Native AI
+Built by healthcare domain experts — not generic AI adapted for health. Gazal, our healthcare LLM, understands clinical context natively.
+
+### Enterprise Security
+HIPAA, SOC 2, HITRUST, and NPHIES certified. Your data stays encrypted, compliant, and under your control at all times.
+
+### Proven ROI in 90 Days
+Health plans see measurable returns within their first quarter — from reduced denials and faster turnaround to millions recovered in fraud savings.
+
+...
+
+## News and Insights
+### TachyHealth Achieves NPHIES Certification
+January 2026
+**Industry Insights**
+
+...
+
+## Enterprise-Grade Security & Compliance
+Our systems are built to HIPAA standards and officially certified under ISO 27001, ISO 22301, and ISO 13485.
+ISO/IEC 27001:2022 ISO 22301:2019 ISO 13485:2016 HIPAA
+Visit our Trust Center
+
+## Ready to Transform Your Health Plan Operations?
+Join the health plans that are already saving millions with AI-powered claims intelligence. See TachyHealth in action with a personalized demo.
+Book a Demo Contact Sales
+Free consultation — no commitment required
+TachyHealth Logo
+
+...
+
+## Get the latest Technology & Healthcare news in your inbox!
+### Tachy Assistant
+Always online
+Hi! How can I help you today?
+Ask anything about TachyHealth or our AI solutions.

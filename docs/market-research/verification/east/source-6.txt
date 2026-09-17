@@ -1,0 +1,172 @@
+# Benchmarking the Medical Understanding and Reasoning of Large Language Models in Arabic Healthcare Tasks
+
+###### Abstract
+
+Recent progress in large language models (LLMs) has showcased impressive proficiency in numerous Arabic natural language processing (NLP) applications. Nevertheless, their effectiveness in Arabic medical NLP domains has received limited investigation. This research examines the degree to which state-of-the-art LLMs demonstrate and articulate healthcare knowledge in Arabic, assessing their capabilities across a varied array of Arabic medical tasks. We benchmark several LLMs using a medical dataset proposed in the Arabic NLP AraHealthQA challenge in MedArabiQ2025 track. Various base LLMs were assessed on their ability to accurately provide correct answers from existing choices in multiple-choice questions (MCQs) and fill-in-the-blank scenarios. Additionally, we evaluated the capacity of LLMs in answering open-ended questions aligned with expert answers. Our results reveal significant variations in correct answer prediction accuracy and low variations in semantic alignment of generated answers, highlighting both the potential and limitations of current LLMs in Arabic clinical contexts. Our analysis shows that for MCQs task, the proposed majority voting solution, leveraging three base models (Gemini Flash 2.5, Gemini Pro 2.5, and GPT o3), outperforms others, achieving up to 77% accuracy and securing first place overall in the challenge [Lea ](https://arxiv.org/html/2508.15797v1#bib.bib1). Moreover, for the open-ended questions task, several LLMs were able to demonstrate excellent performance in terms of semantic alignment and achieve a maximum BERTScore of 86.44%.
+
+## 1 Introduction
+
+Medicine relies heavily on complex reasoning, spanning tasks from diagnostic decision-making to treatment planning, especially when patient outcomes depend on understanding multi-factorial conditions Qiu et al. ([2024](https://arxiv.org/html/2508.15797v1#bib.bib23)); Huang et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib14)). Differential diagnosis involves generating and narrowing down possible diagnoses using clinical evidence, requiring both extensive medical knowledge and logical reasoning to evaluate multiple hypotheses.
+
+LLMs have demonstrated superior performance across various domains and applications, such as article debiasing Kuo et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib16)), content moderation AlDahoul et al. ([2024b](https://arxiv.org/html/2508.15797v1#bib.bib5)), and political leaning detection AlDahoul et al. ([2024a](https://arxiv.org/html/2508.15797v1#bib.bib4)). In the healthcare domain, LLMs are reshaping the landscape of healthcare by transforming the way consultations, diagnoses, and treatment plans are delivered Yang et al. ([2023](https://arxiv.org/html/2508.15797v1#bib.bib31)). They offer new avenues for improving patient education through dynamic, conversational interactions, thereby enhancing both accessibility and patient autonomy. Beyond direct patient care, LLMs also show promise in supporting medical training and streamlining administrative responsibilities, including the generation of clinical notes, referral letters, and discharge summaries Yang et al. ([2023](https://arxiv.org/html/2508.15797v1#bib.bib31)).
+
+Most existing benchmarks focus on English, leaving a gap in evaluating Arabic LLMs for healthcare due to the lack of high-quality clinical datasets, Arabic’s linguistic diversity, and the limited performance of multilingual models in domain-specific tasks Daoud et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib10)). To fill these gaps, there is an increasing demand for frameworks that evaluate LLM performance in clinical tasks for Arabic-speaking communities. Our analyses and experiments center around the following research questions: RQ1: Do state-of-the-art proprietary base LLMs perform well in Arabic medical tasks? RQ2: To what extent do state-of-the-art proprietary base LLMs with reasoning capacity excel in Arabic medical tasks? RQ3: Do open-source-based Arabic LLMs perform well in Arabic medical tasks? and RQ4: How does majority voting among several LLMs enhance performance in Arabic medical tasks?
+
+We address RQ1 by running the APIs of several LLMs, such as Claude Opus, Grok 3, Deepseek v3, Llama 4 Maverick, GPT-4o-mini, and GPT-4o. To answer RQ2, we utilized APIs of state-of-the-art LLMs with reasoning capabilities such as GPT-o3, Gemini Flash 2.5, and Gemini Pro 2.5. Moreover, to address RQ3, we ran Falcon 3, Fanar, and Allam. Additionally, to answer RQ4, we calculated the majority vote among the predictions of three LLMs.
+
+## 2 Related Work
+
+BioBERT Lee et al. ([2020](https://arxiv.org/html/2508.15797v1#bib.bib17)), SCIBERT Beltagy et al. ([2019](https://arxiv.org/html/2508.15797v1#bib.bib9)), and PubMedBERT Gu et al. ([2021](https://arxiv.org/html/2508.15797v1#bib.bib12)) improved biomedical NLP by training on domain-specific corpora, thereby outperforming the general BERT model Yang et al. ([2023](https://arxiv.org/html/2508.15797v1#bib.bib31)). Building on this, ClinicalBERT Alsentzer et al. ([2019](https://arxiv.org/html/2508.15797v1#bib.bib7)) enhanced performance on medical tasks by fine-tuning BERT and BioBERT using the MIMIC-III clinical dataset. Expanding further, GatorTrona Yang et al. ([2022](https://arxiv.org/html/2508.15797v1#bib.bib32)). significantly larger model trained from scratch on extensive clinical and biomedical text—demonstrated strong results across a wide range of clinical NLP tasks Yang et al. ([2023](https://arxiv.org/html/2508.15797v1#bib.bib31)).
+
+Various benchmarks have been developed to evaluate LLMs’ proficiency in medical reasoning and knowledge Huang et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib14)); Zuo et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib33)). However, significant challenges persist, ranging from ethical and safety concerns to the risk of biased outputs and inconsistent performance across different languages and cultural settings Yang et al. ([2023](https://arxiv.org/html/2508.15797v1#bib.bib31)); Nazi and Peng ([2024](https://arxiv.org/html/2508.15797v1#bib.bib19)); Daoud et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib10)).
+
+To advance medical LLMs, researchers have increasingly focused on creating multilingual medical datasets Qiu et al. ([2024](https://arxiv.org/html/2508.15797v1#bib.bib23)). They introduced MMedC, a 25.5-billion-token multilingual medical corpus, and MMedBench, a multilingual QA benchmark with rationales. By fine-tuning Llama 3 (8B), they found it outperformed all other open-source models and approached GPT-4 performance. However, Arabic was not one of the languages included Qiu et al. ([2024](https://arxiv.org/html/2508.15797v1#bib.bib23)).
+
+Arabic medical benchmarks are limited and mostly focused on question-answering tasks. While resources like MMLU Hendrycks et al. ([2020](https://arxiv.org/html/2508.15797v1#bib.bib13)), AraSTEM Mustapha et al. ([2024](https://arxiv.org/html/2508.15797v1#bib.bib18)), and AraMed Alasmari et al. ([2024](https://arxiv.org/html/2508.15797v1#bib.bib3)) offer valuable contributions, they do not fully cover the breadth of Arabic medical tasks, highlighting the need for more comprehensive benchmarking efforts. The previous issue was addressed by the MedArabiQ benchmark Daoud et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib10)).
+
+## 3 Materials and Methods
+
+### 3.1 Dataset Overview
+
+The medical data used in this work is the main dataset utilized in the AraHealthQA shared task in the MedArabiQ2025 track under one of the Arabic NLP challenges. It focuses on modern standard Arabic (MSA) and consists of 700 diverse clinical samples, covering both structured medical knowledge assessments and real-world patient-doctor interactions Daoud et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib10)). The first dataset is for multiple choice question answering (classification). Few examples of the first dataset are shown in Figure [1](https://arxiv.org/html/2508.15797v1#S3.F1). The dataset is distributed as follows:
+
+- •
+a random set of 100 multiple-choice questions to evaluate the models’ medical understanding.
+- •
+a set of 100 multiple-choice questions with bias injected to evaluate how LLMs handle ethical or culturally sensitive scenarios.
+- •
+a set of 100 fill-in-the-blank questions with choices to evaluate the model’s ability to recognize correct answers, reducing the reliance on generative capabilities.
+
+![Refer to caption](data.png)Figure 1: examples of multiple choice question answering (classification) dataset: MCQs in blue, Fill-in-the-blank questions with choices in green
+The second dataset is for open-ended question answering (generation). Few examples of the second dataset are shown in Figure [2](https://arxiv.org/html/2508.15797v1#S3.F2). The dataset is distributed as follows:
+
+- •
+a set of 100 fill-in-the-blank questions without choices to assess LLMs’ reasoning and generation capabilities.
+- •
+a set of 100 patient-doctor Q&As selected from AraMed Alasmari et al. ([2024](https://arxiv.org/html/2508.15797v1#bib.bib3)) to evaluate LLMs with online real-world scenarios from medical discussion forums.
+- •
+a 100 Q&As with grammatical error correction to handle inflectional patterns and prepare the dataset for grammatical correction.
+- •
+a 100 Q&As with LLM Modifications to mitigate potential model memorization and to assess the model’s reasoning and adaptability.
+
+The previous 700 examples were used for evaluation of LLMs. Later, another set of 200 examples (100 MCQs and 100 open-ended questions) was released for testing the LLMs’ reasoning and understanding.
+
+![Refer to caption](data2.png)Figure 2: examples of open-ended question dataset: patient-doctor Q&A in blue, Fill-in-the-blank without choices in green
+
+### 3.2 Methods
+
+We have evaluated state-of-the-art base LLMs to identify the best in terms of correct answer match accuracy in MCQs task and alignment score of generated answers in open-ended questions task. This LLM can understand the questions, identify the correct answers utilizing its embedded knowledge and reasoning capability, and generate the answers that align with those of experts.
+
+We started assessing several proprietary base LLMs for the MCQs task to evaluate the accuracy of the match between real and predicted answers. We used LLMs’ APIs in the inference mode utilizing two different zero-shot prompts specialized for the MCQs task (Prompt 1 and Prompt 2). The evaluated LLMs are: Gemini Flash 2.5 Team et al. ([2023](https://arxiv.org/html/2508.15797v1#bib.bib26)); Koray Kavukcuoglu ([2025](https://arxiv.org/html/2508.15797v1#bib.bib15)), Gemini Pro 2.5 Team et al. ([2023](https://arxiv.org/html/2508.15797v1#bib.bib26)); Koray Kavukcuoglu ([2025](https://arxiv.org/html/2508.15797v1#bib.bib15)), GPT-4o-mini OpenAI ([2024](https://arxiv.org/html/2508.15797v1#bib.bib20)), GPT-4o OpenAI ([2024](https://arxiv.org/html/2508.15797v1#bib.bib20)), GPT o3 OpenAI ([2025](https://arxiv.org/html/2508.15797v1#bib.bib21)), Grok 3 xAI ([2025](https://arxiv.org/html/2508.15797v1#bib.bib30)), Claude Opus cla ([2024](https://arxiv.org/html/2508.15797v1#bib.bib2)), Deepseek v3 DeepSeek ([2024](https://arxiv.org/html/2508.15797v1#bib.bib11)), and Llama 4, and Maverick Team ([2025b](https://arxiv.org/html/2508.15797v1#bib.bib27)).
+
+![[Uncaptioned image]](image.png)![[Uncaptioned image]](image2.png)
+Later, we selected the two LLMs that have shown high performance in the MCQs task: Gemini Flash 2.5 and Gemini Pro 2.5 and utilized them in the open-ended question task. We also demonstrated the performance of small-sized LLMs such as GPT-4o-mini in this task. We utilized three different prompts specialized for open-ended tasks (Prompt 1, Prompt 2, and Prompt 3).
+
+Additionally, open-source-based Arabic LLMs such as Falcon3 Team ([2024](https://arxiv.org/html/2508.15797v1#bib.bib28)); Technology Innovation Institute UAE(2024) ([TII](https://arxiv.org/html/2508.15797v1#bib.bib29)) (“tiiuae/Falcon3-7B-Instruct”), Fanar QCRI ([2025](https://arxiv.org/html/2508.15797v1#bib.bib22)); [Team et al. ](https://arxiv.org/html/2508.15797v1#bib.bib25) (“QCRI/Fanar-1-9B-Instruct”), and Allam ALLaM-AI ([2025](https://arxiv.org/html/2508.15797v1#bib.bib6)); Bari et al. ([2024](https://arxiv.org/html/2508.15797v1#bib.bib8)) (“ALLaM-AI/ALLaM-7B-Instruct-preview”) were assessed for both tasks.
+
+We applied zero-shot prompting across all models and tasks, setting the temperature to 0 and top_p to 1 for all tasks to ensure deterministic responses. For the open-ended question task, BERTScore was used as an evaluation metric to measure alignment between generated and expert answers. For this purpose, we used the "XLM-RoBERTa-Large model" Daoud et al. ([2025](https://arxiv.org/html/2508.15797v1#bib.bib10)), which was trained on multiple languages, including Arabic.
+
+We also evaluated Arabic Falcon Team ([2025a](https://arxiv.org/html/2508.15797v1#bib.bib24)). Since there is no API available for Arabic Falcon, we used the web interface to manually input questions into the chat version. We retained the history of previous questions to avoid clearing the context before each new query.
+
+### 3.3 Results and Discussion
+
+The results of the MCQs task using the proprietary LLMs are shown in Table [1](https://arxiv.org/html/2508.15797v1#S3.T1). The dataset has MCQs related to understanding and reasoning. While understanding involves factual knowledge, reasoning mimics how doctors make decisions.
+
+The medical reasoning capacity of GPT-o3, Gemini Flash 2.5, and Gemini Pro 2.5 makes them have superior performance compared to other LLMs. These simulate diagnostic thinking by combining multiple facts and using step-by-step reasoning to eliminate plausible but incorrect distractors in medical MCQs, which answers RQ2.
+
+| Model | Prompt | Accuracy% |
+|---|---|---|
+| GPT-4o-mini | 1 | 49 |
+| GPT-4o | 1 | 57 |
+| GPT-O3 | 1 | 72 |
+| Gemini Flash 2.5 | 1 | 73 |
+| Gemini Pro 2.5 | 1 | 75 |
+| GPT-O3 | 2 | 74 |
+| Gemini Flash 2.5 | 2 | 74 |
+| Gemini Pro 2.5 | 2 | 76 |
+| Majority voting | 2 | 77 |
+| Grok 3 | 2 | 60 |
+| Claude Opus | 2 | 49 |
+| Falcon Arabic | 2 | 38 |
+| Deepseek v3 | 2 | 56 |
+| Llama 4 Maverick | 2 | 63 |
+Table 1: Accuracy of different proprietary base LLMs using different prompts.
+Even though Claude 3, Deepseek 3, Grok 3, and Llama 4 Maverick possess strong reasoning capabilities, they exhibit modest performance on this task, likely due to limited medical knowledge or insufficient proficiency in Arabic, which addresses RQ1 and RQ2. However, Llama 4 Maverick was the best among them in terms of accuracy (63%).
+
+For sensitivity of prompt construction, we found that Prompt 2, which includes step-by-step or chain-of-thought reasoning, is generally better than simple Prompt 1 when it comes to answering medical MCQs.
+
+The significant finding in this work is that current state-of-the-art proprietary LLMs exhibit limitations in their embedded medical knowledge of various Arabic medical tasks (maximum accuracy is 76% in Gemini Pro 2.5). The source of errors in the MCQ task may stem from misunderstanding of questions, lack of medical knowledge, or lack of medical reasoning capabilities.
+
+To benefit from the capacity of each of three LLMs (GPT-O3, Gemini Flash 2.5, and Gemini Pro 2.5) in MCQs task, we applied a majority voting technique using the predictions from these LLMs, resulting in a final accuracy of 77%, which secured first place overall in the challenge, which answers RQ4.
+
+The results of the open-ended questions task using proprietary LLMs are shown in Table [2](https://arxiv.org/html/2508.15797v1#S3.T2). The dataset has questions labeled with answers. The LLMs should generate answers that are semantically aligned with reference answers.
+
+Our finding indicates that reasoning LLMs such as Gemini Flash 2.5 and Gemini Pro 2.5 have structured answers that reduce hallucination and overconfidence, as the models are less likely to guess and more likely to justify their answers. As a result, their responses often align more closely with reference answers and perform better on semantic evaluation metrics like BERTScore, which answers RQ2. Furthermore, GPT-4o-mini shows good performance in terms of BERTScore.
+
+Additionally, the three LLMs showed high sensitivity to prompts with variances in BERTScores. The maximum BERTScores were achieved by Prompt 3 that asked the LLMs to have modern standard Arabic in response, emphasized medically correct answers, and asked for concise answers that are not diluted with explanations, which usually tend to align more closely with reference answers.
+
+| Model | Prompt | BERTScore |
+|---|---|---|
+| Gemini Pro 2.5 | 1 | 0.8105 |
+| Gemini Flash 2.5 | 2 | 0.8364 |
+| GPT-4o-mini | 2 | 0.8386 |
+| GPT-4o-mini | 3 | 0.8581 |
+| Gemini Flash 2.5 | 3 | 0.8633 |
+| Gemini Pro 2.5 | 3 | 0.8644 |
+Table 2: BERTScore of proprietary base LLMs using different prompts.
+Table [3](https://arxiv.org/html/2508.15797v1#S3.T3) shows the accuracy and BERTScore of several open-source base Arabic LLMs. Among the models, Allam demonstrates relatively better performance (39%) in MCQs task, while Falcon 3 gave the best BERTScore (0.8493). This experiment indicates a lack of medical knowledge and/or medical reasoning in the base open-source Arabic LLMs compared to proprietary ones, which addresses RQ3.
+
+| Model | Task | Accuracy % |
+|---|---|---|
+| Falcon 3 | Task 1 | 36 |
+| Fanar | Task 1 | 31 |
+| Allam | Task 1 | 39 |
+| Model | Task | BERTScore |
+| Falcon 3 | Task 2 | 0.8493 |
+| Fanar | Task 2 | 0.8403 |
+| Allam | Task 2 | 0.8431 |
+Table 3: Accuracy and BERTScore of different base Arabic LLMs.
+
+## Limitations
+
+The first limitation is that multiple-choice and fill-in-the-blank with choice questions in the MedArabiQ2025 dataset are limited to only a few hundred examples. There is a clear need for larger, high-quality Arabic medical datasets to fine-tune LLMs and enhance their performance. Alternatively, storing extensive medical data in a vector database and employing retrieval-augmented generation (RAG) techniques could help retrieve more accurate and contextually relevant answers.
+
+A second limitation of this work is the absence of bias detection and mitigation techniques during the preprocessing of questions before inputting them to LLMs. Incorporating such techniques could play a significant role in improving model performance and ensuring more reliable outputs.
+
+The third limitation is that for open-ended and fill-in-the-blank questions without choices, we lack a robust metric for capturing semantic similarity. In this work, we utilized BERTScore, which often yields similar values across different responses and fails to reflect subtle nuances in semantic alignment with the correct answers.
+
+## References
+
+- (1)Arahealthqa 2025 shared task - track 2 (sub-task 1). [https://www.codabench.org/competitions/8967/#/results-tab](https://www.codabench.org/competitions/8967/#/results-tab). Accessed: 2025-08-05.
+- cla (2024) 2024. Using the api getting started. [https://docs.anthropic.com/en/api/getting-started](https://docs.anthropic.com/en/api/getting-started).
+- Alasmari et al. (2024) Ashwag Alasmari, Sarah Alhumoud, and Waad Alshammari. 2024. Aramed: Arabic medical question answering using pretrained transformer language models. In *Proceedings of the 6th Workshop on Open-Source Arabic Corpora and Processing Tools (OSACT) with Shared Tasks on Arabic LLMs Hallucination and Dialect to MSA Machine Translation@ LREC-COLING 2024*, pages 50–56.
+- AlDahoul et al. (2024a) Nouar AlDahoul, Talal Rahwan, and Yasir Zaki. 2024a. Polytc: a novel bert-based classifier to detect political leaning of youtube videos based on their titles. *Journal of Big Data*, 11(1):80.
+- AlDahoul et al. (2024b) Nouar AlDahoul, Myles Joshua Toledo Tan, Harishwar Reddy Kasireddy, and Yasir Zaki. 2024b. Advancing content moderation: Evaluating large language models for detecting sensitive content across text, images, and videos. *arXiv preprint arXiv:2411.17123*.
+- ALLaM-AI (2025) ALLaM-AI. 2025. Allam-7b-instruct-preview. [https://huggingface.co/ALLaM-AI/ALLaM-7B-Instruct-preview](https://huggingface.co/ALLaM-AI/ALLaM-7B-Instruct-preview). Accessed: 2025-07-13.
+- Alsentzer et al. (2019) Emily Alsentzer, John R Murphy, Willie Boag, Wei-Hung Weng, Di Jin, Tristan Naumann, and Matthew McDermott. 2019. Publicly available clinical bert embeddings. *arXiv preprint arXiv:1904.03323*.
+- Bari et al. (2024) M Saiful Bari, Yazeed Alnumay, Norah A Alzahrani, Nouf M Alotaibi, Hisham A Alyahya, Sultan AlRashed, Faisal A Mirza, Shaykhah Z Alsubaie, Hassan A Alahmed, Ghadah Alabduljabbar, et al. 2024. Allam: Large language models for arabic and english. *arXiv preprint arXiv:2407.15390*.
+- Beltagy et al. (2019) Iz Beltagy, Kyle Lo, and Arman Cohan. 2019. Scibert: A pretrained language model for scientific text. *arXiv preprint arXiv:1903.10676*.
+- Daoud et al. (2025) Mouath Abu Daoud, Chaimae Abouzahir, Leen Kharouf, Walid Al-Eisawi, Nizar Habash, and Farah E Shamout. 2025. Medarabiq: Benchmarking large language models on arabic medical tasks. *arXiv preprint arXiv:2505.03427*.
+- DeepSeek (2024) DeepSeek. 2024. Deepseek chat. [https://www.deepseek.com](https://www.deepseek.com). Accessed: July 13, 2025.
+- Gu et al. (2021) Yu Gu, Robert Tinn, Hao Cheng, Michael Lucas, Naoto Usuyama, Xiaodong Liu, Tristan Naumann, Jianfeng Gao, and Hoifung Poon. 2021. Domain-specific language model pretraining for biomedical natural language processing. *ACM Transactions on Computing for Healthcare (HEALTH)*, 3(1):1–23.
+- Hendrycks et al. (2020) Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and Jacob Steinhardt. 2020. Measuring massive multitask language understanding. *arXiv preprint arXiv:2009.03300*.
+- Huang et al. (2025) Zhongzhen Huang, Gui Geng, Shengyi Hua, Zhen Huang, Haoyang Zou, Shaoting Zhang, Pengfei Liu, and Xiaofan Zhang. 2025. O1 replication journey–part 3: Inference-time scaling for medical reasoning. *arXiv preprint arXiv:2501.06458*.
+- Koray Kavukcuoglu (2025) Koray Kavukcuoglu. 2025. Gemini 2.5: Our most intelligent ai model. [https://blog.google/technology/google-deepmind/gemini-model-thinking-updates-march-2025/#gemini-2-5-thinking](https://blog.google/technology/google-deepmind/gemini-model-thinking-updates-march-2025/#gemini-2-5-thinking).
+- Kuo et al. (2025) Chen Wei Kuo, Kevin Chu, Nouar AlDahoul, Hazem Ibrahim, Talal Rahwan, and Yasir Zaki. 2025. Neutralizing the narrative: Ai-powered debiasing of online news articles. *arXiv preprint arXiv:2504.03520*.
+- Lee et al. (2020) Jinhyuk Lee, Wonjin Yoon, Sungdong Kim, Donghyeon Kim, Sunkyu Kim, Chan Ho So, and Jaewoo Kang. 2020. Biobert: a pre-trained biomedical language representation model for biomedical text mining. *Bioinformatics*, 36(4):1234–1240.
+- Mustapha et al. (2024) Ahmad Mustapha, Hadi Al-Khansa, Hadi Al-Mubasher, Aya Mourad, Ranam Hamoud, Hasan El-Husseini, Marwah Al-Sakkaf, and Mariette Awad. 2024. Arastem: A native arabic multiple choice question benchmark for evaluating llms knowledge in stem subjects. *arXiv preprint arXiv:2501.00559*.
+- Nazi and Peng (2024) Zabir Al Nazi and Wei Peng. 2024. Large language models in healthcare and medical domain: A review. In *Informatics*, volume 11, page 57. MDPI.
+- OpenAI (2024) OpenAI. 2024. [Gpt-4o](https://platform.openai.com/docs/models/gpt-4o).
+- OpenAI (2025) OpenAI. 2025. Introducing o3 and o4-mini. [https://openai.com/index/introducing-o3-and-o4-mini/](https://openai.com/index/introducing-o3-and-o4-mini/). Accessed: 2025-07-13.
+- QCRI (2025) QCRI. 2025. Fanar-1-9b-instruct. [https://huggingface.co/QCRI/Fanar-1-9B-Instruct](https://huggingface.co/QCRI/Fanar-1-9B-Instruct). Accessed: 2025-07-13.
+- Qiu et al. (2024) Pengcheng Qiu, Chaoyi Wu, Xiaoman Zhang, Weixiong Lin, Haicheng Wang, Ya Zhang, Yanfeng Wang, and Weidi Xie. 2024. Towards building multilingual language model for medicine. *Nature Communications*, 15(1):8384.
+- Team (2025a) Falcon-LLM Team. 2025a. [Falcon-arabic: A breakthrough in arabic language models](https://falcon-lm.github.io/blog/falcon-arabic).
+- (25) Fanar Team, Ummar Abbas, Mohammad Shahmeer Ahmad, Firoj Alam, Enes Altinisik, Ehsannedin Asgari, Yazan Boshmaf, Sabri Boughorbel, Sanjay Chawla, Shammur Chowdhury, Fahim Dalvi, Kareem Darwish, Nadir Durrani, Mohamed Elfeky, Ahmed Elmagarmid, Mohamed Eltabakh, Masoomali Fatehkia, Anastasios Fragkopoulos, Maram Hasanain, Majd Hawasly, Mus’ab Husaini, Soon-Gyo Jung, Ji Kim Lucas, Walid Magdy, Safa Messaoud, Abubakr Mohamed, Tasnim Mohiuddin, Basel Mousi, Hamdy Mubarak, Ahmad Musleh, Zan Naeem, Mourad Ouzzani, Dorde Popovic, Amin Sadeghi, Husrev Taha Sencar, Mohammed Shinoy, Omar Sinan, Yifan Zhang, Ahmed Ali, Yassine El Kheir, Xiaosong Ma, and Chaoyi Ruan. Fanar: An arabic-centric multimodal generative ai platform.
+- Team et al. (2023) Gemini Team, Rohan Anil, Sebastian Borgeaud, Yonghui Wu, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew M Dai, Anja Hauth, et al. 2023. Gemini: a family of highly capable multimodal models. *arXiv preprint arXiv:2312.11805*.
+- Team (2025b) Meta Team. 2025b. [The llama 4 herd: The beginning of a new era of natively multimodal ai innovation](https://ai.meta.com/blog/llama-4-multimodal-intelligence/).
+- Team (2024) TII Team. 2024. The falcon 3 family of open models.
+- Technology Innovation Institute UAE(2024) (TII)Technology Innovation Institute (TII) UAE. 2024. Falcon3-7b-instruct. [https://huggingface.co/tiiuae/Falcon3-7B-Instruct](https://huggingface.co/tiiuae/Falcon3-7B-Instruct).
+- xAI (2025) xAI. 2025. [Grok 3 beta — the age of reasoning agents](https://x.ai/news/grok-3).
+- Yang et al. (2023) Rui Yang, Ting Fang Tan, Wei Lu, Arun James Thirunavukarasu, Daniel Shu Wei Ting, and Nan Liu. 2023. Large language models in health care: Development, applications, and challenges. *Health Care Science*, 2(4):255–263.
+- Yang et al. (2022) Xi Yang, Aokun Chen, Nima PourNejatian, Hoo Chang Shin, Kaleb E Smith, Christopher Parisien, Colin Compas, Cheryl Martin, Anthony B Costa, Mona G Flores, et al. 2022. A large language model for electronic health records. *NPJ digital medicine*, 5(1):194.
+- Zuo et al. (2025) Yuxin Zuo, Shang Qu, Yifei Li, Zhangren Chen, Xuekai Zhu, Ermo Hua, Kaiyan Zhang, Ning Ding, and Bowen Zhou. 2025. Medxpertqa: Benchmarking expert-level medical reasoning and understanding. *arXiv preprint arXiv:2501.18362*.

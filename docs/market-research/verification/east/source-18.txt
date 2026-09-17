@@ -1,0 +1,69 @@
+# HUMAIN Unveils HUMAIN ONE, Its Next-Generation Agentic AI Operating System, at Future Investment Initiative (FII9) in Riyadh
+
+## News provided by
+
+[**HUMAIN** ](/news/humain/)
+Oct 28, 2025, 07:12 ET
+
+RIYADH, Saudi Arabia, Oct. 28, 2025 /PRNewswire/ -- HUMAIN, a global AI company under the Public Investment Fund (PIF) building end-to-end AI stack capabilities, today announced the launch of HUMAIN ONE, its proprietary agentic AI operating system, at the 9th edition of the Future Investment Initiative (FII9) in Riyadh.
+
+Designed to redefine enterprise AI, HUMAIN ONE automates complex back-office operations ensuring tasks are completed accurately, compliantly, and on time while reducing governance complexity and enabling smarter, more agile organizations.
+
+HUMAIN ONE unifies enterprise functions including HR, finance, procurement, and productivity within a single language-based interface. Users simply express their intent, whether requesting data, running analytics, or executing actions, and HUMAIN ONE understands the context and carries out the task across connected systems and agents, eliminating the need to navigate multiple tools.
+
+Enterprises can seamlessly integrate HUMAIN ONE with existing platforms or build directly on HUMAIN's agent-native systems of record, already live for HR and expanding across other enterprise domains.
+
+Powered by HUMAIN's agentic orchestration engine and its Arabic-first large language model, ALLAM, HUMAIN ONE delivers multimodal reasoning, automation, and human collaboration in a unified experience. The system allows AI to handle operational workloads, freeing people to focus on creativity, strategy, and direction.
+
+At FII9, attendees of the announcement heard from HUMAIN CEO, Tareq Amin, who emphasized: "With HUMAIN ONE, we are redefining enterprise computing by making AI an active partner that understands your goals, anticipates needs, and executes tasks autonomously. Moving from cluttered icons to streamlined intelligence, this is an adaptive intelligence layer built to elevate productivity and creativity across every role in the enterprise." Following the keynote, Saejong Lee, Head of HUMAIN ONE, delivered a live demonstration, showcasing the system's capabilities to attendees.
+
+The launch of HUMAIN ONE follows the debut of the HUMAIN Horizon Pro AI PC at the Qualcomm Snapdragon Summit last month, a flagship device purpose-built to run HUMAIN's AI-native operating system. The AI PC features a dedicated HUMAIN Button that instantly activates the HUMAIN ONE system.
+
+HUMAIN ONE reimagines the modern enterprise workspace by connecting people, data, and AI across departments through natural language.
+
+**Enterprise Agents for Every Function:**
+
+**Human Resources (HR):** HUMAIN ONE empowers HR teams through intelligent, autonomous agents that streamline every aspect of people operations:
+
+- Leave Manager: Automates leave requests, approvals, and tracking with full policy compliance.
+- Expense & Travel Manager: Simplifies business trip planning, reimbursements, and expense approvals.
+- Payroll Manager: Ensures accurate, secure, and timely payroll processing with real-time visibility.
+- Recruitment Manager: Manages candidate sourcing, screening, and onboarding in collaboration with hiring teams.
+- Employee Support Manager: Acts as a personal assistant for every employee — instantly handling HR policy queries, payslip requests, and company documentation through natural language interaction.
+**Productivity & Collaboration**: HUMAIN ONE shifts enterprise productivity from managing inputs to maximizing outcomes, eliminating context switching and fragmented workflows:
+
+- HUMAIN Secretariat: A proactive executive assistant that manages meetings, calendars, tasks, and files in one unified workspace.
+- HUMAIN Search: A next-generation research tool delivering state-of-the-art accuracy and comprehensive insights in under three minutes.
+- HUMAIN Connect: A video conferencing solution enhanced with agentic capabilities, launching in Q4 2025, enabling live meeting summaries, action tracking, and context recall.
+- HUMAIN Workhub: An integrated office suite built directly into the HUMAIN ONE interface, available Q1 2026, designed for seamless document creation, collaboration, and agentic workflow execution.
+- HUMAIN Code: A no-code/low-code environment empowering developers and enterprise teams to build custom agents using natural language prompts.
+**Procurement & Finance Expansion**: HUMAIN ONE is extending its agentic ecosystem into Procurement and Finance, introducing agents like:
+
+- Contract Manager: An intelligent contract management system that automates NDA creation and approval with government-certified digital signatures and secure audit trails.
+As part of its agentic enterprise vision, HUMAIN is also developing core system-of-record frameworks for Procurement and Finance, allowing organizations to either transition fully to HUMAIN's infrastructure or integrate existing platforms while still benefiting from the power of HUMAIN ONE's intelligence layer.
+
+**The HUMAIN Marketplace
+**To accelerate innovation and empower global collaboration, HUMAIN is launching the HUMAIN Marketplace, a platform where developers and enterprises can build, publish, and monetize their own agents using HUMAIN's open standards. This ecosystem enables partners to extend HUMAIN ONE's capabilities, creating specialized AI agents that can be shared, deployed, and scaled worldwide.
+
+"Our vision goes beyond a single OS. We're creating an open ecosystem for intelligent collaboration," added Amin. "By empowering organizations and developers to build and distribute their own agents, HUMAIN ONE becomes the foundation for an entirely new digital economy driven by agentic intelligence."
+
+**HUMAIN ONE Partnerships Launch at FII9**
+
+During the FII9 launch event, HUMAIN highlighted several strategic collaborations that will accelerate the growth of the HUMAIN ONE ecosystem:
+
+- **EY:** A strategic partnership to explore how EY's proprietary AI assets, across HR, tax, accounting, governance, and corporate development, can be reimagined and deployed as intelligent HUMAIN ONE agents.
+- **Groq:** All AI models powering HUMAIN ONE are running on Groq's ultra-fast inference infrastructure, hosted in Dammam, Saudi Arabia.
+- **Replit:** A transformative partnership aimed at turning the Kingdom into a Nation of AI Coders by empowering every student, developer, and enterprise to build intelligent applications and contribute to the HUMAIN ecosystem.
+**About HUMAIN:**
+
+HUMAIN, a PIF company, is a global artificial intelligence company delivering full-stack AI capabilities across four core areas: next-generation data centers, hyper-performance infrastructure & cloud platforms, advanced AI Models, including the world's most advanced Arabic LLMs built in the Arab world, and transformative AI Solutions that combine deep sector insight with real-world execution.
+
+HUMAIN's end-to-end model serves both public and private sector organizations, unlocking exponential value across all industries, driving transformation and strengthening capabilities through human-AI synergies. With a growing portfolio of sector-specific AI products and a core mission to drive IP leadership and talent supremacy world-wide, HUMAIN is engineered for global competitiveness and national distinction.
+
+Press Contact:
+Hana Nemec
+[[email protected]](/cdn-cgi/l/email-protection#562624163e233b373f387835393b)
+
+SOURCE HUMAIN
+
+![](https://rt.prnewswire.com/rt.gif?NewsItemId=NY08840&Transmission_Id=202510280712PR_NEWS_USPR_____NY08840&DateId=20251028)

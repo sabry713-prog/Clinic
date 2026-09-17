@@ -1,0 +1,46 @@
+[Blog](https://www.synapxe.sg/media/blog)
+
+[Events](https://www.synapxe.sg/media/events)
+
+[News](https://www.synapxe.sg/media/news)
+
+[Media Releases](https://www.synapxe.sg/media/media-releases)
+
+[Publications](https://www.synapxe.sg/media/publications)
+
+[All](https://www.synapxe.sg/media/all)
+
+17 Sep 2024
+
+[Artificial Intelligence](https://www.synapxe.sg/media/category/#sxatags=artificial-intelligence)
+
+# SingHealth pilots GPT tool with Synapxe for clinician notes to improve patient-doctor interactions
+
+Share this article
+
+
+![Singapore public healthcare cluster SingHealth is progressively launching Note Buddy, a GenAI-powered documentation tool, across all its institutions.](https://mc-ae878fb3-424b-4ec4-86b1-1740-cdn-endpoint.azureedge.net/-/media/project/synapxe/media/news/2024/sep/note-buddy/note-buddy-inarticle-750x423-px.png?rev=2441f63acb02419abaef9193929bbd05&hash=D0FD1B6EF6D64696B6CE05892BE4AB46)
+
+_Image Source: Canva_
+
+Singapore public healthcare cluster, SingHealth, has been progressively launching Note Buddy, a GenAI-powered documentation tool, across all its institutions from 4th September this year to assist healthcare professionals in note taking during consultations.
+
+The tool taps on the ability of generative pre-trained transformer (GPTs) to automatically transcribe and summarise doctor-patient conversations in real-time, and even across Singapore’s four main languages – English, Mandarin, Malay and Tamil.
+
+The tool has been launched on a secure GPT platform, known as Tandem, developed by the national health tech agency Synapxe.
+
+By leveraging a common platform like Tandem, GenAI innovations such as Note Buddy can eventually be deployed across other public healthcare institutions, said Synapxe’s Director of Data aNalytics and AI, and Chief Data Officer, Andy Ta, in an official statement.
+
+View the full article here: [https://govinsider.asia/intl-en/article/singhealth-pilots-gpt-tool-for-clinician-notes-to-improve-patient-doctor-interactions](https://govinsider.asia/intl-en/article/singhealth-pilots-gpt-tool-for-clinician-notes-to-improve-patient-doctor-interactions)
+
+Related articles
+
+No results
+
+
+
+X
+
+By continuing to use and navigate this website, you consent to the use of cookies in accordance with our [Privacy Policy](https://www.synapxe.sg/privacy-policy).
+
+Confirm

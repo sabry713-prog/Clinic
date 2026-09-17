@@ -1,0 +1,866 @@
+## Sources
+
+[1] https://waseel.com/wrcm — NPHIES Integration & Revenue Cycle Management | WASEEL
+    > "Ensure seamless NPHIES integration and streamlined insurance operations with our advanced WRCM.
+Stay compliant with Saudi healthcare standards!"
+    > "Streamline your revenue processes to speed up reimbursements and maximize profits. Ensure consistent payment collection at your facility!"
+    > "Ensure NPHIES integration and optimize compliance with Saudi healthcare standards (including CHI, Zatca)."
+    > "Automate claims processing and pre-authorization with our WRCM engine. Reduce overhead and enhance speed!"
+    > "Unlock seamless KSA healthcare coding and compliance with Waseel’s advanced medical code mapping."
+[2] https://waseel.com/healthcare-centers — HEALTHCARE CENTERS - Waseel
+    > "- An integrated platform that centralizes all administrative operations in one place
+- Smart solutions that automate routine tasks and reduce human errors
+- Seamless integration with government systems and relevant authorities"
+    > "- Reduce claim rejections by up to 20% or less
+- Advanced financial reports and analytics for data-driven decision-making**
+**
+- Accelerate the revenue cycle and improve cash flow"
+    > "- Continuous automatic updates to ensure alignment with Saudi regulations
+- Internal monitoring and control systems to maintain the highest quality standards
+- Tailored solutions to meet local requirements"
+    > "Gain full control over drug spending with real-time formulary checks and automated prior authorizations. Our PBM solution ensures medication management is efficient, accurate, and fully compliant with local healthcare standards."
+    > "- Helps reduce unnecessary medication costs
+- Eliminates claim rejections due to drug coverage mismatches
+- Fully compliant with Saudi FDA and insurer formularies"
+    > "Streamline insurance operations and maximize revenue in one platform. Our WRCM solution combines Waseel Connects seamless NPHIES integration with smart RCM automation to reduce claim rejections and improve financial performance — all while ensuring full compliance with Saudi regulations (NPHIES, CHI, ZATCA)."
+    > "- Accelerated revenue cycles through automated workflows
+- Real-time eligibility checks via NPHIES integration
+- Complete financial visibility with BI dashboards"
+    > "****Transform your healthcare facility with our cloud-based HIS, designed to optimize operational efficiency and enhance patient care coordination."
+    > "- Lowers IT costs with an integrated cloud platform
+- Enhances clinical workflows through a unified EMR system
+- Reduces administrative errors
+- Provides 24/7 secure access with full Saudi data compliance"
+    > "Dawy improves patient engagement and reduces no-shows through intelligent scheduling and accessible self-service tools."
+    > "- Increases bookings through patient self-service
+- Decreases administrative workload
+- Includes integrated insurance verification
+****"
+    > "Our OTD engine enhances claim accuracy through real-time validation against insurers’ medical policies and streamlines the approval process."
+    > "- Reduces denials with automated service validation
+- Speeds up approvals with smart rule checks
+- Ensures continuous compliance with Saudi insurance regulations
+- Seamlessly integrates into existing healthcare workflows"
+[4] https://www.santechture.com/our-products/thynk — (no title)
+    > "Validate claims using 4 million+ rules and RCM-expert intelligence to 
+safeguard your margins and your mission."
+    > "Revenue, 37,642, Total Claims, 134 Claims, High Risk, 19 Alerts, Moderate Risk, 229 Alerts, Denials, 0, Risks Identified, RULE ID, SEVERITY, AT RISK"
+    > "Warning, $8,740.50, New Claim, Analysing, Risk Category, Billing, 87, Exclusion, 21, MNEC Coding, 315, MNEC Crosswalk, 38, Validation, 64"
+    > "Insurance payers are applying stricter review practices. 
+Relying on manual RCM is no longer a sustainable option."
+    > "Manual process, Catch these issues with, Thynk, Physicians, Billers, Coders, Payer Protocols, Coding Guidelines, Medical Necessity, AI Denial Trends, Challenge #1"
+    > "With rejections deviating by 15 to 25% between payers, manual teams cannot keep pace with regulatory updates."
+    > "Physicians are too focused on patient care to 
+navigate complex insurance circulars, leadingâ¨â¨
+to documentation gaps."
+    > "Every rejected claim is delayed cash flow. Every denied claim is a possible loss of revenue."
+    > "Eliminate administrative bottlenecks by processing thousands of historical or pending claims in seconds. Thynk identifies financial or compliance risks across a variety of sources:"
+    > "No integration is required; perform batch processing of claim files to minimize denial risk before submission."
+    > "From patient eligibility and medical necessity to compliance standards, we cover the entire patient journey."
+    > "Reduce initial denial rates by up to 80% and safeguard your facility's financial sustainability."
+    > "Turn risks into actionable positive outcomes through automated workflows, auto corrections and agentic AI tasks."
+[5] https://www.santechture.com/our-products/verity — (no title)
+    > "AI powered CDI review and clinical coding to boost productivity and safeguard 
+your revenue and significantly reduce compliance risks."
+    > "ICD-10, CPT, ACHT, Treatment Plan, DRG, Condition Bundles, Medical Interventions, HCC, DIAGNOSIS GROUPINGS, UNOPTIMISED INPUTS, Raw Clinical Note, Missing details, Physician Note, Incomplete note, Consultation Summary, Unstructured"
+    > "Clinical coding is a slow and manual process that exhausts teams and delays the entire reimbursement cycle."
+    > "Fast moving regulatory standards and protocol changes make it nearly impossible for manual processes to stay 100% compliant."
+    > "Inconsistent documentation and coding gaps across claims lead to avoidable higher rejections and revenue loss."
+    > "Clinical note, Elevate quality with, Verity, AI review, Gap identified, ICD-10, Suggested code"
+    > "Suggestions highlight the correct and identify gaps in realtime, slashing search time and boosting physician documentation and coding accuracy and productivity."
+    > "Full GCC localised support for the Saudi Billing System (SBS), ICD-10-AM & CM, CPT, and ACHI standards."
+    > "Built-in checks for medical necessity and coding rules protect your reimbursement integrity during the coding process."
+    > "Verity embeds directly into your existing infrastructure, ensuring advanced clinical validation occurs within your team's workflow."
+    > "Effortless, rapid, low-code integration via browser extension with web-based EMRs across physician and coding workflows."
+    > "Automatically route and prioritise incoming claims directly into smart task lists for your coding and CDI team."
+    > "Our solutions provide the most regulatory comprehensive compliance coveringâ¨â¨
+all coding and CDI standards in the GCC."
+[6] https://assets.solventum.com/is/content/mmmspinco/revenue-integrity-prebill-fact-sheet-his-rc-enpdf — Solventum™ Revenue Integrity System for Prebill Review
+    > "documentation issues at the point of care. 
+Flag high-risk claims before submission, 
+helping maximize reimbursement and reduce 
+revenue leakage."
+    > "billing and utilization review teams 
+together on a single platform. Streamline 
+communication, reduce administrative 
+burden and foster cross-functional 
+collaboration."
+    > "monitor patterns in clinical and financial data, 
+updating recommendations in near real time 
+with machine learning. Stay ahead of payer 
+rule changes and regulatory updates without 
+manual intervention."
+    > "The Solventum Revenue Integrity System 
+(RIS) is an AI-powered platform designed 
+to help healthcare organizations 
+proactively prevent claim denials, reduce 
+revenue leakage and optimize financial 
+performance. By integrating clinical, 
+coding and payment data, Solventum RIS 
+Prebill Review delivers real-time insights 
+and actionable recommendations, 
+transforming the revenue cycle from 
+a reactive process to a strategic, 
+preventive workflow."
+    > "Integrated AI-driven workflow: RIS analyzes documentation and coding in real time, 
+flagging high-risk claims and providing targeted recommendations for intervention 
+before claims are submitted. This proactive approach shifts denial management 
+upstream, reducing rework and administrative costs."
+    > "Real-time recommendations: Machine learning models surface actionable insights 
+within existing workflows, guiding staff to address gaps and mitigate risks as they arise. 
+This includes diagnosis-related group (DRG) validation, code suggestions and prompts 
+for missing documentation."
+    > "Comprehensive reporting: Advanced dashboards link upstream clinical activities to 
+downstream payment outcomes, enabling leaders to drill down by facility, provider or 
+DRG. This transparency supports operational decision-making and return on investment 
+(ROI) tracking."
+    > "the system becomes more precise, reducing low-yield reviews and focusing resources 
+on the most impactful cases."
+    > "Solventum is trusted by over 5,000 healthcare organizations and is recognized for its leadership 
+in eliminating revenue cycle waste and driving value-based outcomes. By integrating AI across 
+connected workflows, Solventum empowers teams to move from chasing denials to preventing 
+them, delivering measurable financial gains, operational efficiency and improved patient experience."
+    > "For more information or to request a demo, explore the Solventum™ Revenue Integrity System on 
+our website."
+    > "For more information on how our software and services can assist 
+your organization, contact your Solventum sales representative, 
+call us at 800-367-2447, or visit us online at Solventum.com."
+    > "© Solventum 2025. All rights reserved. Solventum and the S logo 
+are trademarks of Solventum or its affiliates. Other trademarks 
+are the property of their respective owners. Please recycle. 
+Printed in U.S.A. Published 11/25"
+[7] https://nanohealthsuite.com/health-information-technology — Health Information Technology — NANO Health Suite
+    > "A patient talks to a clinician. NANO Health turns that moment into a complete record, an accurate code, a clean claim and a national-scale insight — one connected platform for providers, payers and regulators across 30+ countries."
+    > "![Every encounter tells a story. We turn it into intelligence.](/_next/image?url=https%3A%2F%2Fbackend.nanohealthsuite.com%2Fimg%2FCollaborative-Intelligence-1643716492.png&w=3840&q=75)"
+    > "AI that reads every record the way an auditor would: extracting clinical data with 99% accuracy, validating documentation, suggesting ICD-10, CPT and DRG codes in real time — while DoctorSense turns the patient conversation itself into a structured note, in Arabic and English, before the doctor leaves the room."
+    > "Providers, payers and regulators read the same record differently. The suite serves each of them from one source of truth."
+    > "Adjudicate faster with coded, validated claims — and manage every class of policy on one system."
+    > "National-scale grouping, costing and compliance data for the decisions only governments can make."
+    > "> I have had the experience of using the Nano Health Suite's "Pharmacy Benefit Manager" since 2018 and needless to say, they have the best service and a great team to do the job for you. Nano Health Suite's development team did a very professional job in providing us with the best claims-handling software. We are satisfied with the solution and communication flow throughout the project development and deployment."
+    > "> We have been using Nano Health Suite's "Electronic Medical Records" Software for more than 5 years now & the best part about the solution is the easy navigation between the medical, appointments, and electronic modules. Live customer support is a perfect 10 in resolving issues and promptness to help. Its integration with Riayati to send electronic claims is an added bonus. I would highly recommend this product and NHS team to all my contacts."
+    > "> Luckily for Nano Health Suite, you have the best of both worlds, the best Insurance Management Solution, and Great Customer Service team. As a new client of your firm, I really appreciate your IMS software. But what I am most impressed with is the level of customer service your ever-ready-to-help staff has been providing. And it has not been just one person or a team, if I need to call out, from the start of the sales team approaching us for the demo of the product to the support team answering questions."
+    > "“Healthcare data should work as hard as the people who create it. We build the systems that make that true.”"
+    > "See how NANO Health applies artificial intelligence across the record — from the moment of care to the insight a health system acts on."
+    > "Health information technology is the set of systems that capture, code, exchange and analyse clinical and administrative healthcare data. In practice it spans the electronic medical record, clinical coding and DRG grouping, revenue cycle and claims, patient-level costing, and the analytics that turn all of it into decisions. NANO Health Suite covers that span as one connected platform rather than a set of disconnected tools."
+    > "NANO CSS provides AI-assisted coding support, NANO DRG performs grouping tuned to regional standards, and the Coding Rules Wizard lets teams encode and maintain their own compliance rules. Terminology management keeps code sets consistent across systems, so the same clinical concept means the same thing everywhere in the record."
+    > "Yes. Integration is a first-class part of the platform: NANO Healthcare API Services expose the suite to other systems, the data management portfolio covers interoperability and integral care, and OMOP conversion maps existing data into a common research model. The platform is designed to sit alongside systems you already run rather than replace them."
+    > "Three groups, from one source of truth: healthcare providers and clinicians who create the record; payers and insurers who adjudicate and reimburse against it; and regulators and public health authorities who need national-scale grouping, costing and compliance data. NANO Health has served these audiences for over 22 years across more than 30 countries."
+    > "NANO AI CDI 360 is NANO Health's clinical documentation integrity platform: AI that extracts clinical data from records with 99% accuracy, validates documentation for gaps, suggests ICD-10, CPT and DRG codes in real time, and monitors compliance. Its clinician-facing copilot, DoctorSense — accredited by SDAIA and used by 30,000+ healthcare professionals — turns the patient conversation into a structured note in Arabic and English."
+    > "Yes. The platform and this site are bilingual English and Arabic with full right-to-left support, and NANO Health has long-standing deployments across the MENA region including regulatory authorities in Saudi Arabia and health systems in the United Arab Emirates."
+    > "- Talk to an engineer, not a script
+- Demos tailored to your data, not slides
+- Present across 30+ countries"
+    > "No forms disappearing into the void — a NANO Health specialist reads every message and replies within one business day."
+[8] https://nanohealthsuite.com/location/saudi-arabia — Get in touch
+    > "## Explore and learn about Nano health services how new technologies are shaping the industry and how Nano health can drive innovation in healthcare businesses."
+    > "Whether you require improving operational efficiency, optimizing financial performance, or magnifying the consumer experience, we offer business insight and innovative technology to benefit you meet your objectives."
+    > "**Address:**4212 Saud Ibn Abdulaziz Ibn Muhammad Branch, Al Muruj Dist, Riyadh Kingdom of Saudi Arabia"
+    > "Submit the subsequent form. Our consulting representative will evaluate your requirements and email you with the best pricing convenience."
+[10] https://sahl.ai — Sahl AI - Effortless Clinical Note Taking
+    > "We are raising money to grow Sahl AI. You can invest until 30 September 2026.
+Ask to invest
+logo
+EN AR
+[Demo](https://calendly.com/ammar-sahl/30min)"
+    > "# The copilot that
+doctors love
+Accredited by SDAIA. Trusted by leading hospitals. Built for
+Arabic-speaking clinicians.
+Trusted by healthcare providers
+PDPL PDPL Compliant
+ISO ISO 27001/27701 Certified
+Used in 20+ specialties Used in 20+ specialties
+HIPAA HIPAA Compliant
+GDPR GDPR Compliant
+Sahl AI Interface"
+    > "## SDAIA - AI Service Provider Accreditation Certificate holder
+### Proudly made in Saudi Arabia
+#### Backed by Riyadh First Health Cluster
+Through our partnership with Riyadh First Health Cluster, we built the largest known medical dataset in Arabic in Saudi Arabia"
+    > "## Your hospital is losing 2 million SAR every month
+### 40% better than Microsoft, Google & Open AI
+Here's how we did it: [Read here](https://medium.com/@umair_31508/redefining-healthcare-documentation-the-power-of-our-speech-recognition-model-542a1f8b0e65)"
+    > "## Loved by Health Care Leaders
+### Dr. Saleh Altamimi
+CEO, Riyadh First Health Cluster, Health Holding Company
+“ It is a simple solution that I believe will be very useful to many. AI scribes are taking over, and this is just the beginning... ”"
+    > "## Sahl AI scores 93% on a clinically validated tool
+### 58
+Summaries Reviewed
+[Read our case study here](https://app.sahl.ai/case-study)"
+    > "## Our Story
+April 2023
+|
+Incorporation of Sahl AI in UK
+May 2023
+|
+Developed First Prototype
+July 2023
+|
+Signed a Letter of Intent with Riyadh First Health Cluster
+August 2023
+|
+Development Commences
+October 2023
+|
+$425k investment raised
+December 2023
+|
+Ethics approval to conduct research study (Data Collection)
+March 2024
+|
+Built MVP
+June 2024
+|
+Got our first sale and deployed across 9 specialty clinics in 2 hospitals
+October 2024
+|
+$850K investment raised
+Q4 2024
+|
+Trial with ~2000 physicians at 3 more hospitals"
+    > "# Made by healthcare workers for healthcare workers
+Paediatric ER Consultant, Al-Iman Hospital
+This is crazy. Thank you for this. This will save time.
+Dr. Fawaz Eldidri
+Maternity Consultant, KSMC
+Accept Decline
+footer.logo_alt [info@sahl.ai](mailto:info@sahl.ai)
+Saudi Made"
+    > "## Product
+* [Request Demo](https://calendly.com/ammar-sahl/30min)
+* [Sahl AI App](https://app.sahl.ai)"
+    > "### Resources
+* [Video Tour](https://www.youtube.com/watch?v=hHA1RWXV_H0)
+* [Dr Saleh Message](https://www.youtube.com/watch?v=vjT12vBp108)
+* [Documentation](https://docs.sahl.ai)
+* [Blog](https://app.sahl.ai/blogs)
+* Cookie Policy
+* Privacy Policy
+* Terms of Service
+Proudly made in Saudi Arabia 🇸🇦
+© Sahl AI
+* [](https://www.linkedin.com/company/sahl-ai)"
+[11] https://medinform.jmir.org/2026/1/e83335 — A Bilingual Arabic-English Ambient AI Scribe for Clinical Documentation: Prospective Evaluation Study
+    > "Physicians devote a significant portion of their time to the administrative task of documenting medical encounters with patients [1]. Clinical documentation serves critical functions, including care continuity, quality assurance, and in many jurisdictions, medico-legal protection. It is an essential component for ensuring patient safety and also impacts subsequent tasks, such as submitting insurance claims [2]. The digitization of medical records and the widespread adoption of electronic health record systems have substantially increased the documentation burden on physicians, leading to increased physician burnout [3]. Furthermore, clinical documentation has become a distraction, changing the traditional doctor-patient relationship into a doctor-computer-patient interaction [4]."
+    > "Clinical documentation is typically completed either during or after patient encounters. Documenting in real time may interrupt the clinical interaction, whereas postvisit documentation may add to physician workload and relies on recall rather than contemporaneous capture. Ambient artificial intelligence (AI) scribes automate clinical note generation and improve the doctor-patient relationship, freeing physicians to focus on personalized care [56]. This study evaluates Sahl AI, an AI tool for Arabic and English, using the modified 9-item Physician Documentation Quality Instrument (PDQI-9) tool. This research is unique in its dual-language focus and is particularly relevant in Arabic-speaking countries where clinical encounters are conducted in Arabic, while medical documentation is recorded in English. This supports health care providers who routinely switch between languages during consultations when eliciting patient histories and documenting care."
+    > "Arabic is often categorized as a low-resource language in speech technologies due to its complex characteristics. These include its writing system with positional variance and diacritical marks, phonology that features emphatic consonants and vowel length distinctions, and grammar that involves root-based morphology and case-gender agreement. The variability is further compounded by numerous dialects and diglossia, as well as influence from other languages and its significant religious context. This necessitates ongoing translation by the physicians, introducing cognitive strain. Although ambient AI scribes offer a potential solution to mitigate this burden, the effectiveness of bilingual systems in such linguistically complex environments remains insufficiently examined. Therefore, the aim of this study was to develop and assess the feasibility and physician experience of a bilingual Arabic-English medical ambient AI scribe in routine clinical practice."
+    > "The study was a prospective, single-arm feasibility pilot study evaluating the performance of Sahl AI, a bilingual ambient AI scribe, in routine physician-patient consultations. The primary objectives were to (1) fine-tune an AI pipeline for automated clinical documentation generation and subsequently (2) evaluate the usability of Sahl AI and its impact on the physicians’ workflow and the quality of documentation."
+    > "The study was conducted between December 23, 2023, and November 28, 2024, across outpatient clinics, inpatient services, and primary care centers within Riyadh First Health Cluster (Riyadh, Saudi Arabia). The study comprised 2 stages: (1) a development stage, during which data collection and a feasibility evaluation were performed, and (2) an implementation stage, in which the fine-tuned AI pipeline was assessed in a real-world clinical setting (Figure 1A)."
+    > "(A) Two-stage study design. Stage 1: iterative development including multidialect Arabic audio collection, manual transcription by bilingual research assistants, ASR and LLM fine-tuning, and feasibility evaluation (n=64 encounters; mean 9-item Physician Documentation Quality Instrument [PDQI-9] score: 42.2/45, SD 2.98). Stage 2: real-world implementation at family medicine clinics (King Saud Medical City [KSMC]), with prospective data collection (n=55 encounters; 40 Arabic, 15 English), independent blinded evaluation using the modified PDQI-9, and a parallel physician experience survey (n=22). Dashed arrow indicates pipeline transfer from development to implementation. (B) Artificial intelligence (AI) pipeline architecture: audio capture, encoder-decoder ASR, anonymization via context-aware transformer for personally identifiable information (PII) deidentification, and decoder-only LLM for clinical note generation. ASR: automatic speech recognition; LLM: large language model."
+    > "During stage 1, participating specialties included, but were not limited to, general and internal medicine, general surgery, pediatrics, family medicine, obstetrics and gynecology, cardiology, and respiratory medicine. Both new and follow-up patient encounters were included, provided eligibility criteria were met and physicians were able to conveniently record audio conversations during clinical encounters. During stage 2, new patient encounters were sampled during designated family medicine clinic sessions when participating physicians were available. Verbal consent was obtained from patients by the treating physicians and was documented in the clinical notes."
+    > "The inclusion criteria were as follows: patients of all ages and sexes who provided informed consent for the use of Sahl AI during their clinical consultation. For pediatric patients, consent was obtained from a parent or legal guardian."
+    > "The exclusion criteria were as follows: patients with cognitive impairment who were unable to provide informed consent."
+    > "During stage 1, audio data were collected to optimize and fine-tune the AI pipeline using Sahl AI’s proprietary Data Collection Pipeline. Audio streams from physician-patient conversations were segmented into shorter audio chunks to facilitate accurate labeling. Participating physicians received training on audio recording using various devices and on obtaining informed consent from patients. The recorded audio was securely stored on cloud servers in compliance with the Kingdom of Saudi Arabia’s Personal Data Protection Law (PDPL). The audio data were initially retained for 6 months, with the retention period later extended to 1 year following approval of an ethics amendment."
+    > "Recordings were collected across multiple clinical specialties during stage 1 using physicians’ personal mobile phones as well as desktop microphones, including Anker PowerConf S360 USB Speakerphones and Kaysuda SP300 Bluetooth Speakerphones. A team of bilingual research assistants fluent in Arabic and English reviewed and edited the transcribed audio segments to ensure high-quality labeled datasets for AI pipeline optimization. The dataset encompassed a wide range of Arabic dialects, including those spoken in Saudi Arabia, Yemen, Egypt, Sudan, the Levant, Kuwait, and North Africa, as well as simplified Arabic spoken by nonnative speakers and diverse English accents. Data scientists subsequently curated the labeled data, excluding poor-quality audio segments identified during review by the research assistants."
+    > "The AI pipeline was iteratively tested with internal evaluation metrics before being piloted with physicians during stages 1 and 2 of the study. The pipeline (Figure 1B) comprised multiple components requiring optimization for clinical deployment. In particular, the speech-to-text engine was based on a transformer-based encoder-decoder automatic speech recognition architecture, in which the encoder transforms raw audio signals into high-level semantic representations and the decoder generates the corresponding text transcription. Prior to clinical note generation, transcripts were processed through a deidentification layer that used a context-aware transformer model to detect and redact personally identifiable information. The large language model component was a decoder-only autoregressive transformer trained using causal language modeling."
+    > "Fine-tuning focused on improving robustness to spontaneous clinical dialogue, variability in dialects, and background noise commonly encountered in outpatient and inpatient environments. Model training prioritized transcription accuracy for medical conversations. To minimize overfitting and prevent information leakage, training and evaluation datasets were strictly separated."
+    > "During stage 1, following the fine-tuning and optimization of the AI pipeline, version 1 of Sahl AI was evaluated in a controlled setting to assess feasibility outside of routine clinical practice. This evaluation involved role-plays and mock conversations between physicians, as well as prerecorded simulated physician-patient conversations generated by nonphysicians. These audio recordings were processed by the AI pipeline to generate clinical notes, enabling the assessment of the ambient AI scribe’s performance in the Arabic language. Collectively, these activities constituted the feasibility component of the development stage."
+    > "Clinical notes were generated in accordance with the documentation requirements of the Central Board for Accreditation of Healthcare Institutions and included standardized headings, such as chief complaint, history of present illness, past medical or surgical history, allergy, medication, social history, family history, physical examination findings, diagnosis, and plan. Participating physicians evaluated the AI-generated clinical notes after completing the role-play scenarios or listening to the prerecorded simulated conversations."
+    > "In total, 64 independent assessments were conducted using a modified PDQI-9 (Table 1), a tool that has been previously validated and used in recent evaluations of ambient AI scribes [78]. For the purposes of this study, the PDQI-9 tool was adapted to reflect Arabic-language and bilingual audio-to-text workflows. Specifically, the original domains of “up-to-date” and “synthesized” were replaced with “free from hallucination” and “translated accurately to English,” respectively. These modified domains have not been formally validated and were used for exploratory assessment only."
+    > "Nine-item Physician Documentation Quality Instrument (PDQI-9) tool measuring the quality of the clinical note across 9 dimensions^a^."
+    > "|Domain | Description |
+| --- | --- |
+|Accurate | The note is true. It is free of incorrect information. For example, if the history is about chest pain and the note mentions abdominal pain, then this represents that the note was not accurate. |
+|Thorough | The note is complete and free from omission and documents all of the issues of importance to the patient. For example, if a symptom about visual loss was discussed and was important to the note but not mentioned, then this represents that the note was not thorough. |
+|Useful | The note is extremely relevant, providing valuable information and/or analysis. |
+|Organized | The note is well formed and structured as per CBAHI^b^ recommendations in a way that helps the reader understand the patient’s clinical course. |
+|Comprehensible | The note is clear, without ambiguity or sections that are difficult to understand. |
+|Succinct | The note is brief, to the point, and without redundancy. |
+|Internally consistent | No part of the note ignores or contradicts any other part. For example, if 1 section of the note mentions that the patient has asthma but another section says no history of asthma, then this is not internally consistent. |
+|Free from hallucination | The note is free of hallucination and only contains information verifiable by the audio conversation. For example, if the note mentions that the patient smokes and drinks alcohol when it was not at all discussed in the note, then this represents hallucination. |
+|Translated accurately to English | The note reflects the Arabic conversation between the physician and the patient accurately in the English language. |"
+    > "Each domain was scored from 1 to 5 (Likert scale), with 1 being “not at all” and 5 being “extremely.”"
+    > "Based on the findings from stage 1, the AI pipeline was further optimized to improve performance prior to real-world deployment. During stage 2, the model was deployed in family medicine clinics for real-world testing involving both new and follow-up patient encounters. From a larger cohort of physicians, 6 physicians who consented to participate received at least 30 minutes of training on the effective use of the software prior to study initiation."
+    > "Physician-patient conversations and the corresponding unedited clinical notes generated by Sahl AI were recorded and subsequently evaluated by 2 independent evaluators. Evaluators listened to the complete audio recordings and assessed the associated unedited clinical notes using the modified PDQI-9 tool. To reduce the likelihood of identifying the physician speaker, evaluators were recruited from clinical specialties different from those of the participating physicians; however, complete anonymization could not be guaranteed, as the evaluators were recruited from the same health cluster. Evaluators were blinded to the identities of both patients and physicians. However, as the raw audio was not modified to redact personally identifiable information, complete blinding cannot be assured. Scores from evaluators were averaged prior to calculating the final modified PDQI-9 domain scores."
+    > "The evaluation process involved 2 evaluator groups. Evaluator group 1 comprised a single reviewer, while evaluator group 2 consisted of 2 reviewers who divided the assigned clinical notes between them. Each clinical note was reviewed by 2 evaluators—1 from each group. In cases where domain-level scores differed by 2 or more points, both evaluators were asked to rereview the clinical notes and reconcile discrepancies."
+    > "To ensure consistency across recordings, a standardized microphone (Kaysuda SP300 Bluetooth Speakerphones) connected to a laptop computer was used for all consultations. Audio recordings were performed by trained research assistants and uploaded directly through the Sahl AI software. Following each consultation, Sahl AI generated a single clinical note immediately using the recorded audio, which was then reviewed in its unedited form by the independent evaluators."
+    > "Clinical encounters were categorized as “Arabic” or “English” based on the predominant language of the consultation, as initially determined by research assistants and subsequently confirmed by the evaluators. Code-switched encounters involving substantial use of both languages were classified according to the language comprising the majority (>50%) of clinical content. Regardless of input language, Sahl AI generated all clinical documentation exclusively in English."
+    > "Following real-world deployment in the family medicine department, a targeted physician experience survey was conducted to capture feedback from clinicians with the direct hands-on use of Sahl AI. The survey was completed between 29 July and 28 November 2024 by 22 physicians. Eligibility was limited to physicians who had used the system in at least 3 clinical encounters, ensuring sufficient exposure to evaluate its impact on clinical workflow. Survey items evaluated perceived note comprehensiveness, time savings, ease of use, impact on physician burnout, and impact on clinical workflow using a 5-point Likert scale ranging from strongly agree to strongly disagree. The survey was designed as a descriptive assessment of user experience among active users rather than a population-level evaluation."
+    > "During the development stage, individual modified PDQI-9 scores were recorded for each physician’s assessment. In contrast, during the implementation stage, the modified PDQI-9 scores were calculated by calculating the mean scores from 2 independent evaluators for each domain and then summing these domain-level means. The overall modified PDQI-9 scores were reported as mean (SD) and were calculated out of a maximum total score of 45 for Arabic conversations and 40 for English conversations, as the “translated accurately to English” domain was not applicable to English consultations. Since the modified PDQI-9 domain scores were ordinal Likert-scale measures and group sizes were unbalanced (40 Arabic vs 15 English consultations), comparisons between Arabic and English groups were conducted using nonparametric Mann-Whitney __U__ tests. Differences between evaluator scores were quantified using the mean absolute deviation (MAD), calculated as the average of the absolute differences between paired domain scores. MAD was computed both overall and at the domain level. Descriptive statistics, including means and frequencies, were used to summarize the responses from the physician experience questionnaire."
+    > "This study was approved by the institutional review board of King Saud Medical City (protocol H1R1-18-Sep23-01). Verbal informed consent was obtained from all participating patients prior to audio recording and was documented in the medical record. The use of verbal consent was approved by the institutional review board given the minimal-risk nature of the study and the practical limitations of obtaining written consent during routine clinical encounters without disrupting workflow. For pediatric patients, consent was obtained from parents or guardians. All data collection, storage, and analysis procedures were conducted in accordance with confidentiality requirements and complied with the Saudi Data and Artificial Intelligence Authority PDPL [9]. No patient demographic information was collected, and independent evaluators assessed clinical notes without access to any identifying data. Patients did not receive financial compensation for participation, and physicians participated as part of their routine clinical duties."
+    > "Surveyed physicians perceived that the tool improved note accuracy and quality compared to the clinical practice of typing notes, resulting in more comprehensive and complete documentation compared to current practice. Most responding physicians perceived that the use of Sahl AI can reduce cognitive overload and save time, resulting in a positive overall impact on their clinical workflow. Such findings have been confirmed by other studies, especially showing that the use of ambient AI scribes leads to time saved and reductions in cognitive burden for physicians [1015-21undefinedundefinedundefinedundefinedundefinedundefined]. However, a recent report by the Peterson Health Technology Institute concluded that while AI scribes may reduce clinician burnout, it is unclear whether it actually saves time and leads to financial gains [22]. The report concluded that differences in outcomes were likely due to organization-specific metrics, which had variation in how they were defined and measured. Nevertheless, the result of this study is in line with the growing consensus that AI scribes can enhance physician efficiency by alleviating the cognitive burden associated with comprehensive documentation."
+    > "This study used a single-arm design without a comparator, as comparative evaluation was outside the scope of this work. The absence of baseline comparisons in Arabic or bilingual settings with physician-authored documentation or generic large language models, both in the literature and in this study, limits the ability to draw conclusions regarding comparative effectiveness. Future studies incorporating head-to-head comparisons are required to establish relative performance."
+    > "The sample size was limited due to the practical challenges of collecting real-world audio data, which may affect the interpretability and generalizability of the findings. In addition, physicians used Sahl AI as a stand-alone web app that was not integrated into the electronic medical record. Electronic medical record integration is an important factor in simplifying clinical workflows and has been associated with the improved adoption of ambient AI scribes [21]. Real-world testing was conducted exclusively within the family medicine specialty; therefore, the findings may not generalize to other clinical specialties, and further evaluation across diverse clinical domains is warranted. Furthermore, the independent evaluation was conducted by physicians from the same health cluster; although evaluators were blinded to physician and patient identities, full blinding could not be ensured and may have introduced bias, especially as the raw audio was not modified to redact personal identifiable information."
+    > "The study did not include a systematic assessment of medical complexity between Arabic and English encounters, which may influence the interpretation of between-group comparisons. Future studies should capture encounter-level characteristics, such as number of medical entities spoken and number of diagnoses, to assess whether any observed language–based differences may be confounded by case complexity. Additionally, encounters were classified as Arabic or English based on the predominant language, without quantifying the degree of code-switching within individual consultations. This may limit the understanding of the model’s performance in heavily code-switched versus predominantly monolingual encounters. Separately, a formal safety audit evaluating the potential clinical impact of documentation inaccuracies was not performed. Incorporating such assessments in future work may further strengthen the evidence base. While the training data included multiple Arabic dialects, performance was not systematically evaluated across specific dialect groups, limiting conclusions regarding dialect-level generalizability."
+    > "The physician experience survey was based on a convenience sample of clinicians who had used Sahl AI in at least 3 clinical encounters, which may introduce selection bias toward more engaged users. As the survey was distributed through direct outreach during deployment and the total number of physicians invited was not systematically recorded, a formal response rate could not be calculated. Consequently, the survey findings should be interpreted as descriptive user feedback rather than generalizable estimates of physician satisfaction or adoption. As such, the specific percentages reported from the survey should not be interpreted as representative of the broader physician population."
+    > "Since the completion of this study, subsequent iterations of the Sahl AI models have been released with improvements in accuracy and processing speed. Further research is needed to evaluate the clinical impact of Arabic medical ambient AI scribes, including objective measures of time savings, documentation quality compared with standard practice, effects on physician-patient interaction, and downstream operational and revenue-cycle outcomes."
+    > "This study highlights the potential of medical ambient AI scribe technology to enhance clinical documentation in both Arabic and English clinical environments. Sahl AI demonstrated the ability to generate high-quality clinical notes, with potential benefits including improved documentation quality, time savings, and reduced cognitive burden for physicians. To support broader adoption, future research should address the limitations identified in this study, including evaluation across diverse clinical settings and patient populations, as well as integration with electronic medical record systems. Importantly, this work provides a foundational framework for the development and training of medical ambient AI scribes in low-resource languages, such as Arabic, while also introducing a robust methodology for assessing the quality of AI-generated clinical documentation."
+[12] https://www.oracle.com/health/clinical-suite/clinical-ai-agent — Oracle Health Clinical AI Agent | Oracle Health
+    > "**AI-powered workflows supporting clinical and administrative roles**
+Oracle Health Clinical AI Agent helps limit manual effort and support clinicians, staff, and operations through intelligent automation. By drafting documentation, automating coding and scheduling, coordinating workflows, and connecting clinical and financial data, our solution supports informed decision-making and enhanced patient engagement—empowering users to focus on direct patient care and meaningful interactions, while applying their professional judgment."
+    > "Oracle Health Clinical AI Agent is built on a unified, scalable architecture that integrates data and intelligence and enables workflow orchestration. It’s designed to deliver trustworthy AI insights across clinical, operational, and financial workflows to help inform decision-making and support meaningful patient care."
+    > "Synchronizes multiple AI agents to manage complex, context-aware workflows, adapting seamlessly to clinician and staff needs.
+- ### Connected data provides a comprehensive view of care"
+    > "Unifies clinical, operational, and financial information into one layer to enhance analytics and promote consistent, data-driven decision-making.
+- ### Workflow engine integrates insights into daily work"
+    > "Delivers AI-powered recommendations in near real time, embedding actionable insights directly within everyday workflows for enhanced efficiency and confidence.
+- ### Transparent framework supports user confidence"
+    > "Provides interpretable, explainable AI outputs, so users understand the basis for recommendations and can act with trust."
+    > "Connect clinical, operational, and financial data across the care continuum. Automate tasks with specialized AI capabilities that can be deployed to help draft documentation, coordinate resources, support patient access, and streamline financial operations—creating consistent, connected experiences."
+    > "Streamline administrative tasks and communication across teams. Automate routine follow-ups, data entry, and information routing while presenting work in structured workflows so staff can efficiently manage patient care processes."
+    > "Oracle Health Clinical AI Agent is planned to organize appointments, manage waitlists, and align provider schedules through guided workflows for patient access and staff coordination."
+    > "Oracle Health Clinical AI Agent is planned to help track and organize follow-up care using structured workflows to document recommended services and manage completion across providers."
+    > "Oracle Health Clinical AI Agent is planned to help process insurance and benefits information automatically by providing coverage details at the point of service for registration and billing purposes."
+    > "Oracle Health Clinical AI Agent is planned to help automate registration and confirm key details before visits to support check-in and facilitate accurate data workflows."
+    > "Surface context-aware clinical insights and AI driven recommendations at the point of care, supporting documentation, decision-making, and patient interactions in inpatient, outpatient, and emergency settings."
+    > "Oracle Health Clinical AI Agent transforms clinician workflows by summarizing charts, highlighting critical information, drafting notes and orders, reviewing patient history within a unified patient record, and enabling nurses to use voice to capture charting details, supporting enhanced decision-making."
+    > "Oracle Health Clinical AI Agent surfaces key patient insights through conversational search and visual summaries, delivering summaries at the point of care to support accurate and efficient clinical workflows."
+    > "Oracle Health Clinical AI Agent is planned to track patient readiness for discharge and prompt care teams with early discharge opportunities, supporting coordinated planning and smooth care transitions."
+    > "Support patients through communication and guided next steps. Use AI insights to present educational resources and personalized guidance to maintain continuity throughout care."
+    > "Oracle Health Clinical AI Agent enables patients to manage appointments by presenting near real-time availability and booking options, enhancing access and convenience."
+    > "Oracle Health Clinical AI Agent is planned to provide cost estimates and verified coverage details before services by presenting information in a clear, structured format, helping patients make informed financial decisions."
+    > "Oracle Health Clinical AI Agent delivers tailored responses using conversational AI and clinical knowledge, making it easy for patients to understand their care and act."
+    > "Oracle Health Clinical AI Agent supports timely preventive and follow-up care by summarizing patient data in near real time, supporting enhanced patient engagement and care."
+    > "Streamline revenue cycle management by verifying coverage and eligibility, automating prior authorization requests, suggesting codes, and managing claims and denials efficiently."
+    > "Oracle Health Clinical AI Agent is planned to streamline prior authorizations by gathering payer requirements and drafting submission requests through integration with payer systems, helping alleviate administrative burden."
+    > "Oracle Health Clinical AI Agent is planned to identify, organize, and track appeals and corrections by presenting financial tasks within structured, traceable workflows, enabling teams to address denials efficiently and minimize revenue risk."
+    > "Oracle Health Clinical AI Agent generates coding suggestions based on clinical documentation by analyzing conversations and care context, identifying charge codes, and presenting suggestions within the workflow to support coding accuracy and compliant claim submissions."
+    > "Oracle Health Clinical AI Agent is planned to group and verify charges by applying payer, contract, and coverage rules and tracking billing progress, supporting accurate claim submission and consistency in revenue cycle processes."
+    > "> “Oracle Clinical AI Agent has allowed us to focus on improving the physicians’ lives by reducing the documentation and cognitive burden and allowing physicians to spend more time doing the things they love.”"
+    > "- [![atlanticare](/a/ocom/img/customerlogo-atlanticare-clr.svg)](/customers/atlanticare/)
+- [![beacon-health](/a/ocom/img/customerlogo-beacon-health-system-clr.svg)](/customers/beacon-health/)
+- [![covenant-health](/a/ocom/img/customerlogo-covenant-health-clr.svg)](/customers/covenant-health-clinical-ai-agent/)
+- [![hudson-physicians](/a/ocom/img/customerlogo-hudson-physicians-clr.svg)](/customers/hudson-physicians/)
+- [![milton-keynes-university-hospital](/a/ocom/img/customerlogo-milton-keynes-university-hospital-clr.svg)](/customers/milton-keynes-university-hospital-pioneers-ai/)
+- [![northern-arizona-healthcare-ai](/a/ocom/img/customerlogo-northern-arizona-health-clr.svg)](/customers/northern-arizona-healthcare-ai/)
+- [![sarah-bush-lincoln](/a/ocom/img/customerlogo-sarah-bush-lincoln-clr.svg)](/customers/sarah-bush-lincoln/)
+- [![st-johns-health](/a/ocom/img/customerlogo-st-johns-health-clr.svg)](/customers/st-johns-health/)
+- [![torrance-memorial](/a/ocom/img/customerlogo-torrance-memorial-physician-network-clr.svg)](/customers/torrance-memorial-physician-network/)"
+    > "Discover how Oracle is putting AI into action to transform healthcare. We’ll showcase how Oracle Health Clinical AI Agent harnesses advanced AI to help automate routine administrative work, draft documentation, and proactively surface relevant insights for each user.
+- ### Beacon Health System’s Use of Oracle Health Clinical AI Agent"
+    > "Learn how Beacon Health System has improved providers’ EHR satisfaction, documentation quality, and downstream outcomes while setting a model for scalable AI adoption with Oracle Health Clinical AI Agent.
+- ### Giving nurses back time for their patients and themselves"
+    > "See how our nursing AI agent enables nurses to quickly capture discrete data in near real time, helping alleviate administrative tasks, enhance patient experiences, and free up time for direct care.
+- ### Oracle Health Clinical AI Agent listens so physicians can too"
+    > "See firsthand how AI-powered technology can help alleviate administrative burden, enhance patient experiences, and restore valuable time for physicians.
+- ### Oracle AI Agents for Fusion Applications"
+    > "Oracle AI agents for Fusion Applications help drive efficiencies, innovation, and growth across the enterprise. These powerful tools assist users via generative AI–powered services that are seamlessly embedded into everyday business processes and transactions."
+    > "The features and capabilities disclosed here which incorporate artificial intelligence (AI) can be used to assist users and help enhance product functionality. The nature and extent of AI assistance may evolve over time and is subject to change."
+    > "*The content is intended to outline our general product direction. It is intended for information purposes only, and may not be incorporated into any contract. It is not a commitment to deliver any material, code or functionality, and should not be relied upon in making purchasing decisions. The development, release, timing, and pricing of any features or functionality described for Oracle’s products may change and remains at the sole discretion of Oracle Corporation. Not all features are currently offered for sale in the United States or elsewhere. Availability of some features may depend on any necessary regulatory approvals or clearance."
+[13] https://www.glance.care/knowledge-center/a-spike-in-medical-claims-rejections — A spike in medical claim rejections
+    > "Over the past months, major insurance companies in Saudi Arabia have escalated their auditing of clinical documentation—focusing closely on the accuracy of diagnoses, completeness of ICD-10-AM coding, and regulatory alignment with the Council of Health Insurance (CHI)."
+    > "The result? A notable spike in claim rejections, delayed reimbursements, and mounting administrative stress for hospitals and healthcare providers."
+    > "This shift signals a systemic push towards tightened oversight, with insurance companies leveraging internal audit systems and AI tools to validate every line item in a submitted claim. Hospitals that are not prepared will feel the financial and operational strain."
+    > "- Requesting justification for each diagnosis code
+- Auditing alignment between notes, codes, and treatment plans
+- Rejecting vague or incomplete clinical documentation
+- Denying claims that lack CHI-compliant medication or service details
+Without a robust clinical documentation integrity (CDI) system, even the most well-meaning clinicians are at risk of miscoding or under-documenting care."
+    > "To safeguard revenue and improve operational integrity, hospitals must adopt a proactive strategy built on standardized documentation, accurate coding, and regulatory compliance."
+    > "1. **Strengthen Clinical Decision Support** Equip physicians with tools that guide them through accurate differential diagnosis, and recommend evidence-bases and guideline-based tests and treatments. This helps improve both the quality of care and the clarity of documentation.
+2. **Automate Claim Validation Before Submission** Use pre-audit engines that simulate insurance checks before the claim leaves your system. These tools ensure every code is tied to adequate documentation and CHI standards.
+3. **Train and Support Coding Teams** Invest in ongoing education for your RCM and coding staff on the latest ICD-10-AM updates, CHI policies, and audit trends. Combine human expertise with smart tools like Glance CodeAudit or Glance Moramiz to reduce manual errors.
+4. **Integrate Smart Documentation Tools** Use tools like Glance Omni that support CHI-compliant clinical notes, recommend codes, and embed audit trails—reducing callbacks and rework from payers. [Try Glance Omni now](https://app.glance.care/signup)"
+    > "Each rejected claim costs hospitals not just time, but revenue and reputation. As regulations tighten, hospitals that embrace AI-powered documentation and coding support will outperform others in efficiency, compliance, and reimbursement speed."
+    > "The era of poor documentation is over. Hospitals must ensure that every claim submitted is bulletproof—from the diagnosis to the code to the approval request."
+    > "- Use AI tools to support clinical decisions
+- Pre-audit claims before submission
+- Ensure CHI compliance at every step
+Want to see how Glance Care helps hospitals reduce rejection rates and ensure claim integrity?"
+[14] https://www.chi.gov.sa/en/knowledge-center/Pages/clinical-manuals.aspx — Medical Necessity Criteria
+    > "These criteria must be used and interpreted within the framework of the CHI Essential Benefit Package, the Insurance Drug Formulary, and other policies and circulars issued by the Council of Health Insurance."
+    > "Medical Necessity criteria are sets of criteria used to determine whether a particular health service or treatment is medically necessary and appropriate for the beneficiary based on current scientific recommendations. These criteria are used by health care providers and insurance companies to ensure that appropriate health care services are provided and covered appropriately to improve the quality of health care. These criteria focus on:"
+    > "The treatment or intervention must be necessary to treat or diagnose a medical condition or to prevent development of disease or worsening of an existing condition."
+    > "The treatment or intervention must be appropriate to the beneficiary’s health condition based on established clinical guidelines and standards. This requires that the treatment or intervention to be compatible with the beneficiary’s specific condition and achieve the desired outcome."
+    > "There must be sufficient evidence to support the effectiveness of the treatment or intervention based on reliable medical evidence."
+    > "Treatment or intervention should be cost-effective compared to other available options. This ensures that the treatment or intervention provides adequate value for the associated expenses."
+    > "Treatment should be tailored to the individual needs of beneficiaries, considering the beneficiaries' medical history and specific health conditions."
+    > "Medical necessity may also include certain preventive services that are considered necessary to prevent diseases or detect health conditions at early stage."
+    > "Documentation must be provided to justify the medical need for the treatment or procedure. This can include clinical notes, test results, and treatment plans."
+    > "Preventing harm that may occur to CHI beneficiaries due to medically unjustified intervention or treatment or due to unjustified denial of service coverage."
+    > "These criteria help ensure that beneficiaries receive appropriate health care and that health costs are managed effectively by providers and insurance companies."
+    > "##### Saudi National Clinical Practice Guidelines for Management of Adult systemic Lupus Erythematosus"
+    > "##### MOH Protocols for the Management of Attention Deficit Hyperactive Disorder (ADHD) Across the Life Span"
+    > "###### Source: US Department of Health and Human Services/Centers for Disease Control and Prevention"
+    > "###### Source: e American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines"
+[15] https://www.glance.care — AI-Powered Clinical Documentation and Decision Support
+    > "Glance into our tailored solutions and discover how your clinic flows and workday can be stress-free, efficient, and focused on patient care, not documentation."
+    > "Join 1,000+ ![Physician](/_app/immutable/assets/physician-avatar.DGQrgvHI.png) physicians, ![Trust](/_app/immutable/assets/trust-icon.C8jgQ30w.png) who trust Glance care to save time,
+boost accuracy, ![Patient](/_app/immutable/assets/patient-avatar.DjqJs-lA.png) and elevate patient care,
+every single day."
+    > "evidence you can act on; because medicine is no place for AI hallucinations. Get fast, evidence-based answers to your clinical questions, each backed by citations and clear educational flowcharts, built for point-of-care decisions and teaching. Speed without shortcuts, insight without guesswork."
+    > "Effortless, Accurate ICD10-AM Coding Instantly. Let Moramiz AI automatically code your clinical notes with precision, no hassle, no wasted time. Spend more time caring for patients and less time searching through 40,000 codes. Just use Quick Coder and simplify your workflow."
+    > "Structured Notes, Standardized Instantly Turn raw clinical notes into clear, consistent SOAP templates in seconds. DocuGen ensures documentation stays smart, searchable, and survey-ready."
+    > "Effortless Patient-Doctor Engagement and Automation Automate follow-ups, share visit summaries, and connect the right patient to your right specialist, all with your smart health concierge, Sanad."
+    > "Glance Care is a specialized health tech solution focused on medical documentation and clinical decision support systems. It uses advanced technologies to provide streamlined support for healthcare professionals, especially busy doctors."
+    > "To get started, simply sign up for free and receive 4,000 complimentary credits. With Glance Care, you can access features such as Quick Coder, SOAP Builder, Clinical Note Taking, and Patient Engagement—all designed to enhance your workflow and improve patient care."
+    > "You can sign up for free and receive 4,000 complimentary credits to get started. After you’ve tried and enjoyed the service, you can choose from a variety of subscription plans designed to fit different needs and budgets."
+    > "Glance Care excels in supporting documentation and decision support for primary and secondary care specialties. For more specialized, tertiary cases, we currently offer dedicated solutions for oncology and cardiology. Our research and development team is actively working on expanding to additional specialty areas in the future."
+    > "Quick Coder: We currently support the Australian modification territory of the ICD-10 coding system. This includes Saudi Arabia, Qatar, Bahrain, Australia, New Zealand, Singapore, Turkey, and Ukraine. Support for the ICD-10 CM territory—including the USA, India, UAE, and the Philippines—will be available soon."
+    > "SOAP Builder and Note Taking: These features use English-based documentation standards that are suitable for most countries."
+    > "Engage: This feature is specifically localized to comply with Saudi regulations and meet the needs of the Saudi market."
+[16] https://santechture.com — Home | Santechture
+    > "We don’t just provide software; we provide financial certainty. Our solutions are the productisation of over 15 years in the RCM space."
+    > "Lower your administrative overhead by replacing manual, high-touch RCM tasks with scalable, expert-led automation."
+    > "Our 4 million+ rules act as an intelligent safeguard, ensuring every claim is compliant and accurate before it leaves your facility."
+    > "By streamlining the entire workflow - from the initial patient encounter to final settlement - we eliminate administrative bottlenecks."
+    > "Ensure clean claim submissions and predictable reimbursement cycles, providing financial sustainability."
+[17] https://assets.solventum.com/is/content/mmmspinco/codefinder-software-fact-sheet-his-rc-en-sapdf — Codefinder Brochure-Saudi(Ver17 April)
+    > "Designed for expert and novice coders alike,
+the SolventumTM CodefinderTM Software 
+offers more of everything you expect from 
+the world’s most popular coding software."
+    > "With Solventum experts delivering consistent 
+regulatory updates and clients providing 
+continuous feedback, Codefinder works the 
+way coders work, with all the latest features 
+to address regulatory requirements and 
+operational demands."
+    > "With easy-to-use menus, references and 
+prompts, Solventum Codefinder gives 
+coders the functionality they need to code 
+accurately and work productively."
+    > "Keeping up with the ever-changing rules and regulations of health care is difficult. Understanding and managing regulatory 
+updates, classification guidelines, payment methodologies and the increasing volume of data in the EMR are formidable 
+challenges."
+    > "In addition, the work to increase the integrity of clinical documentation and the increased specificity required for health 
+data use have also become part of the coding landscape, adding to the complexity facing HIM professionals. These 
+responsibilities have become key factors in the decision-making processes that can affect every level of a healthcare 
+organisation."
+    > "Decisions made to improve quality throughout the hospital are based largely on data supplied by the HIM department. New 
+technology and changing regulations have not altered the fact that medical record coding provides the basic foundation of 
+every organisation’s data. Today most hospitals depend on the functionality and reliability of Solventum’s coding software 
+to build that foundation."
+    > "Solventum Codefinder is a sophisticated yet easy-to-use suite of tools that supports coders with powerful coding logic, 
+giving them the confidence by meeting their needs for accuracy and efficiency."
+    > "The software is designed to provide appropriate support for novice to expert level coders. It guides the coder through the 
+coding process, covering the full range of situations from complex diabetes scenarios to repetitive or typical patient 
+encounters. At any time, the coder can view the selection of online references to clarify the situation and make appropriate 
+decisions."
+    > "Today’s shortage of qualified coders requires 
+organisations to identify ways to maintain coding 
+accuracy and consistency. Solventum Codefinder gives 
+coders the support and confidence they need to follow 
+correct coding rules and guidelines."
+    > "The following references are integrated into the software 
+right where coders need them to expedite the coding 
+process:
+• ICD-10-AM/ACHI Codebook
+•  Australian Coding Standards
+•  National Coding Advice
+•  Australian Refined Diagnosis related Groups
+•  Elsevier's Anatomy Plates
+•  SBS Alphabetical Index
+•  SBS Coding Standards
+•  SBS Summary of Changes"
+    > "With Solventum Codefinder, coders have a flexible tool that supports greater productivity allowing direct coding 
+for routine procedures yet employing consistent rules and expert logic to help address unique or complex coding 
+issues. For all of these reasons, Solventum will continue to use this flagship coding and reimbursement solution as 
+the coding engine for the Solventum™ 360 Encompass™ System as it begins being deployed in the region."
+    > "Code editing is integrated seamlessly so that the codes assigned are continuously edited for quality. Codefinder edits are
+driven by our hosted Edit Engine and are based on the ICD-10-AM/ACHI coding classification, Saudi Billing System (SBS) Classification, 
+National Coding Advice, Australian Coding Standards and the AR-DRG grouper manual. In addition, there are Propriety Edits based on 
+Solventum Intellectual Property. The Edits provide real time on-screen feedback to coders to ensure compliance to standards and 
+advice. Errors corrected at the time of coding enhance the quality of the coding and prevent the record needing to be retrieved at a later 
+date for review and correction."
+    > "Solventum delivering coder 
+confidence 
+For over 30 years, Solventum has been a leader in coding and 
+reimbursement solutions for Australian and New Zealand 
+organisations and has spent over a decade working with other 
+clients in the region. Let our expertise help you stay compliant and 
+efficient. With Solventum Codefinder Software your coders can:"
+    > "•  Solventum™ Codefinder™ Software-Helps you manage the complex rules and terminology found in mandated rules,"
+    > "•  Solventum Grouping Software-Provides accurate AR-DRG grouping capabilities for national and state-based reimbursement"
+    > "methodologies. DRGs are automatically computed during coding to help improve coder productivity, and multiple"
+    > "•  Reimbursement can be calculated including funding adjustments based on current requirements."
+    > "Solventum
+Building 20, 3rd floor, 
+Dubai Internet City, 
+PO Box 500599 
+Dubai, United Arab Emirate"
+    > "©Solventum 2024. Solventum, the S logo and other trademarks are trademarks of Solventum or 
+its affiliates. 3M, the 3M logo and other 3M owned and/or licensed trademarks are trademarks 
+of 3M Company. Other trademarks are the property of their respective owners."
+    > "For more information on how Solventum solutions can assist your organization, email 
+info.his-mea@solventum.com or visit us online: www.solventum.com"
+[18] https://www.solventum.com/content/dam/public/language-masters/en_gb/hisb/document/2025/360-encompass-system-factsheet-his-rc-en-sa.pdf — 360 encompass Brochure-Saudi
+    > "For more than 10 years, hospitals used 360E 
+to automate coding workflows, using our 
+expert guided artificial intelligence (Al) to 
+realize both cost and time saving benefits."
+    > "The Solventum 360 Encompass platform 
+includes comprehensive workflows and 
+automation for coding, CDI and audit 
+solutions, as well as integration with 
+computer-assisted physician documentation 
+(CAPD) workflows."
+    > "Coding and CDI teams can adapt to new 
+technologies, monitor performance, build 
+coding and CDI competencies, and improve 
+business processes with the aid 
+of Solventum's consulting services."
+    > "Now more than ever, hospitals need a technically 
+advanced and tightly integrated revenue cycle 
+management system. It's the best foot forward 
+against shifting reimbursements, qualified coder 
+shortages and changing government regulations. 
+So, how can hospitals simultaneously reduce 
+costs, remain compliant and protect - or even 
+enhance - the quality of patient care?"
+    > "With the introduction of computer-assisted 
+coding in 2012, Solventum has built 
+a robust platform covering key layers of the 
+revenue cycle business. As our client's technology 
+needs progress, so does Solventum 360 
+Encompass. Today, the platform is an evolving 
+collection of revenue cycle management modules 
+that work together to help health care 
+organizations stay in control of cost, compliance 
+and quality. Modules include:"
+    > "Once siloed and unaligned, coding and CDI teams are now a 
+force to be reckoned with. Working concurrently in one 
+system, Solventum 360 Encompass eliminates silos, reduces 
+duplication and fosters collaboration and insights across care 
+settings. Coders can rely on Solventum 360 Encompass for 
+coding excellence and top features for optimal 
+auto-suggestions. CDI staff can count on the system to 
+surface quality indicators to help drive complete and accurate 
+clinical documentation."
+    > "When organizations are ready for further coding automation, 
+Solventum is ready to help. Our technology can take codes 
+into a more autonomous experience by auto-dropping user's 
+historically accurate and confident auto-suggested codes into 
+the Solventum Coding and Reimbursement System (CRS) 
+coding pane for final code set completion. This effectively 
+frees up coders' time to focus on complex codes, shifting 
+focus away from repetitive, simple coding tasks."
+    > "Our Solventum technology is backed by a team of consultants 
+with specialized credentials and decades of health care 
+experience. Our consultants provide analysis and data 
+informed recommendations, in addition to personalized 
+support, education, training, workflow redesign and 
+supplemental staffing."
+    > "Utilizing the power of the Solventum Cloud Platform, all the 
+same features available for Solventum 360 Encompass 
+on-premises can now be delivered in the cloud. The agility 
+offered by cloud solutions can help organizations shift focus 
+away from time consuming IT maintenance and delivery, and 
+more on business outcomes. Organizations can decrease 
+total cost of ownership in areas such as hardware, software, 
+maintenance and support. This secure and flexible option is 
+integrated with other Solventum solutions."
+    > "Solventum develops features and 
+functionality that can be used across 
+the Solventum 360 Encompass 
+platform, based on licensing. These 
+features expand the confines of 
+traditional roles and locations, bringing 
+teams together to work from one 
+source, in one common system. Some 
+of these expanded features and 
+capabilities include:"
+    > "Solventum
+Building 20, 3rd floor, 
+Dubai Internet City, 
+PO Box 500599 
+Dubai, United Arab Emirate"
+    > "©Solventum 2024. Solventum, the S logo and other trademarks are trademarks of Solventum or 
+its affiliates. 3M, the 3M logo and other 3M owned and/or licensed trademarks are trademarks 
+of 3M Company. Other trademarks are the property of their respective owners."
+    > "For more information on how Solventum solutions can assist your organization, email 
+info.his-mea@solventum.com or visit us online: www.solventum.com"
+[19] https://lean.sa/en/products-and-solutions — Products & Solutions
+    > "We see the future through today's eyes by building proactive solutions — and elevate your business with Lean products that boost performance and innovation."
+    > "Sehhaty is a comprehensive digital platform offering innovative healthcare solutions for individuals."
+    > "Yamamah is an advanced data analytics platform for health practitioners, processing healthcare data sources to provide a comprehensive view of population health."
+    > "Ayenati is a cutting-edge cloud platform designed to connect healthcare providers with laboratory service providers, supporting the transformation of healthcare in Saudi Arabia in line with Saudi Vision 2030."
+    > "A Diagnosis-Related Group (DRG) is a coding and payment system used to classify patients with similar clinical diagnoses to help healthcare providers better control hospital resources."
+    > "A health information system (HIS) that records patients' medical information and aims to enhance healthcare practitioners' experience."
+    > "The terminology engine is an advanced NLP-based machine-learning model that can classify normal text to standard medical terms."
+    > "Product
+![Medical Data Quality logo](https://cdn.sanity.io/images/u9trt2s5/production/dc1fe8c4f68d5252bd9f3634f89161c50589f0eb-190x182.webp?w=3840&q=75&auto=format&fit=max)"
+    > "The Medical Data Quality Engine is an AI tool designed to assess, cleanse, and enhance the quality of healthcare data, providing actionable recommendations."
+    > "Tarmeez platform integrates multiple systems to support medical coders and enhance the quality and accuracy of healthcare data."
+    > "The platform is designed to advance scientific research in healthcare across Saudi Arabia by providing secure access to data and powerful analytical tools."
+    > "A national integrated platform designed to streamline operations across healthcare and non-healthcare sectors in the Kingdom of Saudi Arabia."
+    > "A service that ensures the safety of workers in health-regulated sectors through automated health certificate issuance, providing a streamlined and reliable solution for worker compliance and safety."
+    > "The Unified Digital Platform for Healthcare Practitioners, registered with the Saudi Commission for Health Specialties."
+    > "Solution
+![Driver License Screening logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)"
+    > "Solution
+![NPHIES (Unified Health Record) logo](https://cdn.sanity.io/images/u9trt2s5/production/e5f49cc003f950bf8f222d984b1a264bacfa1af6-190x182.webp?w=3840&q=75&auto=format&fit=max)"
+    > "nphies platform is one of the nation's pioneering initiatives, led by the Council of Health Insurance in collaboration with the National Health Information Center and under the supervision and support of the Ministry of Health."
+    > "A medical prescriptions service that replaces traditional paper prescriptions with an advanced electronic system, making the prescription process more efficient."
+    > "Raqeeb enables licensed healthcare practitioners to prescribe and dispense controlled drugs while accessing patient medication history to improve decision-making and tracking in healthcare facilities across the Kingdom."
+    > "Solution
+![Food Delivery Medical Report logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)"
+    > "A service that aims to verify the health status of food delivery representatives and ensure their safety."
+    > "A service that aims to automate medical reports for issuing and renewing residency permits."
+    > "Solution
+![Health Event Management logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)"
+    > "A service that enables healthcare event organizers to access healthcare practitioners accurately and quickly."
+    > "A service that enables healthcare facilities to register sick leaves and verify accuracy from accredited sources."
+    > "Solution
+![Healthy Marriage Screening logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)"
+    > "A service that aims to improve public health by reducing the spread of infectious diseases among spouses or potential hereditary diseases."
+    > "Heem is a unified API marketplace designed to serve institutions in the health sector, providing seamless access to API services that enhance, automate, and speed up business processes."
+    > "A patient verification service that enables stakeholders to electronically verify the data of the patient, healthcare practitioner, or healthcare facility to help serve as a primary identifier in the health sector."
+    > "Solution
+![National Vaccination Registry logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)"
+    > "A service that aims to build a unified database containing all vaccinations of individuals, children, and associated information."
+    > "National Tele-radiology platform that enables healthcare facilities to send medical reports and X-ray images remotely, to ensure continuous monitoring."
+    > "A service that aims to automate the mechanisms for issuing medical reports for individuals seeking firearms licenses."
+[20] https://www.zawya.com/en/press-release/companies-news/kings-college-hospital-london-jeddah-becomes-the-first-hospital-in-saudi-arabia-to-implement-intersystems-intellicare-482048 — King's College Hospital London â Jeddah becomes the first hospital in Saudi Arabia to implement InterSystems IntelliCare | ZAWYA
+    > "# King's College Hospital London â Jeddah becomes the first hospital in Saudi Arabia to implement InterSystems IntelliCare | ZAWYA
+URL: https://www.zawya.com/en/press-release/companies-news/kings-college-hospital-london-jeddah-becomes-the-first-hospital-in-saudi-arabia-to-implement-intersystems-intellicare-482048
+Published: 2026-09-08"
+    > "King's College Hospital London â Jeddah becomes the first hospital in Saudi Arabia to implement InterSystems IntelliCare | ZAWYA"
+    > "The adoption of InterSystems IntelliCareâ¢ marks the next step in the hospital's digital journey. Image Courtesy: King's College Hospital London â Jeddah"
+    > "JEDDAH, Saudi Arabia â King's College Hospital London â Jeddah (Kingâs Jeddah), one of the Kingdom of Saudi Arabiaâs most distinguished multispecialty hospitals, is set to become the first hospital in the EMEA region to go live with InterSystems IntelliCareâ¢, the next-generation electronic health record (EHR) platform with AI at its core. Marking this important milestone, Kingâs Jeddah has signed an agreement with InterSystems to transition from TrakCare to IntelliCare. Building on a longstanding and trusted relationship, this next step reflects Kingâs Jeddah's continued commitment to leveraging advanced technology to enhance patient care and uphold the highest international standards of healthcare delivery."
+    > "Kingâs Jeddah was established as a unique extension of King's College Hospital London, a teaching institution founded in 1840 with a legacy of clinical firsts spanning nearly two centuries. Since opening its doors in Jeddah in 2025, the hospital has brought international protocols, academic oversight, and world-class multidisciplinary care to the heart of Saudi Arabia. With 130+ specialist consultants across 35 clinical specialties and 10 dedicated centers of excellence, Kingâs Jeddah is designed to deliver complex and critical care to patients across the Kingdom."
+    > "The adoption of InterSystems IntelliCareâ¢ marks the next step in the hospital's digital journey. IntelliCare is purpose-built on the proven foundation of InterSystems TrakCare and designed for healthcare organizations seeking seamlessly connected, AI-powered solutions. Unlike platforms that treat artificial intelligence as an add-on, IntelliCare embeds AI directly into clinical workflows, from documentation and ordering to clinical decision support and patient communication, enabling clinicians to dedicate more time to patients and less to screens."
+    > "For Kingâs Jeddah, the path to IntelliCare is built on confidence earned. Having successfully deployed TrakCare as the hospital's core EHR, the clinical and operational teams have developed a deep understanding of how InterSystems technology can be shaped to their needs. The transition to IntelliCare is therefore less a leap into the unknown and more a natural evolution, one that unlocks significantly greater intelligence and automation while preserving continuity of care."
+    > ""At King's College Hospital Jeddah, our ambition has always been to bring the highest standards of international clinical practice to Saudi Arabia. Technology is not the destination; better patient outcomes are. Adopting InterSystems IntelliCare enables our teams to work with greater intelligence, reduce avoidable"
+[21] https://www.abridge.com/press-release/upmc-scales-abridge — UPMC Scales Abridge AI Platform Enterprise-Wide to 12,000 Clinicians
+    > "# UPMC Scales Abridge AI Platform Enterprise-Wide to 12,000 Clinicians
+URL: https://www.abridge.com/press-release/upmc-scales-abridge"
+    > "A behind-the-scenes look at how AI-generated clinical documentation is evaluated for accuracy and safety."
+    > "We believe we can help fix the system by anchoring on the conversation, the most human signal in healthcare."
+[22] https://www.prnewswire.com/news-releases/nabla-now-supports-35-languages-to-advance-culturally-responsive-care-302239179.html — Nabla Now Supports 35 Languages to Advance Culturally Responsive Care
+    > "# Nabla Now Supports 35 Languages to Advance Culturally Responsive Care
+URL: https://www.prnewswire.com/news-releases/nabla-now-supports-35-languages-to-advance-culturally-responsive-care-302239179.html
+Published: 2024-09-05
+Author: Nabla"
+    > "- Nabla expands languages captured by its ambient AI assistant to produce culturally responsive clinical notes and instructions to streamline workflows and enhance the patient/provider experience 
+- Medical errors due to language barriers cost the U.S. health system an estimated $60 to $80 billion annually
+- Ineffective physician-patient communication can impact patient compliance, experiences, and health outcomes"
+    > "BOSTON, Sept 5, 2024 /PRNewswire/ -- Nabla, the leading ambient AI assistant for clinicians, today announced the launch of 31 new languages. Nabla expanded its AI-powered clinical documentation to support additional languages beyond the existing English (US), English (UK), French, and Spanish. The enhancement aims to assist a broader range of physicians who care for patients in various languages, including regional dialects and variations. By introducing these new language options, Nabla hopes to help bridge the language barrier for the 66 million people who do not speak English as their primary language. Nabla now supports 35 international languages."
+    > "Exam room language barriers negatively impact the patient-physician relationship, causing confusion, distrust in physicians, a low rate of patient compliance, and poor health outcomes. At the same time, physicians who provide care in multiple languages require expanded access to AI-powered documentation tools that lead to greater efficiency and overall improved patient outcomes. Ineffective communication also has financial implications, where medical errors related to language barriers cost health systems up to $80 billion annually nationwide."
+    > ""Supporting physicians with AI assistants like ours that enhance clinical documentation regardless of the language spoken bridges a gap in care delivery and drives forward health equity initiatives," said Delphine Groll, co-founder and COO, Nabla. "By expanding the languages Nabla captures, we're advancing care delivery by allowing providers to remain focused on building rapport and trust with the patient and improving the patient experience by generating clear, concise language-specific details and instructions.""
+    > "In July 2023, Nabla was the first ambient AI assistant to launch a Spanish-language version to support physician-patient conversations. California-based health systems, including Children's Hospital Los Angeles, quickly adopted the Spanish-language version, which is used in 8% of the visits conducted with Nabla. Nabla listened closely to its customers and prospects when determining which new language versions to create. For example, prospects and clients based on the West Coast frequently requested Chinese language support to improve communications with their patient population that speaks Chinese languages. All new language versions account for the top languages"
+[23] https://www.suki.ai — Suki: Ambient Clinical Intelligence | AI for Medical Documentation
+    > "# Suki: Ambient Clinical Intelligence | AI for Medical Documentation
+URL: https://www.suki.ai/"
+    > "AI infrastructure that gets documentation, coding, and revenue right. Manage charting, dictation, patient instructions, orders, and more with a platform that integrates with the top EHRs â and delivers real ROI."
+    > "Suki goes far beyond transcription, capturing the entire patient conversation to generate complete, high-quality notes, patient instructions, and orders. With flexible capabilities like voice-enabled editing and problem-based charting, Suki adapts to the way clinicians work and streamlines every step of documentation."
+    > "Our technology works seamlessly across desktop and mobile devices in both iOS and Android for 100+ specialties. It also adapts to where and how you work â in various care settings as well as with all major EHRs, plus healthtech partners across telehealth, care management, and more."
+    > "Our comprehensive AI assistant helps clinicians be more present by spanning the entire workflow â from pre-charting to documentation to clinical reasoning â all in a first party app."
+    > "Our developer toolkit helps healthtech companies add powerful AI capabilities directly into their applications, enabling a seamlessly integrated, streamlined experience for their users."
+    > "No other platform comes close to what Suki can do. Our all-in-one ambient technology powers every workflow for maximum flexibility and interoperability."
+    > "Built with intelligence at its core and designed to innovate quickly, Suki delivers personalized experiences and future-proofed solutions that clinicians can trust."
+    > "We donât stop at clinical notes. As a true AI assistant, we combine documentation, coding, clinical reasoning, and Q&A in a single solution while continuously adding more features."
+    > "Our deep, real-time integrations with the four leading EHRs â Epic, Oracle Health, athenahealth, and MEDITECH â make Suki the most embedded ambient AI solut"
+[24] https://www.tachyhealth.com — TachyHealth - The Intelligent Operating System for Health
+    > "# The Intelligent
+Operating System
+for Health
+Automate claims processing, detect abnormal patterns in real time, enforce coding accuracy, and improve health outcomes — with generative, agentic, and predictive AI purpose-built for payers.
+Book a Demo See It in Action
+Money saved"
+    > "## 0+B
+NPHIES Certified Certified for Saudi Arabia's National Platform for Health Information Exchange Services HL7 FHIR Supports the global standard for healthcare data interoperability and exchange ISO 27001 International standard for information security management systems ISO 22301 International standard for business continuity
+management systems SOC 2 Audited controls for security, availability, and confidentiality of customer data HITRUST Gold-standard security framework purpose-built for healthcare organizations HIPAA Compliant with US health data privacy and security regulations"
+    > "## What We Solve for Health Plans
+Three critical challenges every payer faces — and how TachyHealth's AI eliminates them
+"
+    > "### Stop Revenue Leakage
+AI-powered claims validation catches underpayments, missed denials, and coding errors before they cost you millions.
+40% less leakage
+"
+    > "### Eliminate Manual Bottlenecks
+Automate claims adjudication, prior auth, and coding workflows — freeing your team to focus on exceptions, not routine.
+3x faster processing
+"
+    > "### Detect Fraud in Real Time
+Multi-dimensional AI analysis identifies upcoding, unbundling, and suspicious billing patterns across your entire claims stream.
+$2.8M recovered/quarter"
+    > "## Measurable Impact on Payer Operations
+Health plans using TachyHealth see transformative results within the first 90 days
+40%
+Reduction in Claims Leakage
+AI-powered validation catches overpayments and billing errors before settlement
+3x
+Faster Claims Processing
+AI-powered adjudication accelerates end-to-end turnaround times
+$2.8M
+Avg. Fraud Recovered Per Quarter
+Multi-layered AI detection identifies waste, abuse, and fraud patterns
+97%
+Autonomous Coding Accuracy
+Clinical NLP achieves near-perfect ICD-10, CPT, and SBS code assignment"
+    > "## Agentic Products Built for Health Insurers
+Purpose-built AI modules that plug into your claims workflow — from intake to payment integrity
+* Claims Review
+* Fraud Detection
+* Pharmacy Benefits
+* Policy Intelligence
+* Medical Coding
+* Gazal AI"
+    > "### AiReview
+Automate Claims Adjudication & Medical Review
+Eliminate manual claims review bottlenecks. AiReview validates medical necessity, checks policy compliance, flags anomalies, and auto-adjudicates routine claims — reducing turnaround from days to minutes while maintaining 97%+ accuracy.
+70% less manual review
+Product details
+aiReview"
+    > "## Go Live in Weeks, Not Months
+### Connect Your Systems
+Plug into your existing claims platform, EHR, and payer infrastructure via NPHIES, HL7 FHIR, or our REST APIs. No rip-and-replace required.
+02"
+    > "### Configure & Calibrate
+Our team calibrates AI models to your specific formulary, policy rules, and clinical protocols. Your compliance and medical teams validate every rule.
+03"
+    > "## Why Health Insurers Choose TachyHealth
+### Extreme Accuracy
+Our multi-agent AI achieves 97%+ accuracy across medical coding, claims review, and fraud detection — exceeding human-level performance."
+    > "### 100% Explainability
+Every AI decision comes with a complete audit trail and clinical rationale — no black boxes, full regulatory transparency."
+    > "### Rapid Integration
+Deploy in weeks, not months. Seamless integration with existing claims systems, EHRs, and payer infrastructure via NPHIES, HL7, and FHIR."
+    > "### Healthcare-Native AI
+Built by healthcare domain experts — not generic AI adapted for health. Gazal, our healthcare LLM, understands clinical context natively."
+    > "### Enterprise Security
+HIPAA, SOC 2, HITRUST, and NPHIES certified. Your data stays encrypted, compliant, and under your control at all times."
+    > "### Proven ROI in 90 Days
+Health plans see measurable returns within their first quarter — from reduced denials and faster turnaround to millions recovered in fraud savings."
+    > "## News and Insights
+### TachyHealth Achieves NPHIES Certification
+January 2026
+**Industry Insights**"
+    > "## Enterprise-Grade Security & Compliance
+Our systems are built to HIPAA standards and officially certified under ISO 27001, ISO 22301, and ISO 13485.
+ISO/IEC 27001:2022 ISO 22301:2019 ISO 13485:2016 HIPAA
+Visit our Trust Center"
+    > "## Ready to Transform Your Health Plan Operations?
+Join the health plans that are already saving millions with AI-powered claims intelligence. See TachyHealth in action with a personalized demo.
+Book a Demo Contact Sales
+Free consultation — no commitment required
+TachyHealth Logo"
+    > "## Get the latest Technology & Healthcare news in your inbox!
+### Tachy Assistant
+Always online
+Hi! How can I help you today?
+Ask anything about TachyHealth or our AI solutions."
+[25] https://lean.sa/en/products-and-solutions/nphies-unified-health-record — NPHIES (Unified Health Record)
+    > "NPHIES (Unified Health Record)
+nphies platform is one of the nation's pioneering initiatives, led by the Council of Health Insurance in collaboration with the National Health Information Center and under the supervision and support of the Ministry of Health.
+Brand: Lean Business Services"
+[26] https://news.healwell.ai/news-releases/healwells-orion-health-signs-memorandum-of-understanding-with-lean-business-services-to-advance-ai-powered-healthcare-in-saudi-arabia-across-the-middle-east — October 30, 2025 | News Release | HEALWELL AI
+    > "# HEALWELL’s Orion Health Signs Memorandum of Understanding with Lean Business Services to Advance AI-Powered Healthcare in Saudi Arabia & Across the Middle East
+* HEALWELL AI and its subsidiary Orion Health have signed a Memorandum of Understanding (MoU) with Lean Business Services, to jointly explore the development and commercialization
+of digital health and AI-driven solutions across the Middle East and Orion’s global markets.
+* The MoU leverages complementary strengths across technology, innovation, and market access, focusing on AI driven population health, clinical AI, and data-interoperability.
+* Initial areas of collaboration include enhancing population health strategies and integrating world leading AI solutions into Saudi Arabia’s NPHIES platform.
+**TORONTO, ON, October 30, 2025** — HEALWELL AI Inc.
+(“ **HEALWELL** ” or the “ **Company** “) (TSX: AIDX, OTCQX: HWAIF), a healthcare artificial intelligence company focused on preventative care, and its subsidiary Orion Health,"
+    > "real-time, standards-based data exchange and interoperability across the Kingdom.
+This MoU brings together HEALWELL’s advanced AI and clinical decision support tools, Lean’s innovation and market leadership in the Kingdom, and Orion Health’s proven"
+    > "The MoU agreement was formally signed by Hamed Shahbazi, Executive Chairman of HEALWELL AI, and Mohanned Alrasheed, the CEO of Lean during the Global Health Exhibition in Riyadh on
+October 28, 2025."
+    > "“By combining Lean’s national experience in building interoperable health systems with HEALWELL and Orion Health’s AI-driven capabilities, we are accelerating the next phase of"
+    > "“This MoU represents a powerful alignment between three leaders in digital health,” said James Lee, CEO of HEALWELL AI.
+“By combining Lean’s market presence in the Kingdom, Orion Health’s global interoperability expertise, and HEALWELL’s AI-driven solutions, we are accelerating the transformation of"
+    > "The collaboration with HEALWELL AI and Orion Health aligns with Lean’s mission to extend Saudi Arabia’s digital health expertise globally, fostering sustainable partnerships that"
+    > "About HEALWELL AI
+HEALWELL is a healthcare artificial intelligence company focused on preventative care."
+    > "Using its own proprietary technology, HEALWELL is developing and commercializing advanced clinical decision support systems that can help healthcare providers detect rare and"
+    > "HEALWELL is executing a strategy centered around developing and acquiring technology and clinical sciences capabilities that complement its road map."
+    > "across the Middle East and Orion’s global markets;; and are based on assumptions, expectations, estimates and projections as of the date of this press release."
+    > "Forward looking statements contained in this press release are based on various assumptions, including, but not limited to, the following: HEALWELL’s ability to integrate its AI"
+    > "## Stock Information
+### FWB:6H90
+#### VeroSource Solutions
+VeroSource Solutions is a digital health company established in 2014 to empower people and unlock the potential in Canadian healthcare. Its team of professionals has extensive experience in the full lifecycle of healthcare IT solutions and offers healthcare providers the technology and support needed to go digital."
+    > "#### Doctorly
+Read the original press release [here](http://news.healwell.ai/wp-content/uploads/2024/11/09Nov5919848HEALWELL_A-EN.pdf) .
+[Visit Website →](https://www.doctorly.de/)
+Dismiss ad Dismiss ad
+This will close in 0 seconds
+modal-check"
+    > "#### xAI
+Learn more at https://x.ai/ Read the original press release [here](https://news.healwell.ai/strategic-investment-in-xai-to-accelerate-development-of-healthcare-focused-large-language-models/) .
+[Visit Website →](https://x.ai/)"
+    > "#### Abstractive Health
+Read the original press release [here.](https://news.healwell.ai/healwell-ai-announces-strategic-investment-and-commercialization-agreement-with-abstractive-health-to-advance-generative-ai-powered-clinical-documentation-solutions/)"
+[27] https://oasissys.com — OASIS company is one of Al Murjan Holding Group. It is one of the leading family businesses in the Kingdom of Saudi Arabia owned by members of the Bin Mahfouz family.
+    > "OASIS+ is a robust and integrated web-based hospital information management system that adopts the latest cutting-edge technologies to to meet rapidly changing business requirements."
+    > "OASIS+ is a robust and integrated web-based hospital information management system that adopts the latest cutting-edge technologies to meet rapidly changing business requirements. It is developed in modules or sub-systems that can stand independently or be combined into a common central database that addresses all areas of health care activities within the hospital."
+    > "OASIS Practice is a cloud-based application includes everything to run and manage clinics or polyclinics, connects all departments together and provide practice management plus a comprehensive billing service."
+    > "OASIS Practice is a cloud-based application includes everything to run and manage clinics or polyclinics, connects all departments together and provide practice management plus a comprehensive billing service. It is easy to implement and adapt."
+    > "- Reduce Operational Costs
+- Serve More Patients
+- Reduce Claim Rejection
+- Patient portal
+- All the Support You Need
+- Revenue Cycle Management
+***Target Customers***"
+    > "OASIS-Tele is a new safe and secure offering that uses modern technologies to overcome geographical barriers and increases access to health care services."
+    > "OASIS-Tele is a new safe and secure offering that uses modern technologies to overcome geographical barriers and increases access to health care services. It provides a cloud platform that allows physicians and patients to communicate in real-time, through virtual sessions using video conferencing. Patients with chronic diseases can be monitored in their homes with mobile medical devices that collect data about vital signs, as blood sugar levels, blood pressure or other. Remote caregivers can review and analyze the data instantly."
+    > "We are seeking to build a training academy that supports our member hospitals to help them use the system smoothly and efficiently by providing free and paid training courses."
+    > "READ MORE**
+We are seeking to build a training academy that supports our member hospitals to help them use the system smoothly and efficiently by providing free and paid training courses. The academy would also support the company’s employees through continuous training courses that will help increase their understanding of the system and the business process in the health sector, enabling a team of trained consultants."
+    > "We are seeking to integrate with many international companies to align ourselves with the latest technologies in “Health management information system”"
+    > "READ MORE**
+We are aiming to integrate with many international companies to align ourselves with the latest technologies in “Health Management Information System” from all over the world, giving us leverage to provide consultation in this field."
+[28] https://selat.com.sa — Selat – Selat for business solutions
+    > "Selat simplifies your healthcare service by providing end-to-end VBHC-revenue cycle management that allows you to focus on what matters most – *fulfilling your mission and improving the health of your community.*"
+    > "Our experts carefully build RCM solutions tailored to your healthcare organization.
+ We prioritize efficacy, simplicity, and seamless services to achieve positive financial outcomes."
+    > "There is a growing need to mitigate declining reimbursement, increased risk, and margin pressures in the healthcare industry, and Selat was created in response to that need."
+    > "With decades of collective experience in the field of healthcare, automation, consulting, and RCM implementation, we have set a legacy in the sector."
+    > "Our unmatched experience, rigorous research, and comprehensive understanding of industry practices, assessments, evaluations, and implementations empower us to deliver effective results."
+    > "Our services address industry challenges by enhancing overall RCM operations, such as improving profitability, maximizing medical billing, enhancing coding, improving collection, revitalizing hospital revenue cycle performance, and improving cost-effectiveness."
+    > "Selat has the resources, experience, and capabilities to improve organizations’ financial health and profitability without negatively impacting the bottom line."
+    > "We utilize the industry’s best practices and hold professionalism and integrity as our core values. Our team strives to provide our customers and partners with valuable benefits and superior care."
+    > "Regulators, payers, and healthcare providers trust us for our full revenue-cycle services, including some of the largest, most successful healthcare systems."
+    > "As the Kingdom’s largest revenue cycle partner, Selat provides comprehensive revenue cycle management ranging from receiving patients to payment collection from different payers and final settlements."
+    > "With Selat’s top-of-the-class revenue cycle management services, our clients focus more on providing quality care to their patients while we take care of all the other aspects of their business."
+    > "## **Government Project**
+This major medical city project represents a significant turning point in Selat's history as our first government contract."
+    > "## **Educational Project**
+At a Major University medical city managed by the Ministry of Education, we established a specialized business center..."
+    > "We firmly believe in delivering exceptional revenue cycle management that enhance healthcare providers operational excellence"
+    > "Implementing the TOM (Targeted Operating Model) to achieve maximum impact & improve your financial growth"
+    > "At Selat, we measure our impact not only through our services but also through the complete transition of knowledge and expertise to our clients, equipping them with the tools and knowledge they need to fully utilize the RCM on their own."
+    > "Take control of your revenue cycle with Selat’s expert guidance and RCM solutions. Feel free to get in touch for a personalized consultation."
+    > "**Selat** combine a mix of local and international knowledge and expertise through our international reputable partners."
+    > "- [ About Selat ](https://selat.com.sa/about/)
+- [ Services ](https://selat.com.sa/services/)
+- [ Case Studies ](https://selat.com.sa/case-studies/)
+- [ Partners ](https://selat.com.sa/partners/)
+- [ Careers ](https://selat.com.sa/careers/)
+- [ Contact Us ](https://selat.com.sa/contact-us/)"
+    > "- Street 76, Al Olaya, Riyadh, KSA
+- [ info@selat.com.sa ](mailto:info@selat.com.sa)
+- [ +966 9200 199 20 ](tel:+966%209200%20199%2020)"
+[29] https://clinicy.com.sa — Clinicy
+    > "You didn't start your clinic to chase paperwork...We unify your entire clinic on one smart, secure platform."
+    > ""With Clinicy, we turned chaos into control. Appointments jumped by 567%, and no-shows dropped from 35% to just 6%. Now, our branches run seamlessly, and we can focus on what matters most our patients.""
+    > ""Dawali Clinic faced a 50% no-show rate and overwhelming manual processes. Clinicy transformed their operations with automated scheduling, reminders, and integrated reporting cutting no-shows to 13% and boosting bookings by 256%. ""
+[30] https://www.dedalus.com/global/en/landing/mea — Mea Landing Page - Dedalus Global
+    > "# Dedalus Completes Strategic Transfer of AMEA Operations to ENTOMO
+Dedalus has transferred its operations in Asia, Middle East, and Africa (specifically in Singapore, Thailand, Malaysia, Brunei, UAE, Saudi Arabia, and Egypt) to ENTOMO
+[23 July 2025 - Press Release](https://www.dedalus.com/global/en/media/news/dedalus-and-entomo-sign-agreement-for-amea-business-transition/)"
+    > "## Find out more
+### Dedalus France Morocco Find out more
+[### Entomo Singapore, Thailand, Malaysia, Brunei, UAE, Saudi Arabia and Egypt Find out more](https://entomo.co/)
+[Dedalus](https://www.dedalus.com/global)"
+[31] https://srca.org.sa/en/news/saudi-red-crescent-and-elm-sign-memorandum-of-understanding-to-develop-digital-platforms-and-artificial-intelligence — &#8220;Saudi Red Crescent&#8221; and &#8220;Elm&#8221; Sign Memorandum of Understanding to Develop Digital Platforms and Artificial Intelligence
+    > "The Saudi Red Crescent Authority signed a Memorandum of Understanding (MoU) with Elm Company, represented by SRCA Assistant president for Shared Services, Eng. Yasir bin Tariq Al Rayes while Elm was represented by Abdulaziz bin Abdulmohsen Al-Sheikh, Vice President of Business Sectors on the sidelines of the Authority’s participation in the Global Health Exhibition 2024, held at the Riyadh International Convention and Exhibition Center – Malham, from October 21 to 23, 2024. According to the MoU, the Saudi Red Crescent Authority and Elm Company will explore cooperation opportunities in developing digital products and platforms through innovative models. The agreement also covers providing services such as (consultations, outsourcing operations and inspections, data analysis, and artificial intelligence). Additionally, the MoU outlines that the two parties will sign a formal agreement to define their commitments and rights if collaboration opportunities arise. The MoU also allows for the possibility of each party collaborating with other entities on projects and coordinating the necessary studies to achieve the goals and requirements."
+[32] https://arabianreseller.com/2026/09/08/kings-jeddah-selects-intersystems-intellicare-to-advance-digital-healthcare-in-saudi-arabia — King’s Jeddah Selects InterSystems IntelliCare to Advance Digital Healthcare in Saudi Arabia
+    > "# King’s Jeddah Selects InterSystems IntelliCare to Advance Digital Healthcare in Saudi Arabia"
+    > "King’s College Hospital London – Jeddah (King’s Jeddah) is set to become the first hospital in Saudi Arabia to implement InterSystems IntelliCare, a next-generation electronic health record (EHR) platform designed with artificial intelligence embedded across clinical workflows."
+    > "The hospital has signed an agreement with InterSystems to transition from TrakCare, building on an established technology relationship and its existing digital healthcare infrastructure. The move is part of King’s Jeddah’s wider strategy to use technology to improve clinical efficiency, patient outcomes and the delivery of international healthcare standards in Saudi Arabia."
+    > "Established in Jeddah in 2025 as an extension of King’s College Hospital London, King’s Jeddah has more than 130 specialist consultants across 35 clinical specialties and 10 centres of excellence. The hospital brings the clinical protocols and academic oversight of the London institution to Saudi Arabia, with a focus on complex and critical care."
+    > "The transition to IntelliCare builds on the hospital’s experience with TrakCare. Rather than introducing an entirely new EHR environment, King’s Jeddah will build on an existing platform and operational understanding while adding AI-driven capabilities and automation."
+    > "InterSystems IntelliCare is designed to integrate AI directly into clinical workflows rather than relying on separate AI applications. Its capabilities include AI-assisted documentation, clinical workflow intelligence, decision support and patient communication."
+    > "One of the key features is ambient clinical documentation, which uses AI to transform clinical conversations into structured medical records. This is intended to reduce the administrative burden on clinicians while supporting more complete and accurate documentation."
+    > "The platform also incorporates intelligence into workflows covering areas such as ordering, prescribing, results review and messaging. Its interoperability capabilities include support for HL7 FHIR and SMART on FHIR, enabling integration with the wider digital healthcare ecosystem in Saudi Arabia."
+    > "“At King’s College Hospital Jeddah, our ambition has always been to bring the highest standards of international clinical practice to Saudi Arabia. Technology is not the destination; better patient outcomes are,” said Dr Ibrahim Alharfi, Chief Executive Officer, King’s College Hospital London – Jeddah. “Adopting InterSystems IntelliCare enables our teams to work with greater intelligence, reduce avoidable delays, and keep the clinician’s attention where it belongs: on the patient in front of them.”"
+    > "According to Diaa Kamal, Chief Information Officer, King’s College Hospital London – Jeddah, the hospital’s experience with TrakCare provided the foundation for the transition."
+    > "“IntelliCare takes that foundation and makes it exponentially smarter with AI that surfaces the right information at the right moment, documentation that happens naturally, and workflows that adapt to the clinician rather than the other way around,” he said."
+    > "The implementation reflects the broader shift in healthcare IT towards platforms where AI is embedded within core clinical systems rather than added through standalone tools and integrations."
+    > "Ali Abi Raad, Managing Director, InterSystems Middle East, India and South Africa, said the company was “proud to continue this journey” with King’s Jeddah, adding that the hospital was well positioned to realise the potential of IntelliCare following its TrakCare deployment."
+[33] https://www.zawya.com/en/press-release/companies-news/king-abdullah-medical-complex-jeddah-and-maternity-and-childrens-specialist-hospital-optimize-operations-with-intersystems-trakcare-meui-upgrade-cjxel8rs — King Abdullah Medical Complex Jeddah and Maternity and Children's Specialist Hospital optimize operations with InterSystems TrakCare MEUI Upgrade
+    > "# King Abdullah Medical Complex Jeddah and Maternity and Children's Specialist Hospital optimize operations with InterSystems TrakCare MEUI Upgrade
+URL: https://www.zawya.com/en/press-release/companies-news/king-abdullah-medical-complex-jeddah-and-maternity-and-childrens-specialist-hospital-optimize-operations-with-intersystems-trakcare-meui-upgrade-cjxel8rs
+Published: 2025-02-14"
+    > "King Abdullah Medical Complex Jeddah and Maternity and Children's Specialist Hospital optimize operations with InterSystems TrakCare MEUI Upgrade"
+    > "Social link for twitter Social link for facebook Social link for linkedin Social link for youtube"
+    > "Successful digital health transformation needs comprehensive user adoption and the InterSystems TrakCare mobile enabled user interface (MEUI) is a key component to scaling adoption by extending device and care-setting choice with intuitive ease of use."
+    > "Jeddah, Saudi Arabia: InterSystems, a creative data technology provider dedicated to helping customers solve the most critical scalability, interoperability, and speed problems, are pleased to share that King Abdullah Medical Complex Jeddah (KAMCJ) and Maternity and Children's Specialist Hospital (MCSH) have upgraded their Electronic Medical Record (EMR) to the latest version of InterSystems TrakCareÂ® unified health information system."
+    > "KAMCJ is a 500-bed hospital complex under the Ministry of Health that provides elective medical and surgical services combined with a state-of-the-art laboratory, trauma center and outpatient clinics serving North Jeddah. MCSH is a 300-bed hospital that provide healthcare services for women and all diseases related to womenâs health by qualified, specialized, and highly professional doctors using the latest equipment and technologies through outpatient clinics, in addition to receiving all emergency cases in the emergency department."
+    > "The EMR upgrade is a major milestone in both facilitiesâ digital health transformation journey â that enhances patient care and streamlines their operations. Without comprehensive user adoption digital health transformations fail. The latest, easy-to-use TrakCare interface adds to the userâs choice of device and care-setting to further support the delivery of the highest levels of patient-focused, quality, and safety outcomes. At the same time, the hospitals unlocked new value from their EMRs by adopting unified modules for the intensive care unit, anesthesia, and maternity. Using a unified EMR ensures information captured once is available immediately to cross-departmental authorized users to avoid data silos. They also upgraded and added blood bank services to their laboratory information management system (LIMS) that uses InterSystems TrakCare Laboratory EnterpriseÂ®."
+    > "The upgrade was smooth and successful because KAMCJ and MSCH multi-disciplined teams engaged stakeholders, communicated the leadership vision for the next generation of care services, and professionally executed a user training program supported by a close partnership with InterSystems implementation team."
+    > "âOur success is driven by continuous growth and collaboration at all levels,â said Maha Hetaimish, Health Application Manager, King Abdullah Medical Complex Jeddah. âWe are pro"

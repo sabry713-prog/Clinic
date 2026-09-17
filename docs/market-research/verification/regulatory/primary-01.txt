@@ -1,0 +1,114 @@
+![HL7 Saudi Arabia](https://portal.nphies.sa/ig/assets/images/HL7_KSA_Logo_VSM.png)
+
+[![nphies](https://portal.nphies.sa/ig/assets/images/nphies-logo-transparent.png)](https://nphies.sa/)
+
+[![HL7 FHIR](https://portal.nphies.sa/ig/assets/images/fhir-logo-www.png)](http://hl7.org/fhir/R4)
+
+Healthcare Financial Services IG Edition 1
+
+1.0.0 - STU
+
+![Saudi Arabia flag](https://portal.nphies.sa/ig/assets/images/sau.svg)
+
+- [**Table of Contents**](https://portal.nphies.sa/ig/toc.html)
+- [**Background**](https://portal.nphies.sa/ig/reading-this-guide.html)
+- **Introduction**
+[<prev](https://portal.nphies.sa/ig/reading-this-guide.html) \|
+
+[bottom](https://portal.nphies.sa/ig/introduction.html#bottom)
+
+\| [next>](https://portal.nphies.sa/ig/credits.html)
+
+Healthcare Financial Services IG Edition 1 - Local Development build (v1.0.0) built by the FHIR (HL7® FHIR® Standard) Build Tools. See the [Directory of published versions](http://nphies.sa/fhir/ksa/nphies-fs/history.html)
+
+## Introduction [Anchor](https://portal.nphies.sa/ig/introduction.html\#introduction)
+
+- [Overview](https://portal.nphies.sa/ig/introduction.html#overview)
+- [What Is nphies? (Financial Services Perspective)](https://portal.nphies.sa/ig/introduction.html#what-is-nphies-financial-services-perspective)
+- [HIDP - Health Insurance Data](https://portal.nphies.sa/ig/introduction.html#hidp---health-insurance-data)
+
+### Overview [Anchor](https://portal.nphies.sa/ig/introduction.html\#overview)
+
+The Kingdom of Saudi Arabia is a large arid country with a population of about 34 million, made up of approximately 22 million citizens and 12 million expatriate residents. The healthcare system in Saudi Arabia is comprised of a public system operated and funded by the Ministries of Health, National Guard and Education, and a private system based on private healthcare delivery organizations and private health insurance companies and Third Party Administrators (TPAs).
+
+Saudi regulations require that employers provide health insurance to all of their employees, including Saudi citizens, and regulate the participation of both private and public provider organizations in the exchange of eClaims and related information with the private insurance industry. Currently (October 2025) the Council for Health Insurance regulates the health insurance industry with 6,600 provider organizations and 28 insurers and 8 TPAs which together service about 14.1 million beneficiaries - expatriates and Saudi citizens employed in private industry, and 18.8+ million visitors.
+
+Historically each provider organization developed their own codes for such activities as billing and information management and selected their own codes for ordering, diagnosis and such inter-organization exchanges. This has resulted in a lack of efficiency, and lack of interoperability and a barrier to modernization of the financial and clinical aspects of digital healthcare in the country. Beginning in about 2012, the leading regulators of the Saudi healthcare system: **Council for Health Insurance** (CHI) for financial exchanges and the **Ministry of Health** (MOH) for clinical exchanges began formulating models to put in place to support a modern, efficient, interoperable digital health system. The financial system was called SHIB - the Saudi Health Insurance Bus, and the clinical system was called SeHE - the Saudi Electronic Health (data) Exchange. These programs were later brought together under the current program name **nphies - the National Platform for Health Information Exchange Services**.
+
+| | Key Performance Indicators | Value |
+| --- | --- |
+| Beneficiaries Served | 14.1+ M Employer Insurance<br>18.8+ M Visitor Insurance |
+| Provider Facilities Onboarded | 6,419+ |
+| Insurers Onboarded | 25 |
+| Software Vendors Onboarded | 60+ |
+| Market Share of Claims | 98% |
+| Authorization Adjudication within 30 minutes | 96% |
+
+**Key Performance Metrics** | | Period | Transaction Type | Volume |
+| --- | --- | --- |
+| 2023 (Annual) | Total | 143 M |
+| 2024 (Annual) | Total | 292 M |
+| 2025 (Q1) | Total | 96 M |
+| Eligibility | 50 M |
+| Authorization | 11 M |
+| Claims | 31 M |
+| Payment | 4 M |
+
+**Transaction Volumes** |
+
+**nphies** functions as a single point of contact for all providers, insurers and TPAs for the exchange of eClaims and clinical information as depicted below. Currently all of the private insurers and/or their TPAs and most of the 6,600 regulated provider organizations exchange all of their eClaims transactions via the **nphies** system. The public health system has joined the **nphies** environment and will continue to add public providers as it transforms itself into a national insurer. Any of the approximately 18,000 Saudi healthcare provider organizations which have not already joined **nphies** may also connect to **nphies**.
+
+![Saudi eCLaims Ecosystem Diagram](https://portal.nphies.sa/ig/nphies.png)
+
+This implementation guide provides the standards used by all parties for the exchange of financial (eClaims) information.
+The objective is to enable payers (HICs (insurers) and TPAs) and providers (HCPs) to integrate with **nphies** for the exchange of eClaims. The guide provides an overview of **nphies**, the information exchange construction (messaging), the [Use Case](https://portal.nphies.sa/ig/usecases.html) information flow between different healthcare stakeholders and **nphies**, defines the message structures, and provides links to relevant [FHIR artifacts](https://portal.nphies.sa/ig/artifacts.html) and documentation.
+
+### What Is nphies? (Financial Services Perspective) [Anchor](https://portal.nphies.sa/ig/introduction.html\#what-is-nphies-financial-services-perspective)
+
+**nphies** is a centralized validating standards-based information exchange gateway to connect all healthcare providers and payers within KSA. Its role is to support the market in providing timely, efficient, and cost-effective information exchange services to providers of healthcare services, clinical and insurance, in Saudi Arabia.
+
+Breaking this down:
+
+- **Centralized** – financial data exchanges (eClaims transactions) between providers and payers will be facilitated by a single centralized hub. There will no longer be peer to peer exchanges.
+- **Processing & Validating (Not Adjudicating)** – transactions will be processed and validated for compliance to data formats and coding standards and monitored for compliance with regulatory requirements and good business practices. The platform will validate exchanges and reject invalid submissions.
+- **Standards-based** – the data formats for the information exchanges are based on internationally recognized standards that are appropriately constrained to meet the local Saudi business needs. Coded data will similarly use consistent terminology drawn from internationally recognized or Saudi nationally recognized coding standards.
+- **Information exchange** – the key purpose of the **nphies** is to facilitate the exchange of consistent and high-quality transactions between providers and payers to support the business of health insurance.
+- **Gateway** – the **nphies** will validate and deliver transactions to the intended recipient in real-time or store the transaction for delivery when the recipient is available or reject the transaction if it is invalid.
+
+Summarizing the above points, **nphies** is a single point of contact platform to which all HCPs and HICs may connect to exchange standards-based messages where **nphies** will validate the form and content of those messages to maximize the validity, the standards and compliance of those information exchanges.
+
+#### Expected Benefits [Anchor](https://portal.nphies.sa/ig/introduction.html\#expected-benefits)
+
+- Increased data consistency, quality, and computability for providers and payers;
+- Increased consistency in the data requirements for eClaims exchanges;
+- Increased satisfaction for providers, payers and patients with the eClaims experience;
+- Reduction in overall market costs;
+- Increased processing efficiency and regulatory compliance;
+- Increased ‘first time right’ exchanges;
+- Reduce barriers to entry to the private insurance market.
+
+
+#### What the **nphies** does not Do [Anchor](https://portal.nphies.sa/ig/introduction.html\#what-the-nphies-does-not-do)
+
+- Does not process or adjudicate the transactions. **nphies** is a ‘smart courier’ but does not take on the role of the provider or payer or Third-Party Administrator (TPA).
+- Does not regulate the market, it monitors the transactions and alerts regulators such as CHI for compliance issues.
+- Does not determine ‘fraud’, it marks questionable transactions for the payer to consider. It highlights the suspicious transactions based on the rules.
+- Does not provide an online practice management system for healthcare providers or a claims administration for system payers. It will provide a simple claims entry system to support providers until they acquire a proper healthcare information management system.
+- Does not provide an online claims backup system, providers and payers are required to properly design and manage their infrastructures.
+
+#### Information Retention [Anchor](https://portal.nphies.sa/ig/introduction.html\#information-retention)
+
+The **nphies** will retain copies of information exchanges to support the market and regulators such as CHI in dispute resolution, in understanding market health and the management of the regulatory processes.
+
+### HIDP - Health Insurance Data [Anchor](https://portal.nphies.sa/ig/introduction.html\#hidp---health-insurance-data)
+
+When a provider does not already know which insurers have policies for a patient they may access the HIDP-API, Health Insurance Data, to obtain a list of insurers having policies for the patient. For more information, refer to the document **Beneficiary Discovery Insurance HIDP Guideline** in the documentation folder on the [nphies unified portal](https://portal.nphies.sa/).
+
+|     |     |     |
+| --- | --- | --- |
+| [<prev](https://portal.nphies.sa/ig/reading-this-guide.html) | [top](https://portal.nphies.sa/ig/introduction.html#top) | [next>](https://portal.nphies.sa/ig/credits.html) |
+
+IG © 2024+ [HL7 Saudi Arabia](http://hl7.sa/). Package nphies-fs#1.0.0 based on [FHIR 4.0.1](http://hl7.org/fhir/R4/). Generated 2025-12-03
+
+Links: [Table of Contents](https://portal.nphies.sa/ig/toc.html) \|
+[QA Report](https://portal.nphies.sa/ig/qa.html)

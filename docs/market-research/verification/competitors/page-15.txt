@@ -1,0 +1,108 @@
+# Glance,
+
+# Click, Care,
+
+# and Organize
+
+Turn your insight into clinical documentation and actionable care plans.
+
+Glance into our tailored solutions and discover how your clinic flows and workday can be stress-free, efficient, and focused on patient care, not documentation.
+
+![Glance Doctor Solutions Hero](/_app/immutable/assets/glance-doctor-solutions-hero.GAv9_1Cx.png)
+
+Join 1,000+ ![Physician](/_app/immutable/assets/physician-avatar.DGQrgvHI.png) physicians, ![Trust](/_app/immutable/assets/trust-icon.C8jgQ30w.png) who trust Glance care to save time,
+boost accuracy, ![Patient](/_app/immutable/assets/patient-avatar.DjqJs-lA.png) and elevate patient care,
+every single day.
+
+---
+
+Our users are making an impact at these leading medical institutions.
+
+## Powerful Features,
+Seamlessly Connected
+
+### Ask Glance
+
+Powered by MultiModal AI & AI Transcriber
+
+evidence you can act on; because medicine is no place for AI hallucinations. Get fast, evidence-based answers to your clinical questions, each backed by citations and clear educational flowcharts, built for point-of-care decisions and teaching. Speed without shortcuts, insight without guesswork.
+
+![Ask Glance](/_app/immutable/assets/feature-ask-glance.B1i-KcST.png)
+
+### Quick Coder
+
+Powered by Moramiz AI & AI Transcriber
+
+Effortless, Accurate ICD10-AM Coding Instantly. Let Moramiz AI automatically code your clinical notes with precision, no hassle, no wasted time. Spend more time caring for patients and less time searching through 40,000 codes. Just use Quick Coder and simplify your workflow.
+
+![Quick Coder](/_app/immutable/assets/feature-quick-coder.BLrXm9LX.png)
+
+### SOAP Builder
+
+Powered by DocuGen AI & AI Transcriber
+
+Structured Notes, Standardized Instantly Turn raw clinical notes into clear, consistent SOAP templates in seconds. DocuGen ensures documentation stays smart, searchable, and survey-ready.
+
+![SOAP Builder](/_app/immutable/assets/feature-soap-builder.DpKui3eB.png)
+
+### Engage
+
+Powered by Sanad AI
+
+Effortless Patient-Doctor Engagement and Automation Automate follow-ups, share visit summaries, and connect the right patient to your right specialist, all with your smart health concierge, Sanad.
+
+![Engage](/_app/immutable/assets/feature-engage.DZTdcd4B.png)
+
+### Note Taking
+
+Powered by DocuGen & Moramiz AI
+
+Effortless, Accurate ICD10-AM Coding Instantly. Let Moramiz AI automatically code your clinical notes with precision, no hassle, no wasted time. Spend more time caring for patients and less time searching through 40,000 codes. Just use Quick Coder and simplify your workflow.
+
+![Note Taking](/_app/immutable/assets/feature-note-taking.BzMU6xnN.png)
+
+## Real People, Real Results
+
+Dr. Rauf Qardahi, MD
+
+Surgeon, Al Olaya Medical Center
+
+## Frequently Asked Questions
+
+1
+
+### What is Glance Care and how does it work?
+
+Glance Care is a specialized health tech solution focused on medical documentation and clinical decision support systems. It uses advanced technologies to provide streamlined support for healthcare professionals, especially busy doctors.
+
+To get started, simply sign up for free and receive 4,000 complimentary credits. With Glance Care, you can access features such as Quick Coder, SOAP Builder, Clinical Note Taking, and Patient Engagement—all designed to enhance your workflow and improve patient care.
+
+2
+
+### How much does it cost?
+
+You can sign up for free and receive 4,000 complimentary credits to get started. After you’ve tried and enjoyed the service, you can choose from a variety of subscription plans designed to fit different needs and budgets.
+
+3
+
+### What specialties does Glance Care support?
+
+Glance Care excels in supporting documentation and decision support for primary and secondary care specialties. For more specialized, tertiary cases, we currently offer dedicated solutions for oncology and cardiology. Our research and development team is actively working on expanding to additional specialty areas in the future.
+
+4
+
+### Which countries are supported by Glance Care?
+
+Our technology is developed in Saudi Arabia and is designed to be effective worldwide.
+
+Quick Coder: We currently support the Australian modification territory of the ICD-10 coding system. This includes Saudi Arabia, Qatar, Bahrain, Australia, New Zealand, Singapore, Turkey, and Ukraine. Support for the ICD-10 CM territory—including the USA, India, UAE, and the Philippines—will be available soon.
+
+SOAP Builder and Note Taking: These features use English-based documentation standards that are suitable for most countries.
+
+Engage: This feature is specifically localized to comply with Saudi regulations and meet the needs of the Saudi market.
+
+## Discover the future of clinical efficiency—powered by AI, designed just for you.
+
+Need a custom demo? Contact us!
+
+![Glance Care Doctor](/_app/immutable/assets/senior-doctor.BAhLIVpV.png)

@@ -1,0 +1,26 @@
+# MedArabiQ: Benchmarking Large Language Models on Arabic Medical Tasks
+URL: https://arxiv.org/html/2505.03427v2
+
+MedArabiQ: Benchmarking Large Language Models on Arabic Medical Tasks
+
+\theorembodyfont\theoremheaderfont\theorempostheader
+
+: \theoremsep \jmlrvolume298 \jmlrpages1-37 \jmlryear2025 \jmlrworkshopMachine Learning for Healthcare \setcodeutf8
+
+# MedArabiQ: Benchmarking Large Language Models on Arabic Medical Tasks
+
+\NameMouath Abu Daoudâ  \Emailmma9138@nyu.edu \NameChaimae Abouzahirâ  \Emailca2627@nyu.edu \NameLeen Kharouf \Emaillk2713@nyu.edu \NameWalid Al-Eisawi \Emailwa2076@nyu.edu \NameNizar Habash \Emailnizar.habash@nyu.edu \NameFarah E. Shamout \Emailfarah.shamout@nyu.edu \addrNew York University Abu Dhabi, United Arab Emirates \addrâ  Equal contributions
+
+###### Abstract
+
+Large Language Models (LLMs) have demonstrated significant promise for various applications in healthcare. However, their effectiveness in the Arabic medical domain remains unexplored due to the lack of high-quality domain-specific datasets and benchmarks. This study introduces MedArabiQ, a new benchmark dataset consisting of seven Arabic medical tasks, covering multiple specialties and including multiple-choice questions, fill-in-the-blank questions, and patient-doctor questions and answers. We first constructed the dataset using past medical exams as well as publicly available datasets. We conducted an extensive evaluation with eight state-of-the-art open-access and proprietary high-resource LLMs, including GPT-4, Deepseek v3, and Gemini 1.5. Our findings highlight the need for the creation of new high-quality benchmarks that span different languages to ensure fair deployment and scalability of LLMs in healthcare. By establishing this benchmark and releasing the dataset, we provide a foundation for future research aimed at evaluating and enhancing the multilingual capabilities of LLMs for the equitable use of generative AI in healthcare.
+
+##### Data Availability
+
+In this article, we present a new benchmark dataset, MedArabiQ, designed to evaluate the performance of LLMs on Arabic medical tasks. We release our data for reproducibility to enable a fair evaluation of language models in the future: https://github.com/nyuad-cai/MedArabiQ
+
+## 1 Introduction
+
+The recent advent of Large Language Models (LLMs) has revolutionized Natural Language Processing (NLP) by demonstrating exceptional performance in various tasks, ranging from language translation to creative writing (Nazi and Peng, 2023). Although LLMs were initially designed for general language understanding, they have since been evaluated for many domain-specific applications, such as education, programming, art, and medicine. They have also been adapted for domain-specific tasks using different fine-tuning strategies and specialized datasets (Kaddour et al., 2023).
+
+The use of LLMs in healthcare has sparked enthusiasm due to the potential to improve diagnostic processes, clinical decision-making, and overall patient care (Nazi and Peng, 2023; Meng et al., 2024). One particular application of interest is medical education,

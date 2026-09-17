@@ -1,0 +1,199 @@
+# Products & Solutions
+
+We see the future through today's eyes by building proactive solutions — and elevate your business with Lean products that boost performance and innovation.
+
+Solution
+![Sehhaty logo](/productlogos/sehhaty.png)
+
+### Sehhaty
+
+Sehhaty is a comprehensive digital platform offering innovative healthcare solutions for individuals.
+
+Product
+![Yamamah logo](/productlogos/yamamah.png)
+
+### Yamamah
+
+Yamamah is an advanced data analytics platform for health practitioners, processing healthcare data sources to provide a comprehensive view of population health.
+
+Product
+![Ayenati logo](https://cdn.sanity.io/images/u9trt2s5/production/ea7c6a2a8973599c218fcba783d431e888cd9688-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Ayenati
+
+Ayenati is a cutting-edge cloud platform designed to connect healthcare providers with laboratory service providers, supporting the transformation of healthcare in Saudi Arabia in line with Saudi Vision 2030.
+
+Product
+![DRG logo](https://cdn.sanity.io/images/u9trt2s5/production/dc1fe8c4f68d5252bd9f3634f89161c50589f0eb-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### DRG
+
+A Diagnosis-Related Group (DRG) is a coding and payment system used to classify patients with similar clinical diagnoses to help healthcare providers better control hospital resources.
+
+Product
+![Raqeem logo](https://cdn.sanity.io/images/u9trt2s5/production/609a7ca56e99dd6e7b3619d768be0af8f9e1e8c9-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Raqeem
+
+A health information system (HIS) that records patients' medical information and aims to enhance healthcare practitioners' experience.
+
+Product
+![Terminology Engine logo](/productlogos/terminology-engine.png)
+
+### Terminology Engine
+
+The terminology engine is an advanced NLP-based machine-learning model that can classify normal text to standard medical terms.
+
+Product
+![Medical Data Quality logo](https://cdn.sanity.io/images/u9trt2s5/production/dc1fe8c4f68d5252bd9f3634f89161c50589f0eb-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Medical Data Quality
+
+The Medical Data Quality Engine is an AI tool designed to assess, cleanse, and enhance the quality of healthcare data, providing actionable recommendations.
+
+Product
+![](https://cdn.sanity.io/images/u9trt2s5/production/d3fbb975e13a0d1b453a9293e1499eb69b5a9b1c-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Tarmeez
+
+Tarmeez platform integrates multiple systems to support medical coders and enhance the quality and accuracy of healthcare data.
+
+Product
+![](https://cdn.sanity.io/images/u9trt2s5/production/0077e2c317d45f7da50a083d54a558bc461007e6-256x245.webp?w=3840&q=75&auto=format&fit=max)
+
+### Research Avenue
+
+The platform is designed to advance scientific research in healthcare across Saudi Arabia by providing secure access to data and powerful analytical tools.
+
+Solution
+![Seha logo](/productlogos/seha.png)
+
+### Seha
+
+A national integrated platform designed to streamline operations across healthcare and non-healthcare sectors in the Kingdom of Saudi Arabia.
+
+Solution
+![Amanat logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Amanat
+
+A service that ensures the safety of workers in health-regulated sectors through automated health certificate issuance, providing a streamlined and reliable solution for worker compliance and safety.
+
+Solution
+![Anat logo](https://cdn.sanity.io/images/u9trt2s5/production/0938de9214a5df4f1b9bd1e1d23577b6617c9979-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Anat
+
+The Unified Digital Platform for Healthcare Practitioners, registered with the Saudi Commission for Health Specialties.
+
+Solution
+![Driver License Screening logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Driver License Screening
+
+A service that aims to automate medical reports for driver's license screening.
+
+Solution
+![NPHIES (Unified Health Record) logo](https://cdn.sanity.io/images/u9trt2s5/production/e5f49cc003f950bf8f222d984b1a264bacfa1af6-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### NPHIES (Unified Health Record)
+
+nphies platform is one of the nation's pioneering initiatives, led by the Council of Health Insurance in collaboration with the National Health Information Center and under the supervision and support of the Ministry of Health.
+
+Solution
+![E-Prescription logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### E-Prescription
+
+A medical prescriptions service that replaces traditional paper prescriptions with an advanced electronic system, making the prescription process more efficient.
+
+Solution
+![Raqeeb logo](/productlogos/raqeeb.png)
+
+### Raqeeb
+
+Raqeeb enables licensed healthcare practitioners to prescribe and dispense controlled drugs while accessing patient medication history to improve decision-making and tracking in healthcare facilities across the Kingdom.
+
+Solution
+![Food Delivery Medical Report logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Food Delivery Medical Report
+
+A service that aims to verify the health status of food delivery representatives and ensure their safety.
+
+Solution
+![Iqamat logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Iqamat
+
+A service that aims to automate medical reports for issuing and renewing residency permits.
+
+Solution
+![Health Event Management logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Health Event Management
+
+A service that enables healthcare event organizers to access healthcare practitioners accurately and quickly.
+
+Solution
+![Sick Leave logo](/productlogos/sick-leaves.png)
+
+### Sick Leave
+
+A service that enables healthcare facilities to register sick leaves and verify accuracy from accredited sources.
+
+Solution
+![Healthy Marriage Screening logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Healthy Marriage Screening
+
+A service that aims to improve public health by reducing the spread of infectious diseases among spouses or potential hereditary diseases.
+
+Solution
+![Heem logo](https://cdn.sanity.io/images/u9trt2s5/production/e1fdea75322c76434c6cdafb033dce1975d71a82-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### Heem
+
+Heem is a unified API marketplace designed to serve institutions in the health sector, providing seamless access to API services that enhance, automate, and speed up business processes.
+
+Solution
+![National Registry logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### National Registry
+
+A patient verification service that enables stakeholders to electronically verify the data of the patient, healthcare practitioner, or healthcare facility to help serve as a primary identifier in the health sector.
+
+Solution
+![National Vaccination Registry logo](https://cdn.sanity.io/images/u9trt2s5/production/801ba0904938f5cb8c6a79752223c217c4ed3c90-190x182.webp?w=3840&q=75&auto=format&fit=max)
+
+### National Vaccination Registry
+
+A service that aims to build a unified database containing all vaccinations of individuals, children, and associated information.
+
+Solution
+![Pre-Employment Screening logo](/productlogos/pre-employment-screening.png)
+
+### Pre-Employment Screening
+
+A service that aims to automate employee examination procedures.
+
+Solution
+![Pre-Entry School Screening logo](/productlogos/pre-entry-school-screening.png)
+
+### Pre-Entry School Screening
+
+A service that aims to examine preschoolers to issue a comprehensive medical report.
+
+Solution
+![Tele-Radiology logo](/productlogos/tele-radiology.png)
+
+### Tele-Radiology
+
+National Tele-radiology platform that enables healthcare facilities to send medical reports and X-ray images remotely, to ensure continuous monitoring.
+
+Solution
+![Weapon Screening logo](/productlogos/weapon-screening.png)
+
+### Weapon Screening
+
+A service that aims to automate the mechanisms for issuing medical reports for individuals seeking firearms licenses.

@@ -1,0 +1,70 @@
+- An integrated platform that centralizes all administrative operations in one place
+- Smart solutions that automate routine tasks and reduce human errors
+- Seamless integration with government systems and relevant authorities
+
+- Reduce claim rejections by up to 20% or less
+- Advanced financial reports and analytics for data-driven decision-making**
+**
+- Accelerate the revenue cycle and improve cash flow
+
+- Continuous automatic updates to ensure alignment with Saudi regulations
+- Internal monitoring and control systems to maintain the highest quality standards
+- Tailored solutions to meet local requirements
+
+### PBM
+
+Gain full control over drug spending with real-time formulary checks and automated prior authorizations. Our PBM solution ensures medication management is efficient, accurate, and fully compliant with local healthcare standards.
+
+**Key Benefits:**
+
+- Helps reduce unnecessary medication costs
+- Eliminates claim rejections due to drug coverage mismatches
+- Fully compliant with Saudi FDA and insurer formularies
+
+### **WRCM**
+
+Streamline insurance operations and maximize revenue in one platform. Our WRCM solution combines Waseel Connects seamless NPHIES integration with smart RCM automation to reduce claim rejections and improve financial performance — all while ensuring full compliance with Saudi regulations (NPHIES, CHI, ZATCA).
+
+**Key Benefits:****
+**
+
+- Accelerated revenue cycles through automated workflows
+- Real-time eligibility checks via NPHIES integration
+- Complete financial visibility with BI dashboards
+
+**Hospital Information System (HIS)**
+
+****Transform your healthcare facility with our cloud-based HIS, designed to optimize operational efficiency and enhance patient care coordination.
+
+**Key Benefits:**
+
+- Lowers IT costs with an integrated cloud platform
+- Enhances clinical workflows through a unified EMR system
+- Reduces administrative errors
+- Provides 24/7 secure access with full Saudi data compliance
+
+### DAWY
+
+Dawy improves patient engagement and reduces no-shows through intelligent scheduling and accessible self-service tools.
+
+**Key Benefits:**
+
+- Increases bookings through patient self-service
+- Decreases administrative workload
+- Includes integrated insurance verification
+****
+
+**Optimized Treatment Delivery (OTD)**
+
+Our OTD engine enhances claim accuracy through real-time validation against insurers’ medical policies and streamlines the approval process.
+
+**Key Benefits:**
+
+- Reduces denials with automated service validation
+- Speeds up approvals with smart rule checks
+- Ensures continuous compliance with Saudi insurance regulations
+- Seamlessly integrates into existing healthcare workflows
+
+## **Experience Waseel**
+
+## **In Action**

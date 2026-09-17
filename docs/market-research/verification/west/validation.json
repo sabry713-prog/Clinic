@@ -1,0 +1,12 @@
+{
+  "profile_count": 11,
+  "has_format_only_boundary": true,
+  "has_neo4j": true,
+  "has_nabla_ci": true,
+  "has_dax_ci": true,
+  "has_uw_null_fulfillment": true,
+  "no_old_autopass_recommendation": true,
+  "no_no_new_ai_risk_claim": true,
+  "no_universal_signoff_claim": true,
+  "citation_validation_exit": 0
+}

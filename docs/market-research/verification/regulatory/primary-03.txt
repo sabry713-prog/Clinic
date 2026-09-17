@@ -1,0 +1,910 @@
+ 
+
+Page 1 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+ 
+
+ 
+ 
+
+ 
+
+ 
+ 
+ 
+
+ 
+
+ 
+
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+
+ 
+
+ 
+ 
+
+Version Number: 1.0 
+Version Date: 10/8/2025 
+
+Guidance on Digital Health Products 
+
+ 
+
+ 
+
+MDS – G27 
+
+ 
+
+MDS-G-027-V1/250810 
+
+
+ 
+
+Page 2 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+Table of Contents 
+ 
+
+Introduction _____________________________________________________________ 3 
+      Purpose ______________________________________________________________ 3 
+      Scope _______________________________________________________________ 3 
+      Background __________________________________________________________ 3 
+ 
+1. Digital Health Products __________________________________________________ 4 
+1.1. Qualification of Digital Health Products as Medical Devices ____________________ 4 
+1.2. Categories of Digital Health Products ______________________________________ 4 
+
+1.2.1. Software as a Medical Device (SaMD) ________________________________ 4 
+1.2.2. Mobile Health Applications (mHealth Apps) ___________________________ 8 
+1.2.3. Digital Therapeutics (DTx) _________________________________________ 9 
+1.2.4. Health Information Technology (HIT) ________________________________ 9 
+1.2.5. Telemedicine ___________________________________________________ 10 
+1.2.6. Wearable Devices _______________________________________________ 10 
+1.2.7. Virtual Reality & Augmented Reality (VR/AR) ________________________ 11 
+1.2.8. Artificial Intelligence and Machine Learning (AI/ML)___________________ 11 
+ 
+2. General Wellness Devices _______________________________________________ 12 
+2.1. Labeling ____________________________________________________________ 12 
+ 
+3. Regulatory Provisions Governing Digital Health Products ______________________ 13 
+ 
+Annexes _______________________________________________________________ 14 
+      Annex (A): Definitions and Abbreviations _________________________________ 15 
+ 
+ 
+
+  
+
+
+ 
+
+Page 3 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+Introduction 
+ 
+Purpose   
+The purpose of this guidance is to clarify the categories of digital health products that fall under 
+the regulatory scope of the Saudi Food and Drug Authority (SFDA). It provides an overview of 
+the major categories within digital health, outlines the regulatory approach for such 
+technologies, and clarifies the distinction between what qualifies as a regulated medical device 
+and what falls under general wellness products. 
+ 
+Scope 
+This guidance applies to digital health products with various technologies. It is intended to 
+support medical device manufacturers and software developers seeking to obtain Medical 
+Devices Marketing Authorization (MDMA) for digital health products within KSA, as well as 
+for end users of these products.  
+This guidance covers the following key categories within the digital health field: 
+
+• 
+Software as a Medical Device (SaMD). 
+• 
+Mobile Health Applications (mHealth apps).  
+• 
+Digital Therapeutics (DTx). 
+• 
+Health Information Technology (HIT). 
+• 
+Telemedicine. 
+• 
+Wearable Devices. 
+• 
+Virtual Reality & Augmented Reality (VR/AR). 
+• 
+Artificial Intelligence and Machine Learning (AI/ML). 
+• 
+General Wellness Devices. 
+ 
+Background   
+SFDA has issued this guidance document in reference to the “Law of Medical Devices” issued 
+by the Royal Decree No. (M/54) dated 6/7/1442 H.   
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+ 
+
+Page 4 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+ 
+1. Digital Health Products 
+Digital health refers to the use of Information and Communication Technologies (ICT) to 
+improve health outcomes and optimize the delivery of healthcare services. Digital health 
+technologies have a wide range of uses, ranging from public health applications to medical 
+device applications.  
+ 
+1.1. Qualification of Digital Health Products as Medical Devices 
+Medical device that incorporate digital health technologies is defined as a product or solution 
+that incorporates software, connectivity, sensors or digital tools and is intended for medical 
+purposes. These applications may be intended for use as standalone medical devices, integrated 
+within a medical or diagnostic device, or as adjunct tools that support the use of other medical 
+products such as devices, drugs, or biologicals. 
+Whether a digital health product qualifies as a medical device depends on its intended use, as 
+defined by the manufacturer. Information in product labeling (marking), technical 
+specifications, instructions for use, and any accompanying documents provided by the 
+manufacturer should clearly indicate the intended purpose of the product. If the manufacturer 
+intends the device to be used for purposes falling within the definition of a "Medical Device" 
+under the “Medical Devices Law”, such as prevention, investigation, detection, diagnosis, 
+treatment, alleviation, compensation, replacement, monitoring, controlling, support or 
+management of medical conditions, diseases, anatomical functions, or physiological processes, 
+the device will be qualified as a medical device. 
+ 
+1.2. Categories of Digital Health Products 
+1.2.1. Software as a Medical Device (SaMD) 
+The International Medical Device Regulators Forum (IMDRF) provides a widely accepted 
+definition for SaMD: 
+"Software intended to be used for one or more medical purposes that perform these purposes 
+without being part of a hardware medical device." (IMDRF SaMD Working Group, 2013). 
+The majority of digital health products fall within this category. SaMD refers exclusively to 
+standalone software, and include software intended for in vitro diagnostic (IVD) purposes. It 
+can function independently or in conjunction with other products, and may interface with other 
+software, hardware, or general-purpose platforms to fulfill its intended medical purpose. SaMD 
+may operate on either a general-purpose computing platform (e.g., a smartphone or PC) or a 
+medical-purpose computing platform. In contrast, software that is embedded within a hardware 
+medical device and intended to operate, drive, or control that device is not considered SaMD. 
+Such software is referred to as Software in a Medical Device (SiMD) and is outside the scope 
+of this guidance.  
+Standalone software that is intended to drive or influence the use of a hardware medical device 
+is not necessarily considered SaMD. Its regulatory qualification depends on whether it serves a 
+medical purpose. 
+
+• 
+If the software drives or influences a hardware medical device and has a medical 
+purpose, it qualifies as SaMD and is regulated independently.  
+• 
+If the software drives or influences a hardware medical device but lacks a medical 
+purpose of its own, it is considered as an accessory and is regulated accordingly.  
+• 
+If the software solely intended to operates or controls a hardware medical device 
+without contributing to any medical functionality, it is not considered SaMD, although 
+
+
+ 
+
+Page 5 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+it may still be subject to regulation as an accessory if it supports the device's 
+functionality. 
+ 
+Table 1 summarizes these scenarios and their corresponding regulatory implications. 
+
+Scenario 
+Qualification 
+Regulatory Implication 
+The software drives/influences a 
+hardware medical device and has a 
+
+medical purpose 
+
+SaMD 
+Regulated independently as 
+
+SaMD 
+
+The software drives/influences a 
+hardware medical device but does not 
+
+have a medical purpose on its own 
+
+Accessory 
+
+Considered an accessory to 
+
+the medical device and 
+
+regulated accordingly 
+
+The software is solely used to operate 
+
+or control a hardware device without 
+
+medical functionality 
+
+Not SaMD, but 
+
+may be an 
+
+accessory 
+
+− 
+Regulated only if it is 
+
+intended to assist the 
+
+functionality of the 
+
+device 
+Table 1. Qualification of standalone software that is intended to drive or influence a hardware 
+medical device. 
+ 
+See (Figure 1) for an overview of the regulatory decision flow for software qualification as a 
+medical device.  
+
+
+ 
+
+Page 6 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+Does the software function as an 
+accessory to a medical device, or does it 
+
+drive or influence the operation of a 
+
+hardware medical device?
+
+No
+
+Does the software analyze, interpret, or 
+manipulate data beyond basic functions like 
+storage, archiving, communication, or search?
+
+Yes
+
+Is the software s action intended to 
+
+benefit individual patients?
+
+Yes
+
+Does the software meet the definition of 
+
+SaMD as outlined in this guidance?
+Yes
+Qualify as MD
+Does not 
+qualify as MD
+
+No
+
+Yes
+
+No
+
+No
+
+ 
+Figure 1. Regulatory decision pathway for software qualification. 
+ 
+ 
+When SaMD  meets the definition of an IVD medical device, it falls under the regulatory 
+framework for IVD medical devices, as outlined in (MDS-REQ 1). Furthermore, if the SaMD 
+is explicitly intended by its manufacturer to be used in conjunction with an IVD medical device 
+(meaning that it operates independently but complements the IVD device to enable it to achieve 
+its intended purpose), it is also considered within the scope of the IVD regulation and shall be 
+treated as an IVD SaMD in its own right (see Figure 2). 
+
+
+ 
+
+Page 7 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+ Software as Medical Device (SaMD) according to 
+
+the definition of this guidance
+
+Does the SaMD provide information that 
+
+falls within the definition of an IVD as 
+
+outlined in MDS-REQ 1 ?
+
+Yes
+
+Does the SaMD generate information 
+exclusively using data from IVD medical 
+
+devices?
+
+No
+
+Is the intended purpose of the SaMD 
+primarily based on IVD data or MD data?
+
+IVD
+
+Covered by MDS-REQ 1  
+
+(IVD )
+
+No
+
+Covered by MDS-
+
+REQ 1 (MD )
+Yes
+
+MD
+
+ 
+Figure 2. Pathway for determining SaMD qualification as IVD or MD. 
+ 
+ 
+ 
+ 
+
+
+ 
+
+Page 8 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+Example of SaMD: 
+
+• 
+Software that monitors vital signs (e.g., heart rate, blood glucose levels) and alerts 
+patients or healthcare providers to critical changes. This software has a direct medical 
+purpose of detecting and managing a health condition. 
+ 
+Examples of non-SaMD: 
+
+• 
+Educational or informational software that provides general health or medical 
+knowledge without offering patient-specific diagnoses, treatment recommendations, or 
+clinical decisions support. These tools support awareness and education but are not 
+considered medical devices. 
+• 
+Communication software used for general interaction between patients and healthcare 
+providers (e.g., secure messaging platforms) that do not analyze or interpret clinical 
+data. While they facilitate healthcare communication, they lack a standalone medical 
+function. 
+• 
+Population-level analytics tools designed to identify health trends or patterns across 
+groups without targeting individual patient diagnosis or treatment. These are used for 
+public health or operational insights rather than direct patient care. 
+ 
+1.2.2. Mobile Health Applications (mHealth Apps) 
+A Mobile health application (mHealth app) is a software program designed to operate on mobile 
+devices, such as smartphones, tablets, and wearables, with the purpose of performing one or 
+more functions related to health, healthcare, or wellness. These apps often leverage the built-in 
+features of mobile devices, such as camera, light sensors, vibration alerts, and motion detectors, 
+to perform health-related functions. The goals are often to improve patient outcomes, enhance 
+access to healthcare, increase healthcare efficiency, and empower individuals in managing their 
+own health. They often intersect with telemedicine, particularly when mobile apps facilitate 
+communication, health data tracking, or remote patient monitoring. When an mHealth app 
+meets the definition of SaMD, it is regulated as SaMD and is generally used in one of the 
+following ways: 
+
+• 
+As a standalone app that transforms a mobile platform into a regulated medical device. 
+• 
+As an accessory to a regulated medical device, supporting its medical functionality. 
+ 
+Examples of mHealth apps that qualify as medical devices: 
+
+• 
+An app that helps epilepsy patients track seizure episodes and generates reports for 
+their healthcare providers. 
+• 
+An app that uses a smartphone’s built-in sensors to monitor blood glucose levels and 
+recommend insulin dosage adjustments for diabetic patients. 
+• 
+An app that processes medical imaging (e.g., radiology scans) to assist healthcare 
+professionals in diagnostic decision-making. 
+ 
+Examples of mHealth apps that do not qualify as medical devices: 
+
+• 
+An app that sends reminders for medication intake without managing dosage or 
+providing drug-specific recommendations. 
+• 
+An app that allows users to log meals and calculate nutritional content for general 
+wellness purposes. 
+
+
+ 
+
+Page 9 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+1.2.3. Digital Therapeutics (DTx) 
+Software-based interventions designed to treat, manage, or alleviate diseases, disorders, 
+conditions, or injuries. DTx are evidence-based therapeutic interventions that have been 
+clinically validated to produce measurable improvements in patient health outcomes. DTx can 
+be used as a standalone therapy or in combination with other treatments, such as 
+pharmacological therapy or in-person care. The treatment relies on the collection, analysis, and 
+application of digital health data, enabling personalized and adaptive treatment pathways.  DTx 
+utilizes a range of digital technologies, including apps, sensors, VR/AR, and the Internet of 
+Things (IoT) to encourage behavioral change, support adherence, and monitor clinical progress 
+in real time. DTx are considered a type of SaMD and generally subject to regulation as medical 
+devices. 
+ 
+Examples of DTx: 
+
+• 
+Software for the treatment of insomnia that delivers cognitive behavioral therapy 
+(CBT) techniques to improve sleep quality. 
+• 
+An app for chronic low back pain that provides personalized exercise programs and 
+integrates physiotherapy, relaxation techniques, and patient education.  
+ 
+1.2.4. Health Information Technology (HIT) 
+Health information technology (HIT) refers to the hardware, software, and systems used by 
+healthcare professionals to store, retrieve, manage, share, and analyze patient’s health data to 
+support clinical decision-making and improve healthcare delivery. Common examples of HIT 
+systems include: 
+
+• 
+Electronic health records (EHRs)  
+• 
+Health information systems (HIS) 
+• 
+Decision support systems (DSS) 
+• 
+Electronic prescribing (e-prescribing) software  
+In general, HIT products are not considered medical devices unless they are specifically 
+intended to analyze or interpret medical information for the purpose of diagnosing, treating, 
+mitigating, curing, or preventing a disease or health condition. In such cases, the product may 
+be subject to regulatory oversight as a medical device. Some HIT products may consist of 
+multiple integrated modules, but only certain modules meet the definition of a medical device. 
+In such cases, only the modules that independently qualify as medical devices are subject to 
+regulatory oversight. Accordingly, only the regulated module(s) should be submitted for 
+regulatory review.  The remaining non-medical modules are not required to be included in the 
+submission, provided that their separation and non-medical function are clearly documented. 
+ 
+A HIT product does not qualify as a medical device if it is: 
+
+• 
+Intended solely for administrative or communication support, such as appointment 
+scheduling, patient admission, billing processing, or secure messaging. Examples 
+include pharmacy systems used for medication dispensing and prescribing software 
+used by physicians that facilitate documentation or workflow without performing 
+clinical decision-making. 
+• 
+Designed exclusively to store, transfer, convert formats, or display medical data or test 
+results without any analysis or interpretation of the data. For instance, a clinical 
+information system (CIS) that receives and stores data from a medical device, allowing 
+
+
+ 
+
+Page 10 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+healthcare professionals to access and review the information at a later time, would fall 
+into this category. 
+ 
+Examples of HIT that qualify as medical devices: 
+
+• 
+A laboratory information management system (LIMS) that automatically interprets lab 
+results and generates potential diagnostic suggestions. 
+• 
+A clinical decision support system (CDSS) that monitors patient data in real time and 
+generates alerts for abnormal conditions requiring medical intervention. 
+• 
+A voice scribe system that transcribes clinician-patient interactions and generates 
+diagnostic suggestions. 
+ 
+1.2.5. Telemedicine 
+Telemedicine refers to the use of telecommunication technologies to deliver healthcare services 
+remotely, including clinical consultations, diagnosis, treatment, and patient monitoring. 
+Telemedicine systems may consist of hardware, software, or integrated digital platforms that 
+enable healthcare professionals to provide medical care without requiring in-person interaction. 
+Telemedicine is commonly categorized into three functional domains: 
+
+• 
+Tele-collaboration: 
+Communication 
+and 
+coordination 
+between 
+healthcare 
+professionals, such as case referrals, obtaining second opinions, or collaborative 
+diagnosis. 
+• 
+Tele-treatment: Remote delivery of clinical care, including digital diagnostics, and 
+interventions using technologies such as robotic-assisted surgery. 
+• 
+Tele-monitoring: Remote collection, transmission, and clinical use of patient health 
+data for ongoing monitoring and decision-making. 
+The software and tools used in telemedicine, particularly those intended for diagnosis, 
+monitoring, or treatment, are typically subject to medical device regulation.  
+ 
+Example of a telemedicine application that qualifies as a medical device: 
+
+• 
+A remote diagnostic platform that allows radiologists to access and interpret DICOM 
+images. 
+ 
+Example of a telemedicine application that does not qualify as a medical device: 
+
+• 
+General-purpose video conferencing tools used solely for communication—without 
+integrated medical functionality. 
+ 
+1.2.6. Wearable Devices 
+A wearable medical device is defined as a device designed to be worn on the human body or 
+attached to clothing for the purpose of monitoring health parameters, detecting physiological 
+abnormalities, and, in some cases, delivering medical interventions. These devices typically 
+integrate biosensors and software to collect, process, and sometimes act upon health-related 
+data. Wearables that primarily collect general health or wellness data, such as heart rate or 
+physical activity, are not typically qualified as medical devices, especially when they do not 
+provide clinical interpretation or medical decision support.  
+ 
+Example of a wearable device that qualifies as a medical device: 
+
+• 
+A wearable device that tracks general sleep patterns without offering diagnostic 
+insights. 
+
+
+ 
+
+Page 11 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+ 
+Example of a wearable device that does not qualify as a medical device: 
+
+• 
+A wearable device that performs a medical assessment function or is used in 
+conjunction with a regulated medical product, such as a smartwatch designed to detect 
+irregular heart rhythms and alert the user to seek medical evaluation. 
+ 
+Common classifications of wearable medical devices: 
+
+1. Skin-based wearable devices: These devices are designed for non-invasive monitoring 
+
+through skin contact. They are widely used for physiological and psychological 
+tracking, supporting the diagnosis and management of conditions such as 
+cardiovascular, respiratory, or neuromuscular disorders. For example, ECG patches, 
+and wearable thermometers. 
+2. Biofluid-based wearable devices: These wearables analyze body fluids such as sweat, 
+
+saliva, tears, or urine, which contain valuable biomarkers for continuous monitoring 
+and diagnostic purposes. For example, sweat-based glucose monitors, and tear-
+analyzing smart contact lenses. 
+ 
+1.2.7. Virtual Reality & Augmented Reality (VR/AR) 
+VR and AR technologies in healthcare refer to immersive and interactive systems designed to 
+support clinical, therapeutic, diagnostic, or rehabilitative purposes. VR fully immerses the user 
+in a computer-generated, simulated environment, while AR enhances the real-world 
+environment by overlaying digital content onto physical surroundings. These technologies are 
+increasingly being integrated into medical devices to enhance patient care and clinical 
+outcomes. VR and AR applications used solely for medical education, clinical training, or 
+general wellness, without a diagnostic or therapeutic purpose, are not classified as medical 
+devices. 
+ 
+Examples of medical applications of VR and AR technologies in regulated medical devices 
+include: 
+
+• 
+Assisting in surgical planning and intraoperative navigation. 
+• 
+Delivering non-pharmacological pain management therapy. 
+• 
+Supporting behavioral or cognitive rehabilitation, such as in cases of post-traumatic 
+stress disorder (PTSD) or anxiety disorders. 
+• 
+Facilitating physical therapy and motor skill recovery in post-injury or post-stroke 
+patients. 
+ 
+1.2.8. Artificial Intelligence and Machine Learning (AI/ML) 
+AI/ML are technologies that enable software systems to learn from data, adapt, and improve 
+performance over time without being explicitly programmed. In healthcare, AI/ML has the 
+potential to enhance a wide range of applications, from early disease detection and diagnosis to 
+workflow optimization, clinical decision support, and treatment planning. AI/ML-enabled 
+software that meets a medical purpose is typically regulated as SaMD. However, AI/ML 
+introduces unique complexities requiring enhanced regulatory approaches to ensure safety, 
+effectiveness, transparency, and ethical use. The SFDA has established additional regulatory 
+requirements specific to AI/ML-enabled medical devices. These focus on the following areas:  
+ 
+
+
+ 
+
+Page 12 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+• 
+Validation & Verification (V&V): Algorithms must be tested using diverse, high-
+quality datasets to demonstrate safety and effectiveness. 
+• 
+Data Quality & Governance: Strict protocols must ensure data integrity, accuracy, 
+privacy, and traceability throughout the entire device lifecycle. 
+• 
+Transparency & Explainability: Clear documentation of algorithm functionality, 
+limitations, and biases is required to support clinical understanding. 
+• 
+Risk Management: A comprehensive framework must address potential risks 
+including bias, cybersecurity, data privacy, and unintended outcomes. 
+• 
+Human Oversight: The role of healthcare professionals must be defined, with 
+safeguards for human review and intervention. 
+• 
+Lifecycle & Change Management: Procedures must govern updates, re-validation, 
+post-market performance monitoring, and documentation of algorithm changes. 
+ 
+2. General Wellness Devices 
+A digital health product qualifies as a general wellness device if it meets either of the following 
+criteria: 
+
+1. Makes a general wellness claim that does not reference any specific medical condition 
+
+or disease. 
+Or 
+2. Makes a general wellness claim that references a chronic disease, provided that the 
+
+intended use of the device relates to living well with that disease or mitigating its impact 
+on individuals' well-being. 
+ 
+For some chronic diseases, such as type 2 diabetes, high blood pressure, and heart disease, it is 
+well understood that a healthy lifestyle can reduce the impact of these diseases on well-being. 
+General wellness devices with a disease-related claim can still qualify as general wellness 
+devices as long as the claim is unrelated to the diagnosis, cure, mitigation, prevention, or 
+treatment of a disease or condition. Even if these devices reference a disease or condition, they 
+differ from medical devices in that they are intended to reduce the impact of certain chronic 
+diseases or conditions on individuals’ lives—based on the widely accepted understanding that 
+a healthy lifestyle contributes to improved quality of life for those living with such conditions. 
+In a situation where a general wellness device is recommended, used, or prescribed by medical 
+professionals for purposes that fall within the definition of a “Medical Device” as stated in the 
+“Medical Devices Law”, and the manufacturer is aware of such use, the device shall be subject 
+to SFDA assessment to determine whether it should be classified as a medical device and 
+regulated accordingly under the Medical Devices Law and its implementing regulation. Any 
+identified off-label medical use of the product shall be promptly reported to the SFDA. 
+ 
+
+2.1.  Labeling 
+If the digital health product qualifies as a general wellness device, the manufacturer shall clearly 
+state in the labeling (in both Arabic and English) that the device is not intended for medical 
+purposes.  
+ 
+ 
+
+
+ 
+
+Page 13 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+ 
+3. Regulatory Provisions Governing Digital Health Products 
+Manufacturer of digital health product shall comply with the “Requirements for Medical 
+Devices Marketing Authorization (MDMA) (MDS-REQ 1), if the product qualifies as a medical 
+device. 
+An additional number of regulatory documents that constitute guidance governing medical 
+devices that incorporate digital health technologies include: 
+
+• 
+MDS-G23: Guidance on Software as a Medical Device. 
+• 
+MDS-G10: Guidance on Artificial Intelligence (AI) and Machine Learning (ML) 
+technologies based Medical Devices. 
+• 
+MDS-G38: Guidance on Pre-Market Cybersecurity of Medical Devices. 
+ 
+ 
+
+
+ 
+
+Page 14 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+
+Annexes 
+
+ 
+ 
+ 
+
+ 
+ 
+
+
+ 
+
+Page 15 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+Annex (A): Definitions and Abbreviations 
+
+ 
+
+SFDA 
+Saudi Food and Drug Authority 
+
+KSA 
+Kingdom of Saudi Arabia 
+
+MDMA 
+Medical Device Marketing Authorization 
+
+Medical Device 
+Any instrument, apparatus,  implement,  implant,  in vitro reagent or 
+calibrator,  software, or material used for operating medical devices, 
+or any other similar or related article, intended to be used alone or in 
+combination with other devices for diagnosis, prevention,  monitoring,  
+controlling,  treatment, or alleviation of disease or injury, or for 
+compensation for an injury; investigation, replacement, modification, 
+or support of the anatomy or of a physiological process; supporting or 
+sustaining life; controlling or assisting conception; sterilization of 
+medical devices; providing information for medical or diagnostic 
+purposes by means of in vitro examination of specimens derived from 
+the human body; and does not achieve its primary intended action by 
+pharmacological, immunological or metabolic means, but which may 
+be assisted in its intended function by such means. 
+
+In Vitro Diagnostic 
+(IVD) 
+
+Means a medical device, whether used alone or in combination, 
+intended by the manufacturer for the in vitro examination of specimens 
+derived from the human body solely or principally to provide 
+information for diagnostic, monitoring or compatibility purposes. This 
+includes reagents, calibrators, control materials, specimen receptacles, 
+software and related instruments or apparatus or other articles. 
+
+Digital Health 
+Medical Device 
+
+Software or digital technology-based device intended for medical 
+purposes. 
+
+General Wellness 
+Device 
+
+Product without a medical claim, the use of which can contribute to 
+the wellbeing of individual persons. 
+
+Manufacturer 
+Any natural or legal person with responsibility for design and 
+manufacture of a medical device with the intention of making it 
+available for use, under his name; whether or not such a medical device 
+is designed and/or manufactured by that person himself or on his 
+behalf by another person. 
+
+Risk 
+Means the combination of the probability of occurrence of harm and 
+the severity of that harm. 
+
+Accessory for a 
+medical device  
+
+Any material or product intended specifically to be used with a 
+medical device or supply to enable it to achieve its purpose. 
+
+Software driving or 
+influencing the use 
+of a device 
+
+Software which is intended to drive or influence the use of a 
+(hardware) medical device. It does not independently serve a medical 
+purpose or generate information for medical use, as defined under 
+medical device or IVD medical device regulations. 
+
+AI 
+Artificial Intelligence 
+
+ML 
+Machine Learning 
+
+MD 
+Medical Device 
+
+
+ 
+
+Page 16 of 16 
+ 
+MDS-G-027-V1/250810 
+ 
+Restricted - مقيد 
+
+IVD 
+In Vitro Diagnostic 
+
+MDS 
+Medical Devices Sector 
+
+SaMD 
+Software as a Medical Device 
+
+SiMD 
+Software in a Medical Device 
+
+IMDRF 
+International Medical Device Regulators Forum 
+
+IoT 
+Internet of Things  
+ 
+ 
+ 
+ 
+

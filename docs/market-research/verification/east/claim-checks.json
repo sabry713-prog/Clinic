@@ -1,0 +1,10 @@
+{
+  "provider_primary_status": true,
+  "sahl_stages_and_denominators": true,
+  "checkpoint_task_boundaries": true,
+  "limited_rollouts": true,
+  "project_architecture": true,
+  "health_auto_separation": true,
+  "old_overclaims_absent": true,
+  "citation_gate": true
+}

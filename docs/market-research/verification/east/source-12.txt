@@ -1,0 +1,32 @@
+# Behind the $600 Million Win: Medical AI Commercialization Enters an Acceleration Phase-VCBeat
+URL: https://www.vcbeathealth.com/article/31498
+
+Behind the $600 Million Win: Medical AI Commercialization Enters an Acceleration Phase-VCBeat
+
+Home Behind the $600 Million Win: Medical AI Commercialization Enters an Acceleration Phase
+
+# Behind the $600 Million Win: Medical AI Commercialization Enters an Acceleration Phase
+
+Dec 10, 2025 10:41 CST Updated 10:41
+
+Share:
+
+##### Xunfei Healthcare
+
+Developer of Intelligent Medical Service Platforms
+
+The Commercialization of Medical AI Sparks Renewed Industry Debate.
+
+Recently, the Hefei Public Resources Trading Center in Anhui Province issued an announcement: IFLY TEK won the bid for the âSoftware Services for the National Pilot Base for Artificial Intelligence Applications (Primary Healthcare Services Sector)â project, with a winning bid amount of RMB 428 million.
+
+Some industry observers believe this once again confirms that the commercialization of medical AI continues to face the challenge of âstrong technology, difficult implementation, and slow monetization,â remaining highly dependent on government procurement. However, other perspectives point out that behind the successful bid,It represents an innovative exploration of iFLYTEK Healthcareâs AI commercialization path: the effectiveness of its GBC (Government-Business-Consumer) linkage model is beginning to emerge, and a closed-loop ecosystem of âG-end data, B-end scenarios, and C-end monetizationâ has been established.
+
+With this âbid win,â the model will also enter a critical validation phase. What new insights will the âsuccessfulâ exploration by leading enterprises bring to the commercial implementation of the medical AI industry?
+
+GBC Collaboration Model: iFLYTEK Healthcareâs Path to Commercial Innovation
+
+In China, primary healthcare institutions bear the heavy responsibility of safeguarding the health of hundreds of millions of people, leveraging the nationâs most extensive coverage network and accounting for more than half of all clinical consultations. They also serve as a crucial vehicle for implementing tiered diagnosis and treatment and the âHealthy Chinaâ strategy. However, this system faces structural challenges characterized by âstaff shortages, limited capabilities, and imbalanced resource allocation.â Artificial intelligence technology offers an innovative, efficient, and replicable pathway to address these issues.
+
+As the strategic foundation of IFLY TEK since its establishment in 2016,G-endPrimary healthcare settings remain its core area of deep engagement. Leveraging âZhiyi Assistant,â the worldâs first AI system to pass the National Medical Licensing Examination, it deeply integrates into the entire primary care workflow through a humanâAI collaborative model, significantly enhancing physiciansâ work efficiency and service quality via AI technologies.
+
+InB-Side (Hospital Side), IFLY TEK leverages its self-developed Spark Medical Large Model as the technological foundation to provide hospitals with full-stack AI solutions covering improvements in service quality and effici

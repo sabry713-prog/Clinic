@@ -1,0 +1,24 @@
+# Nabla Now Supports 35 Languages to Advance Culturally Responsive Care
+URL: https://www.prnewswire.com/news-releases/nabla-now-supports-35-languages-to-advance-culturally-responsive-care-302239179.html
+Published: 2024-09-05
+Author: Nabla
+
+Nabla Now Supports 35 Languages to Advance Culturally Responsive Care
+
+# Nabla Now Supports 35 Languages to Advance Culturally Responsive Care
+
+ Nabla 
+
+Sep 05, 2024, 10:00 ET
+
+- Nabla expands languages captured by its ambient AI assistant to produce culturally responsive clinical notes and instructions to streamline workflows and enhance the patient/provider experience 
+- Medical errors due to language barriers cost the U.S. health system an estimated $60 to $80 billion annually
+- Ineffective physician-patient communication can impact patient compliance, experiences, and health outcomes
+
+BOSTON, Sept 5, 2024 /PRNewswire/ -- Nabla, the leading ambient AI assistant for clinicians, today announced the launch of 31 new languages. Nabla expanded its AI-powered clinical documentation to support additional languages beyond the existing English (US), English (UK), French, and Spanish. The enhancement aims to assist a broader range of physicians who care for patients in various languages, including regional dialects and variations. By introducing these new language options, Nabla hopes to help bridge the language barrier for the 66 million people who do not speak English as their primary language. Nabla now supports 35 international languages.
+
+Exam room language barriers negatively impact the patient-physician relationship, causing confusion, distrust in physicians, a low rate of patient compliance, and poor health outcomes. At the same time, physicians who provide care in multiple languages require expanded access to AI-powered documentation tools that lead to greater efficiency and overall improved patient outcomes. Ineffective communication also has financial implications, where medical errors related to language barriers cost health systems up to $80 billion annually nationwide.
+
+"Supporting physicians with AI assistants like ours that enhance clinical documentation regardless of the language spoken bridges a gap in care delivery and drives forward health equity initiatives," said Delphine Groll, co-founder and COO, Nabla. "By expanding the languages Nabla captures, we're advancing care delivery by allowing providers to remain focused on building rapport and trust with the patient and improving the patient experience by generating clear, concise language-specific details and instructions."
+
+In July 2023, Nabla was the first ambient AI assistant to launch a Spanish-language version to support physician-patient conversations. California-based health systems, including Children's Hospital Los Angeles, quickly adopted the Spanish-language version, which is used in 8% of the visits conducted with Nabla. Nabla listened closely to its customers and prospects when determining which new language versions to create. For example, prospects and clients based on the West Coast frequently requested Chinese language support to improve communications with their patient population that speaks Chinese languages. All new language versions account for the top languages

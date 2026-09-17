@@ -1,0 +1,111 @@
+[
+Heidi launches first AI device for clinical work: **Remote**
+
+](/hardware)
+
+### Ask AI about Heidi:
+
+Clinicians Reclaim Over 500 Hours Weekly with AI-Powered Clinical Scribe.
+
+**Clinicians Reclaim Over 500 Hours Weekly with AI-Powered Clinical Scribe.**
+
+*Users report lower stress and significant increase in presence with patients.*
+
+Cambridge, Ontario — July 9, 2025 — The Cambridge North Dumfries Ontario Health Team (CND OHT) is proud to share early success from its adoption of Heidi, a powerful [ambient AI](/blog/ambient-ai) medical scribe that transcribes patient visits and generates detailed care notes.
+
+“Using Heidi has elevated my practice as a family physician. Not having to focus on notetaking, I can engage more with my patients – listen to their concerns, ask thoughtful questions, and develop more personalized and effective care plans,” said Dr. Cameila Singh, Primary Care Lead, Cambridge North Dumfries Ontario Health Team.
+
+The Heidi [AI medical scribe](/blog/ai-medical-scribe-adoption) technology currently supports over 2,900 patient consultations weekly across the Cambridge North Dumfries region. It generates documentation for new patient visits, follow-ups, referral letters and procedural notes.
+
+Since introducing Heidi in early 2025, CND OHT’s evaluation shows clinicians using the Heidi scribe have already saved more than 530 hours per week in documentation time. The evaluation results also show:
+
+- 100% of clinicians report increased presence with patients
+- 90% report lower levels of stress and burnout
+- An average of 11 minutes saved per patient consult
+- 80% of notes require minimal edits
+- 70% cite greater accuracy and clarity in clinical records
+The evaluation was conducted over a three-month period in early 2025 with 169 clinicians working across multiple specialties. Results demonstrate how seamless integration of ambient AI technology into clinical workflows has measurable and immediate benefits by strengthening overall documentation quality and care continuity, while improving patient and clinician experience.
+
+“CND OHT is showing what’s possible when you place clinicians at the heart of innovation,” said Dr. Thomas Kelly, CEO and co-founder of Heidi Health. “Their leadership is helping set a national precedent for how AI can support and enhance human care.”
+
+### Start practicing with a partner
+
+ Care is better with Heidi
+
+## Keep Reading
+
+[
+
+###### The era of the clinician builder is here
+
+Heidi Team
+
+April 21, 2026
+
+](/blog/the-era-of-the-clinician-builder-is-here)[
+
+###### Eligibility and Benefits Verification: Guidelines and Examples
+
+Nikki Zurbano
+
+April 16, 2026
+
+](/blog/eligibility-and-benefits-verification)
+
+Adoption of [AI scribe](/blog/ai-medical-scribe) technology is part of CND OHT’s ongoing commitment to innovation to improve provider and patient experience and wellbeing.
+
+“I just find I have so much more to give at the end of the day, ” said Dr. Adam Wilson, family physician, Dunbar Family Practice, Cambridge, ON.
+
+## **About Cambridge North Dumfries Ontario Health Team**
+
+The Cambridge North Dumfries Ontario Health Team (CND OHT) is a collaborative of 40+ health and social service provider agencies from Cambridge, North Dumfries and the Waterloo Region. The CND OHT envisions a community where people access seamless and integrated services to ensure the health and wellbeing of our diverse populations.
+
+The Ontario government introduced Ontario Health Teams to support a connected health care system centred around patients, families and caregivers. Ontario Health Teams will strengthen local services, making it easier for patients to navigate the system and transition between providers.
+
+For more information about the CND OHT, please visit [cndoht.com](https://cndoht.com).
+
+### **About Heidi Health**
+
+Heidi Health is a leading ambient AI scribe, enabling clinicians to capture and generate medical documentation automatically in real time. Used in over 1.5 million patient consults per month across Canada, Heidi helps healthcare teams reduce burnout, increase accuracy, and focus on what matters most—patients. Heidi meets Canadian privacy and security requirements, including PIPEDA and PHIPA in Ontario. Heidi data is also stored in Canada.
+
+Learn more at [www.heidihealth.com](https://www.heidihealth.com).
+
+[
+
+###### Heidi Expands Epic Integration to Mobile with Haiku Support
+
+Heidi Team
+
+March 24, 2026
+
+](/blog/heidi-epic-integration-hyperspace-haiku)
+
+[
+
+###### Doctors are not databases. So why are we treating them like they are?
+
+Heidi Team
+
+March 24, 2026
+
+](/blog/doctors-are-not-databases-so-why-are-we-treating-them-like-they-are)
+
+[
+
+###### Heidi Launches First Hardware Designed For Reliable Audio Capture in Every Clinical Setting
+
+Heidi Team
+
+March 23, 2026
+
+](/blog/heidi-launches-hardware)
+
+[
+
+###### How Heidi Cut ASR Costs 64% and Latency 75% with NVIDIA Nemotron Open ASR
+
+Heidi Team
+
+March 16, 2026
+
+](/blog/how-heidi-improved-asr-nvidia-nemotron)

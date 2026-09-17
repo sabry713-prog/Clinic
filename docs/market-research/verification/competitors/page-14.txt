@@ -1,0 +1,473 @@
+**​​​​​​​ Disclaimer**
+
+ These criteria must be used and interpreted within the framework of the CHI Essential Benefit Package, the Insurance Drug Formulary, and other policies and circulars issued by the Council of Health Insurance.
+
+**​​​​​​ Medical Necessity**
+
+ Medical Necessity criteria are sets of criteria used to determine whether a particular health service or treatment is medically necessary and appropriate for the beneficiary based on current scientific recommendations. These criteria are used by health care providers and insurance companies to ensure that appropriate health care services are provided and covered appropriately to improve the quality of health care. These criteria focus on:
+
+**​​​​​​ Medical Necessity**
+
+ The treatment or intervention must be necessary to treat or diagnose a medical condition or to prevent development of disease or worsening of an existing condition.
+
+**​​​​​​ Clinical Appropriateness**
+
+ The treatment or intervention must be appropriate to the beneficiary’s health condition based on established clinical guidelines and standards. This requires that the treatment or intervention to be compatible with the beneficiary’s specific condition and achieve the desired outcome.
+
+**​​​​​​ Evidence-Based**
+
+ There must be sufficient evidence to support the effectiveness of the treatment or intervention based on reliable medical evidence.
+
+**​​​​​​Cost-Effectiveness**
+
+ Treatment or intervention should be cost-effective compared to other available options. This ensures that the treatment or intervention provides adequate value for the associated expenses.
+
+**​​​​​​ Patient-Specific**
+
+Treatment should be tailored to the individual needs of beneficiaries, considering the beneficiaries' medical history and specific health conditions.
+
+**​​​​​​ Preventive Care**
+
+ Medical necessity may also include certain preventive services that are considered necessary to prevent diseases or detect health conditions at early stage.
+
+**​​​​​​ Documentation**
+
+ Documentation must be provided to justify the medical need for the treatment or procedure. This can include clinical notes, test results, and treatment plans.
+
+**​​​​​​ Transparency**
+
+ These criteria achieve transparency between health care providers and insurance companies.
+
+**​​​​​​ Protecting beneficiaries**
+
+ Preventing harm that may occur to CHI beneficiaries due to medically unjustified intervention or treatment or due to unjustified denial of service coverage.
+
+ These criteria help ensure that beneficiaries receive appropriate health care and that health costs are managed effectively by providers and insurance companies.
+
+ ​
+
+##### Medical Necessity Criteria for Urine Culture Testing in Pediatrics
+
+###### Source: Saudi Pediatric Infectious Disease Society
+
+Pediatrics
+
+##### Medical Necessity Criteria for Breast Cancer Screening
+
+###### Source: CHI
+
+Obstetrics and Gynecology, Bariatric Surgery
+
+##### Medical Necessity Criteria for Vitamin B12 Testing
+
+###### Source: CHI
+
+Internal Medicine, Endocrinology
+
+##### Saudi Clinical Preventive
+
+###### Source: Public Health Authuraty
+
+Preventive Medicine & Occupational Medicine
+
+##### Vitamin D
+
+###### Source: CHI
+
+Preventive Medicine & Occupational Medicine
+
+##### TIRZEPATIDE (Mounjaro)
+
+###### Source: CHI
+
+Internal Medicine, Endocrinology
+
+##### Saudi National Clinical Practice Guidelines for Management of Adult systemic Lupus Erythematosus
+
+###### Source: MOH
+
+Internal Medicine, Endocrinology
+
+##### MOH Protocols for the Management of Attention Deficit Hyperactive Disorder (ADHD) Across the Life Span
+
+###### Source: MOH
+
+Psychiatry, Neurology
+
+##### Cardiac Cath
+
+###### Source: American College of Cardiology/American Heart Association
+
+Internal Medicine, Cardiology
+
+##### Dyslipidemia (SHC)
+
+###### Source: National Heart Center
+
+Internal Medicine, Cardiology
+
+##### Heart Failure
+
+###### Source: American College of Cardiology/American Heart Association
+
+Internal Medicine, Cardiology
+
+##### National Reference for Family Medicine and Primary Healthcare
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Internal Medicine
+
+##### Rhinosinusitis
+
+###### Source: MOH
+
+Ear Nose and Throat
+
+##### Rhinosinusitis treatment protocol
+
+###### Source: MOH
+
+Ear Nose and Throat
+
+##### Varicocele
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Surgery, Urology
+
+##### Behavioral and Psychological Symptoms
+
+###### Source: MOH
+
+Psychiatry
+
+##### Depression
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Psychiatry
+
+##### Management of Adult Obsessive and Compulsive Disorder
+
+###### Source: MOH
+
+Psychiatry
+
+##### Management of Anxiety Disorder
+
+###### Source: MOH
+
+Psychiatry
+
+##### Schizophrenia and Bipolar Affective Disorder
+
+###### Source: MOH
+
+Psychiatry
+
+##### Specialized Infant Formulas
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Pediatrics
+
+##### Knee Osteoarthritis (OA) Physical Therapy
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Orthopedic
+
+##### Low Back Pain MRI
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Orthopedic
+
+##### Low Back Pain Physical Therapy
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Orthopedic
+
+##### Osteoporosis
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Orthopedic
+
+##### Contraception
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Obstetrics and Gynecology, Infertility
+
+##### Chest Pain
+
+###### Source: American College of Cardiology/American Heart Association
+
+Internal Medicine, Cardiology
+
+##### Dementia
+
+###### Source: AMERICAN GERIATRICS SOCIETY
+
+Internal Medicine
+
+##### Diabetes Mellitus
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Internal Medicine, Endocrinology
+
+##### Dyspepsia
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Internal Medicine, Gastroenterology
+
+##### Headache
+
+###### Source: Saudi Society of Family and Community Medicine & CHI
+
+Internal Medicine, Neurology
+
+##### Hypertension
+
+###### Source: Saudi Society of Family and Community Medicine +SHMS+CHI
+
+Internal Medicine, Cardiology
+
+##### Insulin Pump Policy
+
+###### Source: مركز تقييم التقنيات الصحية
+
+Internal Medicine, Endocrinology
+
+##### Obstructive Sleep Apnea
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Internal Medicine, Sleep Medicine
+
+##### Sexually Transmitted Infections
+
+###### Source: MOH
+
+Internal Medicine, Infectious Diseases
+
+##### Streptococcal Pharyngitis
+
+###### Source: US Department of Health and Human Services/Centers for Disease Control and Prevention
+
+Internal Medicine, Infectious Diseases
+
+##### Valvular Heart Diseases
+
+###### Source: e American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines
+
+Internal Medicine, Cardiology
+
+##### Manual in Emergency Medicine
+
+###### Source: MOH
+
+Emergency Medicine
+
+##### Urinary Tract Infection
+
+###### Source: MOH
+
+Surgery, Urology
+
+##### Lower Respiratory Tract Infection
+
+###### Source: MOH
+
+Internal Medicine, Pulmonology
+
+##### Exercise
+
+###### Source: MOH
+
+Preventive Medicine & Occupational Medicine
+
+##### Child Health Passport
+
+###### Source: MOH
+
+Pediatrics
+
+##### Hormonal Replacement Therapy
+
+###### Source: pcwhf.co.uk
+
+Obstetrics and Gynecology
+
+##### Mother Health Passport
+
+###### Source: MOH
+
+Obstetrics and Gynecology
+
+##### Polycystic Ovary
+
+###### Source: pcos-uk
+
+Obstetrics and Gynecology
+
+##### Asthma
+
+###### Source: MOH
+
+Internal Medicine, Pulmonology
+
+##### Dyslipidemia
+
+###### Source: Saudi Society of Family and Community Medicine
+
+Internal Medicine, Cardiology
+
+##### Irritable Bowel Syndrome
+
+###### Source: The American Journal of GASTROENTEROLOGY
+
+Internal Medicine, Gastroenterology
+
+##### Kidney Transplant
+
+###### Source: International liver Transplant Society
+
+Internal Medicine, Nephrology
+
+##### Anemia
+
+###### Source: saudi commission for health specialties
+
+Hematology & Oncology
+
+##### Colorectal Cancer Screening
+
+###### Source: Saudi Society of Clinical Pharmacy+ SCHS
+
+Hematology & Oncology
+
+##### Bariatric and Metabolic Surgery
+
+###### Source: Saudi Society of Obesity Medicine and Surgery
+
+Surgery, Bariatric Surgery
+
+##### Healthy Food
+
+###### Source: MOH
+
+Preventive Medicine & Occupational Medicine
+
+##### Pediatric DKA/HHS Protocol
+
+###### Source: MOH
+
+Pediatrics, Endocrinology
+
+##### Bradycardia and Pacemaker
+
+###### Source: American College of Cardiology/American Heart Association
+
+Internal Medicine, Cardiology
+
+##### Saudi Stroke Standards
+
+###### Source: MOH
+
+Internal Medicine, Neurology
+
+##### DKA/HHS Protocol
+
+###### Source: MOH
+
+Internal Medicine, Endocrinology
+
+##### Tobacco
+
+###### Source: National Committee for Tabaco Control
+
+Preventive Medicine & Occupational Medicine
+
+##### Ventricular Arrhythmias
+
+###### Source: American College of Cardiology/American Heart Association
+
+Internal Medicine, Cardiology
+
+##### Intra-abdominal Infections Treatment Protocol
+
+###### Source: MOH
+
+Internal Medicine, Infectious Diseases
+
+##### NEUROPATHIC PAIN
+
+###### Source: MOH
+
+Surgery, Nephrology
+
+##### Peritoneal Dialysis
+
+###### Source: Council of Health Services
+
+Internal Medicine, Nephrology
+
+##### Inpatient Hypoglycemia Management Protoco
+
+###### Source: MOH
+
+Internal Medicine, Endocrinology
+
+##### Prostate Cancer
+
+###### Source: Saudi Oncology Society and Saudi Urology Association
+
+Hematology & Oncology
+
+##### Renal Cell Cancer
+
+###### Source: Saudi Oncology Society and Saudi Urology Association
+
+Hematology & Oncology
+
+##### Urothelial Bladder Cancer
+
+###### Source: Saudi Oncology Society and Saudi Urology Association
+
+Hematology & Oncology
+
+##### Heamodialysis
+
+###### Source: National Kidney Foundation
+
+Internal Medicine, Nephrology
+
+##### Emergency Classification
+
+###### Source: MOH
+
+Emergency Medicine
+
+##### Chronic Kidney Disease
+
+###### Source: International Society of Nephrology
+
+Internal Medicine, Nephrology
+
+##### Lumbar Disc Herniation
+
+###### Source: North American Spine Society
+
+Orthopedic
+
+##### Lumbar Spinal Stenosis
+
+###### Source: North American Spine Society
+
+Orthopedic

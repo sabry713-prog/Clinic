@@ -1,0 +1,37 @@
+Over the past months, major insurance companies in Saudi Arabia have escalated their auditing of clinical documentation—focusing closely on the accuracy of diagnoses, completeness of ICD-10-AM coding, and regulatory alignment with the Council of Health Insurance (CHI).
+
+The result? A notable spike in claim rejections, delayed reimbursements, and mounting administrative stress for hospitals and healthcare providers.
+
+This shift signals a systemic push towards tightened oversight, with insurance companies leveraging internal audit systems and AI tools to validate every line item in a submitted claim. Hospitals that are not prepared will feel the financial and operational strain.
+
+## The Core of the Problem: Documentation Gaps and Coding Errors
+
+Rejections aren’t just about incorrect ICD-10-AM codes. Insurers are now:
+
+- Requesting justification for each diagnosis code
+- Auditing alignment between notes, codes, and treatment plans
+- Rejecting vague or incomplete clinical documentation
+- Denying claims that lack CHI-compliant medication or service details
+Without a robust clinical documentation integrity (CDI) system, even the most well-meaning clinicians are at risk of miscoding or under-documenting care.
+
+## How Hospitals Should Respond
+
+To safeguard revenue and improve operational integrity, hospitals must adopt a proactive strategy built on standardized documentation, accurate coding, and regulatory compliance.
+
+1. **Strengthen Clinical Decision Support** Equip physicians with tools that guide them through accurate differential diagnosis, and recommend evidence-bases and guideline-based tests and treatments. This helps improve both the quality of care and the clarity of documentation.
+2. **Automate Claim Validation Before Submission** Use pre-audit engines that simulate insurance checks before the claim leaves your system. These tools ensure every code is tied to adequate documentation and CHI standards.
+3. **Train and Support Coding Teams** Invest in ongoing education for your RCM and coding staff on the latest ICD-10-AM updates, CHI policies, and audit trends. Combine human expertise with smart tools like Glance CodeAudit or Glance Moramiz to reduce manual errors.
+4. **Integrate Smart Documentation Tools** Use tools like Glance Omni that support CHI-compliant clinical notes, recommend codes, and embed audit trails—reducing callbacks and rework from payers. [Try Glance Omni now](https://app.glance.care/signup)
+
+## *Rejections Are Expensive. Prevention is Cheaper.*
+
+Each rejected claim costs hospitals not just time, but revenue and reputation. As regulations tighten, hospitals that embrace AI-powered documentation and coding support will outperform others in efficiency, compliance, and reimbursement speed.
+
+## The Bottom Line: You Can’t Afford to Guess
+
+The era of poor documentation is over. Hospitals must ensure that every claim submitted is bulletproof—from the diagnosis to the code to the approval request.
+
+- Use AI tools to support clinical decisions
+- Pre-audit claims before submission
+- Ensure CHI compliance at every step
+Want to see how Glance Care helps hospitals reduce rejection rates and ensure claim integrity?

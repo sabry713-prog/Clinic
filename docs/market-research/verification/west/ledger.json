@@ -1,0 +1,415 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://ncbi.nlm.nih.gov/pubmed/41497288",
+      "title": "Ambient AI Scribes in Clinical Practice: A Randomized Trial - PubMed",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 2,
+      "url": "https://www.microsoft.com/en-us/microsoft-cloud/blog/healthcare/2025/03/03/meet-microsoft-dragon-copilot-your-new-ai-assistant-for-clinical-workflow",
+      "title": "Meet Microsoft Dragon Copilot: Your new AI assistant for clinical workflow | The Microsoft Cloud Blog",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Dragon Copilot uses grounded AI with citations to ensure trust in its responses.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "url": "https://www.healthcarefinancenews.com/news/abridge-and-availity-partner-real-time-prior-authorization",
+      "title": "Abridge and Availity partner for real-time prior authorization | Healthcare Finance News",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "The development of real-time prior authorization is one component of revenue cycle collaboration using conversational intelligence, the companies said.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "url": "https://newsroom.clevelandclinic.org/2025/02/19/cleveland-clinic-announces-the-rollout-of-ambience-healthcares-ai-platform",
+      "title": "https://newsroom.clevelandclinic.org/2025/02/19/cleveland-clinic-announces-the-rollout-of-ambience-healthcares-ai-platform",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Providers must read the note in its entirety to confirm its accuracy and completeness and edit as needed before signing.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "url": "https://www.nature.com/articles/s44401-026-00144-6",
+      "title": "Accelerating ambient AI scribe enterprise-scale deployment: Cleveland Clinicâs novel approach to health system-industry partnership | npj Health Systems",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "This partnership enabled deployment and onboarding of over 4000 ambulatory care clinicians in 4 months",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "url": "https://www.codametrix.com/resources/year-one-real-results-how-health-systems-are-using-ai-to-deliver-fast-roi-in-the-revenue-cycle",
+      "title": "CodaMetrix â Code For Better, Contextual Coding Automation",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "92% of Radiology cases now coded autonomously",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "url": "https://akasa.com/case-studies/montage-auth-status",
+      "title": "(no title)",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "22% reduction in their auth status Epic work queue volume",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "url": "https://akasa.com/press/cleveland-clinic-akasa-deepen-ai-partnership",
+      "title": "(no title)",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "implementing it in all its U.S. locations over the course of four months",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "url": "https://www.waystar.com/news/waystar-advances-ai-leadership-with-next-generation-denial-prevention-and-reimbursement-recovery-innovations",
+      "title": "Waystar Advances AI Leadership with Next-Generation Denial Prevention and Reimbursement Recovery Innovations | Waystar",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "With Waystar AltitudeAI capabilities, early adopters are overturning 40% more denials.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "url": "https://www.prnewswire.com/news-releases/smarterdx-recognized-as-one-of-modern-healthcares-2025-innovators-award-honorees-302428230.html",
+      "title": "SmarterDx recognized as one of Modern Healthcare's 2025 Innovators Award Honorees",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "an average of $2 million in annual net new revenue per 10,000 patient discharges, achieving a 5:1 ROI.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "url": "https://www.gosh.nhs.uk/news/researchgosh-led-trial-of-ai-scribe-technology-shows-transformative-benefits-for-patients-and-clinicians-across-london",
+      "title": "GOSH-led trial of AI-scribe technology shows ‘transformative’ benefits for patients and clinicians across London",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Results showed a 23.5% increase in direct patient interaction time during appointments, alongside an 8.2% reduction in overall appointment length when AI-scribes were used.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "url": "https://healthinnovation-kss.com/independent-evaluation-of-tortus-ambient-voice-technology-shows-time-savings-and-improved-patient-interaction-for-kent-and-medway",
+      "title": "Independent evaluation of TORTUS ambient voice technology shows time savings and improved patient interaction for Kent and Medway",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Adult social care sites ended their pilot early after failing to realise the perceived benefits.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/pmid/41497288",
+      "title": "Checking your browser - reCAPTCHA",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 14,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12858090",
+      "title": "A Pragmatic Randomized Controlled Trial of Ambient Artificial Intelligence to Improve Health Practitioner Well-Being",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "The reduction in WoW (-0.50 hours per day; 95% CI, -0.90 to -0.09) was sensitive to exclusion of extreme values and was no longer significant after removing the top 3% of daily observations.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "A closed cohort of 66 health care practitioners (attending physicians and advanced practice practitioners) was recruited and individually randomly assigned in a 1:1:1 ratio into three 6-week sequences (waves) of a 24-week stepped-wedge schedule (Fig. 1). Stratified permuted-block randomization balanced specialty type and each wave transitioned from practice-as-usual to the ambient AI intervention at 6-week intervals (Supplementary Appendix, Section 1). The trial was registered on ClinicalTrials.gov (NCT06517082) on August 9, 2024. All primary and secondary end points were prespecified in the protocol and completed as planned. No deviations from the prespecified end points occurred. The full statistical analysis plan (version 2.0, June 23, 2025), analysis code, and participant survey data are available in the public Git repository (https:// git.doit.wisc.edu/smph-public/LearningHealthSystem/ ambientlistening) to support reproducibility.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Health care practitioners entered their own diagnostic and billing codes, which were then reviewed by certified health system coders as part of standard operations. Coders assessed the alignment of primary and secondary International Classification of Diseases, Tenth Revision (ICD-10) codes with documentation, using a standardized rubric, assigning partial credit for insufficient specificity and a score of zero for errors that affected billing validity (Supplementary Appendix, Section 2).",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "We assessed documentation quality in a random sample of AI-generated notes using the Provider Documentation Summarization Quality Instrument 9 (PDSQI-9), a validated instrument adapted here for evaluating summaries of clinical encounter transcripts. 16 Transcripts served as the reference documents, an analog to prior use of source notes for multidocument summarization. The PDSQI-9 evaluates accuracy (including falsification/fabrication), thoroughness (major omissions), abstraction/synthesis, usefulness for clinical decision-making, stigmatizing language, and linguistic qualities (organization, comprehensibility, succinctness). Each item is scored on a five-point Likert scale with explicit, rule-based anchors for every level of performance. The citation domain was excluded, as transcripts represented a single-source document. Scoring was performed on the final AI-generated note using an LLM-as-a-judge implementation that has been validated against physician ratings across multiple note-generation tasks. 17 Notes were analyzed in their unedited form before practitioner review. The full rubric, scoring rules, and automation scripts are available in Epic's open-source GitHub repository at https://github .com /epic -open -source /evaluation -instruments /tree /main /src / evaluation\\_instruments /instruments /pdsqi\\_9.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Analyses followed the intention-to-treat (ITT) principle in a linear mixed-effects model with random effects for participants using the averages of the item scores for the primary outcome. Calendar time trends were adjusted with period fixed effects (reference: period 1); for documentation metrics secondary outcomes, calendar time trends were adjusted using continuous weeks since the start of the study. The type-I error rate was split between the coprimary outcomes, with each outcome using a two-sided type-I error rate of 0.025 (total type-I error rate of 0.05). Analyses were also adjusted for specialty to account for the randomization stratification variable adjustment. 21 To control for the false discovery of secondary measures, the Benjamini-Hochberg method was applied with a total two-sided type-I error rate of 0.1. Primary mixed-effects models included provider random intercepts, period fixed effects, and adjustment for specialty. Survey missingness was low; complete-case analyses were performed, and 95% CIs were calculated using robust standard errors with a biased-reduced linearization adjustment (CR2) using the \"clubSandwich\" package. [22][23][24] For clinical use, thresholds to dichotomize professional fulfillment and exhaustion or interpersonal disengagement scores were provided in the validation work by Trockel et al., 18 who applied receiver operating characteristics analyses to identify thresholds with optimal sensitivity and specificity (at least 2.33 and at least 4.0 for work exhaustion/interpersonal disengagement and professional fulfillment scores, respectively) and against external anchors of quality of life and previously published burnout measures. These thresholds demonstrated meaningful discrimination and were further associated with clinically relevant outcomes, including medical error rates and depression-symptom severity. Guided by this prior work, and consistent with institutional practice at our site, we applied the same thresholds. In addition, the number needed to treat (NNT) was calculated by dichotomizing a within-practitioner change in work exhaustion/interpersonal disengagement score, where 1 indicates score improvement by the estimated treatment effect from the linear mixed-effects model.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "We then used a logistic generalized linear mixed model adjusted for time period fixed effects and specialty to estimate the adjusted odds ratio, which was used to estimate the absolute risk reduction and the NNT; CIs were calculated using the Wald method. 25,26 All code was performed in R (4.3), and Supplementary Appendix, Section 3, provides the consolidated standards of reporting trials (CONSORT) checklist 27 for reporting. Clinical trial data and analytic code are available at https://git .doit .wisc .edu /smph -public /LearningHealthSystem /ambientlistening.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "The 66 enrolled health care practitioners were evenly distributed by specialty across the three randomization waves and were predominantly female (78.8%), with a median age of 42.5 years (interquartile range, 36.3-49.0). Most identified as non-Hispanic white (89.4%) and were physicians (72.7%). The specialty with the greatest representation was family medicine (45.5%).",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "During the study period of usual care and ambient AI intervention, health care practitioners authored a total of 71,487 clinical notes, of which 44,395 were authored only by humans and 27,092 were generated using ambient AI. Among the human-authored notes, 31.9% occurred during the intervention period with ambient AI available. The note-weighted mean of health care practitioner ambient AI utilization was 71.0% (SD 31.6%). Pre-and posttrial interviews were completed on a subgroup of practitioners to share qualitative feedback on their experience (Supplementary Appendix, Sections 4 and 5).",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "and a significant decrease of 0.44 points in work exhaustion/interpersonal disengagement (robust 95% CI, -0.62 to -0.25; P<0.001), on a five-point Likert scale (Fig. 2). At baseline, 56.1% had work exhaustion/interpersonal disengagement scores above the threshold for high work exhaustion/interpersonal disengagement (at least 2.33), while 25.8% had scores above the threshold for high professional fulfillment (at least 4.0). By the end of the study, the proportion above the high work exhaustion/interpersonal disengagement threshold decreased to 35.4%,",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "while the proportion crossing the high professional fulfillment threshold increased to 41.5%. The full distribution of scores between usual care and access to ambient AI is shown in Supplementary Appendix, Section 8. The treatment effect was sustained across the study waves, and the variability of primary outcome effect sizes across time can be seen in Figure 3. The NNT to achieve this magnitude of work exhaustion/interpersonal disengagement reduction in one health care practitioner was 1.68 (95% CI, 1.55 to 1.82), corresponding to an absolute risk reduction of 0.60.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Week-averaged WoW ranged between 0.01 hours and 35.08 hours, and time spent on notes ranged between 0.27 hours and 11.17 hours. Compared with the control period, health care practitioners with ambient AI spent less time in the EHR per 8 hours of patient time, with reductions in week-averaged time spent on notes (-0.36 hours; robust 95% CI, -0.55 to -0.17; adjusted P<0.001). In a sensitivity analysis, exclusion of the top 0.5% of observations (revised range: 0 to 8.17 hours) still showed a reduction in time spent on notes (-0.34 hours; 95% CI, -0.50 to -0.17). Week-averaged WoW was reduced (-0.50 hours; robust 95% CI, -0.90 to -0.09; adjusted P=0.03), but excluding the top 3% of observations (revised range: 0.01 to 9.87 hours) attenuated the effect size, resulting in a nonsignificant reduction (-0.19 hours; robust 95% CI, -0.40 to 0.03). The proportion of encounters closed on the same",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Across 15 sequential 1-month rolling windows, no drift events were observed. A planned software update on October 29, 2024, was associated with a nonsignificant change in ambient AI utilization (+0.17 percentage points; 95% CI, -8.33 to 8.67; P=0.97), as well as nonsignificant differences between trial groups regarding WoW (+0.10 hours; 95% CI, -1.14 to 1.33; P=0.88) and time spent on notes (+0.17 hours; 95% CI, -0.29 to 0.61; P=0.50).",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "practitioner and note type, with 50.4% generated using ambient AI. Notes produced with ambient AI demonstrated greater compliance with final ICD-10 billing diagnoses, as adjudicated by professional coders (Supplementary Appendix, Section 9), compared with notes authored without AI assistance, with a mean ICD-10 compliance score of 6.87 (95% CI, 6.76 to 6.98) for ambient AI generated notes versus 5.94 (95% CI, 5.81 to 6.07) for human-authored notes (P<0.001) on a scale of 0 to 10.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "In the PDSQI-9 evaluation, we analyzed 7966 randomly sampled notes representative of all health care practitioners who used the ambient AI system. On average, notes contained 6559 input tokens (SD 2436) and 1953 output tokens (SD 334). For accuracy, which captures the fidelity of extraction and detection of any falsification or fabrication, the mean score was 4.44 (SD 0.93) on a five-point Likert scale. For thoroughness, assessing major omissions, the mean score was 4.57 (SD 0.68). The domain of abstraction (i.e., synthesis), reflecting the ability to integrate and summarize across data elements, scored 3.97 (SD 0.58). For usefulness, defined as the generation of information relevant and helpful for specialty-specific clinical decision-making, the mean score was 4.83 (SD 0.51). Finally, for linguistic quality, the software achieved high ratings: organization, 4.90 (SD 0.16); comprehensibility, 4.99 (SD 0.13); and succinctness, 4.63 (SD 0.55). Stigmatizing language appeared in less than 1% of the notes (n=12).",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Although WoW also decreased by 0.50 hours (-30 minutes) per day, sensitivity analyses surfaced that the effect was likely concentrated among a small subset with extreme after-hours burden. In contrast, time spent on notes declined consistently across sensitivity analyses. Coding for billing diagnoses improved, and documentation quality using the PDSQI-9 performed consistently well across domains of accuracy, completeness, and linguistic quality, with particularly strong performance on measures of comprehensibility and organization. As part of our realtime monitoring, we implemented a software-agnostic drift detection system to continuously track metrics in documentation efficiency in 2-week rolling windows. The system flagged no major workflow disruptions during the 24-week trial period. Qualitative interviews revealed that health care practitioners experienced reduced cognitive burden, enhanced patient engagement, and alleviated evening charting, most likely contributing further to work exhaustion/interpersonal disengagement reduction. These insights mirror user-reported benefits from pilot studies at other health systems, 5 as well as large-scale deployments. 13 Nonadoption drivers from the interviews include device constraints, visit type (e.g., procedure-only), and patient preference.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Several limitations occurred in the study. The practitioner cohort was predominantly younger, white, and female, with nearly half from family medicine. These features limit generalizability, particularly to more diverse, community-based, and late-adopting populations. Because participation required voluntary enrollment, the study population may reflect early adopters, who are more comfortable with novel technologies. Sensitivity analyses stratified by utilization levels supported the primary findings, but self-selection bias remains possible. Given the open-label design, expectancy or Hawthorne effects are possible, as administration of the PFI may increase practitioners' awareness of particular work domains and thereby influence their self-reported experiences. The trial data did not collect patient-reported outcomes related to comfort or disclosure; future trials should assess patient experience and relationship quality.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "url": "https://abridge.com/press-release/mayo-clinic-announcement",
+      "title": "Mayo Clinic Expands Use of Abridge Enterprise-Wide to Improve Patient Care",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "starting with approximately 2,000 clinicians",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "url": "https://www.waystar.com/news/announcing-generative-ai",
+      "title": "Waystar unveils transformative generative AI innovation to help providers recover billions of dollars tied to 450 million annual denied claims | Waystar",
+      "accessed": "2026-09-11"
+    },
+    {
+      "id": 17,
+      "url": "https://smarterdx.com/case-studies/millions-captured-what-three-health-systems-realized-from-implementing-clinical-ai",
+      "title": "SmarterDx",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "UAMS, Novant Health, and McLaren Health Care",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12768499",
+      "title": "Ambient AI Scribes in Clinical Practice: A Randomized Trial",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Notably, the time-in-note metric does not account for time spent editing the AI scribe-generated draft within the vendor platforms.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Enrolled physicians (N=238) were randomly assigned 1:1:1 to either of two intervention groups, one provisioned with Microsoft DAX Copilot (N=79) and one provisioned with Nabla (N=79), or to a contemporaneous control group (N=80). To achieve cohort balance, the study statistician performed covariate-constrained random assignment on physician baseline time-in-note (an Epic Systems, Inc.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "The study protocol was developed in accordance with Standard Protocol Items: Recommendations for Interventional Trials-Artificial Intelligence (SPIRIT-AI) and registered on ClinicalTrials.gov (NCT06792890). 42 The study results reported in this article follow the Consolidated Standards of Reporting Trials-Artificial Intelligence (CONSORT-AI). 43 The University of California, Los Angeles (UCLA) Institutional Review Board (IRB-24-5425) determined that the study did not constitute human subjects research. Institutional urgency to rapidly test the tools during a brief contractual trial period precluded the study's timely preregistration. The finalized trial registration was submitted on December 9, 2024, and published on January 27, 2025; the unpublished protocol manuscript can be found in the Supplementary Appendix.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Physicians were recruited via department-wide emails and nominations from department leaders. Physicians were required to hold at least one half-day of clinic per week, and those in intervention groups who used human scribes were obligated to forego this assistance during the study. Usage was restricted to English-only visits due to a lack of internal validation of translation capabilities. Figure 1 summarizes the trial recruitment.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "The primary analyses -comparing DAX versus the control and Nabla versus the control -were conducted according to the intention-to-treat principle. Time-in-note was log-transformed to address nonnormal distribution and compared with providers' prior 6-month baseline. A linear mixed-effects model, which included a study group effect, a period effect (second month vs. first month), and the interaction of these terms, was utilized to model change in logtime-in-note, accounting for repeated measurements over time. Linear contrasts were used to evaluate the effect of each tool versus the control in the second month (primary hypothesis). Survey-derived (Mini-Z 2.0, PTL, PFI-WE) quantitative outcomes were analyzed using unadjusted linear regression models of the absolute change from baseline to postintervention. Binary outcomes (e.g., dichotomized burnout) were analyzed using logistic regression models of postintervention responses, adjusting for baseline response.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "We used a multiplicity-adjusted significance level of 0.025 for primary outcome hypothesis testing. For all other outcomes, we did not perform hypothesis testing and only report estimated differences and 95% confidence intervals. Results were collected on January 15, 2025, and all analyses were performed from January 16, 2025, to May 19, 2025, using R version 4.4.2 (https://www .r -project .org /).",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Per intention-to-treat, time-in-note for each provider reflects the average of all notes written per month, regardless of scribe use. In our mixed model analysis comparing baseline log time with December data, time-in-note declined by an estimated 18 seconds (from 4 minutes 22 seconds to 4 minutes 4 seconds) in the control group, 23 seconds (from 4 minutes 29 seconds to 4 minutes 6 seconds) in the DAX group, and 41 seconds (from 4 minutes 30 seconds to 3 minutes 49 seconds) in the Nabla group. The reduction in the Nabla group was significantly larger than in the control group (-9.5% [95% confidence interval (CI), -17.2% to -1.8%; P=0.02), while the reduction in the DAX group did not significantly differ from the control group (-1.7%; 95% CI, -9.4% to +5.9%; P=0.66) (Table 2). Although not statistically significant in a month-to-month comparison, reductions in November (Nabla=-5.0% [95% CI, -12.7% to +2.7%]; DAX=-0.0% [95% CI, -7.6% to +7.7%]) were smaller than in December.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Table 2. Documentation Efficiency Metrics and Psychometric Outcomes from Survey Assessments.\\* Measure DAX vs. Control Nabla vs. Control Efficiency Metrics (%) Difference 95% CI Difference 95% CI Time in notes per note † -0.02 -0.09 to 0.06 -0.10 -0.17 to -0.02 Time on unscheduled days 0.14 -0.05 to 0.33 0.06 -0.13 to 0.26 Time outside scheduled hours 0.09 -0.14 to 0.32 0.08 -0.15 to 0.31 Mini-Z 2.0 Supportive work environment 1.51 0.55 to 2.47 1.55 0.59 to 2.51 Work pace and EMR stress 1.41 0.38 to 2.43 1.20 0.18 to 2.23 Composite 2.83 1.28 to 4.37 2.69 1.14 to 4.23 PFI-WE -0.32 -0.55 to -0.08 -0.23 -0.46 to 0.01 PTL -39.89 -71.88 to -7.90 -31.69 -63.79 to 0.42 Binary Mini-Z 2.0 Odds Ratio Odds Ratio Single-item burnout 0.78 0.40 to 1.54 0.67 0.34 to 1.34 Supportive work environment 1.87 0.83 to 4.23 1.84 0.82 to 4.14 Work pace and EMR stress 1.90 0.17 to 21.54 1.87 0.17 to 21.19 Composite -joyful Workplace 1.64 0.38 to 7.14 1.50 0.35 to 6.45",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "One adverse patient safety event was reported. Five physician co-authors (P.J.L., J.N.M., C.S., E.C., and A.C.) independently deemed the event, described as \"extensive patient counseling was not included in the assessment/plan or the patient instructions,\" to be grade 1 (mild). 52",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "This study has limitations. First, it was conducted among 238 physicians at a single academic institution on Englishonly encounters from November 4, 2024 to January 3, 2025, and thus, our findings may not be broadly applicable to different practice settings or other times of the year. Second, our participants were mostly female, which could reduce generalizability given that females represent 38.1% of all physicians nationally. 60 However, the inclusion of multiple specialties strengthens overall generalizability. Third, our trial was tightly scheduled due to limitations imposed by contract terms, which stipulated the length and number of users, and contributed to the postcommencement trial registration. This may have limited the degree of impact, given the time it takes to gain dexterity. The brevity may have also disincentivized physicians from investing time in learning the tool and customizing it, which could lead to an underestimation of positive results. Of note, while formal interaction testing was negative, we observed a month-to-month reduction trend in time-in-note, which may suggest a learning curve and potentially larger reductions over time. Fourth, physicians had the ability to edit the AI-generated text in both the scribe platforms and in Epic's note-writing interface, and we learned midway through the trial that Epic's Signal metrics do not account for platform time. Hence, reported time savings for time-in-note may represent an overestimation. This underrecognized limitation affects all AI scribe studies reporting Epic's Signal metrics. Fifth, Nabla was not directly integrated within Epic's mobile application (Haiku), whereas DAX was. Thus, Nabla users had to launch an encounter from a desktop to prompt a push notification on their phone, potentially affecting the physicians' usability impressions. Sixth, there is potential for nonresponse bias with the poststudy survey, which could skew survey results positively or negatively.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "url": "https://abridge.com/blog/building-trusted-healthcare-ai",
+      "title": "Abridge General Counsel Tim Hwang on Principles for Building Trusted AI",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "With Linked Evidence, Abridge-generated draft clinical documentation is traceable to the source conversation.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "url": "https://www.healthcareitnews.com/news/autonomous-coding-ai-shows-impressive-results-ohsu",
+      "title": "Autonomous coding with AI shows impressive results at OHSU",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Coding-related denials for autonomously coded radiology cases are 70% lower than manually coded cases",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "\"For radiology, our automation rate has reached 92%,\" she said. \"Our coder workload was reduced by nearly 28%. Coding-related denials for autonomously coded radiology cases are 70% lower than manually coded cases, and our automated denial rate was substantially lower – 0.33% percent for AI-coded cases versus 1.09% for manual coding.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "url": "https://www.prnewswire.com/news-releases/codametrix-named-no-1-in-inaugural-best-in-klas-title-for-autonomous-medical-coding-302678539.html",
+      "title": "CodaMetrix Named No. 1 in Inaugural Best in KLAS Title for Autonomous Medical Coding",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "BOSTON, Feb. 4, 2026 /PRNewswire/ -- CodaMetrix, the market leader in autonomous medical coding, today announced it has been ranked No. 1 in the 2026 Best in KLAS segment for Autonomous Coding, reflecting its leadership in defining and setting the performance standard for the category.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "url": "https://www.chi.gov.sa/en/Uniplat/pages/default3.aspx",
+      "title": "Home",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Training sessions are held weekly for those who have been invited from healthcare providers and health insurance companies.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "url": "https://www.fiercehealthcare.com/ai-and-machine-learning/rush-mcleod-health-and-fmol-health-report-revenue-gains-suki-ai-scribe",
+      "title": "KLAS report finds clinical, financial gains from Suki AI scribe",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "KLAS' validation study provides hard metrics that Suki's AI clinical intelligence platform can alleviate physician burnout and improve financial viability. Across all three large health systems, there was a 35% to 65% reduction in after-hours documentation. The health systems reported a positive financial impact, without productivity pressure, with an average incremental revenue per provider per month of $1,223.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Rush University System for Health experienced a 4% reduction of time clinicians spend in notes and 4% reduction in after-hours work during the pilot. Improved documentation drove a modest $178 increase in monthly revenue per user. The health system has since expanded Suki's technology from 125 clinicians in 21 specialties to 243 active users across 35 specialties, and FMOL Health from 35 clinicians across primary care and key specialties to 132 users across 15 specialties, the KLAS report said.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "url": "https://nabla.com/mankato-clinic",
+      "title": "Mankato Clinic",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "The study compared performance metrics for the twelve months before and after the adoption of Nabla, an advanced ambient AI technology used to support clinical documentation during patient encounters. Over 100 healthcare providers at Mankato Clinic in southern Minnesota used the technology more than 8,000 times to assist with visits.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "To be included in the analysis, specialties had to receive at least 40 patient responses. Gastrointestinal saw the greatest improvement in patient satisfaction, with a 44% increase, followed by Cardiology with a 15% increase.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "url": "https://www.heidihealth.com/blog/clinicians-reclaim-over-500-hours-weekly-with-ai-powered-clinical-scribe",
+      "title": "Clinicians Reclaim Over 500 Hours Weekly with Heidi",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "The evaluation results also show:",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "The evaluation was conducted over a three-month period in early 2025 with 169 clinicians working across multiple specialties. Results demonstrate how seamless integration of ambient AI technology into clinical workflows has measurable and immediate benefits by strengthening overall documentation quality and care continuity, while improving patient and clinician experience.",
+          "added": "2026-09-11"
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "url": "https://klasresearch.com/report/suki-roi-validations-2026-cross-organizational-results-from-suki-s-clinical-intelligence-platform/3869",
+      "title": "Suki ROI Validations 2026",
+      "accessed": "2026-09-11",
+      "quotes": [
+        {
+          "text": "Three large health systems—**FMOL Health**, **McLeod Health**, and **Rush University System for Health**—set out to adopt an ambient speech technology solution that would (1) significantly reduce their clinicians’ documentation burden and (2) generate measurable operational and financial impact. To accomplish this, they deployed Suki, an AI-powered clinical intelligence platform that streamlines clinical note creation and supports accurate coding within existing EHR workflows in their ambulatory care settings. All three organizations experienced reduced documentation burden, greater time savings, and improved E/M coding, which have led to improved efficiency and clear financial gain. Additional benefits include improved provider satisfaction, enhanced patient care, and improved patient satisfaction. This report examines outcomes achieved and lessons learned by the three participating organizations.",
+          "added": "2026-09-11"
+        },
+        {
+          "text": "Log inLog in to see the full dataset.",
+          "added": "2026-09-11"
+        }
+      ]
+    }
+  ]
+}

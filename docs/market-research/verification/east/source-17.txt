@@ -1,0 +1,25 @@
+# SGH-grown PEACH keeps patients safe
+URL: https://sgh.com.sg/news/patient-care/sgh-grown-peach-keeps-patients-safe-
+Published: 2025-07-30
+
+SGH-grown PEACH keeps patients safe 
+
+# SGH-grown PEACH keeps patients safe 
+
+30 Jul 2025 
+
+MEDIA RELEASE
+
+Singapore, 30 July 2025 â Identifying key medical issues and optimising patient's health before surgery often require doctors at Singapore General Hospitalâs (SGH) Preoperative Assessment Clinic (PAC) to pore over more than 400 pages of constantly evolving perioperative[1] guidelines. The sheer volume and frequent updates make consistent adherence challenging, potentially leading to suboptimal preparation for surgery and postponement of surgery, while adding significantly to doctors' administrative workload. 
+
+Enter PEACH (PErioperative AI Chatbot), a clinical decision support system developed by SGH, where doctors simply input relevant patient information from electronic health records into the chatbot to perform various tasks. These include answering perioperative-related anaesthesia questions, drafting referral letters and patient instructions, summarising key anaesthesia-related issues, and generating perioperative care plans.
+
+ âPEACH represents a significant step forward in how we manage preoperative assessments. By integrating our comprehensive perioperative guidelines with AI technology, we've created a tool that not only enhances patient safety but also helps doctors make more efficient and consistent decisions,â says Dr Ke Yuhe, Associate Consultant, Department of Anaesthesiology, SGH, who led the development of PEACH. 
+
+Large Language Models (LLMs) are emerging as powerful healthcare tools but their use with clinical data raises substantial data privacy and information security concerns. To mitigate these issues, Dr Ke and her team integrated SGHâs perioperative guidelines into PAIR, an AI assistant created by Open Government Products (OGP), accessible only on hospital-issued encrypted laptops. OGP is an experimental development team within the Singapore Government. 
+
+The chatbot can also triage pre-surgery patients, recommending if assessment should be conducted via phone, in-person at PAC, or on surgery day. This capability potentially helps reduce waiting time at PAC, which sees about 25,000 pre-surgery patients annually, allowing doctors to focus on complex cases and minimising unnecessary hospital visits.
+
+Two comprehensive studies validated PEACHâs effectiveness, leading to Singaporeâs Health Sciences Authorityâs approval for its deployment in healthcare setting, including SGH. The first study in November 2024, examining 240 PEACH interactions, demonstrated about 98 per cent accuracy in making pre-surgery recommendations, with minimal hallucination[2] (less than 2 per cent) and guideline deviation rate (less than 1 per cent). 
+
+The second study, conducted between January and February 2025 across more than 270 actual patient assessments, showed that doctors primarily used PEACH for complex cases. They were also asked to rate the chatbot from 1 to 5 and it scored 4.94 for safety, 4.81 for explainability, and 4.72 for comprehen

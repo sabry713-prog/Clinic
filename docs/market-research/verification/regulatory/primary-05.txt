@@ -1,0 +1,1185 @@
+
+--- PDF page 1 ---
+Digital Government 
+Policies
+Document Type: Policy
+Document Classification: Public
+Document No. DGA-1-2
+Issue No.: 2.0
+December 0،5 2023
+
+--- PDF page 2 ---
+Content
+04
+03
+02
+01
+05
+06
+6.2
+6.3
+6.1
+6.4
+07
+08
+09
+10
+11
+12
+13
+7.1
+7.2
+8.1
+8.2
+9.1
+9.2
+10.1
+10.2
+11.1
+11.2
+03Preamble
+04Introduction
+05Objectives of the Digital Government Policies
+05Scope of the Digital Government Policies
+06Applicability of the Digital Government Policies
+06Pillars and Focus Areas of the Digital Government Policies
+06Engagement
+07Transformation
+08Capacity
+09Governance
+10Governance and Compliance Policy
+10Policy Scope
+10Policy Statement
+12Whole of Government Platforms Policy
+12Policy Scope
+13Policy Statement
+16Digital Services Lifecycle Administration and Upskilling Policy
+16Policy Scope
+16Policy Statement
+20Beneficiary centricity policy
+20Policy Scope
+21Policy Statement
+23Technology Policy
+23Policy Scope
+24Policy Statement
+30Table of Definitions
+36Table of Abbreviations
+
+--- PDF page 3 ---
+01. Preamble 
+Based on Cabinet Decision No. 418 of 25/07/1442 AH approving regulations of the Digital
+Government Authority (DGA), which stipulates that DGA is the competent authority for all issues
+relating to Digital Government and that it is the national reference in its affairs, and based on DGA’s
+competence to organize the work of the Digital Government and to ensure integration between all
+government agencies, and according to its competence and functions under Article 4 of the above-
+mentioned cabinet decision mandating the DGA to organize the Digital Government work, including
+by issuing regulation related to the DGA’s activity, setting plans, programs and indicators, regulating
+operations, processes and related projects, and following up on compliance.
+As such, DGA prepared and issued the "Digital Government Policy" on 29 September 2021 and
+prepared and issued the five policies derived therefrom which are consecutively as follows:
+"Governance and Compliance Policy", “Whole of Government Platforms Policy", "Digital Services
+Lifecycle Administration and Upskilling Policy", "Beneficiary Centricity Policy" and "Technology
+Policy“, all of which have been integrated into this document under one title “Digital Government
+Policies”. Their close interdependence and shared objectives are aimed at improving the regulatory
+environment of the Digital Government, accelerating and enabling Saudi Arabia’s sustainable digital
+transformation.
+This document includes all the policies issued by DGA, which are included in the Digital Government
+regulatory framework (Figure. 1), which is a regulatory tool, whereby the design and development of
+regulatory documents are strategically governed and implemented in accordance with eight main
+principles.
+Digital First
+Digital By 
+Default Government-As-
+A-Platform Digital By Design Open By DefaultMobile First
+Digital Government Regulatory Framework
+Key Principles of the Digital Government’ Regulatory Framework
+Digital Government Policies
+TechnologyBeneficiary-CentricWhole-of-Government PlatformsGovernance & Compliance Lifecycle Administration & Upskilling
+Sub-Frameworks
+Controls and Standards
+Guidelines
+Once-Only 
+Principles 
+ Ease of Policy 
+Formulation
+Figure 1: Digital Government regulatory framework 
+
+--- PDF page 4 ---
+02. Introduction
+Digital Government Policies outline the Digital Government directions, empower and accelerate the
+sustainable digital transformation of the government sector in the medium and long term, help
+government entities develop strategic plans aligned with the Digital Government's strategic
+directions, and enable the successful implementation of those designed plans, based on a set of focus
+areas within four main pillars (Figure 2), each of which covers a number of provisions in a coherent
+and integrated manner, as follows:
+Governance and Compliance Policy: Promotes governance of Digital Government fields conducted by
+government agencies and their compliance to Digital Government related regulations.
+Whole of Government Platforms Policy: Regulates the most important aspects and enablers of
+government digital platforms
+Digital Services Lifecycle Administration and Upskilling policy: Addresses aspects related to the
+management of Digital Government services provided to beneficiaries through various digital
+channels and the development of digital skills.
+Beneficiary Centricity Policy: Regulates aspects related to improving beneficiary’s experience of
+Digital Government services, and enhancing participation and communication between government
+service providers and beneficiaries
+Technology Policy: Covers the aspects related to the underlying pillars of technology and the
+technologies supporting the Digital Government business, to support the delivery of Digital
+Government services, internal operational work, cloud computing, data management, and innovation
+Collaboration  Technical CapabilityStructural & Operational Models Designing Policies
+Governance and compliance Whole of government platforms Digital Services Lifecycle 
+Administration and Upskilling Beneficiary centricity Technology Policies 
+Focus 
+Areas  
+Data and privacy Workforce Digital CapabilityIT governance Taking Responsibility
+Information sharing Managerial CapabilityShared resources Multi-stakeholder Dynamics
+Innovative Government Culture Business Capability Digital Government Products
+Transparency Beneficiaries’ CapabilityGovernment Modernization Adherence to Policies and Standards
+Inclusion Cross-cutting Capability Provisioning of Services
+Digital Government Policies 
+Engagement CapacityTransformation Governance Pillars
+Figure 2: pillars and focus areas of the Digital Government Policies 
+
+--- PDF page 5 ---
+03. Objectives of  the Digital Government Policies
+Accelerating and enabling the digital transformation of the government sector by 
+enhancing its local capacity and effectiveness, and improving its responsiveness to meet 
+needs and priorities of beneficiaries.
+Governance of roles and responsibilities, including, but not limited to, Digital Government 
+services, oversight of their design and development, procurement and licensing, and 
+measurement of their performance and maturity.
+Facilitating and accelerating interaction between government entities by providing 
+government digital platforms for common services, contributing to provision of digital 
+services in a unified manner, encouraging use of common infrastructure and applications, 
+and increasing the level of data sharing between different government entities.
+Improving Saudi Arabia ’s ranking in international indicators and the United Nations E -
+Government Development Index, and aligning with international organizations' digital 
+service assessment indicators and with the local standards issued by competent 
+authorities.
+Supporting government entities in focusing on beneficiaries and understanding their
+needs, requirements and aspirations when designing Digital Government services.
+Contributing to improving the quality and utilization of data management as an important
+asset at the national level, thereby contributing to the guidance and support of
+Government agencies' decisions.
+Supporting government entities in making decisions related to building and developing
+technologies supportive of the Digital Government's work and investing in emerging
+technologies, thereby facilitating the delivery of Digital Government services, raising their
+quality and helping to reduce costs.
+These policies outline the general orientations of the Digital Government, in order to 
+enable achievement of the following objectives:
+Supporting government agencies in managing and upgrading Digital Government
+services by setting up the foundations and general directions for the design of digital
+services and development of digital content, identifying top priority digital services and
+providing services through unified digital channels, as well as developing and building
+digital capabilities.
+04. Scope of Digital Government Policies 
+These policies cover the pillars of Digital Government, including the governance of related fields, as
+well as the most important aspects related to government digital platforms, service management,
+digital skills development, and improved beneficiary experience, as well as aspects related to the
+fundamental pillars of technology along with the technologies supporting the government digital
+business, cloud computing, data management, and innovation.
+
+--- PDF page 6 ---
+05. Applicability the Digital Government Policies apply to:
+Applying the Digital Government Policies for:
+06. Pillars and Focus Areas of the Digital Government Policies
+Government entities.
+1. Transparency: Government entities shall foster increased participation, which fosters public
+trust in government, and active citizen involvement ranging from basic consultation and
+information sharing to joint development and co-creation. Government entities shall also use
+digital technologies and innovation to support effective communication among participants.
+2. Collaboration: Government entities shall work collaboratively with all groups active in the
+digital government ecosystem – namely, government, the private sector, and civil society
+organizations. The broad collaboration will help identify gaps and priorities in the provision of
+services and information thus propelling a more efficient allocation of resources – people,
+funding, and technology. Current gaps between supply (government) and demand (benefi-
+ciaries and other targeted institutions) will be minimized, resulting in increased beneficiary
+satisfaction with government services.
+3. Data and privacy: Government entities shall align regulations related to data management,
+security, and privacy with existing legislation issued by the relevant government entities.
+Government entities shall also encourage beneficiaries’ participation to share data
+comprehensively while ensuring beneficiaries’ data protection and facilitating easy access to
+personal data.
+4. Information sharing: Government entities shall make available data that is classified as public
+information in accordance with existing regulations issued by relevant government entities. As
+a result, beneficiaries will be fully informed when accessing government services that offer
+engagement and participation mechanisms. Government entities shall also comply with
+policies and regulations protecting confidential information as per existing regulations issued
+by other relevant government entities.
+5. Innovative Government Culture: Government entities shall create a culture of information, data
+sharing, and collaboration, and promote interaction across institutions from different sectors –
+government, the private sector ,and civil society - to foster a more effective digital government
+and contribute to the Kingdom’s Vision 2030 goals.
+6. Inclusion: Government entities shall adopt an inclusive approach to ensure information access
+by people with disabilities and from vulnerable communities so that they can engage with the
+government effectively.
+Engagement requires the participation of and collaboration with institutions from government,
+the private sector, civil society and beneficiaries so they can provide valuable inputs for digital
+government implementation.
+Private sector that acts as a developer or operator of
+Digital Government-related activities.
+6.1 Engagement
+
+--- PDF page 7 ---
+6.2 Transformation
+Transformation includes the enablers that drive the development of government – the main
+emphasis being on modernization, not technology. Transformation demands an integrated
+approach to institutional modernization – changes to managerial, organizational, technical, and
+business processes – that will drive high-quality digital government platforms and services.
+1. Government Modernization: Government entities shall link their digital transformation and use
+of new technologies to broader government modernization processes in order to build
+enhanced capabilities and increase the availability and quality of both digital services and
+whole-of-government platforms.
+2. Structural & Operational Models: Government shall take a comprehensive approach to
+transformation, not limited to technology. Government entities will align their existing
+business model to the priorities of the National Digital Government Strategy while updating
+required management skills, internal structures, and administration processes.
+3. IT governance: Government entities shall strengthen internal governance of information
+technology in accordance with related standards while ensuring alignment with policies and
+standards issued by DGA, the latter already aligned with international bodies such as ISO.
+4. Shared resources: Government entities shall give priority to shared resources and capabilities
+available on whole-of-government platforms. Government entities shall also identify and
+address the current challenges and gaps in skilled resources by engaging with relevant
+government entities.
+
+--- PDF page 8 ---
+6.3 Capacity
+The pillars of engagement and transformation require access to an e-client digital government
+ecosystem, including the local private sector, that facilitates the much-needed change in
+government entities. Change and process management overall Capability, as well as technical
+expertise, is needed to strengthen an enabled government workforce and drive complex
+transformation processes.
+1. Beneficiaries’ Capability: Government entities shall increase beneficiaries’ (government entities)
+awareness and promote digital skills by conducting awareness workshops that will digitally
+empower beneficiaries to interact effectively and efficiently with the government, actively use
+participation platforms, and be part of decision-making processes
+2. Technical Capability: Government entities shall strengthen their technical capabilities to
+support the National Digital Government Strategy implementation, including understanding
+the impact of new technologies on government operations to adopt and encourage their use.
+Government entities shall build a capable and empowered technical workforce to ensure the
+successful adoption of digital transformation.
+3. Workforce Digital Capability: Government entities shall develop the digital capabilities of all
+employees so that the entire workforce contributes to the transformation of the workplace
+needed for digital government. Government entities shall develop and adopt initiatives that
+aim at closing current digital skills gaps and thus meet labor market demand.
+4. Managerial Capability: Government entities shall enhance administrative and managerial
+capabilities to achieve an effective return on digital investments. Digital Government projects
+require high-quality project management for successful implementation.
+5. Business Capability: Government entities shall enhance the business capabilities of staff
+through feasibility studies and business case development for digital initiatives, following
+regional and global best practices and experience.
+6. Cross-cutting Capability: Government entities shall increase the efficiency and effectiveness of
+working across government and strengthen the capabilities required to respond collectively,
+especially in crisis times
+
+--- PDF page 9 ---
+6.4 Governance
+Governance contributes to the realization of all the principles mentioned above through, (1)
+overseeing and monitoring the adoption of the Digital Government Policy by DGA and other
+relevant government entities, as well as compliance with standards and procedures published
+by DGA; (2) encouraging collaboration across the digital government ecosystem; (3) ensuring
+continuous engagement and communication between government entities driving digital
+transformation; (4) ensuring policy coherence across government entities, and (5) justifying the
+costs of government digital services within the government sector.
+1. Adherence to Policies and Standards: Government entities shall comply with policies and
+standards issued by DGA, the technical standards on digital transformation models, and digital
+government regulations issued by other government entities. DGA will monitor and report
+compliance, as will provide advisory services to raise the level of compliance across
+government.
+2. Designing Policies: Government entities shall work closely with DGA in the development of
+digital government policies, regulations, and principles. The DGA will also support gap identi-
+fication and their closing.
+3. Taking Responsibility: Government entities shall be responsible for the proper and effective
+implementation of digital government, including full compliance with policies and standards
+by any of the service providers contracted to furnish digital government services.
+4. Multi-stakeholder Dynamics: Government entities shall engage external parties such as
+businesses, civil society, and citizens in executing the initiatives and overall strategic direction
+of the National Digital Government Strategy.
+5. Digital Government Products: Government entities shall adhere to the standards envisaged for
+digital government products and work directly with DGA to oversee their implementation in
+cooperation with the relevant authorities.
+6. Provisioning of Services: Government entities’ service providers (developers and service
+operators) shall adhere with the Framework and all relevant decisions issued by DGA.
+
+--- PDF page 10 ---
+07. Governance and Compliance Policy
+7.1 Policy  Scope 
+Governance of all areas related to digital government conducted by government agencies, and the
+extent of their compliance with regulations related to digital government. The policy covers the
+following areas:
+ProcurementLicensing and 
+AccreditationFundingPrivacyOversight
+54321
+Overseeing the work of the digital government in terms of setting the necessary policies and 
+standards, measuring performance, the maturity of digital government services, and the extent 
+of compliance with the regulations issued by the authority, through:
+7.2.1.1 Coordinating with digital government authority to develop their execution plans related to 
+the Digital Government Strategy and periodically reporting progress against these plans as specified 
+by the digital government authority. 
+7.2.1.2 Regularly providing updates on updating their digital services to ensure accurate digital 
+service maturity assessment. 
+7.2.1.3 Developing and implementing a plan to increase the internal usage of digital government 
+products and services, and measure the usage rate against the plan.
+7.2.1.4 Develop and implement a plan to increase the rate of use of electronic transactions when 
+interacting with other government agencies, and measure the rate of use against the plan that has 
+been developed.
+7.2.1 Oversight    
+7.2 Policy Statement  
+
+--- PDF page 11 ---
+It includes protecting and confidentiality of the data of individual beneficiaries and preserving
+their rights, and government entities must work to achieve this through:
+7.2.2    Privacy
+7.2.2.1 Commitment to all national legislation and regulations level requirements and adherence to 
+their privacy-related regulations, as the relevant government entity stipulated.
+7.2.2.2 Publishing the privacy policy on their website to inform the public about the procedures in 
+place to manage users’ data.
+7.2.2.3 Developing regulations for actions to be taken in case of a security incident or personal data 
+breach. 
+It includes everything related to the return on investment for digital government business by 
+government agencies, through:
+7.3.3.1 Complying with the digital investment standards issued by the digital government authority, 
+including revenue generated from intellectual property, infrastructure, and services.
+It includes everything related to the issuance of licenses and accreditations by government 
+agencies to developers and operators of digital government business from the private sector, 
+and achieving this through:
+7.2.4.1 Seeking assistance from licensed developers and operators when assigned to provide digital 
+government services.
+7.2.4.2 Complying with digital trust regulations issued by the digital government authority.
+It includes everything related to the supply of products related to the business of the digital 
+government, including services, solutions, systems, etc., provided by the private sector to 
+government agencies, and this is achieved through:
+7.2.5.1 Complying with the government Tenders and Procurement regulations issued by the 
+Ministry of Finance.
+7.2.5.2 Commitment to framework agreements (for ICT products) issued by the Ministry of Finance 
+and relevant authorities.
+7.2.3 Funding 
+7.2.4 Licensing and accreditation 
+7.2.5 Procurement
+
+--- PDF page 12 ---
+08. Whole of Government Platforms Policy 
+8.1 Policy Scope 
+This policy covers key aspects related to Whole of Government Platforms and its key enablers, which 
+includes, but not limited to, the following:
+Digital Identity
+Identity authentication management
+Electronic payment gates
+Digital Trust
+The Government Service Bus (GSB)
+The Government Secure Network (GSN)
+Government Clouds
+Saudi National Portal for Government Service
+Saudi Open Data Portal
+Digital Marketplace Platform
+
+--- PDF page 13 ---
+8.2 Policy Statement 
+8.2.1.1 Make efforts to align its platforms with the strategic directions of digital government, digital 
+government policies, the Digital Government Framework and the regulations emanating from it, and 
+all regulations issued by the Authority in this regard.
+8.2.1.2 Complying with all regulations issued by the digital government authority regarding the 
+registration, development, and updating of their digital platforms based on functional requirements 
+to build and operate the platform. 
+8.2.1 Government entities shall comply with regulations issued by the digital 
+government authority through: 
+8.2.2.1 Ensuring that their Platforms are accessible and inclusive of all beneficiary segments.
+8.2.2.2 Promoting the integration with other government entities to support provisioning of their 
+digital services.
+8.2.2.3 Offering a unified and seamless user experience through their Platforms.
+8.2.2 Government entities shall improve the user experience of their digital services 
+through:
+8.2.3.1 Refraining from being bound by specific technologies or channels and providing access to 
+their digital services through various channels.
+8.2.3.2 Leveraging on technologies that enable digital service design, exchange and integration with 
+other government entities according to the Platforms architecture and functional requirements.
+8.2.3.3 Availing required tools and capabilities to study the usage of current Platforms and provide 
+value-added services.
+8.2.3 Government entities shall adopt various technologies to develop their 
+Platforms through:
+
+--- PDF page 14 ---
+8.2.4 Government entities shall maintain the level of continuity and improvement of 
+the Platforms business process through:
+8.2.4.1 Promoting the use of their Platforms across different stakeholders from government or 
+private sector.
+8.2.4.2 Providing the required support and needed documentations to improve business operations 
+and service delivery.
+8.2.4.3 Allocating needed tools and resources to continuously monitor, maintain and update the 
+Platforms.
+8.2.4.4 Establishing a mechanism to continuously audit and monitor Platforms functionalities and 
+use cases.
+8.2.4.5 Tracking, measuring and reporting the usage of the Platforms usage, and ensuring that the 
+Platforms development plans are aligned with regulations issued by the digital government 
+authority.
+8.2.4.6 Developing and implementing an incentivization program to promote Platforms adoption.
+8.2.4.7 Setting an overview and a detailed plan to follow to achieve the goals set for the Platforms, 
+and measure progress against that plan.
+8.2.5 Government entities shall direct their efforts to increase the satisfaction of 
+beneficiaries when using their digital Platforms through:
+8.2.5.1 Developing and implementing a plan to increase beneficiary satisfaction, meet their needs, 
+and work in their best interest by adopting transparency, accountability and confidentiality when 
+offering services through their Platforms.
+8.2.5.2 Assigning teams to provide customer care and help desk support to beneficiaries and 
+government entities who subscribe to the Platforms.
+8.2.5.3 Elevating the value delivered to beneficiaries through their Platforms, improving the 
+Platforms usability for Subscribers, reducing costs and avoiding duplication of efforts in alignment 
+with the relevant standards issued by the digital government authority.
+8.2.6 Government entities shall maintain the level of operations and maintenance 
+of their Platforms through:
+8.2.6.1 Preparing and implementing a comprehensive change management plan to address 
+organizational problems that may arise during development and operation of the platform. The 
+government agency shall adopt a collaborative and joint approach with other government agencies 
+and their private sector partners to ensure ease and smoothness of development, implementation 
+and operations, depending on platform's functional characteristics and services.
+8.2.6.2 Adopting a comprehensive approach to monitor usage data and extract conclusions and 
+insights thereof in alignment with DGA regulations.
+
+--- PDF page 15 ---
+8.2.7 Government entities shall promote innovation through
+8.2.8 Government entities or private sector companies who develop or operate 
+Platforms shall improve services provided through
+8.2.7.1 Involving stakeholders from private sector and other government entities to encourage co -
+creation and collaborative innovation in designing new services and business models.
+8.2.7.2 Promoting Platforms usage in all sectors and business areas, in alignment with regulations 
+issued by the digital government authority and relevant authorities.
+8.2.8.1 Adopting Identity Authentication Management Service, such as (NAFATH) for digital services 
+that require the characteristics or functions of a digital identity.
+8.2.8.2 Adopting electronic payment gateways such as (SADAD) for government digital services or 
+electronic payments.
+8.2.8.3 Adopting services provided by the government authority responsible for digital trust services 
+or one of the licensed digital trust service providers, unless the digital government authority 
+excludes it from this.
+8.2.8.4 Connecting to the Government Secure Network (GSN) to link the government integration 
+channel for digital government services that require secure exchange of data or information.
+8.2.8.5 Adopting the digital marketplace platform (once launched) when developing its platforms, 
+and purchasing services and technical solutions through it.
+8.2.9 Government entities shall adopt cloud solutions for their digital platforms 
+through
+8.2.9.1 Adopting G -Cloud instead of traditional solutions, in alignment with regulations issued by 
+relevant authorities, including, but not limited to, the "Cloud First Policy" issued by MCIT, and the 
+"Cloud Computing Regulatory Framework" issued by CST.
+.
+
+--- PDF page 16 ---
+09. Digital Services Lifecycle Administration and Upskilling Policy 
+9.1 Policy Scope 
+The policy covers the different aspects related to managing and administrating government digital 
+services provided to beneficiaries through the different digital channels, in addition to the aspects 
+related to digital skills development.
+Compliance with this policy by government entities ensures the provision of efficient government 
+digital services that fulfill beneficiaries' needs and meet their expectations as it sets the directions 
+and general provisions for:
+9.2.1  Digital Service Design 
+9.2.1.1 Adopting a strategy to design government digital services that is aligned with the digital 
+government strategic directions, the Digital Government Policy, and all relevant regulations issued 
+by the Digital Government Authority.
+9.2.1.2 Ensuring that all government digital services design procedures are adaptable to the new 
+technologies  and to rapid change in technologies, and focus on satisfying users ’ needs from these 
+services.
+9.2 Policy Statement
+Digital Service Design
+Digital Services provisioning through omni-channel (mobile phones and smart devices)
+Digital Content Development Top priority digital services identification
+Digital skills Development
+Includes all aspects related to government digital service design at all stages, for the service to be 
+clear, simple, consistent, flexible, and proactive, as much as possible, in accordance with the 
+regulations issued by the Digital Government Authority and the relevant government agencies. 
+Government entities should work to achieve this by:
+
+--- PDF page 17 ---
+9.2.1.3 Providing the required attention to the privacy of beneficiaries by adhering to the 
+requirements related to  data privacy issued by The Saudi Data and Artificial Intelligence Authority 
+(SDAIA) before designing the digital services (privacy by design and privacy by default).
+9.2.1.4 Adopt Complying with the cybersecurity requirements issued by the National Cybersecurity 
+Authority in all of the digital government service design and development.
+9.2.1.5 Developing quality assurance procedures and taking them into consideration when 
+designing and developing the digital government services.  
+9.2.1.6 Publishing and linking all government digital services to the Unified National Platform 
+(MY.GOV.SA) to provide a seamless, satisfactory, and integrated experience in accordance with the 
+Royal Decree no. (11904) dated 05/03/1437 H.
+9.2.1.7 Providing beneficiaries with specialized digital channels to provide feedback and comments 
+on the digital services. Government entities shall continuously analyze feedbacks and identify 
+improvement opportunities to address these comments periodically.
+9.2.1.8 Providing beneficiaries with the ability to access and update their personal and registration 
+data - as  possible - through the government entity platform, and in accordance with the 
+requirements of the  Personal Data Protection    Regulation.
+9.2.1.9 Designing proactive notifications specific to the beneficiary, that ease access to the service, 
+whenever applicable.
+9.2.1.10 Applying the "Once -only principle ” that enables government entities to share beneficiary 
+data across government through one unified integration channel such as the Government Service 
+Bus (GSB), and relying on a unified data file, in order to ensure that the beneficiary enter his data 
+only once.
+9.2.1.11 Defining the government digital services accurately and identifying its linkage to the 
+government entity ’s internal services and procedures and defining the Service Level Agreements 
+(SLA) to ensure service continuity and availability.
+9.2.1.12 Providing the government digital services in an integrated and collaborative way with other 
+government entities and identifying opportunities to develop and design digital services that match 
+beneficiary needs and requirements and according to the Whole of Government Platform Policy
+
+--- PDF page 18 ---
+9.2.2 Digital Content Development
+Includes all aspects related to providing the content of government digital services and its related 
+data and making it available to beneficiaries anytime and anywhere through the different digital 
+channels, in accordance with the regulations issued by the Digital Government Authority and the 
+relevant government agencies. Government entities should work to achieve this by:
+9.2.2.1 Including all mandatory content for the government digital services based on the Digital  
+Government Authority  requirements, and as specified in the Unified National Platform (MY.GOV.SA).
+9.2.2.2 Designing the digital services using the metadata standards.
+9.2.2.3 Conducting regular and periodic reviews to make sure all data published for the digital 
+services are accurate and updated.
+9.2.2.4 Providing the digital services content in Arabic and English and other languages based on 
+target  beneficiary segments and use multiple media tools to ensure that all beneficiaries have a 
+similar experience without compromising the quality of the content.
+9.2.2.5 Providing a content that is complying with accessibility requirements for people with 
+disabilities, and set all designs and images used in the digital content to comply with the 
+international World Wide Web Consortium’s (W3C) standards. 
+9.2.3 Digital Services provisioning through omni-channel (mobile phones and 
+smart devices):
+Includes all aspects related to providing government digital services through mobile phones and 
+smart devices, in accordance with the regulations issued by the Digital Government Authority and the 
+relevant government agencies. Government entities should work to achieve this by:
+9.2.3.1 Designing government digital services that are compatible with mobile phones and smart 
+devices; and focus on providing the services that beneficiaries use most frequently.
+9.2.3.2 Developing smart devices applications according to the specification released by the 
+operating system providers, such as, Android and iOS.
+9.2.3.3 Ensuring that touch -based gestures follow commonly used patterns provided by the 
+operating system provider.
+9.2.3.4 Assessing the government digital services based on its compatibility with mobile phones and 
+smart devices.
+9.2.3.5 Developing and improving the government digital services that are assessed as not suitable 
+for mobile phones and smart devices and advising beneficiaries accordingly.
+9.2.3.6 Identifying and building government digital services that are uniquely suited to be provided 
+through mobile phones and smart devices (e.g., where geo -location is a key factor in service 
+provision).
+
+--- PDF page 19 ---
+9.2.4 Digital skills Development
+Includes all aspects related to developing the digital skills, qualifications, and managing the talents in 
+the local workforce, in accordance with the regulations issued by the Digital Government Authority 
+and the relevant government agencies. Government entities should work to achieve this by:
+9.2.4.1 Developing annual plans to build digital skills and capabilities for the government entity.
+9.2.4.2 Developing annual plans to procure the required technologies and knowledge assets for the 
+workforce participating in the design, the development and the operation of the government digital 
+services, and set a plan to provide the required resources and talents (recruitment, training, and 
+outsourcing).
+9.2.4.3 Ensuring that the workforce that is responsible for designing, developing, and operating the 
+government digital services have the required digital skills and experience .
+9.2.4.4 Providing the tools and the technical and administrative support for the workforce in charge 
+of digital services design and development; to ensure effectiveness and productivity.
+Includes all aspects related to identification of top priority digital services, in accordance with the 
+regulations issued by the Digital Government Authority and the relevant government agencies. 
+Government entities should work to achieve this by:
+9.2.5.1 Identifying top priority services in accordance with the methodology mentioned in the 
+UNDESA EGDI report. 
+9.2.5.2 Identifying additional top priority services based on the digital transformation strategic 
+directions of the government entity.
+9.2.5.2 Identifying strategic and operational targets to increase the usage rates of each of the top 
+priority digital services.
+9.2.5.4 Measuring usage rates of the top priority digital services and reporting it to the Digital 
+Government Authority according to what the DGA sees suitable.
+9.2.5 Top priority digital services identification
+
+--- PDF page 20 ---
+10. Beneficiary Centricity Policy
+10.1   Policy Scope
+This policy covers all aspects related to improving the beneficiary's experience of digital 
+government services and enhancing participation and communication between government 
+agencies as service providers and beneficiaries.
+Compliance with this policy by government entities will guarantee focus on the beneficiaries 
+needs and understanding of their needs, requirements and aspirations when designing digital 
+government services, by setting general principles and provisions for the below areas 
+(Detailed in Figure 2):
+Promote participation and 
+adopt a beneficiary 
+centricity culture
+Enhance beneficiary 
+experience
+Establish beneficiary 
+centricity practice
+Promote participation and
+adopt a beneficiary 
+centricity culture 
+Enhance
+beneficiary experience
+Beneficiary Centricity 
+(Continuous Improvement)(Implementation)
+Beneficiary centricity practice (Empowerment)
+Figure 2
+Improving the beneficiary’s
+experience when using digital
+government services, by
+adopting the principles of
+creative, interactive and visual
+design, ease of access and use,
+and information architecture,
+structuring and presentation.
+Ensuring participation and
+interaction with beneficiaries of
+digital government services
+through call centers, electronic
+tools, conversations, social
+networks,
+e-participation, and multimedia
+tools, and taking the necessary
+measures to stimulate and
+increase the use and adoption of
+DG services by beneficiaries
+Establish the beneficiary centricity practice by developing a framework for beneficiary 
+centricity that includes plans, strategy, vision, operating and interactive model, policies, 
+tools, mechanisms, organizational structures and indicators
+
+--- PDF page 21 ---
+10.2.1 Establish beneficiary centricity practice
+Includes all aspects related to establishing the beneficiary centricity practice to ensure maximum 
+benefit from the government digital services, and their adoption by the beneficiaries, in accordance 
+with the regulations issued by the Digital Government Authority and the relevant government 
+agencies. Government entities should work to achieve this by:
+10.2 Statement of Policy
+10.2.1.1 Developing and adopting beneficiary centricity related policies such as “Access to 
+information and   government digital services ” policy and “Electronic participation ” policy and 
+publishing them on the channels used by the government entity to provide digital services while 
+ensuring they are inclusive and clearly presented.
+10.2.1.2 Developing a strategy for digital services provision that accounts for the concept of 
+beneficiary centricity, and develop the required plans, programs and mechanisms to implement the 
+strategy and ensure follow up on implementation.
+10.2.1.3 Identifying top priority digital services that meet beneficiary needs and requirements, in 
+accordance with the “Lifecycle Administration and Upskilling” policy.
+10.2.1.4 Ensuring that the government digital services are reliable, and easy to recognize and access, 
+in a clear and consistent manner.
+10.2.1.5 Ensuring equal access to information and government digital services for all beneficiary 
+segments including people living in remote areas, all age groups, and people with disabilities.
+10.2.1.6 Offering multiple channels to provide government services in order to meet the needs of 
+beneficiaries who don’t have access to digital channels.
+10.2.1.7 Benefiting from the Whole of Government Platforms to collect and share common users 
+data between government entities securely, and in accordance with the Personal Data Protection 
+regulation and the Whole of Government Platforms Policy.
+
+--- PDF page 22 ---
+10.2.2 Enhance beneficiary experience
+Includes all aspects related to improving the beneficiary experience when interacting with the 
+government entity through digital channels and using the government digital services available on 
+these channels, in accordance with the regulations issued by the Digital Government Authority and 
+the relevant government agencies. Government entities should work to achieve this by
+10.2.2.1 Developing a holistic approach to design the beneficiary experience taking into 
+consideration the beneficiary requirements, needs, behaviors and aspirations, and build an 
+information architecture for the content, design and plan the navigation within the website, and 
+apply the principles of visual design, balance, contrast, emphasis, and hierarchy.
+10.2.2.2 Adopting the required mechanisms to implement the outcomes of beneficiary experience 
+studies, during the different stages of preparation, identification of beneficiary needs, analysis, 
+design, develop, test, implement, and impact assessment.
+10.2.2.3 Implementing the minimum Accessibility and Usability Standards of the World Wide Web 
+Consortium (W3C) and the Web Content Accessibility Guidelines (WCAG 2.0) across all government 
+websites and platforms
+10.2.2.4 Providing all necessary means to ensure accessibility of people with disabilities to the 
+government digital services.
+10.2.2.5 Interacting with the beneficiary through the appropriate digital channels and at the times 
+preferred by the beneficiary.
+Includes all aspects related to promoting the participation of beneficiaries, and enhancing 
+communication with them, and following up on the adoption rates of the digital government 
+services, in accordance with the regulations issued by the Digital Government Authority and the 
+relevant government agencies. Government entities should work to achieve this by:
+10.2.3.1 Incentivizing beneficiaries to utilize government digital services.
+10.2.3.2 Listening to beneficiaries ’ voice and continuously encourage their participation in all stages 
+of digital government service design.
+10.2.3.3 Ensuring responsiveness to beneficiary requirements and needs within a defined timeframe 
+through the appropriate direct channels and publishing the results on their official channels.
+10.2.3.4 Promoting beneficiary centricity culture within the entity by ensuring active participation of 
+beneficiaries through consultations, information exchange and co -creation.
+10.2.3 Promote participation and adopt a beneficiary centricity culture
+
+--- PDF page 23 ---
+10.2.3.5 Developing performance indicators to measure the level of adoption of beneficiary centricity 
+practice and develop the user experience within the government entity.
+10.2.3.6 Adopting impact assessment frameworks to assess the impact of adopting the beneficiary 
+centricity practice and developing the user experience.
+11. Technology Policy 
+11.1  Policy Scope 
+This policy covers aspects related to the main technology pillars supporting the Digital Government
+activities including the Government Digital Services and internal operations, Cloud Computing, Data
+Management, and Innovation.
+The Technology policy identify the main technology pillars that government entities should use to 
+support the delivery of digital government services, operations, data management, and innovation in 
+the field of emerging technologies as it sets the directions and general provisions for:
+Innovation Core Technologies
+Cloud Computing Emerging Technologies
+Operations and ResilienceData Management and Governance
+
+--- PDF page 24 ---
+11.2 Policy Statement 
+Includes aspects related to encouraging government entities to adopt and promote innovation in 
+delivering technology solutions to operate the digital government activities, in alignment with 
+regulations issued by the DGA and the relevant government entities. Government entities should 
+aim to achieve that through:
+11.2.1 Innovation
+11.2.1.1 Prioritizing innovative solutions when developing their Digital Strategy and considering it
+when choosing technologies related to the digital government activities to enable the government
+entity achieving flexibility in meeting beneficiaries' needs and priorities.
+11.2.1.2 Promoting a corporate culture that stimulates innovation and encourages employees to
+initiate, participate, and interact.
+11.2.1.3 Promoting an innovative working environment by ensuring flexibility of legislation and
+regulations and allocating the necessary human and technical resources required to activate
+innovation in line with the needs of the government entity.
+11.2.1.4 Activating an approach for innovation to use technologies related to the digital government
+activities – where possible - , which includes developing methodologies and processes for innovation,
+to promote integrity and consistency of the Government Digital Services, provide beneficiaries with a
+seamless experience and achieve the optimal utilization of its available resources.
+11.2.1.5 Building local and international partnerships with universities, research institutions, private
+companies, and civil society to support and stimulate innovation in the development and usage of
+technologies related to digital government activities.
+11.2.1.6 Adopting proofs-of-concept, prototypes, and flexible sandbox environment – where possible
+- in line with the DGA's regulatory directions and governing entities, to provide a safe testing
+environment for technologies related to digital government activities.
+11.2.1.7 Developing the guiding documents, best practices and success stories that promotes
+innovation in the field of business process optimization and digital government service provisioning
+in alignment with the DGA. All content shall be published on DGA E-Services Portal RAQMI in both
+Arabic and English languages.
+11.2.1.8 Adopting a comprehensive methodology to measure the impact of adopting an innovation
+approach by analyzing innovation inputs and outputs.
+
+--- PDF page 25 ---
+Includes aspects related to designing the technical infrastructure related digital government 
+activities to achieve a better quality of government digital services, enhance beneficiaries' 
+experience, and achieve the optimal utilization of available resources, in accordance with regulations 
+issued by the DGA and the relevant government entities. Government entities should aim to achieve 
+that through:
+11.2.2 Core Technologies
+11.2.2.1 Developing a strategy for information technology and digital transformation for the
+government entity that is aligned with the strategic directions of the digital government and supports
+the implementation of the government entity' business strategy.
+11.2.2.2 Ensuring compliance of the technologies related to digital government activities with all
+legislative and regulatory requirements and regulations related to its development, data
+management and governance, transactions and cyber security as issued by the relevant government
+entities.
+11.2.2.3 Adopting a comprehensive framework to develop technologies related to digital government
+activities and utilize the Capability Maturity Model Integration, for example: CMMI.
+11.2.2.4 Documenting the results of all development lifecycle stages for the technologies related to
+digital government activities and keep it as a reference for continuous improvement.
+11.2.2.5 Developing technologies related to digital government activities in a flexible manner that
+allows alignment with future directions of the digital government.
+11.2.2.6 Adopting open-source software practices as part of the government entity's policies, and
+digital transformation strategy – where possible - to ensure expenditure efficiency when investing in
+technologies related to government activities in alignment with the OSS Adoption Strategy published
+by the DGA.
+11.2.2.7 Managing the technologies related to government activities as a government resource and
+making them available as shared services that can be reused – where possible - by other government
+entities.
+11.2.2.8 Working collaboratively with other government entities to achieve integration between
+digital government activities to align with beneficiaries' needs and expectations and in line with
+regulations issued by the DGA and does not contradict with regulations issued by the relevant
+Government Agencies.
+
+--- PDF page 26 ---
+Includes aspects related to making IT investments into co -location infrastructure, cloud hosting, and 
+cloud software to increase economies of scale, increase productivity, increase Digital Government 
+Services agility, scalability and stability, in accordance with regulations issued by the DGA and the 
+relevant government entities Government entities should aim to achieve that through:
+11.2.3 Cloud Computing
+11.2.3.1 Prioritizing cloud over on-premises infrastructure to enable innovation and digitization of
+government services.
+11.2.3.2 Developing a strategy for Data Center consolidation to community cloud Data Centers or
+migrating to public cloud.
+11.2.3.3 Implementing cloud fast tracks for the Government Digital Services Portfolio, in order to
+reduce the single-use, custom-built Government Digital Services, foster its re-use and develop a
+sustainable strategy to modernize the Government Digital Services.
+11.2.3.4 Utilizing a comprehensive framework to migrate the increasingly standardized Government
+Digital Services to cloud with a mix of re-hosting, rebuilding, revising or replacement techniques.
+11.2.3.5 Ensuring compliance of Data Center and cloud-related activities with all legislative and
+regulatory requirements and regulations related to standards, procurement, data classification, as
+issued by the relevant government entities.
+11.2.3.6 Managing co-location infrastructure, hosting, and cloud software and making them available
+as community cloud or migrating them to public cloud.
+11.2.2.9 Working collaboratively with the DGA to develop an Information Technology resource map
+at the level of government entities.
+11.2.2.10 Managing technologies related to digital government activities as distinct and valued assets
+to the government.
+
+--- PDF page 27 ---
+Include aspects related to developing and investing in emerging technologies as part of the
+technologies related to government activities to provide enhanced digital services to beneficiaries
+and achieve optimal use of the available resources, in accordance with regulations issued by the
+DGA and the relevant government entities. Government entities should aim to achieve that
+through:
+11.2.4 Emerging Technologies:
+11.2.4.1 Ensuring compliance of the emerging technologies related to digital government activities
+with all legislative and regulatory requirements and regulations related to its development, data
+management and governance, transactions and cyber security as issued by the relevant government
+entities.
+11.2.4.2 Developing and implementing – where possible- emerging technologies related to digital
+government activities in a flexible manner that allows alignment with future directions of the digital
+government.
+11.2.4.3 Utilizing the emerging technology products and solutions available in the market – where
+possible- such as Artificial Intelligence, Internet of things, Blockchain, Cloud Computing, Robotic
+Process Automation, and Augmented Reality, to create, develop and implement digital government
+activities with the aim of maximizing the expected value, Improving beneficiaries' experience from
+digital government services, Improving the operational performance of the digital government
+activities which will result in promoting expenditure efficiency and Avoiding duplication.
+11.2.4.4 Adopting a comprehensive methodology to measure the impact of emerging technologies
+on digital government activities.
+It includes all aspects related to the management and governance of data that arise from and benefit
+from technologies that support digital government in accordance with the regulations issued by the
+Authority and adherence to the national data governance policies issued by the National Data
+Management Office. Government entities must work to achieve this through:
+11.2.5 Data Management and Governance
+11.2.5.1 Developing a strategy for data management and data governance to efficiently and
+effectively manage the data lifecycle and achieve the expected value.
+11.2.5.2 Modelling the data structure of the government entity and developing the data directory as
+a reference to identify the source and owner of the data.
+11.2.5.3 Classifying the data of the government entity and developing guides on ways to deal with
+each classification, in accordance with the regulations issued by the relevant government entities.
+
+--- PDF page 28 ---
+11.2.5.4 Promoting data sharing and data exchange with other government entities to facilitate the
+implementation of digital government activities.
+11.2.5.5 Ensuring free access to data and public information related to digital government entities, in
+accordance with the regulations issued by the relevant government entities.
+11.2.5.6 Publishing open and shared data and making it available to the public through the Saudi
+Open Data Portal and the digital platforms available by the government entity.
+11.2.5.7 Adopting a comprehensive approach to data storage, preservation, and monitoring of its
+quality, uses, and analysis.
+Includes aspects related to ensuring the continuity and availability of technologies related to digital 
+government activities and its ability to adapt, in accordance with regulations issued by the DGA and 
+the relevant government entities. Government entities should aim to achieve that through
+11.2.6  Operations and Resilience
+11.2.6.1 Identifying and evaluating risks that may affect business continuity and determining the
+likelihood of its occurrence and the expected impact.
+11.2.6.2 Defining and implementing a business continuity strategy based on the identified risks and
+identifying precautions and fallback strategies in the event of disruption of the technologies related
+to digital government activities and preparing the needed reports.
+11.2.6.3 Developing a strategy to deal with natural disasters and cybersecurity risks associated with
+technologies related to digital government activities, including responses and mitigation plans.
+11.2.6.4 Defining the technical (non-functional) requirements of the technologies related to digital
+government activities, including for example: availability, response rates, compatibility, security,
+scalability, data integrity, capacity, and local content.
+11.2.6.5 Adopting the Information Technology Services Management (ITSM) approach and providing
+technical support to all users of technologies related to digital government activities including
+government entity employees and beneficiaries.
+11.2.6.6 Choosing digital service tools and technologies that create higher value in a cost-effective
+way when planning to invest in technologies related to digital government activities.
+
+--- PDF page 29 ---
+11.2.6.7 Developing a comprehensive change management plan for the technologies related to
+digital government activities and implementing it to support government entities in assessing the
+extent to which it meets business needs and measuring its impact.
+11.2.6.8 Allocating technology resources and efforts to leverage interoperable open standards to
+ensure its development and deployment agility.
+11.2.6.9 Conducting regular internal audits on the technologies related to digital government
+activities as defined by the government entity and in line with the Digital Government strategic
+directions.
+11.2.6.10 Envisioning and executing a comprehensive approach to handle legacy technologies
+currently and in the future.
+
+--- PDF page 30 ---
+12. Table of Definitions
+Term Definition
+Authority Digital Government Authority
+Digital Transformation Digitally and strategically transforming and developing business standards and models that
+would rely on data, technologies, and ICT.
+Digital Government
+Promotes administrative, organizational and operational processes between the various
+government entities in their transitioning to a comprehensive digital transformation to
+allow easy and effective access to government digital information and services.
+Electronic Transactions Any exchange, communication, contracting or other procedure performed or executed,
+wholly or partially, by electronic means
+Government Entity Ministries, authorities, public institutions, councils, national centers including any additional
+form of a public entity.
+Policy
+A Policy defines the course or principles of action to guide and determine present and
+future actions and it specifies what government entities are required to do.
+Policies can have related standards that provide more information for entities.
+Standards A set of rules and controls regulating the operations and tasks related to the digital
+government.
+Guidelines Provides examples showing the implementation mechanism of the of policies and
+standards in place.
+Pillars Four elements that are the foundations of the DGP.
+principles Basic and integrated pathways for determining key regulations of government entities
+relating to the digital government
+Beneficiary
+Citizens, residents, visitors, government agencies, private sector, non-for-profit sector,
+inside or outside the KSA that require to interact with a government entity to receive any of
+the services offered in the Kingdom.
+Digital Marketplace 
+Platform
+A platform that enables government entities to purchase and acquire services and technical
+assets (such as: software, hardware, communications services, managed services, cloud
+services(, and complete purchases, payment and receipt through the electronic portal for
+government competitions and procurement.
+Participants Beneficiaries, the private sector or civil society.
+Stakeholder
+Parties and entities that affect and are affected by decisions, directions, procedures,
+objectives, policies and initiatives of the digital government and share some of their
+interests and outputs and are affected by any change that occurs in them.
+Governance structures
+Guides and tools through which to ensure that the decisions and procedures of any party,
+whether administrative or financial, are carried out through a specific and accurate system
+or procedure, and its also group of necessary operation to guide and control the entities and
+define the principles between all stakeholders in the government entities . Decisions on
+implementing digital initiatives.
+Civil Society Non-for-profit entities engaged in social services achieving public interest, such as charities
+and foundations such as Misk Foundation.
+Digital Product
+Digital solutions serving the same scope and offered as one group through digital channels
+such as electronic portals and smart device applications, and these solutions enable the
+beneficiary to complete a request or a service. Products may include software, information,
+or a related set of services that are associated with providing a specific outputs to
+beneficiaries, such as: Passports, Traffic and Civil Affairs.
+
+--- PDF page 31 ---
+Term Definition
+Services Provisioning Any interaction between the beneficiary and the government authority in relation to the
+provisioning of services.
+Whole of Government 
+Platform
+A Whole of Government Platform is a technology-enabled, business-driven central platform
+to continually manage, improve, and deliver government services across multiple digital
+touch points. It provides unified, seamless, integrated cross-channel consistency, omni-
+channel user insights, and active user engagement at every digital touchpoint.
+Saudi national Portal for 
+Government Services 
+(GOV.SA)
+The Unified National Platform that is used to provide digital government services
+Digital Identity Data – in its digital form - that characterizes the identity of a person.
+Identity Authentication 
+Management (NAFADH)
+Unified national information services and systems aiming to enable the verification of
+digital identities and their characteristics for beneficiaries of digital services and platforms.
+Digital Trust A government service used to verify that the electronic transaction is reliable and trusted.
+The Government Service 
+Bus (GSB)
+A unified platform used for Government shared services that are continuously updated and
+provides integration between government entities quickly and securely.
+Government Secure 
+Network (GSN)
+A communication network designed for e-government transactions. This network connects
+government entities to a unified data center.
+G-Cloud
+This is a Cloud typically fully owned by a Government and provisioned for the exclusive use
+of Governmental authorities. Operations for this Cloud could be done by a Governmental
+authority, a third party (e.g. a Cloud Service Provider) or a combination of these. It is
+typically located inside the country, mainly to protect data sovereignty
+National Open Data Portal 
+(data.gov.sa)
+The National Open Data Portal is a public database that enables transparency, encourages
+community participation, and inspires innovation by publishing data sets of government
+entities in the form of open data, making this data available to all beneficiaries.
+Proactive Notifications
+Notifications that are predicted or expected based on beneficiary needs, preferences and
+life events and based on data, information and documents known to the government and
+proposing them in a timely manner, before the beneficiary requests them.
+Metadata Information that describes data and its characteristics, including business data, and
+technical and operational data.
+Digital Service Lifecycle
+Includes all stages that the digital service goes through, such as: discovering beneficiary
+requirements and current challenges, defining digital services, designing service delivery
+procedures and channels, releasing it to beneficiaries, managing it and measuring its
+performance.
+World Wide Web 
+Consortium (W3C)
+The World Wide Web Consortium (W3C) is an international community that develops open
+standards to ensure the long-term growth of the Web.
+Omni-Channels
+Multichannel approach to provide seamless, consistent experience for beneficiaries
+through different digital channels throughout service delivery, whether the beneficiary
+requests the service from the a website, a mobile phone or a smart device. Omni-channel
+approach is different than the Multichannel approach by providing the user with the ability
+to work on the service using different channels without discontinuity.
+Beneficiary Experience Beneficiary’s perceptions and related feelings caused by the one-off and cumulative effect
+of interactions with the government entity’s employees, systems, channels, or services.
+Digital Channel
+A digital means of communication to display information or offer digital services and
+products to beneficiaries, such as websites, digital portals, smart device applications, e-mail,
+self-service kiosks, call center services, social networking sites and applications or Chabot's.
+The services may be provided on all channels or selectively on some of these channels.
+
+--- PDF page 32 ---
+Term Definition
+Digital Service
+A group of digital procedures linked to each other to perform a full function offered by the
+government agency to the beneficiary through digital channels such as electronic portals
+and smart device applications, and it provides one main and specific deliverable. A group of
+related services will form a product, such as: Issue Passport, Renew Driving License, Query
+Traffic Violations, National ID Renewal.
+Top Priority Services The digital services that have been identified by the Digital Government Authority or the
+United Nations.
+Digital Content
+The tool is entrusted with achieving the purpose of creating websites, platforms,
+applications, and various other digital channels and achieving strategic goals towards the
+beneficiaries of those sites and platforms. The digital content of websites includes various
+forms, for example, written content, audio and video clips, images, shapes, charts, etc.
+Required content for the 
+services
+The basic attributes to be defined for a service such as: the purpose of the service,
+prerequisites, steps to complete the service, service fees, target audience, service channels,
+service response time, service level agreement (SLA), customer support details, and related
+services.
+E-government 
+Development Index (EGDI)
+The EGDI monitors and measures progress of world governments in digital transformation.
+The EGDI is composed of three sub-indices: online services index (OSI), telecommunication
+infrastructure index (TII) and human capital index (HCI).
+Digital Skills
+Set of skills that equip the workforce with the ability to interact with information
+technology and digital solutions and helps them innovate to develop internal operations
+and services.
+Beneficiary Centricity
+The ability of government entities to understand beneficiaries' situations, perceptions, and
+expectations. It requires having beneficiaries as focal points of all decisions related to
+delivering government services and experiences.
+Promote Beneficiary 
+participation
+Involvement of beneficiaries in digital government service design through obtaining their
+insights and ideas on service delivery to help government entities understand their
+experiences.
+Adopt beneficiary centricity 
+culture
+Developing and implementing strategies, methodologies and mechanisms within the
+government entity to support their employees in adopting a beneficiary centricity culture
+and measuring their performance through it.
+Accessibility Ensure easy access to services by all beneficiary segments, including inclusiveness, equality
+and accessibility guidelines (W3C).
+Usability
+Quality of user experience when interacting with products and systems, including websites,
+software, devices, and applications. They are also linked to effectiveness, efficiency, general
+user satisfaction, and easily usable product or system.
+Balance Use of design elements to achieve visual balance in presenting content for beneficiaries
+including the color, size, position, shape, and repetition.
+Emphasis Use of design elements to highlight a difference in presenting content for beneficiaries.
+Hierarchy Use of design elements to ease navigating through content through the way it is presented.
+Equal access Necessary arrangements to ensure accessibility to all beneficiary segments to the digital
+government services.
+Accessibility to information 
+and government digital 
+services
+Adopt technical standards and use of technology solutions to ease target beneficiaries
+access to information and government digital services
+Electronic participation
+Digital interaction and participation that allows the beneficiaries to provide their feedback,
+share their ideas and suggestions about specific topic related to society, this includes
+conducting voice of customer studies, to improve government services that revolves
+around the beneficiary needs
+Beneficiary Expectation Set of ideas that the beneficiary has about government digital services
+
+--- PDF page 33 ---
+Term Definition
+Beneficiary Behavior Actions and steps taken by the beneficiary when obtaining the government digital services,
+it includes all feelings and the way they react to the service
+Analysis of beneficiary 
+experience
+Identify pain points and improvement opportunities at all stages of the beneficiary journey
+while interacting with the government entity
+information architecture Visual representation used to represent content and data elements in different levels of
+details and its interrelationship
+Creative Design It is a type of design that uses digital solutions to illustrate a future service or product
+Interactive Design It is a type of design that uses collaborative and interactive communication with the end
+users and involve them in designing future services and products
+Visual Design It is a type of design that uses visuals and illustrative designs to represent an idea or a
+concept
+Innovation
+An innovation is the implementation of a new or significantly improved product (good or
+service), or process, a new marketing method, or a new organisational method in business
+practices, workplace organisation or external relations.
+Cloud Computing
+A model which enables convenient, on-demand network access to a shared pool of
+configurable computing resources (e.g. networks, servers, storage, applications, and
+services) that can be rapidly provisioned and released with minimal management effort or
+service provider interaction.
+Cloud services Provide ICT services through cloud, this includes storing, migrating or processing
+subscriber’s data in the cloud computing system.
+Community Cloud Cloud computing system provided for the exclusive use of a closed group of subscribers
+who share some social, business, administrative or other goals.
+Public Cloud Any cloud computing system available for open use by an entity or an individual.
+On-Premises On-Premises means hardware and software that is deployed to a Data Center that is
+exclusively used by a single Governmental Entity or a Private Cloud.
+Off-Premises
+Off-Premises means hardware and software that is deployed to a Data Center that is used
+by a community of Governmental Entities and/or a Data Center that is open for use by the
+general public.
+Minimum Viable Product It is an initial version of the final product which has the minimum properties to test the
+product with users.
+Proof of Concept The process of testing an idea under development on a small scale to demonstrate its
+feasibility, impact, and the transition to the initial product stage.
+
+--- PDF page 34 ---
+Term Definition
+Capability Maturity Model 
+Integration (CMMI)
+A model that helps identify key capabilities that directly affect business results, return on
+investment, quality, and performance while reducing costs and time.
+Technologies related to 
+digital government 
+activities
+Technical solutions that support the implementation of digital government activities, such
+as customer relationship management (CRM), enterprise resource management (ERP), or
+any other use that serves the goals of digital transformation.
+Emerging Technologies Modern technologies that support the implementation of digital government activities,
+which its applications still under development, such as: AI, IoT, Blockchain, etc.
+Information Technology 
+Resources Map
+Visual representation of non-financial government resources that are used to operate and
+manage technologies related to digital government activities.
+Safe testing environment 
+A testing environment that supports government entities designing innovative solutions to
+offer their digital services safely and flexibly; in order to guide decision making and
+implementation directions.
+Main technology pillars
+Elements of the technologies related to digital government activities, which include
+Innovation, Core Technologies, Cloud Computing, Emerging Technologies, Data
+Management and Governance, and Operations and Resilience.
+Legacy Technologies An information system that may be based on outdated technologies but is critical to day-to-
+day operations.
+Operations Group of interconnected or interacted activities that are executed through the technologies
+related to digital government activities.
+Open-source Software The software whose source code is freely available to anyone to access, modify, use and
+distribute
+Artificial Intelligence
+It is a branch of computer science concerned with building smart machines capable of
+understanding their environment and performing tasks that require a certain level of
+intelligence.
+Internet of Things A network of electronic devices, software and sensors that allow machines to interact with
+each others.
+Open Standards The standards that are accessible and usable by others, while keeping the ownership to the
+developing entity and they have the authority to issue terms of use and user rights.
+Blockchain is a shared, immutable ledger that facilitates the process of recording transactions and
+tracking assets in a business network.
+Robotic Process 
+Automation
+A type of process automation in which software or robot mimics how humans accomplish a
+task.
+Augmented Reality
+Additional information or visual images superimposed on the physical world, often through
+computer-generated graphics and/or sound overlays, to improve the user experience of a
+task or product.
+
+--- PDF page 35 ---
+35
+Term Definition
+Data Modelling The process of building a conceptual representation of data and their relationships to be
+stored in a database.
+Availability The system ability to ensure access to information, data, systems, application compared to
+downtime.
+Response Rate Measures the system ability to return results.
+Compatibility Measures the system ability to operate with different hardware, operating systems, and
+browsers.
+Scalability The system ability to adapt with changing requirements.
+Capacity The system operating capacity at any point of time.
+Cloud Software Software operating in a cloud-based environment.
+Co-location Any Data Center facility that rents out rack space to third parties for their servers or other
+network equipment.
+Rehosting Technique Strategy, commonly known as lift-and-shift, is a widely chosen strategy due to the relatively
+low migration effort and the migration speed.
+Rebuilding Technique Strategy that usually leads to the highest transformation cost. However, it allows optimized
+use of the cloud, leading to cloud-native benefits and making the application future proof.
+Revising Technique Strategy that leads to cloud optimization due to some cloud platform adoption, while
+keeping the application core architecture the same.
+Replacement Technique Strategy that discards legacy application and develop again using cloud services and
+features.
+
+--- PDF page 36 ---
+13. Table of Abbreviations
+abbreviation Definition
+W3C World Wide Web Consortium (W3C).
+WCAG Web Content Accessibility Guidelines (WCAG).
+CMMI Capability Maturity Model Integration.
+ITSM Information Technology Service Management.
+
+--- PDF page 37 ---
+DGA.GOV.SA
