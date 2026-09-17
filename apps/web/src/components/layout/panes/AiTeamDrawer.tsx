@@ -5,7 +5,7 @@
  * cards for the active agent, and an inter-agent activity stream (mock).
  *
  * Collapsing the drawer hands its width back to the center column; the
- * transition is driven by a width class on the container in SullyShell.
+ * transition is driven by a width class on the container in CortexShell.
  */
 
 import { useEffect, useRef } from "react";
@@ -13,8 +13,8 @@ import {
   PanelRightClose, PanelRightOpen, Bot, Play, ArrowRight, Clock,
 } from "lucide-react";
 import {
-  useSully, agentActions, AGENT_IDS, AGENT_LABELS, type AgentId,
-} from "../SullyContext";
+  useCortex, agentActions, AGENT_IDS, AGENT_LABELS, type AgentId,
+} from "../CortexContext";
 import EvidenceChainPopover from "../../ai-team/EvidenceChainPopover";
 import ReceptionistTab from "../../ai-team/ReceptionistTab";
 import { areClinicalProsePathsEnabled } from "../../../lib/demoContainment";
@@ -48,7 +48,7 @@ export default function AiTeamDrawer(): JSX.Element {
   const {
     activeAgent, messages, drawerOpen, postCare, postCareLoading, postCarePendingIntegration,
     setActiveAgent, toggleDrawer, runAgentAction,
-  } = useSully();
+  } = useCortex();
   const streamRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

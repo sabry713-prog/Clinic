@@ -153,7 +153,7 @@ describe("ServiceRequestPanel — SOAP draft suggestions", () => {
   });
 
   it("shows the SOAP-suggest button when an encounter SOAP draft exists", () => {
-    sessionStorage.setItem("sully.scribe.pt-1", JSON.stringify(SOAP_STORE));
+    sessionStorage.setItem("cortex.scribe.pt-1", JSON.stringify(SOAP_STORE));
     render(<ServiceRequestPanel patientId="pt-1" />);
     expect(screen.getByRole("button", { name: /Suggest orders from this encounter's SOAP draft/i })).toBeInTheDocument();
   });
@@ -164,7 +164,7 @@ describe("ServiceRequestPanel — SOAP draft suggestions", () => {
   });
 
   it("matches candidates from the SOAP text and labels the queue honestly", async () => {
-    sessionStorage.setItem("sully.scribe.pt-1", JSON.stringify(SOAP_STORE));
+    sessionStorage.setItem("cortex.scribe.pt-1", JSON.stringify(SOAP_STORE));
     const candidate: ServiceCandidate = {
       code: "abc", code_display: "Colonoscopy", category: "procedure",
       source_type: "dictated_quick_entry", source_excerpt: "colonoscopy",

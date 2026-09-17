@@ -117,14 +117,14 @@ export default function ServiceRequestPanel({ patientId }: { readonly patientId:
   const [error, setError] = useState<string | null>(null);
   const [candidatesSource, setCandidatesSource] = useState<"notes" | "soap">("notes");
   // This encounter's unsaved SOAP draft, mirrored by the encounter shell
-  // (SullyContext session survival). The note extractor only reads the
+  // (CortexContext session survival). The note extractor only reads the
   // medical record, so without this the draft's plan (e.g. "colonoscopy")
   // never reaches order matching.
   const [soapDraft, setSoapDraft] = useState<string | null>(null);
 
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(`sully.scribe.${patientId}`);
+      const raw = sessionStorage.getItem(`cortex.scribe.${patientId}`);
       if (!raw) return;
       const parsed = JSON.parse(raw) as {
         soap?: Partial<Record<"subjective" | "objective" | "assessment" | "plan", string>>;

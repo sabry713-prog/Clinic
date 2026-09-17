@@ -16,7 +16,7 @@
 
 import { useRef, useState } from "react";
 import { CheckCircle2, AlertTriangle, XCircle, Clock, Loader2 } from "lucide-react";
-import type { NphiesStatus } from "./SullyContext";
+import type { NphiesStatus } from "./CortexContext";
 import EvidenceChainPopover from "../ai-team/EvidenceChainPopover";
 import FixedPopover from "../common/FixedPopover";
 import type { EvidenceChain } from "../../hooks/useAgentOrchestrator";

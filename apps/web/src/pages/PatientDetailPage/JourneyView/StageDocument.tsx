@@ -11,7 +11,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { SullyProvider, useSully } from "../../../components/layout/SullyContext";
+import { CortexProvider, useCortex } from "../../../components/layout/CortexContext";
 import AmbientScribePane from "../../../components/layout/panes/AmbientScribePane";
 import { api, type DocumentDraft, ApiError } from "../../../lib/api";
 
@@ -24,7 +24,7 @@ interface StageDocumentProps {
 }
 
 function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void }): null {
-  const { soap } = useSully();
+  const { soap } = useCortex();
   const hasNote = Boolean(soap.subjective.trim() || soap.objective.trim() || soap.assessment.trim() || soap.plan.trim());
   useEffect(() => {
     onDone(hasNote);
@@ -33,7 +33,7 @@ function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void 
 }
 
 function SaveToRecord({ patientId, onSaved }: { readonly patientId: string; readonly onSaved?: (() => void) | undefined }): JSX.Element | null {
-  const { soap, transcript } = useSully();
+  const { soap, transcript } = useCortex();
   const [saved, setSaved] = useState<DocumentDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,17 +110,17 @@ export default function StageDocument({ patientId, onDone, onAdvance }: StageDoc
           Record (or play the demo transcript) — the SOAP note drafts itself as you speak. Edit any field; your edits are final and survive regeneration.
         </p>
       </header>
-      {/* ONE SullyProvider wraps everything: the scribe pane, the
+      {/* ONE CortexProvider wraps everything: the scribe pane, the
           completion probe, AND the save-to-record button all share the
           same SOAP/transcript state. A second provider here would create
           an isolated context whose SOAP is always empty. */}
-      <SullyProvider patientId={patientId} autoStream>
+      <CortexProvider patientId={patientId} autoStream>
         <div className="rounded-2xl border border-line overflow-hidden h-[480px] bg-wash">
           <CompletionProbe onDone={onDone} />
           <AmbientScribePane />
         </div>
         <SaveToRecord patientId={patientId} onSaved={onAdvance} />
-      </SullyProvider>
+      </CortexProvider>
     </section>
   );
 }

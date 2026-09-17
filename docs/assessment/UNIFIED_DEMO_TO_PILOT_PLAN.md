@@ -55,7 +55,7 @@ evidence review. Where they overlap is the strategy. Where they differ
 
 | Order | Item | Why first |
 |---|---|---|
-| 1 | C02 — eliminate mixed mock/live state in SullyContext | Wrong-patient content is the demo-killer |
+| 1 | C02 — eliminate mixed mock/live state in CortexContext | Wrong-patient content is the demo-killer |
 | 2 | C07 — bind internal ports to loopback; disable dev-session in demo builds | Cheapest critical; security embarrassment avoided |
 | 3 | C01 — rewrite deck claims to match implemented controls | The trust pitch is the product |
 | 4 | C08 — label every simulated response; pended ≠ approved everywhere | Already partially done (demo chip); finish it |

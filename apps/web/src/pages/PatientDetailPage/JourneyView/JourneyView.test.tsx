@@ -17,12 +17,12 @@ import JourneyView from "./JourneyView";
 import { api } from "../../../lib/api";
 import type { PatientDetail } from "../../../lib/api";
 
-// Stage 1 hosts the encounter shell's SullyProvider, whose live-patient
+// Stage 1 hosts the encounter shell's CortexProvider, whose live-patient
 // streams never settle in jsdom — stub both pieces; stage 1's real
-// machinery is covered by SullyShell's own tests.
-vi.mock("../../../components/layout/SullyContext", () => ({
-  SullyProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useSully: () => ({
+// machinery is covered by CortexShell's own tests.
+vi.mock("../../../components/layout/CortexContext", () => ({
+  CortexProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useCortex: () => ({
     soap: { subjective: "", objective: "", assessment: "", plan: "" },
     checklist: [], recording: false, elapsedSeconds: 0, transcript: [],
     orders: [], activeAgent: "scribe", messages: [], drawerOpen: true,
@@ -88,7 +88,7 @@ function renderJourney(): ReturnType<typeof render> {
   );
 }
 
-// SullyProvider (stage 1) opens an SSE stream; jsdom has no EventSource.
+// CortexProvider (stage 1) opens an SSE stream; jsdom has no EventSource.
 class FakeEventSource {
   close(): void {}
   addEventListener(): void {}

@@ -1,33 +1,33 @@
 /**
  * Storybook catalog for the 3-pane clinical shell.
  *
- * All state is mock (SullyContext). `autoStream` controls whether the
+ * All state is mock (CortexContext). `autoStream` controls whether the
  * simulated transcript ticks on a timer.
  */
 
 import type { Meta, StoryObj } from "@storybook/react";
-import SullyShell from "./SullyShell";
+import CortexShell from "./CortexShell";
 import NphiesBadge from "./NphiesBadge";
-import { SullyProvider } from "./SullyContext";
+import { CortexProvider } from "./CortexContext";
 import AmbientScribePane from "./panes/AmbientScribePane";
 import TimelinePane from "./panes/TimelinePane";
 import AiTeamDrawer from "./panes/AiTeamDrawer";
 
-const meta: Meta<typeof SullyShell> = {
-  title: "Layout/SullyShell",
-  component: SullyShell,
+const meta: Meta<typeof CortexShell> = {
+  title: "Layout/CortexShell",
+  component: CortexShell,
   parameters: { layout: "fullscreen" },
 };
 export default meta;
 
-type Story = StoryObj<typeof SullyShell>;
+type Story = StoryObj<typeof CortexShell>;
 
 /** Full 3-pane shell. Press Record in the left pane to stream the transcript. */
 export const FullShell: Story = {
   args: { patientName: "Test Patient Alpha", autoStream: true },
   render: (args) => (
     <div className="h-screen bg-wash p-4 text-ink">
-      <SullyShell {...args} />
+      <CortexShell {...args} />
     </div>
   ),
 };
@@ -37,7 +37,7 @@ export const StaticNoStreaming: Story = {
   args: { patientName: "Test Patient Alpha", autoStream: false },
   render: (args) => (
     <div className="h-screen bg-wash p-4 text-ink">
-      <SullyShell {...args} />
+      <CortexShell {...args} />
     </div>
   ),
 };
@@ -47,7 +47,7 @@ function PaneFrame({ children, width }: { children: React.ReactNode; width: stri
   return (
     <div className="h-screen bg-wash p-4 text-ink">
       <div className={`${width} h-[80vh] overflow-hidden rounded-xl border border-line`}>
-        <SullyProvider autoStream={false}>{children}</SullyProvider>
+        <CortexProvider autoStream={false}>{children}</CortexProvider>
       </div>
     </div>
   );

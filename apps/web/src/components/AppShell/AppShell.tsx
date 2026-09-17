@@ -51,7 +51,7 @@ function Icon({ name, className = "w-5 h-5" }: { readonly name: string; readonly
   );
 }
 
-// The four patient views. "encounter" (the 3-pane Sully layout) is NOT here:
+// The four patient views. "encounter" (the 3-pane Cortex layout) is NOT here:
 // it is the only route to the master timeline and the AI Team drawer, which
 // most clinicians touch far less often than the journey, so it moved to the
 // sidebar as its own entry -- the same treatment appointments and intake

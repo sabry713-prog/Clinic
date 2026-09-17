@@ -69,7 +69,7 @@ post-care package regresses to 500s.
 Three separate gaps, different sizes.
 
 **E4a — Agent action cards (M-1) — 2 days.**
-`SullyContext.runAgentAction()` appends a message and returns; eight buttons
+`CortexContext.runAgentAction()` appends a message and returns; eight buttons
 across five tabs do nothing. Split them:
 
 | Action | Disposition |
@@ -87,7 +87,7 @@ treatment is already established and is the honest option.
 `generate_soap_note(transcript)` exists in the orchestrator and is never called.
 Needs: a core proxy route (`POST patients/:id/ai-team/soap` — same scope/RBAC/
 audit shape as the Phase 2 routes), `api.aiTeam.generateSoap()`, and
-`SullyContext` calling it when live transcript lines land, replacing
+`CortexContext` calling it when live transcript lines land, replacing
 `SOAP_STAGES`. Keep the canned stages under `dictationMode === "demo"`.
 
 **E4c — Checklist persistence (M-7) — 1 day.** See finding **C** — this is a

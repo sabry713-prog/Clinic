@@ -1,5 +1,5 @@
 """Tethered AI Team agent handlers -- the orchestration layer connecting the
-front-end AI Team drawer (apps/web, `AiTeamDrawer.tsx` / `SullyContext.tsx`)
+front-end AI Team drawer (apps/web, `AiTeamDrawer.tsx` / `CortexContext.tsx`)
 to the NSCRE graph engine (services/veritas-graph, Sprint 7) and DeepSeek's
 formatting-only prose generator (`deepseek_client.py`, already built in the
 2026-07-22 merge).

@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, Square, ListChecks, FileText, Loader2, AlertTriangle } from "lucide-react";
-import { useSully, type SoapField } from "../SullyContext";
+import { useCortex, type SoapField } from "../CortexContext";
 import { useDictation, type DictationResult } from "../../../hooks/useDictation";
 
 const SOAP_SECTIONS: readonly { field: SoapField; label: string }[] = [
@@ -49,7 +49,7 @@ export default function AmbientScribePane(): JSX.Element {
     dictationMode, patientId, transcribing, dictationError,
     setDictationMode, appendTranscriptLine, setTranscribing, setDictationError,
     activeSpeaker, setActiveSpeaker,
-  } = useSully();
+  } = useCortex();
   const feedRef = useRef<HTMLDivElement>(null);
 
   // Audit H-3: real microphone capture + the on-prem transcription service,

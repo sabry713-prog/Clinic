@@ -11,7 +11,7 @@ import { api, type PatientDetail, ApiError } from "../../lib/api";
 import { useCopilot } from "../../context/CopilotContext";
 import PatientWorkspace from "./PatientWorkspace";
 import PatientFilePage from "./PatientFilePage";
-import SullyShell from "../../components/layout/SullyShell";
+import CortexShell from "../../components/layout/CortexShell";
 import JourneyView from "./JourneyView/JourneyView";
 
 type ViewId = "workspace" | "chart" | "encounter" | "journey";
@@ -176,7 +176,7 @@ export default function PatientDetailPage(): JSX.Element {
         )}
         {view === "encounter" && (
           <div className="min-h-0 flex-1 px-3 pb-3">
-            <SullyShell
+            <CortexShell
               patientName={patient.display_name ?? patient.mrn ?? undefined}
               patientId={patientId}
               encounterId={activeEncounterId}

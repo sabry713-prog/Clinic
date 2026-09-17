@@ -17,7 +17,7 @@ interface StageDiagnoseProps {
 
 function readSoapAssessment(patientId: string): string {
   try {
-    const raw = sessionStorage.getItem(`sully.scribe.${patientId}`);
+    const raw = sessionStorage.getItem(`cortex.scribe.${patientId}`);
     if (!raw) return "";
     const parsed = JSON.parse(raw) as { soap?: Partial<Record<"assessment" | "plan", string>> };
     return [parsed.soap?.assessment, parsed.soap?.plan]

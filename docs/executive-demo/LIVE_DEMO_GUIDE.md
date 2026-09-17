@@ -10,7 +10,7 @@ Two things are true about this build today, and this guide is written
 around both of them rather than around either alone:
 
 1. **The `VeritasShell` UI (Scenes 1, 2, 4, 5) works flawlessly today with
-   zero backend dependency** — `SullyShell`'s built-in demo data drives a
+   zero backend dependency** — `CortexShell`'s built-in demo data drives a
    fully interactive scribe pane, order entry with live-clickable NPHIES
    badges, an AI Team drawer, and evidence-chain popovers. This is the safe
    spine of the demo — nothing here can fail on stage.

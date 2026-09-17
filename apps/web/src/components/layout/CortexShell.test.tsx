@@ -1,5 +1,5 @@
 /**
- * Tests for the 3-pane Sully shell: pane rendering, drawer collapse/expand,
+ * Tests for the 3-pane Cortex shell: pane rendering, drawer collapse/expand,
  * agent tab switching, live SOAP editing, and NPHIES badge states.
  *
  * autoStream is disabled so the simulated transcript timer never fires and
@@ -9,7 +9,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import SullyShell from "./SullyShell";
+import CortexShell from "./CortexShell";
 import NphiesBadge from "./NphiesBadge";
 
 function renderShell() {
@@ -17,12 +17,12 @@ function renderShell() {
   // needs a router context here exactly as it has one in the app.
   return render(
     <MemoryRouter>
-      <SullyShell patientName="Test Patient Alpha" autoStream={false} />
+      <CortexShell patientName="Test Patient Alpha" autoStream={false} />
     </MemoryRouter>,
   );
 }
 
-describe("SullyShell — 3-pane layout", () => {
+describe("CortexShell — 3-pane layout", () => {
   it("renders all three panes", () => {
     renderShell();
     expect(screen.getByLabelText("Ambient scribe")).toBeInTheDocument();

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useSully, type OrderCategory, type OrderLine, type TimelineEntry } from "../SullyContext";
+import { useCortex, type OrderCategory, type OrderLine, type TimelineEntry } from "../CortexContext";
 import NphiesBadge from "../NphiesBadge";
 import PreAuthModal, { type PreAuthFields } from "../../timeline/PreAuthModal";
 
@@ -40,7 +40,7 @@ const CATEGORY_ICONS: Record<OrderCategory, typeof Beaker> = {
 };
 
 export default function TimelinePane(): JSX.Element {
-  const { timeline, timelineLoading, timelineError, orders, soap, runAgentAction, submitPreAuth } = useSully();
+  const { timeline, timelineLoading, timelineError, orders, soap, runAgentAction, submitPreAuth } = useCortex();
   const [preAuthOrder, setPreAuthOrder] = useState<OrderLine | null>(null);
   const [, setSearchParams] = useSearchParams();
 

@@ -1,5 +1,5 @@
 /**
- * SullyShell — the 3-pane clinical encounter shell.
+ * CortexShell — the 3-pane clinical encounter shell.
  *
  *   Left   — Ambient Scribe & live SOAP note (fixed width)
  *   Center — Patient master timeline & clinical order entry (flexes)
@@ -13,17 +13,17 @@
  * from the sidebar.
  */
 
-import { SullyProvider } from "./SullyContext";
+import { CortexProvider } from "./CortexContext";
 import AmbientScribePane from "./panes/AmbientScribePane";
 import TimelinePane from "./panes/TimelinePane";
 import AiTeamDrawer from "./panes/AiTeamDrawer";
-import { useSully } from "./SullyContext";
+import { useCortex } from "./CortexContext";
 
-interface SullyShellProps {
+interface CortexShellProps {
   readonly patientName?: string | undefined;
   /** Real patient ID to ground the AI Team agents in via NSCRE (Sprint 8).
    * Omitted keeps the shell in its existing demo/mock mode -- see
-   * SullyProvider's patientId doc comment. */
+   * CortexProvider's patientId doc comment. */
   readonly patientId?: string | null | undefined;
   /** Real encounter to submit NPHIES pre-authorizations against (Sprint 9).
    * Without it the pre-auth modal explains that the shell is in demo mode
@@ -35,7 +35,7 @@ interface SullyShellProps {
 
 /** Inner layout — needs to be under the provider to read drawer state. */
 function ShellLayout({ patientName }: { readonly patientName?: string | undefined }): JSX.Element {
-  const { drawerOpen } = useSully();
+  const { drawerOpen } = useCortex();
 
   return (
     <div className="flex h-full w-full overflow-hidden rounded-2xl border border-line bg-white shadow-card">
@@ -68,15 +68,15 @@ function ShellLayout({ patientName }: { readonly patientName?: string | undefine
   );
 }
 
-export default function SullyShell({
+export default function CortexShell({
   patientName,
   patientId = null,
   encounterId = null,
   autoStream = true,
-}: SullyShellProps): JSX.Element {
+}: CortexShellProps): JSX.Element {
   return (
-    <SullyProvider autoStream={autoStream} patientId={patientId} encounterId={encounterId}>
+    <CortexProvider autoStream={autoStream} patientId={patientId} encounterId={encounterId}>
       <ShellLayout patientName={patientName} />
-    </SullyProvider>
+    </CortexProvider>
   );
 }

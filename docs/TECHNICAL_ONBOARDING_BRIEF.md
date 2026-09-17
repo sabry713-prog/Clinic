@@ -139,7 +139,7 @@ true on disk but uncommitted at the time; it is committed now.
 
 Please read this section before you form an impression from the UI.
 
-1. **Eight agent action cards do nothing.** `SullyContext.runAgentAction()`
+1. **Eight agent action cards do nothing.** `CortexContext.runAgentAction()`
    appends a chat message and returns. "Adjust Dosage", "Check formulary tier",
    etc. are dead buttons. (Tracked as M-1.)
 2. **The scribe's SOAP note is canned.** Dictation is real; the note it produces

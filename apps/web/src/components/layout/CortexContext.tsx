@@ -1,5 +1,5 @@
 /**
- * SullyContext — mock state for the 3-pane clinical shell (Sprint 3).
+ * CortexContext — mock state for the 3-pane clinical shell (Sprint 3).
  *
  * Everything here is MOCK data used to demonstrate the shell's behaviour:
  * a live-streaming transcript, an auto-updating SOAP draft, order lines with
@@ -140,7 +140,7 @@ export interface AgentMessage {
  * to reach the real pipeline. */
 export type DictationMode = "live" | "demo";
 
-interface SullyState {
+interface CortexState {
   readonly recording: boolean;
   readonly elapsedSeconds: number;
   readonly transcript: readonly TranscriptLine[];
@@ -670,12 +670,12 @@ function describeHandoff(h: AgentHandoff): string {
 }
 
 // ---------------------------------------------------------------- context
-const SullyCtx = createContext<SullyState | null>(null);
+const CortexCtx = createContext<CortexState | null>(null);
 
 /** Milliseconds between simulated transcript lines while "recording". */
 const STREAM_INTERVAL_MS = 1800;
 
-export function SullyProvider({
+export function CortexProvider({
   children,
   autoStream = true,
   patientId = null,
@@ -686,7 +686,7 @@ export function SullyProvider({
   readonly autoStream?: boolean;
   /** Real patient to ground the AI Team agents in via NSCRE (Sprint 8).
    * Omitted/null keeps this shell in its existing demo/mock mode -- no page
-   * in this app passes a real one yet (SullyShell has no patientId prop
+   * in this app passes a real one yet (CortexShell has no patientId prop
    * either); wiring that into patient routing is a separate later step.
    * Live results only ever ADD to the mock activity stream below, never
    * replace it, so nothing here regresses when no patient is wired in. */
@@ -752,7 +752,7 @@ export function SullyProvider({
   // only (not localStorage): the recording stays on the clinician's own
   // workstation for the current tab session, matching the pane's
   // "nothing is written to the record from here" contract.
-  const scribeKey = patientId ? `sully.scribe.${patientId}` : null;
+  const scribeKey = patientId ? `cortex.scribe.${patientId}` : null;
 
   // The nurse takes vitals before the patient sees the doctor. They are already
   // observations on the record, so the Objective section is filled from them --
@@ -1373,7 +1373,7 @@ export function SullyProvider({
     [activeAgent, patientId, transcript, orders, submitPreAuth],
   );
 
-  const value = useMemo<SullyState>(
+  const value = useMemo<CortexState>(
     () => ({
       recording,
       elapsedSeconds,
@@ -1430,11 +1430,11 @@ export function SullyProvider({
     ],
   );
 
-  return <SullyCtx.Provider value={value}>{children}</SullyCtx.Provider>;
+  return <CortexCtx.Provider value={value}>{children}</CortexCtx.Provider>;
 }
 
-export function useSully(): SullyState {
-  const ctx = useContext(SullyCtx);
-  if (!ctx) throw new Error("useSully must be used inside a SullyProvider");
+export function useCortex(): CortexState {
+  const ctx = useContext(CortexCtx);
+  if (!ctx) throw new Error("useCortex must be used inside a CortexProvider");
   return ctx;
 }

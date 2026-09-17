@@ -14,11 +14,11 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AmbientScribePane from "./panes/AmbientScribePane";
-import { SullyProvider, useSully } from "./SullyContext";
+import { CortexProvider, useCortex } from "./CortexContext";
 
 /** Reads context state for assertions. */
 function ContextProbe({ onLines }: { onLines: (lines: readonly { speaker: string; text: string }[]) => void }): null {
-  const { transcript, activeSpeaker, setActiveSpeaker, appendTranscriptLine } = useSully();
+  const { transcript, activeSpeaker, setActiveSpeaker, appendTranscriptLine } = useCortex();
   // Expose the helpers for imperative use by the test
   (globalThis as Record<string, unknown>).__ctx = {
     transcript,
@@ -34,9 +34,9 @@ describe("Speaker toggle — single-mic differentiation", () => {
   it("renders both speaker buttons with the clinician active by default", () => {
     render(
       <MemoryRouter>
-        <SullyProvider autoStream={false}>
+        <CortexProvider autoStream={false}>
           <AmbientScribePane />
-        </SullyProvider>
+        </CortexProvider>
       </MemoryRouter>,
     );
     expect(screen.getByTestId("speaker-clinician")).toHaveAttribute("aria-checked", "true");
@@ -45,7 +45,7 @@ describe("Speaker toggle — single-mic differentiation", () => {
 
   // Toggle switching is verified live in the browser (the buttons
   // visibly switch the gradient pill); jsdom's act/fireEvent doesn't
-  // reliably flush the SullyProvider's nested useCallback chain.
+  // reliably flush the CortexProvider's nested useCallback chain.
   // The default-state test above proves both buttons render with
   // correct initial aria-checked; the switching is a simple state flip.
 });

@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useEffect } from "react";
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { SullyProvider, useSully } from "./SullyContext";
+import { CortexProvider, useCortex } from "./CortexContext";
 import AmbientScribePane from "./panes/AmbientScribePane";
 
 const { apiMock, generateSoapMock } = vi.hoisted(() => {
@@ -43,7 +43,7 @@ vi.mock("../../lib/api", () => ({ api: apiMock }));
 /** Pushes three dictation lines into the live transcript on mount, which
  * crosses the auto-generation threshold (>= 3 lines). */
 function TranscriptDriver(): null {
-  const { appendTranscriptLine } = useSully();
+  const { appendTranscriptLine } = useCortex();
   useEffect(() => {
     appendTranscriptLine("Patient reports chest tightness on exertion.");
     appendTranscriptLine("Blood pressure is 148 over 92.");
@@ -56,10 +56,10 @@ function TranscriptDriver(): null {
 function renderScribe(): ReturnType<typeof render> {
   return render(
     <MemoryRouter>
-      <SullyProvider patientId="pt-1" autoStream={false}>
+      <CortexProvider patientId="pt-1" autoStream={false}>
         <TranscriptDriver />
         <AmbientScribePane />
-      </SullyProvider>
+      </CortexProvider>
     </MemoryRouter>,
   );
 }
@@ -112,9 +112,9 @@ describe("Ambient scribe — live SOAP failure notice", () => {
     // second mount (same patient, no new dictation): the recording is back
     render(
       <MemoryRouter>
-        <SullyProvider patientId="pt-1" autoStream={false}>
+        <CortexProvider patientId="pt-1" autoStream={false}>
           <AmbientScribePane />
-        </SullyProvider>
+        </CortexProvider>
       </MemoryRouter>,
     );
     expect(screen.getByText(/chest tightness on exertion/)).toBeInTheDocument();

@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useEffect } from "react";
 import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { proposeChecklist, mergeChecklistItems, SullyProvider, useSully, type ChecklistItem } from "./SullyContext";
+import { proposeChecklist, mergeChecklistItems, CortexProvider, useCortex, type ChecklistItem } from "./CortexContext";
 import { api } from "../../lib/api";
 
 vi.mock("../../lib/api", () => ({
@@ -63,7 +63,7 @@ describe("proposeChecklist — deterministic derivation", () => {
   });
 });
 
-describe("Smart checklist auto-proposal — wiring (SullyProvider)", () => {
+describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
   class FakeEventSource {
     close(): void {}
     addEventListener(): void {}
@@ -71,7 +71,7 @@ describe("Smart checklist auto-proposal — wiring (SullyProvider)", () => {
   }
 
   function Driver({ lines }: { lines: readonly string[] }): null {
-    const { appendTranscriptLine } = useSully();
+    const { appendTranscriptLine } = useCortex();
     useEffect(() => {
       for (const l of lines) appendTranscriptLine(l);
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,10 +84,10 @@ describe("Smart checklist auto-proposal — wiring (SullyProvider)", () => {
     // feed the live transcript (what the dictation hook uses).
     const { container } = render(
       <MemoryRouter>
-        <SullyProvider patientId="pt-1" autoStream={false}>
+        <CortexProvider patientId="pt-1" autoStream={false}>
           <Driver lines={lines} />
           <AmbientScribePane />
-        </SullyProvider>
+        </CortexProvider>
       </MemoryRouter>,
     );
     return container;

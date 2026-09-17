@@ -21,7 +21,7 @@ function keyOf(c: ServiceCandidate): string {
 
 function readSoapText(patientId: string): string {
   try {
-    const raw = sessionStorage.getItem(`sully.scribe.${patientId}`);
+    const raw = sessionStorage.getItem(`cortex.scribe.${patientId}`);
     if (!raw) return "";
     const parsed = JSON.parse(raw) as { soap?: Partial<Record<"subjective" | "objective" | "assessment" | "plan", string>> };
     return [parsed.soap?.subjective, parsed.soap?.objective, parsed.soap?.assessment, parsed.soap?.plan]
