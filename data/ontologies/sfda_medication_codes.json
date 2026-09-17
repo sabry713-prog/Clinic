@@ -1,0 +1,62 @@
+{
+  "_README": "Real SFDA-sourced medication codes for the demo cohort's drugs, taken from the NPHIES terminology server (the same terminology the claims stack validates against). NOT synthesised: every code below is quoted from the published CodeSystem, with the source URL, version and a digest of the downloaded file recorded so the extraction can be re-derived and checked.",
+  "_note_on_completeness": "The published resource is a FRAGMENT (1000 concepts) of the SFDA product set, so some drugs the demo needs are absent from it rather than absent from SFDA. They are listed under not_available_from_this_source so the gap is recorded rather than papered over. Do not invent codes for them; obtain them from the SFDA drug list or the full terminology release and add them here with their own provenance.",
+
+  "source": {
+    "name": "NPHIES Scientific Codes (CodeSystem)",
+    "url": "https://portal.nphies.sa/ig/CodeSystem-scientific-codes.json",
+    "canonical_url": "http://nphies.sa/terminology/CodeSystem/scientific-codes",
+    "version": "1.0.0",
+    "content": "fragment",
+    "concept_count": 1000,
+    "last_updated": "2024-11-25T12:06:11.265+02:00",
+    "active_as_of": "2025-12-03",
+    "copyright": "Saudi Food and Drug Authority (https://sfda.gov.sa)",
+    "retrieved_on": "2026-09-17",
+    "downloaded_file_sha256": "4863c2c5e097fb5c9a0b71a79acb444c",
+    "downloaded_file_note": "sha256 prefix of the full CodeSystem JSON as downloaded; re-download and compare before trusting this extract"
+  },
+
+  "code_format": "<sfda_product_code>-<strength>-<dosage_form_code>, display is <SCIENTIFIC NAME>-<strength><form>. The strength and form segments follow the SFDA product code, so a code identifies a specific product, not a molecule.",
+
+  "codes": [
+    {
+      "matched_drug": "naproxen",
+      "code": "7000000879-500-100000073664",
+      "display": "NAPROXEN-500mg-Tablet",
+      "note": "single-ingredient naproxen 500mg tablet -- matches the drug named in nscre_contraindications.json"
+    },
+    {
+      "matched_drug": "meloxicam",
+      "code": "7000000803-15-100000073375",
+      "display": "MELOXICAM-15mg-Capsule, hard",
+      "note": "single-ingredient meloxicam 15mg -- matches the drug named in nscre_contraindications.json"
+    },
+    {
+      "matched_drug": "diclofenac",
+      "code": "7000000387-50-100000073664",
+      "display": "DICLOFENAC SODIUM-50mg-Tablet",
+      "note": "single-ingredient diclofenac sodium 50mg -- matches the drug named in nscre_contraindications.json"
+    }
+  ],
+
+  "not_available_from_this_source": [
+    {
+      "drug": "warfarin",
+      "why_it_matters": "nscre_contraindications.json pairs warfarin with four NSAIDs. Without a warfarin code the interaction rule cannot be satisfied by sourced data at all.",
+      "status": "absent from the published 1000-concept fragment; not proven absent from SFDA"
+    },
+    {
+      "drug": "metformin",
+      "why_it_matters": "nscre_renal_dose_limits.json applies a renal threshold to metformin. The fragment carries only metformin COMBINATION products (with alogliptin, sitagliptin, dapagliflozin), which are not the same medication.",
+      "status": "single-ingredient metformin absent from the fragment; combinations present and deliberately not substituted"
+    },
+    {
+      "drug": "ibuprofen",
+      "why_it_matters": "named in nscre_contraindications.json as a warfarin interaction partner.",
+      "status": "the fragment carries ibuprofen 5% gel and 20mg/ml suspension, not a 400mg tablet; a gel is not the systemic NSAID the rule concerns, so none was substituted"
+    }
+  ],
+
+  "how_to_use": "Join on scientific name plus strength: a demo medication whose name and strength match a code above may carry that code and be tagged code_system='sfda'. Anything not listed here must be left uncoded -- an uncoded medication makes the NSCRE necessity/dose checks defer honestly, which is the correct behaviour, rather than firing on a code nobody issued."
+}
