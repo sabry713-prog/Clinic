@@ -50,6 +50,7 @@ from etl_pskg import (  # noqa: E402
     _strip_dose_suffix,
     ingest_patient,
     sync_patient_to_graph,
+    MARK_LAB_AS_DERIVED,
 )
 
 PATIENT_ROW = {"id": "patient-1", "mrn": "MRN-001", "gender": "female", "age": 41}
@@ -167,6 +168,7 @@ class FakeAsyncGraph:
         self.diagnosed_with_edges: set[tuple[str, str, str]] = set()
         self.prescribed_edges: dict[tuple[str, str], dict] = {}
         self.has_lab_edges: set[tuple[str, str]] = set()
+        self.derived_markers: dict[str, dict] = {}
 
     async def run(self, cypher, **params):
         self.calls.append((cypher, params))
@@ -197,6 +199,8 @@ class FakeAsyncGraph:
             self.has_lab_edges.add(("encounter", params["encounter_id"], params["id"]))
         elif cypher == LINK_LAB_TO_PATIENT:
             self.has_lab_edges.add(("patient", params["patient_id"], params["id"]))
+        elif cypher == MARK_LAB_AS_DERIVED:
+            self.derived_markers[params["id"]] = params
         # CREATE CONSTRAINT statements -- no-op in the fake
         return []
 
@@ -214,7 +218,17 @@ async def test_full_patient_produces_expected_nodes_and_edges_no_orphans():
 
     counts = await ingest_patient("patient-1", pool, graph)
 
-    assert counts == {"patients": 1, "encounters": 1, "conditions": 1, "medications": 1, "lab_results": 1}
+    # derived_egfr is not a source row: it is computed from this patient's
+    # creatinine (B5), and counted separately so it can never be mistaken for a
+    # lab the hospital reported.
+    assert counts == {
+        "patients": 1,
+        "encounters": 1,
+        "conditions": 1,
+        "medications": 1,
+        "lab_results": 1,
+        "derived_egfr": 1,
+    }
     assert "patient-1" in graph.patients
     assert "enc-1" in graph.encounters
     assert graph.has_encounter_edges == {("patient-1", "enc-1")}
@@ -227,13 +241,17 @@ async def test_full_patient_produces_expected_nodes_and_edges_no_orphans():
 
     assert graph.lab_results["lab-1"]["flag"] == "high"
     assert graph.lab_results["lab-1"]["effective_at"] == "2026-01-10T00:00:00+00:00"
-    assert graph.has_lab_edges == {("encounter", "enc-1", "lab-1")}
+    # the creatinine on its encounter, plus the derived eGFR on the patient
+    assert graph.has_lab_edges == {
+        ("encounter", "enc-1", "lab-1"),
+        ("patient", "patient-1", "egfr-ckdepi2021-patient-1"),
+    }
 
     # No orphaned nodes -- every non-Patient/Encounter node has exactly the
     # one edge we expect, nothing extra.
     assert len(graph.diagnosed_with_edges) == 1
     assert len(graph.prescribed_edges) == 1
-    assert len(graph.has_lab_edges) == 1
+    assert len(graph.has_lab_edges) == 2
 
 
 @pytest.mark.asyncio
@@ -250,10 +268,11 @@ async def test_ingest_patient_is_idempotent():
     assert len(graph.encounters) == 1
     assert len(graph.conditions) == 1
     assert len(graph.medications) == 1
-    assert len(graph.lab_results) == 1
+    # the measured creatinine plus the eGFR derived from it
+    assert len(graph.lab_results) == 2
     assert len(graph.diagnosed_with_edges) == 1
     assert len(graph.prescribed_edges) == 1
-    assert len(graph.has_lab_edges) == 1
+    assert len(graph.has_lab_edges) == 2
 
 
 @pytest.mark.asyncio
@@ -320,7 +339,12 @@ async def test_lab_result_links_to_patient_when_no_encounter_exists_at_all():
 
     assert counts["lab_results"] == 1
     assert "lab-1" in graph.lab_results  # node still created, never dropped
-    assert graph.has_lab_edges == {("patient", "patient-1", "lab-1")}
+    # the derived eGFR joins it, on the patient, because this patient has no
+    # encounter to hang it from
+    assert graph.has_lab_edges == {
+        ("patient", "patient-1", "lab-1"),
+        ("patient", "patient-1", "egfr-ckdepi2021-patient-1"),
+    }
 
 
 @pytest.mark.asyncio
@@ -491,3 +515,99 @@ async def test_dose_suffixed_medication_names_merge_with_base_name():
     assert ("patient", "patient-b", "warfarin") in graph.prescribed_edges
     assert graph.prescribed_edges[("patient", "patient-a", "warfarin")]["dose"] == "3mg"
     assert graph.prescribed_edges[("patient", "patient-b", "warfarin")]["dose"] == "5mg"
+
+@pytest.mark.asyncio
+async def test_projects_a_derived_egfr_labelled_as_derived():
+    """B5: the renal check needs a LabResult containing 'gfr' and the cohort has
+    none, so one is computed from the patient's own creatinine and marked."""
+    pool = _make_pool(labs=LAB_ROWS_HIGH)
+    graph = FakeAsyncGraph()
+
+    await ingest_patient("patient-1", pool, graph)
+
+    derived = [lab for lab in graph.lab_results.values() if "gfr" in str(lab["test_name"]).lower()]
+    assert len(derived) == 1
+    node = derived[0]
+    assert node["id"] == "egfr-ckdepi2021-patient-1"
+    assert node["unit"] == "mL/min/1.73m2"
+    # LAB_ROWS_HIGH's creatinine is 168 umol/L; CKD-EPI 2021 puts a patient with
+    # that value in the 30s, i.e. below the conventional threshold of 60, which is
+    # exactly the case the renal rule exists to catch.
+    assert 25 < float(node["value"]) < 45
+    # no source reference range exists for a derived value, so no flag is invented
+    assert node["flag"] is None
+
+    marker = graph.derived_markers["egfr-ckdepi2021-patient-1"]
+    assert "CKD-EPI 2021" in marker["formula"]
+    assert "creatinine" in marker["derived_from"]
+
+
+@pytest.mark.asyncio
+async def test_no_derived_egfr_without_a_creatinine():
+    """Nothing is derived from nothing: a patient with no creatinine gets no
+    eGFR, and the check that needs it defers rather than firing on a guess."""
+    labs_without_creatinine = [
+        dict(LAB_ROWS_HIGH[0], id="lab-hb", code="718-7", code_display="Hemoglobin")
+    ]
+    pool = _make_pool(labs=labs_without_creatinine)
+    graph = FakeAsyncGraph()
+
+    counts = await ingest_patient("patient-1", pool, graph)
+
+    assert "derived_egfr" not in counts
+    assert not [lab for lab in graph.lab_results.values() if "gfr" in str(lab["test_name"]).lower()]
+
+
+@pytest.mark.asyncio
+async def test_no_derived_egfr_when_the_creatinine_unit_is_unrecognised():
+    """Units are the difference between ~92 and ~2; an unknown one is refused."""
+    odd_unit = [dict(LAB_ROWS_HIGH[0], unit="mg/24h")]
+    pool = _make_pool(labs=odd_unit)
+    graph = FakeAsyncGraph()
+
+    counts = await ingest_patient("patient-1", pool, graph)
+
+    assert "derived_egfr" not in counts
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "unit",
+    [
+        "umol/L",       # ASCII
+        "\u00b5mol/L",  # U+00B5 MICRO SIGN
+        "\u03bcmol/L",  # U+03BC GREEK SMALL LETTER MU -- what the database holds
+        "UMOL/L",
+        " umol/l ",
+    ],
+)
+async def test_creatinine_units_are_folded_before_comparison(unit):
+    """The two mu characters look identical and are not.
+
+    Comparing the raw string against the micro sign threw away every real
+    creatinine (the source uses the Greek mu), so no eGFR was projected at all --
+    silently, because refusing an unrecognised unit is a legitimate outcome. This
+    is the test that would have caught it.
+    """
+    pool = _make_pool(labs=[dict(LAB_ROWS_HIGH[0], unit=unit)])
+    graph = FakeAsyncGraph()
+
+    counts = await ingest_patient("patient-1", pool, graph)
+
+    assert counts.get("derived_egfr") == 1
+    assert any("gfr" in str(lab["test_name"]).lower() for lab in graph.lab_results.values())
+
+
+@pytest.mark.asyncio
+async def test_creatinine_in_mg_dl_is_converted_not_assumed():
+    """A source that reports mg/dL must be converted, not read as umol/L."""
+    pool = _make_pool(labs=[dict(LAB_ROWS_HIGH[0], unit="mg/dL", value_numeric=1.5)])
+    graph = FakeAsyncGraph()
+
+    await ingest_patient("patient-1", pool, graph)
+
+    derived = next(
+        lab for lab in graph.lab_results.values() if "gfr" in str(lab["test_name"]).lower()
+    )
+    # 1.5 mg/dL == 132.6 umol/L; reading it as umol/L would put a healthy 20-something
+    # value where a stage-3 one belongs
+    assert 35 < float(derived["value"]) < 50

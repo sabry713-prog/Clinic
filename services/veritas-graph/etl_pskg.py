@@ -66,6 +66,7 @@ import asyncpg
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from graph_client import AsyncGraphClient, GraphError, get_async_client  # noqa: E402
+from egfr import CREATININE_LOINC, FORMULA, EGFR_LOINC, egfr_ckdepi_2021
 
 # Uniqueness constraints keep re-ingestion idempotent and lookups indexed.
 # Distinct constraint names from ingest_ontologies.py's -- both target
@@ -150,6 +151,14 @@ LINK_LAB_TO_PATIENT = """
 MATCH (p:Patient {id: $patient_id})
 MATCH (l:LabResult {id: $id})
 MERGE (p)-[:HAS_LAB]->(l)
+"""
+
+# Marks a projected value as computed rather than measured, and records what it
+# was computed from, so a reader of the graph can tell the two apart. Kept
+# separate from MERGE_LABRESULT because measured labs never carry these.
+MARK_LAB_AS_DERIVED = """
+MATCH (l:LabResult {id: $id})
+SET l.derived = true, l.formula = $formula, l.derived_from = $derived_from
 """
 
 
@@ -327,6 +336,84 @@ def _nearest_encounter_id(encounters: list[dict[str, Any]], reference: Any) -> O
 
 # -- Graph writes --------------------------------------------------------------
 
+def _normalise_unit(unit: Any) -> str:
+    """Lower-case a unit and fold the two mu characters together.
+
+    "umol/L" occurs in two indistinguishable-looking spellings: U+00B5 MICRO SIGN
+    and U+03BC GREEK SMALL LETTER MU. The source data uses the Greek one, and an
+    equality check against the micro sign matched neither -- which produced no
+    eGFR at all, silently, because a refused unit is a legitimate "cannot derive"
+    outcome. Fold both before comparing.
+    """
+    text = str(unit or "").strip().lower()
+    text = text.replace("\u00b5", "u").replace("\u03bc", "u")
+    return text.replace(" ", "")
+
+
+def _derived_egfr(
+    lab_results: list[dict[str, Any]], patient: dict[str, Any]
+) -> Optional[tuple[dict[str, Any], dict[str, Any]]]:
+    """Derive an eGFR for this patient from their own most recent creatinine.
+
+    Returns (lab_result_params, derived_marker_params), or None when the record
+    does not support a derivation -- no creatinine, an unrecognised unit, a
+    missing age or sex. None means "not derived"; it never means "assume normal".
+
+    B5: the seeded cohort carries Creatinine but no eGFR, and the NSCRE renal check
+    needs a LabResult whose test_name contains 'gfr'. Deriving it with CKD-EPI 2021
+    keeps the value reproducible and its inputs inspectable. The value is projected
+    into the graph, which is a projection; it is never written back to
+    hospital.observation, which is the hospital's record of record.
+    """
+    creatinines = [
+        lab
+        for lab in lab_results
+        if lab.get("value_numeric") is not None
+        and (
+            str(lab.get("code") or "").startswith(CREATININE_LOINC)
+            or "creatinin" in str(lab.get("code_display") or "").lower()
+        )
+    ]
+    if not creatinines:
+        return None
+
+    latest = max(creatinines, key=lambda lab: lab.get("effective_at") or datetime.min)
+
+    # Units are not decoration: the equation takes mg/dL and the cohort reports
+    # umol/L. An unrecognised unit is refused rather than assumed, because
+    # guessing here moves the result by more than an order of magnitude.
+    unit = _normalise_unit(latest.get("unit"))
+    raw = float(latest["value_numeric"])
+    if unit == "umol/l":
+        value_umol_l = raw
+    elif unit == "mg/dl":
+        value_umol_l = raw * 88.4
+    else:
+        return None
+
+    result = egfr_ckdepi_2021(value_umol_l, patient.get("age"), patient.get("gender"))
+    if result is None:
+        return None
+
+    effective_at = latest.get("effective_at")
+    lab_params = {
+        "id": f"egfr-ckdepi2021-{patient['id']}",
+        "test_name": "eGFR (CKD-EPI 2021, derived)",
+        "value": round(result.value, 1),
+        "unit": "mL/min/1.73m2",
+        # No source reference range exists for a derived value, so no flag is
+        # invented; the NSCRE rule compares it against its own threshold.
+        "flag": None,
+        "effective_at": effective_at.isoformat() if effective_at else None,
+    }
+    marker_params = {
+        "id": lab_params["id"],
+        "formula": FORMULA,
+        "derived_from": f"creatinine {value_umol_l} umol/L on {lab_params['effective_at']}",
+    }
+    return lab_params, marker_params
+
+
 async def _ensure_constraints(graph: AsyncGraphClient) -> None:
     for statement in CONSTRAINTS:
         await graph.run(statement)
@@ -426,6 +513,19 @@ async def ingest_patient(
             await graph.run(LINK_LAB_TO_PATIENT, patient_id=str(patient_id), id=str(lab["id"]))
         counts["lab_results"] += 1
 
+    # Derived eGFR (B5). Computed here rather than read from a lab the hospital
+    # never produced: the cohort reports Creatinine for all 50 demo patients and
+    # carries no eGFR, so the NSCRE renal check had nothing to compare against its
+    # threshold. Projected as its own LabResult, marked derived, linked to the
+    # patient, and left out of hospital.observation.
+    derived = _derived_egfr(lab_results, patient)
+    if derived:
+        lab_params, marker_params = derived
+        await graph.run(MERGE_LABRESULT, **lab_params)
+        await graph.run(MARK_LAB_AS_DERIVED, **marker_params)
+        await graph.run(LINK_LAB_TO_PATIENT, patient_id=str(patient_id), id=lab_params["id"])
+        counts["derived_egfr"] = counts.get("derived_egfr", 0) + 1
+
     return counts
 
 
@@ -505,8 +605,11 @@ async def _run_full_refresh(
             patient_ids = patient_ids[:limit]
         for pid in patient_ids:
             counts = await ingest_patient(str(pid), pool, graph)
+            # key-agnostic: a per-patient projection may report counters the
+            # totals dict was not written with (derived_egfr), and a fixed-key
+            # lookup turned that into a crash after the first patient
             for k, v in counts.items():
-                totals[k] += v
+                totals[k] = totals.get(k, 0) + v
     finally:
         await pool.close()
         await graph.close()
@@ -559,7 +662,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     print(
         f"Synced {totals['patients']} patients, {totals['encounters']} encounters, "
         f"{totals['conditions']} conditions, {totals['medications']} medications, "
-        f"{totals['lab_results']} lab results into the graph."
+        f"{totals['lab_results']} lab results into the graph "
+        f"({totals.get('derived_egfr', 0)} derived eGFR values computed from creatinine)."
     )
     return 0
 
