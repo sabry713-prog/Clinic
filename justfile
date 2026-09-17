@@ -44,6 +44,23 @@ graph-seed:
     cd services/veritas-graph && uv run python ingest_ontologies.py
     cd services/veritas-graph && uv run python ingest_nphies_rules.py
 
+# Project Postgres patient facts into the PSKG graph (Neo4j) — encounters,
+# conditions, medications and lab results. Without this step the NSCRE evidence
+# chain has no patient facts at all and every claim-necessity verdict comes back
+# deferred ("No active medications found..." / "No eGFR result found...").
+# Scoped to the seeded demo cohort; run etl_pskg.py directly for a wider sweep
+# (its default, --patients, or --limit).
+graph-pskg:
+    cd services/veritas-graph && uv run python etl_pskg.py --mrn-prefix MRN-
+
+# Load the NSCRE reference rules (drug-drug contraindication pairs and renal
+# dose limits) onto the already-existing Medication nodes. Without this step
+# the interaction and dose-safety modules have no rules to evaluate, so they
+# can only ever report an evidence gap. Must run AFTER graph-pskg -- the rule
+# loader MATCHes medication keys and never creates patient-fact nodes.
+graph-nscre-rules:
+    cd services/veritas-graph && uv run python nscre_engine.py
+
 # One-command clean bring-up for a demo: infra + migrate + full seed.
 # After this completes, run `just dev` and open http://localhost:3000.
 demo-setup:
@@ -57,6 +74,8 @@ demo-setup:
     just seed-demo
     until docker exec cc-neo4j cypher-shell -u neo4j -p veritas-dev-password "RETURN 1" >/dev/null 2>&1; do sleep 2; done
     just graph-seed
+    just graph-pskg
+    just graph-nscre-rules
     echo "Demo data ready. Start services with: just dev"
 
 # Fixes the L-1 stale-process trap: rerunning `just dev` after a crash used

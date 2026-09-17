@@ -45,9 +45,14 @@ Design notes (see the Sprint 5 plan for the full rationale):
 Usage:
     DATABASE_URL=postgresql://... NEO4J_URI=bolt://localhost:7687 \\
         NEO4J_AUTH=neo4j/password python services/veritas-graph/etl_pskg.py
+
+    # Project only the seeded demo cohort (recommended for demos -- the
+    # default full refresh also pulls in every ingested FHIR record):
+    ... python services/veritas-graph/etl_pskg.py --mrn-prefix MRN-
 """
 from __future__ import annotations
 
+import argparse
 import asyncio
 import os
 import re
@@ -457,7 +462,18 @@ async def sync_patient_to_graph(
             await graph.close()
 
 
-async def _run_full_refresh() -> dict[str, int]:
+async def _run_full_refresh(
+    patient_ids: Optional[list[str]] = None,
+    mrn_prefix: Optional[str] = None,
+    limit: Optional[int] = None,
+) -> dict[str, int]:
+    """Project patient facts into the graph.
+
+    With no arguments this refreshes every row in hospital.patient, which on a
+    dev/demo database also includes unrelated ingested FHIR records. Pass
+    `patient_ids`, or `mrn_prefix` (e.g. "MRN-"), to project a bounded cohort --
+    that is what `just graph-pskg` does for the demo.
+    """
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
         raise RuntimeError("DATABASE_URL is required")
@@ -466,8 +482,18 @@ async def _run_full_refresh() -> dict[str, int]:
     totals = {"patients": 0, "encounters": 0, "conditions": 0, "medications": 0, "lab_results": 0}
     try:
         await _ensure_constraints(graph)
-        async with pool.acquire() as conn:
-            patient_ids = [r["id"] for r in await conn.fetch("SELECT id FROM hospital.patient")]
+        if patient_ids is None:
+            async with pool.acquire() as conn:
+                if mrn_prefix:
+                    rows = await conn.fetch(
+                        "SELECT id FROM hospital.patient WHERE mrn LIKE $1 ORDER BY mrn",
+                        f"{mrn_prefix}%",
+                    )
+                else:
+                    rows = await conn.fetch("SELECT id FROM hospital.patient ORDER BY created_at")
+                patient_ids = [str(r["id"]) for r in rows]
+        if limit is not None:
+            patient_ids = patient_ids[:limit]
         for pid in patient_ids:
             counts = await ingest_patient(str(pid), pool, graph)
             for k, v in counts.items():
@@ -478,9 +504,40 @@ async def _run_full_refresh() -> dict[str, int]:
     return totals
 
 
-def main() -> int:
+def main(argv: Optional[list[str]] = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Project Postgres patient facts (PSKG) into Neo4j.",
+    )
+    parser.add_argument(
+        "--patients",
+        help="Comma-separated patient UUIDs to project. Default: every patient.",
+    )
+    parser.add_argument(
+        "--mrn-prefix",
+        help="Project only patients whose MRN starts with this prefix, e.g. MRN-",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="Cap the number of patients projected (useful for a quick demo run).",
+    )
+    args = parser.parse_args(argv)
+
+    patient_ids = None
+    if args.patients:
+        patient_ids = [p.strip() for p in args.patients.split(",") if p.strip()]
+        if not patient_ids:
+            print("--patients was empty", file=sys.stderr)
+            return 2
+
     try:
-        totals = asyncio.run(_run_full_refresh())
+        totals = asyncio.run(
+            _run_full_refresh(
+                patient_ids=patient_ids,
+                mrn_prefix=args.mrn_prefix,
+                limit=args.limit,
+            )
+        )
     except (GraphError, RuntimeError) as exc:
         print(f"PSKG ETL failed: {exc}", file=sys.stderr)
         return 1
