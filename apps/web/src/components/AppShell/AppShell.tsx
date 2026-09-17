@@ -51,7 +51,12 @@ function Icon({ name, className = "w-5 h-5" }: { readonly name: string; readonly
   );
 }
 
-const PATIENT_VIEWS = ["journey", "workspace", "chart", "encounter"] as const;
+// The four patient views. "encounter" (the 3-pane Sully layout) is NOT here:
+// it is the only route to the master timeline and the AI Team drawer, which
+// most clinicians touch far less often than the journey, so it moved to the
+// sidebar as its own entry -- the same treatment appointments and intake
+// already get. Nothing is lost; the tab row just stops competing with the flow.
+const PATIENT_VIEWS = ["journey", "workspace", "chart"] as const;
 
 interface NavItemProps {
   readonly icon: string;
@@ -224,21 +229,23 @@ export default function AppShell(): JSX.Element {
               {PATIENT_VIEWS.map((view) => (
                 <NavItem
                   key={view}
-                  icon={view === "journey" ? "claimCheck" : view === "workspace" ? "copilot" : view === "chart" ? "overview" : "encounter"}
-                  label={
-                    view === "journey"
-                      ? "Journey"
-                      : view === "workspace"
-                        ? t("shell.copilot")
-                        : view === "chart"
-                          ? t("shell.patientFile")
-                          : t("shell.encounter")
-                  }
+                  icon={view === "journey" ? "claimCheck" : view === "workspace" ? "copilot" : "overview"}
+                  label={view === "journey" ? "Journey" : view === "workspace" ? t("shell.copilot") : t("shell.patientFile")}
                   active={currentView === view}
                   collapsed={collapsed}
                   onClick={() => goToView(view)}
                 />
               ))}
+              {/* The encounter view: the master timeline and the AI Team drawer,
+                  which it is the only route to. It left the tab row so it stops
+                  competing with the journey, but stays one click away here. */}
+              <NavItem
+                icon="encounter"
+                label={t("shell.timelineAndTeam")}
+                active={currentView === "encounter"}
+                collapsed={collapsed}
+                onClick={() => goToView("encounter")}
+              />
               {/* Gated to match backend RBAC exactly (appointment:write /
                   intake:write, packages/shared-types) -- a role that can only
                   view (patient:read) but not create would otherwise see a
