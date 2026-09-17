@@ -755,7 +755,15 @@ caught the hole.
 **Deliberately not done:** implementing a real customer-managed KMS. The provider
 throws `CustomerKmsNotConfiguredError` honestly rather than pretending, and which
 KMS to wire -- and in which region, for Saudi residency -- is a deployment
-decision. It remains the pre-PHI gate.
+decision rather than a code one.
+
+**Decision, 17 September 2026: deferred by the product owner.** The reasoning is
+that the code already refuses safely (no silent degradation, and the platform path
+will not start without a real key), and every environment in use today holds
+synthetic data only. The trigger is explicit so that a deferral does not become an
+omission: **before any real patient data enters any environment**, a KMS or HSM
+must be chosen and wired for the customer-managed path. The choice depends on where
+the solution is hosted, which is not yet decided.
 
 ---
 
