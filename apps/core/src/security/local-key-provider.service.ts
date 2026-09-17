@@ -27,16 +27,32 @@ export class LocalKeyProviderService implements KeyProvider {
 
   private masterKey(): Buffer {
     const hex = this.config.get<string>("ENCRYPTION_MASTER_KEY");
+    const env = (this.config.get<string>("NODE_ENV") ?? "development").toLowerCase();
 
-    // M03: outside development/test, reject both a missing key and the
-    // known dev-default. Encryption must never silently degrade.
-    const env = this.config.get<string>("NODE_ENV") ?? "development";
-    const isTest = this.config.get<string>("ALLOW_DEV_KEYS") === "true";
-    if (env !== "development" && !isTest) {
-      if (!hex || hex === DEV_DEFAULT_MASTER_KEY) {
+    // M03: the known development master key is accepted in development and test
+    // only. Everything else must present a real key.
+    //
+    // ALLOW_DEV_KEYS used to be a blanket override: `env !== "development" &&
+    // !isTest` meant that anything outside development could unlock the
+    // publication-known default simply by setting the flag, including a
+    // production deployment that inherited a copied .env. The register asks for
+    // known keys to be rejected outside isolated tests, so the flag is now
+    // honoured only in test runs and can never unlock a deployed build.
+    const devKeyAllowed = env === "development" || env === "test";
+
+    if (!devKeyAllowed) {
+      if (!hex) {
         throw new Error(
-          "ENCRYPTION_MASTER_KEY is missing or is the known development default. " +
-          "Set a real 32-byte key (64 hex chars) before running outside development.",
+          "ENCRYPTION_MASTER_KEY is missing. A deployed build must be given a real " +
+          "32-byte key (64 hex chars); the development default is refused because it " +
+          "is published in this source tree.",
+        );
+      }
+      if (hex === DEV_DEFAULT_MASTER_KEY) {
+        throw new Error(
+          "ENCRYPTION_MASTER_KEY is the known development default, which is published " +
+          "in this source tree and therefore offers no confidentiality. Generate one with " +
+          "`openssl rand -hex 32` before running outside development.",
         );
       }
     }
