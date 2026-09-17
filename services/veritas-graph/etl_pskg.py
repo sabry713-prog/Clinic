@@ -465,6 +465,7 @@ async def sync_patient_to_graph(
 async def _run_full_refresh(
     patient_ids: Optional[list[str]] = None,
     mrn_prefix: Optional[str] = None,
+    mrn_pattern: Optional[str] = None,
     limit: Optional[int] = None,
 ) -> dict[str, int]:
     """Project patient facts into the graph.
@@ -484,7 +485,15 @@ async def _run_full_refresh(
         await _ensure_constraints(graph)
         if patient_ids is None:
             async with pool.acquire() as conn:
-                if mrn_prefix:
+                if mrn_pattern:
+                    # POSIX regex: the seeded demo cohort is MRN-001..MRN-050,
+                    # while a plain MRN- prefix also catches ingested records
+                    # whose MRNs look like MRN-<hex>.
+                    rows = await conn.fetch(
+                        "SELECT id FROM hospital.patient WHERE mrn ~ $1 ORDER BY mrn",
+                        mrn_pattern,
+                    )
+                elif mrn_prefix:
                     rows = await conn.fetch(
                         "SELECT id FROM hospital.patient WHERE mrn LIKE $1 ORDER BY mrn",
                         f"{mrn_prefix}%",
@@ -517,6 +526,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         help="Project only patients whose MRN starts with this prefix, e.g. MRN-",
     )
     parser.add_argument(
+        "--mrn-pattern",
+        help="Project only patients whose MRN matches this POSIX regex, e.g. "
+             "'^MRN-[0-9]{3}$' for the seeded demo cohort",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         help="Cap the number of patients projected (useful for a quick demo run).",
@@ -535,6 +549,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             _run_full_refresh(
                 patient_ids=patient_ids,
                 mrn_prefix=args.mrn_prefix,
+                mrn_pattern=args.mrn_pattern,
                 limit=args.limit,
             )
         )

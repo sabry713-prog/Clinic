@@ -51,7 +51,14 @@ graph-seed:
 # Scoped to the seeded demo cohort; run etl_pskg.py directly for a wider sweep
 # (its default, --patients, or --limit).
 graph-pskg:
-    cd services/veritas-graph && uv run python etl_pskg.py --mrn-prefix MRN-
+    cd services/veritas-graph && uv run python etl_pskg.py --mrn-pattern '^MRN-[0-9]{3}$'
+
+# Assert the running stack matches docs/DEMO_MANIFEST.md: the schema names the
+# manifest relies on, the seeded cohort, and the graph reference counts derived
+# from the committed ontology files. Reports live totals without asserting them
+# (ingestion keeps moving those).
+verify-demo-data:
+    python tools/verify_demo_data.py
 
 # Load the NSCRE reference rules (drug-drug contraindication pairs and renal
 # dose limits) onto the already-existing Medication nodes. Without this step
@@ -76,6 +83,7 @@ demo-setup:
     just graph-seed
     just graph-pskg
     just graph-nscre-rules
+    just verify-demo-data
     echo "Demo data ready. Start services with: just dev"
 
 # Fixes the L-1 stale-process trap: rerunning `just dev` after a crash used
