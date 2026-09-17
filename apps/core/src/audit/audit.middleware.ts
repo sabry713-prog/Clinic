@@ -5,7 +5,6 @@ import {
   Logger,
 } from "@nestjs/common";
 import type { Request, Response, NextFunction } from "express";
-import { writeAuditEvent } from "@clinical-copilot/audit";
 import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import type {
@@ -16,6 +15,7 @@ import type {
 } from "@clinical-copilot/shared-types";
 import { trace } from "@opentelemetry/api";
 import { v4 as uuidv4 } from "uuid";
+import { AuditOutboxService } from "./audit-outbox.service";
 
 // Extend Express Request type to carry audit context
 declare module "express" {
@@ -33,7 +33,10 @@ const SKIP_AUDIT_PATHS = new Set(["/api/v1/health"]);
 export class AuditMiddleware implements NestMiddleware {
   private readonly logger = new Logger(AuditMiddleware.name);
 
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly outbox: AuditOutboxService,
+  ) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
     // Assign a request ID for correlation
@@ -61,34 +64,34 @@ export class AuditMiddleware implements NestMiddleware {
       const traceId =
         trace.getActiveSpan()?.spanContext().traceId ?? null;
 
-      // M08 (readiness assessment): generic audit writes previously
-      // failed open — a lost write was only logged, the event gone.
-      // Now: bounded retry with backoff; on final failure, the event
-      // is dead-lettered to stderr so it's recoverable from logs.
-      const attempt = async (retries: number): Promise<void> => {
-        try {
-          await writeAuditEvent(this.pool, {
-            actor_id: (req.authenticatedUserId as UserId | undefined) ?? null,
-            actor_role: (req.authenticatedUserRole as UserRole | undefined) ?? null,
-            action,
-            target_type: null,
-            target_id: null,
-            outcome,
-            metadata_json: {
-              method,
-              status_code: res.statusCode,
-              trace_id: traceId,
-              // Never include query params, body, or any PHI
-            },
-            request_id: requestId as RequestId,
-          });
-        } catch (err) {
-          if (retries > 0) {
-            await new Promise((r) => setTimeout(r, 50 * (4 - retries)));
-            return attempt(retries - 1);
-          }
+      // M08: the response is already sent, so this write cannot be part of the
+      // request's transaction. What it CAN be is durable -- the event goes into
+      // audit.outbox in one INSERT and the flusher retries it into audit.event
+      // until it lands. Previously a failed write was retried a few times in
+      // this process and then dropped on stderr, which meant a crash or a
+      // database blip could lose the event outright.
+      void this.outbox
+        .enqueue({
+          actor_id: (req.authenticatedUserId as UserId | undefined) ?? null,
+          actor_role: (req.authenticatedUserRole as UserRole | undefined) ?? null,
+          action,
+          target_type: null,
+          target_id: null,
+          outcome,
+          metadata_json: {
+            method,
+            status_code: res.statusCode,
+            trace_id: traceId,
+            // Never include query params, body, or any PHI
+          },
+          request_id: requestId as RequestId,
+        })
+        .catch((err: unknown) => {
+          // The queue itself is unreachable (the database is down), so there is
+          // nothing durable left to write to. stderr is the last resort, and it
+          // is loud: this is the only path that can still lose an event.
           this.logger.error(
-            { event: "audit_write_dead_letter", request_id: requestId, action, err },
+            { event: "audit_enqueue_dead_letter", request_id: requestId, action, err },
             "AuditMiddleware",
           );
           process.stderr.write(
@@ -102,10 +105,7 @@ export class AuditMiddleware implements NestMiddleware {
               actor_id: (req.authenticatedUserId) ?? null,
             }) + "\n",
           );
-        }
-      };
-
-      void attempt(3);
+        });
     });
 
     next();

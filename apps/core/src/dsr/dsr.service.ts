@@ -22,6 +22,7 @@ import { Injectable, Inject, Logger, NotFoundException, BadRequestException } fr
 import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { writeAuditEvent } from "@clinical-copilot/audit";
+import { AuditOutboxService } from "../audit/audit-outbox.service";
 import type { UserId, UserRole, RequestId } from "@clinical-copilot/shared-types";
 import { createHash } from "crypto";
 
@@ -37,7 +38,10 @@ export interface DsrRequest {
 export class DsrService {
   private readonly logger = new Logger(DsrService.name);
 
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly outbox: AuditOutboxService,
+  ) {}
 
   private hashSubjectId(subjectId: string): string {
     return createHash("sha256").update(subjectId).digest("hex");
@@ -245,6 +249,33 @@ export class DsrService {
         [patientId],
       );
 
+      // 5. Mark the request completed inside the same transaction. This used to
+      //    run after the COMMIT: a crash in between left the record erased, the
+      //    request looking unfinished, and no proof that either had happened.
+      await client.query(
+        `UPDATE app.dsr_request SET status = 'completed', completed_at = now(),
+         result_note = 'Clinical records anonymized; identifiers removed; Neo4j projection deletion attempted (best-effort and logged).'
+         WHERE id = $1`,
+        [dsrRequestId],
+      );
+
+      // 6. Queue the proof in the same transaction (M08). The hand-off commits
+      //    with the erasure or not at all, so an irreversible change can never
+      //    end up without its audit entry.
+      await this.outbox.enqueue(
+        {
+          actor_id: actorId as unknown as UserId,
+          actor_role: actorRole as UserRole | null,
+          action: "DSR_ERASE_COMPLETED",
+          target_type: "patient",
+          target_id: patientId as never,
+          outcome: "SUCCESS",
+          metadata_json: { dsr_request_id: dsrRequestId, method: "anonymize" },
+          request_id: requestId,
+        },
+        client,
+      );
+
       await client.query("COMMIT");
     } catch (err) {
       await client.query("ROLLBACK");
@@ -298,26 +329,6 @@ export class DsrService {
         error: err instanceof Error ? err.message : String(err),
       });
     }
-
-    // 5. Mark the request completed
-    await this.pool.query(
-      `UPDATE app.dsr_request SET status = 'completed', completed_at = now(),
-       result_note = 'Clinical records anonymized; identifiers removed; Neo4j projection deleted.'
-       WHERE id = $1`,
-      [dsrRequestId],
-    );
-
-    // 6. Audit the erasure
-    await writeAuditEvent(this.pool, {
-      actor_id: actorId as unknown as UserId,
-      actor_role: actorRole as UserRole | null,
-      action: "DSR_ERASE_COMPLETED",
-      target_type: "patient",
-      target_id: patientId as never,
-      outcome: "SUCCESS",
-      metadata_json: { dsr_request_id: dsrRequestId, method: "anonymize" },
-      request_id: requestId,
-    });
 
     this.logger.log({ event: "dsr_erase_completed", dsr_id: dsrRequestId, patient_id: patientId });
     return this.getStatus(dsrRequestId);

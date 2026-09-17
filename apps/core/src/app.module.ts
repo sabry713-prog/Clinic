@@ -6,6 +6,7 @@ import { HealthModule } from "./health/health.module";
 import { AuthModule } from "./auth/auth.module";
 import { DatabaseModule } from "./database/database.module";
 import { AuditMiddleware } from "./audit/audit.middleware";
+import { AuditModule } from "./audit/audit.module";
 import { IngestionModule } from "./ingestion/ingestion.module";
 import { PatientModule } from "./patient/patient.module";
 import { RbacModule } from "./rbac/rbac.module";
@@ -46,6 +47,11 @@ function composeFeatureModules() {
   const claimIntegrity = appProfile() === "claim-integrity";
   return [
     DatabaseModule,
+    // Provides AuditOutboxService. The middleware below is applied from this
+    // module's context (consumer.apply in AppModule), so the outbox it injects
+    // has to be visible here -- a provider registered only in AuditModule is
+    // not resolvable from AppModule and the app fails to boot.
+    AuditModule,
     HealthModule,
     AuthModule,
     RbacModule,

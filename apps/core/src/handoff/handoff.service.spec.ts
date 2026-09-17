@@ -282,7 +282,10 @@ describe("DsrService", () => {
       query: jest.fn().mockResolvedValue({ rows: [insertRow] }),
     };
 
-    const service = new DsrService(pool as unknown as import("pg").Pool);
+    const service = new DsrService(
+      pool as unknown as import("pg").Pool,
+      { enqueue: jest.fn().mockResolvedValue("outbox-1") } as unknown as import("../audit/audit-outbox.service").AuditOutboxService,
+    );
     const result = await service.createAccess("ID123", "Patient request", null, null, "req-1" as import("@clinical-copilot/shared-types").RequestId);
 
     expect(result.type).toBe("access");
@@ -307,7 +310,10 @@ describe("DsrService", () => {
       query: jest.fn().mockResolvedValue({ rows: [insertRow] }),
     };
 
-    const service = new DsrService(pool as unknown as import("pg").Pool);
+    const service = new DsrService(
+      pool as unknown as import("pg").Pool,
+      { enqueue: jest.fn().mockResolvedValue("outbox-1") } as unknown as import("../audit/audit-outbox.service").AuditOutboxService,
+    );
     const result = await service.createErase("ID456", "Right to erasure", null, null, "req-2" as import("@clinical-copilot/shared-types").RequestId);
 
     expect(result.type).toBe("erase");
@@ -326,7 +332,10 @@ describe("DsrService", () => {
       query: jest.fn().mockResolvedValue({ rows: [row] }),
     };
 
-    const service = new DsrService(pool as unknown as import("pg").Pool);
+    const service = new DsrService(
+      pool as unknown as import("pg").Pool,
+      { enqueue: jest.fn().mockResolvedValue("outbox-1") } as unknown as import("../audit/audit-outbox.service").AuditOutboxService,
+    );
     const result = await service.getStatus("dsr-3");
 
     expect(result.id).toBe("dsr-3");

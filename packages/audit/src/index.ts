@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import type {
   AuditAction,
   AuditEventId,
@@ -175,6 +175,69 @@ export async function writeAuditEvent(
     }
   }
   throw lastErr;
+}
+
+/**
+ * Write an audit event inside a transaction the caller already owns.
+ *
+ * The caller is responsible for BEGIN/COMMIT/ROLLBACK. Use this when the audit
+ * row must be atomic with the change it records -- an erasure, a sign-off, a
+ * submission -- so that a crash between the two cannot leave the change without
+ * its proof. `writeAuditEvent` above opens its own SERIALIZABLE transaction and
+ * is the right call for standalone writes.
+ */
+export async function writeAuditEventInTx(
+  client: PoolClient,
+  input: AuditWriteInput,
+): Promise<AuditWriteResult> {
+  const prevResult = await client.query<{ hash_self: string }>(
+    "SELECT hash_self FROM audit.event ORDER BY ts DESC, id DESC LIMIT 1",
+  );
+  const hash_prev: string | null = prevResult.rows[0]?.hash_self ?? null;
+
+  const idResult = await client.query<{ id: string }>(
+    "SELECT gen_random_uuid()::text AS id",
+  );
+  const id = idResult.rows[0]?.id;
+  if (!id) throw new Error("Failed to generate UUID");
+
+  const ts = new Date().toISOString();
+  const hash_self = computeHashSelf({
+    id,
+    ts,
+    actor_id: input.actor_id,
+    actor_role: input.actor_role,
+    action: input.action,
+    target_type: input.target_type,
+    target_id: input.target_id,
+    outcome: input.outcome,
+    metadata_json: input.metadata_json,
+    request_id: input.request_id,
+    hash_prev,
+  });
+
+  await client.query(
+    `INSERT INTO audit.event
+       (id, ts, actor_id, actor_role, action, target_type, target_id,
+        outcome, metadata_json, request_id, hash_prev, hash_self)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+    [
+      id,
+      ts,
+      input.actor_id,
+      input.actor_role,
+      input.action,
+      input.target_type,
+      input.target_id,
+      input.outcome,
+      JSON.stringify(input.metadata_json),
+      input.request_id,
+      hash_prev,
+      hash_self,
+    ],
+  );
+
+  return { id: id as AuditEventId, hash_self };
 }
 
 /**
