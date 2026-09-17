@@ -619,6 +619,10 @@ export interface DraftSection {
   readonly title: string;
   readonly policy: "assembled_facts" | "clinician_authored_only";
   readonly text: string;
+  /** True when the reviewing clinician authored this text (ambient Scribe),
+   * rather than it being reproduced from the record. Recorded server-side so a
+   * reviewer can tell the two apart. */
+  readonly authored?: boolean;
 }
 
 export interface CodedTerm {

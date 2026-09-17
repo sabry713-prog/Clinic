@@ -55,6 +55,11 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
   const caretRef = useRef<number>(0);
 
   const isSigned = draft?.status === "signed";
+  // Sections the reviewing clinician wrote themselves (ambient Scribe), as
+  // opposed to text reproduced from the record.
+  const clinicianAuthored = (draft?.sections_json ?? [])
+    .filter((section) => section.authored === true)
+    .map((section) => section.title);
 
   const refreshList = useCallback(() => {
     api.patients.listDrafts(patientId).then((r) => setList(r.data)).catch(() => { /* silent */ });
@@ -221,6 +226,15 @@ export default function DraftPanel({ patientId }: DraftPanelProps): JSX.Element 
                 DRAFT
               </span>
             </div>
+          )}
+
+          {/* Provenance: the ambient Scribe posts the SOAP note the clinician
+              reviewed as authored sections, so say which parts are their own
+              words rather than reproduced from the record. */}
+          {clinicianAuthored.length > 0 && (
+            <p className="mb-2 text-[11px] text-ink-soft" data-testid="draft-authored-note">
+              Clinician-authored: {clinicianAuthored.join(", ")} — the rest is reproduced from the record.
+            </p>
           )}
 
           <textarea
