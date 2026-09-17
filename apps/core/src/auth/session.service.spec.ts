@@ -49,6 +49,19 @@ describe("SessionService — M02 live authorization check", () => {
     SessionService.clearUserStateCache();
   });
 
+  it("reads disablement from the real schema column (regression: phantom u.enabled)", async () => {
+    // The original M02 query selected `u.enabled`, which does not exist on
+    // app."user" (disablement is modelled as `disabled_at`). The query threw on
+    // every request, the service failed closed, and the UI looped back to the
+    // login page. Mocked rows can never catch that, so assert on the SQL text.
+    const { pool, service } = makePool({ rows: [{ enabled: true, role: "physician" }] });
+    const sid = service.create(sessionData(["physician"]));
+    await service.get(sid);
+    const sql = String(pool.query.mock.calls[0][0]);
+    expect(sql).toContain("disabled_at");
+    expect(sql).not.toMatch(/SELECT\s+u\.enabled/);
+  });
+
   it("returns the session when the user is enabled and roles match", async () => {
     const { service } = makePool({ rows: [{ enabled: true, role: "physician" }] });
     const sid = service.create(sessionData(["physician"]));

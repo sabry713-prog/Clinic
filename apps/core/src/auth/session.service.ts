@@ -129,8 +129,13 @@ export class SessionService {
     }
 
     try {
+      // M02 fix: app."user" has no `enabled` column — disablement is modelled
+      // as `disabled_at`. Selecting a phantom column made this query throw on
+      // every request, the catch below fails closed, and the SPA saw a 401 on
+      // /auth/me forever: the login page appeared to accept credentials and
+      // then bounced straight back to itself.
       const result = await this.pool.query<{ enabled: boolean; role: string }>(
-        `SELECT u.enabled, r.role
+        `SELECT (u.disabled_at IS NULL) AS enabled, r.role
          FROM app."user" u
          LEFT JOIN app.user_role r ON r.user_id = u.id
          WHERE u.id = $1 AND u.tenant_id = '00000000-0000-0000-0000-000000000001'

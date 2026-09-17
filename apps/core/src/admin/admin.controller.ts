@@ -313,10 +313,28 @@ export class AdminController {
     );
     if (!existing.rows[0]) throw new NotFoundException("User not found");
 
-    await this.pool.query(
-      `UPDATE app."user" SET roles = $1 WHERE id = $2`,
-      [JSON.stringify(body.roles), targetId],
-    );
+    // M02 fix: `app."user"` has no `roles` column — roles live in
+    // app.user_role (user_id, role). The previous statement targeted a phantom
+    // column, so every role change threw and nothing was ever persisted (the
+    // spec hid it by mocking a row shape that could not come from the schema).
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(`DELETE FROM app.user_role WHERE user_id = $1`, [targetId]);
+      if (body.roles.length > 0) {
+        await client.query(
+          `INSERT INTO app.user_role (user_id, role)
+           SELECT $1, r FROM unnest($2::text[]) AS r`,
+          [targetId, body.roles],
+        );
+      }
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
 
     await writeAuditEvent(this.pool, {
       actor_id: userId as UserId,
