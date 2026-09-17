@@ -166,12 +166,12 @@ Reference layer is also thin: `NphiesDiagnosis` 6, `NphiesService` 5, `NPHIES_JU
 |---|---|---|
 | M01 | **NOT DONE** | `session.service.ts:48` in-process Map; `auth.service.ts:23` pendingStates Map; `otp-rate-limit.ts:2,38-49` in-memory; `ingestion.scheduler.ts:11-38` `setInterval`, no advisory lock. No Redis, no shared store. Chart still requests 3 replicas (`values.yaml:30`), so the "keep demo single-instance" fallback is contradicted. Live symptom: **21 ingestion runs stuck in `running`**, 8 failed, 182 completed. |
 | M02 | **NOT DONE (broken)** | B8. Pre-PHI gate unmet. |
-| M03 | **PARTIAL** | Gate implemented (`local-key-provider.service.ts:30-45`) but lazy (only at wrap/unwrap) and untested; `customer-key-provider.service.ts:33-46` still throws even when a KMS ref is configured. No KMS/HSM wrapping, rotation or recovery. |
+| M03 | **PARTIAL — gate closed 17 Sep, see §18** | The gate existed but was bypassable: `ALLOW_DEV_KEYS=true` unlocked the published dev default in *any* environment, so a deployed build could accept a key that offers no confidentiality. Now honoured only in test runs, and covered by nine tests. **Still open:** no KMS/HSM wrapping, rotation or recovery -- `customer-key-provider.service.ts:33-46` throws honestly. Which KMS to wire is a deployment decision, not a code one (**pre-PHI gate**). |
 | M04 | **NOT DONE** | Live: all 9 `hospital.*` tables have `relrowsecurity=true` but **`relforcerowsecurity=false`**; no `set_config`/`SET LOCAL` anywhere in application code (only policy reads in migrations); single owner-role pool (`database.module.ts:26-33`); tenant hardcoded (`session.service.ts:136`); `patient-scope.service.ts:82-86` reads only `LIMIT 1` role. |
 | M05 | **PARTIAL (inert)** | Partial-failure tracking added (`ingestion.service.ts:72,99-116`) but the migration never applied, so the live CHECK still permits only `running|completed|failed` — writing `partial` would violate it. Pagination explicitly deferred (`:368-375` "for now we take the first page"); `attending_fhir_ref` extracted (`fhir-mapper.ts:43,211-228`) but never written (`:409-450`); merge still log-only (`:242-252`). |
 | M06 | **NOT DONE** | Commit `901fbc7` claims M06 but touched only `ingest_ontologies.py` + manifest/verify script. `etl_pskg.py`/`graph_client.py` unchanged since `9ab2935`; still MERGE-only (`:335`) with no stale-fact deletion, no atomic publication, no source-version lineage for patient facts. Related: B5. |
 | M07 | **NOT DONE (non-functional)** | B8. Anonymise + Neo4j delete code exists (`:191-232,268-271`) but the Neo4j leg is silently skipped if env is unset (`:244-246`), and failures are non-fatal yet marked completed (`:278-294`). Legal-hold awareness is docstring-only. No ambient-consent enforcement. |
-| M08 | **PARTIAL** | Audit still fail-open (`audit.middleware.ts:47-109`, dead-letter to stderr `:94-104`); no outbox. **WORM unchanged**: `worm-export.service.ts:179-185` returns silently without the SDK while the caller logs "AUDIT_WORM_EXPORTED … completed" (`:147-156`); only ETag presence checked (`:217-221`). `backup-db.sh:41-52` unchanged — reproduced: the here-string overrides the pipe, so the dump is discarded and `pipefail` fails. |
+| M08 | **DONE 17 Sep, see §17** | All five parts addressed and each proven by running it: a durable outbox writes audit events (with a row a dead process left behind recovered live, chain verified over 17,584 rows); the WORM export reads its object back and emits success only after that; the backup script's stdin conflict is fixed structurally and the script now verifies dump, encryption round trip and the uploaded object; a restore drill restores into an isolated database and matched 43 tables; the search-metadata scrub was already correct and is now pinned by tests. |
 | M09 | **PARTIAL** | Queue code is genuinely Postgres-backed (`coder-queue.service.ts:110-176`) but **the table does not exist** (B1); `sync()` is row-by-row, untransactional, `updated` hardcoded to 0 (`:137`). NPHIES remains in-process (`tasks.py:13-21`, `StatusBroker` dict `:62-104`). |
 | M10 | **NOT DONE** | Active Q&A still bypasses hybrid retrieval (`apps/qa/main.py:383-388` passes `pool=None, embedder=None, _override_chunks`); `source_id` is the patient id on every chunk (`main.py:135,170,192,217,250,280,302`); `_BM25_SQL` still has no `ORDER BY` (`retriever.py:30-47`). Commit `c8b16a0` claims typed fact contracts but the diff contains none. |
 | M11 | **PARTIAL (ATC not fixed)** | Manifest + checksum gate are real. **ATC bug intact:** `ingest_ontologies.py:207-214` slices `atc[:3]` while `_ATC_DESCRIPTIONS` keys are 4 characters (`:189-203`), so descriptions resolve empty. All 10 manifest entries are `licensed:false`; approver is self-approval ("product-owner (CTO) — session approval"). |
@@ -630,6 +630,134 @@ orchestrator) also need `docs/prompts/` in the image.
 That file's own header documents why -- they need hot-reload for development,
 and containerising them is the **L01** (long-term) item, not a Tier-1 blocker.
 It is recorded here so the omission reads as a decision rather than an oversight.
+
+---
+
+## 17. M08 — the paths that reported success without doing the work (17 September)
+
+Three components claimed success while producing nothing, and the fixes are
+verified by running the paths rather than by reading them.
+
+### 17.1 The backup was silently empty
+
+`infra/scripts/backup-db.sh` read `pg_dump`'s output and the GPG passphrase from
+the same stdin:
+
+```bash
+pg_dump "$DATABASE_URL" ... | gpg ... --passphrase-fd 0 ... <<< "$GPG_PASSPHRASE"
+```
+
+The here-string wins the redirection, so gpg took the passphrase from it and the
+dump bytes went into a pipe nobody read. Reproduced before the fix: a
+200,000-byte input produced a **70-byte** file that decrypted to **0 bytes**, and
+the script exited 0 printing "Upload complete". This is the only backup path.
+
+Fixed structurally: gpg reads the dump as a **file argument** and the passphrase
+from **fd 3**, so the two can never share a descriptor; and the script now refuses
+to report success unless the dump is non-empty, `pg_restore --list` can read it,
+the ciphertext decrypts back to a byte-identical dump, and the uploaded object is
+read back from S3 by size and SHA-256.
+
+Run for real against the live database: **19,115,199 bytes**, **305 TOC
+entries**, round-trip hash equal, uploaded to MinIO and read back matching. A
+manifest records both digests and the verification results.
+
+### 17.2 The WORM export logged success without uploading
+
+`worm-export.service.ts` returned early when the S3 SDK failed to load, and the
+caller logged `AUDIT_WORM_EXPORTED` / "completed" regardless. It also stamped
+`x-content-sha256` with the digest of the **uncompressed** buffer while the object
+stored beside it was the gzip stream, so any third-party verifier hashing the
+downloaded object would conclude it had been tampered with.
+
+Now the digest describes the bytes actually stored, the plaintext digest is kept
+under its own name, the object is read back with `HeadObject` and size and digest
+compared, a manifest records the chain slice the file covers, and the success
+event is emitted only after that verification. Also corrected: the export day was
+derived from **local** date parts while the query used a bare `::date`, so the
+window drifted by the UTC offset and the file was named for a day it did not
+cover. Export days are UTC days, with the window passed as explicit `timestamptz`
+bounds.
+
+Nine tests, including that no success event is emitted in stub mode, on a
+read-back digest mismatch, or on a size mismatch.
+
+### 17.3 Nothing had ever restored a backup
+
+`infra/scripts/restore-drill.sh` downloads the newest backup, checks it against
+its manifest, decrypts it, restores it into an isolated scratch database
+(`restore_drill_<UTC>`), compares row counts table by table against the live
+database, and drops the scratch database. The live database is only ever read.
+Its own first version was wrong -- it picked the newest object under the prefix,
+which is always the manifest, because the manifest is written after its dump.
+
+Run for real: **PASS** -- ciphertext and plaintext matched the manifest, 305 TOC
+entries, restored, **43 tables matched** the live database, scratch dropped.
+
+### 17.4 Audit writes now hand off to a durable outbox
+
+A response-finish handler cannot be transactional with the request it describes,
+and a lost write was retried in-process and then dropped on stderr. The erasure
+had the same problem in a worse form: it anonymized, `COMMIT`ted, and only then
+marked the request complete and wrote its audit entry -- a crash in between left
+a record erased with no proof anything had happened.
+
+`audit.outbox` (migration `1720700000000`) plus `AuditOutboxService`: producers
+enqueue, a flusher drains the queue into `audit.event` through the hash-chain
+writer inside one SERIALIZABLE transaction per batch, and rows are retained after
+flushing. `writeAuditEventInTx` in `packages/audit` writes inside a transaction
+the caller owns, which is what makes the erasure's proof atomic with the erasure.
+
+Verified live, not asserted: a row inserted directly into the outbox -- standing
+in for a process that died before writing its event -- was written into
+`audit.event` by the running service at startup, and matches the queued payload
+on id, action, outcome, actor_role and metadata (all true). `verifyAuditChain`
+over the whole log: `{valid: true, checked_rows: 17584}`. A live 401 was audited
+and drained (outbox 8 rows / 0 unflushed).
+
+**Caught by running the app, not by the tests:** adding a constructor dependency
+to a middleware is invisible to a unit test that constructs the class directly.
+Nest resolves middleware dependencies in the context of the module where
+`consumer.apply` is called, so `AuditModule` had to be visible in `AppModule`
+(and in `DsrModule`); until it was, the app threw `UnknownDependenciesException`
+at boot. This is the identical bug the repository hit before with `RbacModule`.
+
+### 17.5 Raw search metadata -- already correct, now pinned
+
+`patient.controller.ts:136-146` already hashes the query (`query_hash`,
+`query_len`, `result_count`) and never stores the text. Two tests now pin it,
+including that identical queries correlate and different ones do not.
+
+---
+
+## 18. M03 — the key gate, and what remains a decision (17 September)
+
+The register item reads "known dev master key fallback not production-gated;
+customer key provider is a stub". Checked against the code rather than the
+finding text, the first half was **already implemented**: the provider refuses a
+missing key or the published default outside development.
+
+The gate nevertheless had a hole and no test:
+
+```ts
+const isTest = this.config.get("ALLOW_DEV_KEYS") === "true";
+if (env !== "development" && !isTest) { ...reject... }
+```
+
+`ALLOW_DEV_KEYS` was honoured in **any** environment. A production deployment that
+inherited a copied `.env`, or that set the flag to quiet a startup error, would
+silently accept a master key that is published in this source tree -- precisely
+the failure the gate exists to prevent. The flag is now honoured only in test
+runs; anything that is not development or test requires a real 32-byte key and
+cannot be unlocked by it. Nine tests pin this, including the two that would have
+caught the hole.
+
+**Deliberately not done:** implementing a real customer-managed KMS. The provider
+throws `CustomerKmsNotConfiguredError` honestly rather than pretending, and which
+KMS to wire -- and in which region, for Saudi residency -- is a deployment
+decision. It remains the pre-PHI gate.
+
+---
 
 ---
 
