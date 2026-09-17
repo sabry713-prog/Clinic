@@ -29,10 +29,6 @@ interface AuditRow {
   hash_self: string;
 }
 
-interface S3PutResult {
-  ETag?: string;
-}
-
 /**
  * WORM (Write-Once Read-Many) audit export service.
  *
@@ -41,16 +37,56 @@ interface S3PutResult {
  *   - NDJSON (one JSON object per line, ordered by ts ASC, id ASC)
  *   - Gzip compressed
  *   - Uploaded to: audit/{YYYY}/{MM}/{DD}/audit-{YYYY-MM-DD}.ndjson.gz
- *   - Integrity verified via ETag / SHA-256 checksum
+ *   - Accompanied by a manifest at the same path, .manifest.json
+ *   - Read back from the object store and compared before success is reported
  *
  * The S3 bucket MUST have Object Lock (WORM) configured in Terraform/Helm --
  * this is an infrastructure concern, not application code.
  *
  * PHI note: audit events may contain patient_id (UUID) and action codes but
  * NOT free-text clinical content.
+ *
+ * WHY SUCCESS IS ONLY REPORTED AFTER A READ-BACK
+ * ----------------------------------------------
+ * This service used to log "WORM export completed" (event
+ * AUDIT_WORM_EXPORTED) in every case, including when the S3 SDK failed to load
+ * and nothing was uploaded at all: the upload helper returned early and the
+ * caller carried on as if the data were safely in WORM storage. An audit trail
+ * that reports success for objects that do not exist is worse than one that
+ * reports nothing, because it stops anyone from looking.
+ *
+ * It also stamped x-content-sha256 with the hash of the *uncompressed* buffer
+ * while the object stored alongside it was the *gzip* stream, so any verifier
+ * that downloaded the object and hashed it would compute a different digest and
+ * conclude the file had been tampered with.
+ *
+ * Now: the object is written, then read back (HeadObject) and its size and
+ * digest compared against what was sent, and a manifest records the hash of the
+ * exact bytes stored. Only a verified upload emits the success event.
  */
 
 const EXPORT_HOUR = 2; // 02:00 local time
+
+export interface WormExportResult {
+  /** True only when bytes reached the object store. */
+  readonly uploaded: boolean;
+  /** True only when the stored object was read back and matched. */
+  readonly verified: boolean;
+  readonly key: string;
+  readonly manifest_key: string | null;
+  readonly row_count: number;
+  /** SHA-256 of the exact bytes stored (the gzip stream). */
+  readonly content_sha256: string;
+  readonly content_bytes: number;
+  /** SHA-256 of the plaintext NDJSON, for anyone who decompresses first. */
+  readonly ndjson_sha256: string;
+  /** Why nothing was uploaded. Present only when `uploaded` is false. */
+  readonly reason?: string | undefined;
+}
+
+interface PutResult {
+  ETag?: string;
+}
 
 @Injectable()
 export class WormExportService implements OnModuleInit, OnModuleDestroy {
@@ -88,7 +124,8 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises -- scheduled task, errors logged internally
       this.timer = setTimeout(async () => {
       // A failed export must not crash the API process; log and continue so the
-      // next day's export is still scheduled.
+      // next day's export is still scheduled. The failure is loud: nothing
+      // reports success unless the object was read back from the store.
       try {
         await this.exportYesterday();
       } catch (err) {
@@ -105,27 +142,42 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
    * Export audit events for yesterday.
    * Also callable manually via the admin endpoint POST /api/v1/admin/audit/export-worm.
    */
-  async exportYesterday(): Promise<void> {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    await this.exportDate(yesterday);
+  async exportYesterday(): Promise<WormExportResult> {
+    // "Yesterday" is the last COMPLETE UTC day. Deriving it from the local clock
+    // made the export depend on where the process happens to run: at a local
+    // midnight ahead of UTC the window being exported was still open.
+    const now = new Date();
+    const target = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1),
+    );
+    return this.exportDate(target);
   }
 
-  async exportDate(date: Date): Promise<void> {
-    const yyyy = date.getFullYear().toString();
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const dd = String(date.getDate()).padStart(2, "0");
+  async exportDate(date: Date): Promise<WormExportResult> {
+    // An export day is a UTC day, and the window is passed as explicit
+    // timestamps rather than a bare ::date, so the slice does not shift with the
+    // server's or the session's timezone. audit.event.ts is timestamptz.
+    const yyyy = date.getUTCFullYear().toString();
+    const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(date.getUTCDate()).padStart(2, "0");
     const dateStr = `${yyyy}-${mm}-${dd}`;
+    const windowStart = `${dateStr}T00:00:00.000Z`;
+    const windowEnd = new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1),
+    ).toISOString();
 
-    this.logger.info({ date: dateStr }, "WORM export starting");
+    this.logger.info(
+      { date: dateStr, window_start: windowStart, window_end: windowEnd },
+      "WORM export starting",
+    );
 
     const result = await this.pool.query<AuditRow>(
       `SELECT id, ts, actor_id, actor_role, action, target_type, target_id,
               outcome, metadata_json, request_id, hash_prev, hash_self
          FROM audit.event
-        WHERE ts >= $1::date AND ts < ($1::date + INTERVAL '1 day')
+        WHERE ts >= $1::timestamptz AND ts < $2::timestamptz
         ORDER BY ts ASC, id ASC`,
-      [dateStr],
+      [windowStart, windowEnd],
     );
 
     const rows = result.rows;
@@ -133,16 +185,93 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
 
     const ndjson = rows.map((r) => JSON.stringify(r)).join("\n") + "\n";
     const buffer = Buffer.from(ndjson, "utf8");
-
-    const sha256 = crypto.createHash("sha256").update(buffer).digest("hex");
+    const ndjsonSha256 = crypto.createHash("sha256").update(buffer).digest("hex");
     const compressed = await gzip(buffer, { level: 9 });
+    // The digest of the bytes actually stored. Hashing the plaintext and putting
+    // that in the object's metadata is what made verification impossible.
+    const contentSha256 = crypto.createHash("sha256").update(compressed).digest("hex");
 
     const bucket = this.config.get<string>("S3_AUDIT_BUCKET", "clinical-copilot-audit");
     const key = `audit/${yyyy}/${mm}/${dd}/audit-${dateStr}.ndjson.gz`;
+    const manifestKey = `audit/${yyyy}/${mm}/${dd}/audit-${dateStr}.manifest.json`;
 
-    // Perform the S3 upload via the AWS SDK v3 (dynamically imported so the
-    // module compiles even when the SDK is not installed in dev/test mode).
-    await this.uploadToS3(bucket, key, compressed, sha256, rows.length, dateStr);
+    const first = rows[0];
+    const last = rows[rows.length - 1];
+
+    const manifest = {
+      export_date: dateStr,
+      export_window_start_utc: windowStart,
+      export_window_end_utc: windowEnd,
+      generated_at_utc: new Date().toISOString(),
+      bucket,
+      key,
+      row_count: rows.length,
+      // Which slice of the hash chain this file covers: first.hash_prev links to
+      // the previous export, last.hash_self is the tip inside this file.
+      chain_first_id: first?.id ?? null,
+      chain_first_ts: first?.ts ?? null,
+      chain_prev_of_first: first?.hash_prev ?? null,
+      chain_last_id: last?.id ?? null,
+      chain_last_ts: last?.ts ?? null,
+      chain_tip: last?.hash_self ?? null,
+      content_sha256: contentSha256,
+      content_bytes: compressed.length,
+      content_encoding: "gzip",
+      ndjson_sha256: ndjsonSha256,
+      ndjson_bytes: buffer.length,
+    };
+
+    const upload = await this.uploadToS3(bucket, key, compressed, contentSha256, {
+      row_count: String(rows.length),
+      export_date: dateStr,
+      ndjson_sha256: ndjsonSha256,
+    });
+
+    if (!upload.uploaded) {
+      // Stub mode is an explicit, configured state -- never reported as success.
+      this.logger.warn(
+        {
+          event: "AUDIT_WORM_EXPORT_SKIPPED",
+          date: dateStr,
+          row_count: rows.length,
+          reason: upload.reason,
+        },
+        "WORM export not uploaded -- no success reported",
+      );
+      return {
+        uploaded: false,
+        verified: false,
+        key,
+        manifest_key: null,
+        row_count: rows.length,
+        content_sha256: contentSha256,
+        content_bytes: compressed.length,
+        ndjson_sha256: ndjsonSha256,
+        reason: upload.reason,
+      };
+    }
+
+    if (!upload.verified) {
+      throw new Error(
+        `WORM export for ${dateStr} was uploaded but failed read-back verification`,
+      );
+    }
+
+    const manifestBuffer = Buffer.from(JSON.stringify(manifest, null, 2), "utf8");
+    const manifestUpload = await this.uploadToS3(
+      bucket,
+      manifestKey,
+      manifestBuffer,
+      crypto.createHash("sha256").update(manifestBuffer).digest("hex"),
+      { export_date: dateStr, kind: "manifest" },
+      "application/json",
+    );
+
+    if (!manifestUpload.uploaded || !manifestUpload.verified) {
+      throw new Error(
+        `WORM export for ${dateStr}: manifest upload unverified (${manifestUpload.reason ?? "no reason given"})`,
+      );
+    }
 
     this.logger.info(
       {
@@ -150,38 +279,71 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
         date: dateStr,
         row_count: rows.length,
         s3_key: key,
-        sha256,
+        manifest_key: manifestKey,
+        content_sha256: contentSha256,
+        ndjson_sha256: ndjsonSha256,
+        content_bytes: compressed.length,
+        read_back_verified: true,
       },
-      "WORM export completed",
+      "WORM export completed and verified",
     );
+
+    return {
+      uploaded: true,
+      verified: true,
+      key,
+      manifest_key: manifestKey,
+      row_count: rows.length,
+      content_sha256: contentSha256,
+      content_bytes: compressed.length,
+      ndjson_sha256: ndjsonSha256,
+    };
   }
 
+  /**
+   * Put an object, then read it back and compare size and digest.
+   *
+   * Returns `uploaded: false` only in explicit stub mode (see
+   * WORM_EXPORT_ALLOW_STUB). Any other problem throws, because a caller that
+   * cannot tell "not uploaded" from "uploaded fine" is how this service
+   * previously reported success for objects that were never written.
+   */
   private async uploadToS3(
     bucket: string,
     key: string,
     body: Buffer,
-    sha256: string,
-    rowCount: number,
-    dateStr: string,
-  ): Promise<void> {
-    // Dynamic import: if @aws-sdk/client-s3 is not installed (local dev / tests),
-    // log a warning and skip the upload rather than crashing.
-    let S3Client: new (config: unknown) => { send: (cmd: unknown) => Promise<S3PutResult> };
+    contentSha256: string,
+    metadata: Record<string, string>,
+    contentType = "application/x-ndjson",
+  ): Promise<{ uploaded: boolean; verified: boolean; reason?: string }> {
+    let S3Client: new (config: unknown) => { send: (cmd: unknown) => Promise<PutResult> };
     let PutObjectCommand: new (params: unknown) => unknown;
+    let HeadObjectCommand: new (params: unknown) => unknown;
 
     try {
       const sdk = await import("@aws-sdk/client-s3") as {
         S3Client: typeof S3Client;
         PutObjectCommand: typeof PutObjectCommand;
+        HeadObjectCommand: typeof HeadObjectCommand;
       };
       S3Client = sdk.S3Client;
       PutObjectCommand = sdk.PutObjectCommand;
-    } catch {
-      this.logger.warn(
-        { key },
-        "WORM export: @aws-sdk/client-s3 not installed -- skipping S3 upload (stub mode)",
+      HeadObjectCommand = sdk.HeadObjectCommand;
+    } catch (err) {
+      if (this.config.get<string>("WORM_EXPORT_ALLOW_STUB") === "true") {
+        return {
+          uploaded: false,
+          verified: false,
+          reason: `@aws-sdk/client-s3 unavailable and WORM_EXPORT_ALLOW_STUB=true: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        };
+      }
+      throw new Error(
+        `@aws-sdk/client-s3 could not be loaded and WORM_EXPORT_ALLOW_STUB is not set: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
       );
-      return;
     }
 
     const endpoint = this.config.get<string>("S3_ENDPOINT_URL");
@@ -199,27 +361,59 @@ export class WormExportService implements OnModuleInit, OnModuleDestroy {
       },
     });
 
-    const cmd = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: body,
-      ContentEncoding: "gzip",
-      ContentType: "application/x-ndjson",
-      Metadata: {
-        "x-content-sha256": sha256,
-        "x-row-count": String(rowCount),
-        "x-export-date": dateStr,
-      },
-    });
+    const put = await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: body,
+        ContentEncoding: "gzip",
+        ContentType: contentType,
+        Metadata: {
+          // The digest of the stored bytes, under the name a verifier will look
+          // for. The plaintext digest rides alongside for decompressing readers.
+          "x-content-sha256": contentSha256,
+          ...metadata,
+        },
+      }),
+    );
 
-    const result = await client.send(cmd);
-
-    if (!result.ETag) {
+    if (!put.ETag) {
       throw new Error(
-        `WORM export upload for ${dateStr} returned no ETag -- integrity unverified`,
+        `WORM export upload for ${key} returned no ETag -- integrity unverified`,
       );
     }
 
-    this.logger.info({ etag: result.ETag, key }, "S3 upload verified");
+    // Read back what the store actually holds.
+    const head = await client.send(
+      new HeadObjectCommand({ Bucket: bucket, Key: key }),
+    ) as {
+      ContentLength?: number;
+      Metadata?: Record<string, string>;
+    };
+
+    if (typeof head.ContentLength === "number" && head.ContentLength !== body.length) {
+      throw new Error(
+        `WORM export read-back size mismatch for ${key}: stored ${head.ContentLength}, uploaded ${body.length}`,
+      );
+    }
+
+    const storedSha = (head.Metadata ?? {})["x-content-sha256"];
+    if (!storedSha) {
+      throw new Error(
+        `WORM export read-back for ${key} has no x-content-sha256 metadata`,
+      );
+    }
+    if (storedSha !== contentSha256) {
+      throw new Error(
+        `WORM export read-back digest mismatch for ${key}: stored ${storedSha}, uploaded ${contentSha256}`,
+      );
+    }
+
+    this.logger.info(
+      { key, etag: put.ETag, content_sha256: contentSha256, bytes: body.length },
+      "S3 upload verified by read-back",
+    );
+
+    return { uploaded: true, verified: true };
   }
 }

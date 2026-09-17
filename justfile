@@ -240,9 +240,13 @@ eval-classifier-stress:
 
 # ─── Database backup ─────────────────────────────────────────────────────────
 
-# Run a manual database backup
+# Run a manual database backup (dumps, verifies, encrypts, uploads, reads back)
 backup-db:
     ./infra/scripts/backup-db.sh
+
+# Prove the newest backup restores cleanly into an isolated scratch database
+restore-drill:
+    ./infra/scripts/restore-drill.sh
 
 # ─── Helm ────────────────────────────────────────────────────────────────────
 
