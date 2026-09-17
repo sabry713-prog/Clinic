@@ -246,12 +246,62 @@ export class IngestionService {
       const result = scoreReconciliation(currentPatient, candidatePatient);
 
       if (result.decision === "merge") {
-        // Point all references to the earliest-created patient
-        // (simple: just ensure the newer record knows about the older one)
-        // For now, upsert handles this via source_system/source_id uniqueness.
-        // True merging would update patient_id FK references -- deferred for admin flow.
+        // M05: a confident duplicate used to be written to the log and forgotten,
+        // while the LESS certain "quarantine" case was recorded for review -- the
+        // priority was inverted, and the cases most likely to be the same person
+        // were the ones with no record at all.
+        //
+        // Recording the pair is the safe half of a merge: it makes the duplicate
+        // visible and actionable without rewriting patient_id references. The
+        // rewrite itself is deliberately not done here, because a true merge
+        // interacts with erasure (erasing one record must erase what it was merged
+        // into) and with the audit trail's targets -- that needs design, not a
+        // side effect of ingestion.
+        const existingMerge = await this.pool.query(
+          `SELECT id FROM app.identity_quarantine
+           WHERE (candidate_a_id = $1 AND candidate_b_id = $2)
+              OR (candidate_a_id = $2 AND candidate_b_id = $1)
+           LIMIT 1`,
+          [patientId, candidate.id],
+        );
+
+        if (existingMerge.rows.length === 0) {
+          const mergeId = uuidv4();
+          await this.pool.query(
+            `INSERT INTO app.identity_quarantine
+               (id, candidate_a_id, candidate_b_id, confidence, features_json, status)
+             VALUES ($1, $2, $3, $4, $5, 'open')`,
+            [
+              mergeId,
+              patientId,
+              candidate.id,
+              result.score / 100,
+              // the decision rides in the features so the review queue can tell a
+              // confident duplicate from an uncertain one
+              JSON.stringify({ ...result.features, decision: "merge" }),
+            ],
+          );
+
+          await writeAuditEvent(this.pool, {
+            actor_id: null,
+            actor_role: null,
+            action: "IDENTITY_MERGE_CANDIDATE_RECORDED",
+            target_type: "identity_quarantine",
+            target_id: mergeId,
+            outcome: "SUCCESS",
+            metadata_json: {
+              candidate_a: patientId,
+              candidate_b: candidate.id,
+              score: result.score,
+            },
+            request_id: requestId,
+          });
+
+          quarantined = true;
+        }
+
         this.logger.log({
-          event: "identity_auto_merge",
+          event: "identity_merge_candidate_recorded",
           patient_a: patientId,
           patient_b: candidate.id,
           score: result.score,
@@ -456,10 +506,14 @@ export class IngestionService {
       for (const enc of resources.encounters) {
         if (!enc) continue;
         await client.query(
+          // M05: attending_fhir_ref is written, not dropped. mapEncounter has always
+          // produced it; the column did not exist, so "who saw this patient" was
+          // unanswerable from the record.
           `INSERT INTO hospital.encounter
              (patient_id, source_system, source_id, encounter_type, status,
-              started_at, ended_at, ward, bed, fhir_resource_json, last_synced_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,now())
+              started_at, ended_at, ward, bed, attending_fhir_ref,
+              fhir_resource_json, last_synced_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,now())
            ON CONFLICT (source_system, source_id)
            DO UPDATE SET
              encounter_type = EXCLUDED.encounter_type,
@@ -468,11 +522,12 @@ export class IngestionService {
              ended_at = EXCLUDED.ended_at,
              ward = EXCLUDED.ward,
              bed = EXCLUDED.bed,
+             attending_fhir_ref = EXCLUDED.attending_fhir_ref,
              fhir_resource_json = EXCLUDED.fhir_resource_json,
              last_synced_at = now()`,
           [patientDbId, enc.source_system, enc.source_id, enc.encounter_type,
            enc.status, enc.started_at, enc.ended_at, enc.ward, enc.bed,
-           JSON.stringify(enc.fhir_resource_json)],
+           enc.attending_fhir_ref, JSON.stringify(enc.fhir_resource_json)],
         );
         count++;
       }
