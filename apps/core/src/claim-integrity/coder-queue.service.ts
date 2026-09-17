@@ -128,71 +128,113 @@ export class CoderQueueService {
    *   (the defect went away); resolved items are kept as history.
    */
   async sync(report: ClaimSimulationReport): Promise<CoderQueueSyncResult> {
-    const existingResult = await this.pool.query<QueueRow>(
-      `SELECT * FROM app.coder_queue_item`,
-    );
-    const existing = new Map(existingResult.rows.map((r) => [r.item_id, r]));
+    // M09: the whole rebuild runs in one transaction. It used to be a sequence of
+    // independent statements, so a failure partway through left the queue half
+    // rebuilt -- some findings added, some refreshed, some stale rows still
+    // present -- with nothing to roll back to. It also reported `updated: 0`
+    // unconditionally while updating rows, so a caller reading the result
+    // concluded that nothing had changed.
+    const client = await this.pool.connect();
 
     let added = 0;
-    const updated = 0;
+    let updated = 0;
     let preserved = 0;
-    const nextIds = new Set<string>();
+    let removed = 0;
+    let queueSize = 0;
 
-    for (const verdict of report.patients) {
-      for (const finding of findingsFor(verdict)) {
-        const id = itemId(verdict.patient_id, finding.order_id, finding.reason);
-        nextIds.add(id);
-        const prior = existing.get(id);
-        if (prior) {
-          preserved += 1;
-          await this.pool.query(
-            `UPDATE app.coder_queue_item SET detail = $2, updated_at = now()
-             WHERE item_id = $1`,
-            [id, finding.detail],
-          );
-        } else {
-          added += 1;
-          await this.pool.query(
-            `INSERT INTO app.coder_queue_item
-               (item_id, patient_id, mrn, order_id, icd10_code, sbs_code, reason, detail)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             ON CONFLICT (item_id) DO NOTHING`,
-            [
-              id,
-              verdict.patient_id,
-              verdict.mrn,
-              finding.order_id,
-              finding.icd10_code,
-              finding.sbs_code,
-              finding.reason,
-              finding.detail,
-            ],
-          );
+    try {
+      await client.query("BEGIN");
+
+      // FOR UPDATE: a concurrent claim must not land between reading a row and
+      // deciding whether to touch it.
+      const existingResult = await client.query<QueueRow>(
+        `SELECT * FROM app.coder_queue_item FOR UPDATE`,
+      );
+      const existing = new Map(existingResult.rows.map((r) => [r.item_id, r]));
+
+      const nextIds = new Set<string>();
+
+      for (const verdict of report.patients) {
+        for (const finding of findingsFor(verdict)) {
+          const id = itemId(verdict.patient_id, finding.order_id, finding.reason);
+          nextIds.add(id);
+          const prior = existing.get(id);
+
+          if (!prior) {
+            const inserted = await client.query(
+              `INSERT INTO app.coder_queue_item
+                 (item_id, patient_id, mrn, order_id, icd10_code, sbs_code, reason, detail)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+               ON CONFLICT (item_id) DO NOTHING`,
+              [
+                id,
+                verdict.patient_id,
+                verdict.mrn,
+                finding.order_id,
+                finding.icd10_code,
+                finding.sbs_code,
+                finding.reason,
+                finding.detail,
+              ],
+            );
+            added += inserted.rowCount ?? 0;
+            continue;
+          }
+
+          if (prior.detail !== finding.detail) {
+            // Only write when the detail actually changed. Touching updated_at on
+            // a no-op sync made "most recently updated" meaningless, and made a
+            // re-run look like work.
+            const refreshed = await client.query(
+              `UPDATE app.coder_queue_item SET detail = $2, updated_at = now()
+                WHERE item_id = $1`,
+              [id, finding.detail],
+            );
+            updated += refreshed.rowCount ?? 0;
+          } else {
+            preserved += 1;
+          }
         }
       }
-    }
 
-    // Remove unresolved items that are no longer flagged
-    let removed = 0;
-    for (const [id, row] of existing) {
-      if (!nextIds.has(id) && row.status !== "resolved") {
-        await this.pool.query(`DELETE FROM app.coder_queue_item WHERE item_id = $1`, [id]);
-        removed += 1;
+      // Remove unresolved items that are no longer flagged
+      for (const [id, row] of existing) {
+        if (!nextIds.has(id) && row.status !== "resolved") {
+          const deleted = await client.query(
+            `DELETE FROM app.coder_queue_item WHERE item_id = $1`,
+            [id],
+          );
+          removed += deleted.rowCount ?? 0;
+        }
       }
-    }
 
-    const countResult = await this.pool.query<{ count: string }>(
-      `SELECT count(*)::text AS count FROM app.coder_queue_item`,
-    );
+      const countResult = await client.query<{ count: string }>(
+        `SELECT count(*)::text AS count FROM app.coder_queue_item`,
+      );
+      queueSize = Number(countResult.rows[0]!.count);
+
+      await client.query("COMMIT");
+    } catch (err) {
+      await client
+        .query("ROLLBACK")
+        .catch(() => {
+          /* the rollback is best-effort; the transaction aborts with the connection */
+        });
+      throw err;
+    } finally {
+      client.release();
+    }
 
     this.logger.log("coder_queue_synced", {
       added,
+      updated,
       preserved,
       removed,
-      size: Number(countResult.rows[0]!.count),
+      size: queueSize,
     });
+
     return {
-      queue_size: Number(countResult.rows[0]!.count),
+      queue_size: queueSize,
       added,
       updated,
       removed,

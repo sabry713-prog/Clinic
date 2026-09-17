@@ -2,7 +2,8 @@ import { Injectable, Logger, Inject } from "@nestjs/common";
 import type { Pool, PoolClient } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { ConfigService } from "@nestjs/config";
-import { FhirClient } from "@clinical-copilot/fhir-client";
+import { FhirClient, getNextPageUrl } from "@clinical-copilot/fhir-client";
+import type { FhirBundle, FhirResource } from "@clinical-copilot/fhir-client";
 import {
   mapPatient,
   mapEncounter,
@@ -29,6 +30,11 @@ export interface IngestionRunResult {
   readonly errors: readonly string[];
   readonly status: "completed" | "partial" | "failed";
 }
+
+// M05: how many pages one resource type may span before the run is marked
+// partial. A backstop, not a target: it exists so a server returning an
+// endless next link cannot pin the process.
+const MAX_PAGES_PER_RESOURCE = 50;
 
 @Injectable()
 export class IngestionService {
@@ -360,19 +366,51 @@ export class IngestionService {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const safeFetch = async (
       name: string,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      fetcher: () => Promise<any>,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ): Promise<{ resource?: any }[]> => {
+      fetcher: () => Promise<FhirBundle<FhirResource>>,
+    ): Promise<{ resource?: unknown }[]> => {
       try {
         const first = await fetcher();
-        // M05: follow next links for all-page traversal
-        const allEntries = [...(first.entry ?? [])];
-        // The FHIR client's search methods already return a bundle;
-        // for now we take the first page (client may not expose next
-        // links — when it does, traverse here). The count is raised
-        // to reduce silent truncation.
-        return allEntries as { resource?: unknown }[];
+        const allEntries = [...(first.entry ?? [])] as unknown as { resource?: unknown }[];
+
+        // M05: follow link[relation=next] until the server stops offering one.
+        // The client already exports both the link helper and fetchBundle (which
+        // carries the auth headers and the circuit breaker), so page traversal
+        // was a missing integration rather than a missing capability -- the
+        // previous version took the first page and noted the gap in a comment,
+        // which meant a patient with more than one page of history was silently
+        // ingested in part.
+        let next = getNextPageUrl(first);
+        let pages = 1;
+        // set when the loop ends on a failed page: the page-limit note must not
+        // also fire, or one problem is reported as two
+        let stoppedOnFailure = false;
+        while (next !== null && pages < MAX_PAGES_PER_RESOURCE) {
+          try {
+            const page = await client.fetchBundle<FhirResource>(next);
+            allEntries.push(...([...(page.entry ?? [])] as unknown as { resource?: unknown }[]));
+            next = getNextPageUrl(page);
+            pages += 1;
+          } catch (err) {
+            // Keep what was already fetched and mark the run partial. Discarding
+            // pages 1..n because page n+1 failed would turn a partial read into
+            // no read at all, which is the failure this tracking exists for.
+            partial_failures.push(`${name} (page ${pages + 1} failed)`);
+            stoppedOnFailure = true;
+            this.logger.warn({
+              event: "ingestion_page_fetch_failed",
+              resource_type: name,
+              patient_fhir_id: fhirPatientId,
+              page: pages + 1,
+              error: err instanceof Error ? err.message : String(err),
+            });
+            break;
+          }
+        }
+        if (next !== null && !stoppedOnFailure) {
+          partial_failures.push(`${name} (stopped at the ${MAX_PAGES_PER_RESOURCE}-page limit)`);
+        }
+
+        return allEntries;
       } catch (err) {
         partial_failures.push(name);
         this.logger.warn({
