@@ -18,7 +18,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const read = (f: string) => JSON.parse(fs.readFileSync(path.join(here, f), "utf8")) as Record<string, unknown>;
 
 function lookup(dict: Record<string, unknown>, key: string): boolean {
-  const [ns, rest] = key.split(".", 2);
+  const [ns = "", rest = ""] = key.split(".", 2);
   if (!(ns in dict)) return false;
   let cur: unknown = dict[ns];
   for (const part of rest.split(".")) {
