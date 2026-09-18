@@ -48,7 +48,26 @@ DEMO_PATIENTS = {
 }
 
 SEEDED_COHORT_PATTERN = r"^MRN-[0-9]{3}$"
-SEEDED_COHORT_SIZE = 50
+# Read from the seed rather than written down here. This was the literal 50, and adding a
+# single demo patient (the renal case) then failed the demo gate while the system itself was
+# correct -- the gate, not the system, was out of date. A number that has to be edited by
+# hand whenever the seed grows is a gate that will block a demo for no reason.
+_SEED_FILE = Path(__file__).resolve().parents[1] / "apps" / "core" / "src" / "seed" / "dev.ts"
+
+
+def _seeded_cohort_size() -> int:
+    """How many patients the seed creates, counted from the seed source."""
+    text = _SEED_FILE.read_text(encoding="utf-8")
+    mrns = sorted(set(re.findall(r'"(MRN-\d{3})"', text)))
+    if len(mrns) < 50:
+        raise SystemExit(
+            f"refusing to check the demo data: only {len(mrns)} MRNs found in {_SEED_FILE.name}. "
+            "The seed shape changed and this counter needs to learn the new one."
+        )
+    return len(mrns)
+
+
+SEEDED_COHORT_SIZE = _seeded_cohort_size()
 
 # Tables and columns the manifest refers to. A vanished column here is what
 # broke the DSR feature and the login check, so they are asserted by name.
