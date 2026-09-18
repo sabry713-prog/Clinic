@@ -101,3 +101,40 @@ WORM export each fire independently at 02:00, and a `HeadObject` read-back is wh
 tells either of them whether its own upload actually landed. Schedule them apart
 (for example the WORM export at 02:00 and the backup at 02:30) if you want the
 backup to observe a settled audit table.
+
+## RPO and RTO — the position today, and what production must decide
+
+Nothing in this repository stated either, so here it is read off the scripts rather than
+asserted.
+
+**Recovery point (how much data may be lost): 24 hours, as the system stands.** One
+encrypted dump a night at 02:00 (`backup-db.sh`). There is no WAL archiving and no
+point-in-time recovery: the Terraform postgres module *names* the knobs and leaves them
+commented out (`infra/terraform/modules/postgres/main.tf:51-59` — `backup_retention_period`,
+`backup_window`, `skip_final_snapshot`), so what retention a deployment actually gets is
+whatever the provider defaults to. For a clinical system a 24-hour loss window is a
+decision, not a default, and the pilot has to be told the number.
+
+**Recovery time: not measured.** `restore-drill.sh` proves a backup is *restorable* — it
+decrypts it, lists the archive, restores into a scratch database and compares row counts
+table by table — but it does not time anything, and no timed restore of a
+production-sized database has been recorded. *Restorable* and *recoverable within an
+hour* are different claims, and only the first one is supported today.
+
+**What the drill needs (checked today):** `GPG_PASSPHRASE` plus the `S3_*`/`AWS_*`
+variables. None of those names appear in the repository's `.env` — they come from the
+operator's secret store, so only someone given them can run a drill. That is right for a
+passphrase and is exactly why the drill has to be scheduled rather than remembered.
+
+```
+S3_BUCKET=... GPG_PASSPHRASE=... ./infra/scripts/restore-drill.sh
+```
+
+Run it after any change to the backup path — it is that change's regression test — and
+periodically in production. Proposed cadence, for sign-off rather than assumed: monthly,
+recording the measured restore time each run, so the RTO stops being a hypothesis.
+
+**To close L06, production must decide and then verify:** a site-specific RPO and RTO with
+a named owner; WAL archiving or provider PITR to back the RPO; the restore time measured
+on production-sized data; and a failover drill that covers the graph and the object store,
+not only Postgres. Trigger: before the first operational pilot loads real data.
