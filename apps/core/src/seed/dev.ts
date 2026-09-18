@@ -123,6 +123,10 @@ const FAKE_PATIENTS: {
   { givenName: "Mishal", familyName: "Fakename-Al-Mousa", dob: "1961-01-19", sex: "male", mrn: "MRN-048" },
   { givenName: "Noura", familyName: "Fakename-Al-Rashdi", dob: "1990-09-01", sex: "female", mrn: "MRN-049" },
   { givenName: "Sami", familyName: "Fakename-Al-Qahtani", dob: "1968-06-28", sex: "male", mrn: "MRN-050" },
+  // MRN-051 exists to exercise the NSCRE renal rule: chronic kidney disease with
+  // metformin, where the metformin renal threshold (eGFR < 30) is crossed. Its
+  // creatinine is set deliberately in enrich.ts, not drawn from the seeded range.
+  { givenName: "Rashid", familyName: "Fakename-Al-Zahrani", dob: "1954-03-10", sex: "male", mrn: "MRN-051" },
 ];
 
 // Indices 5-9 (MRN-006 through MRN-010) are in-scope for dev physician

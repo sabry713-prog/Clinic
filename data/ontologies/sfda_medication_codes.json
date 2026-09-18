@@ -1,7 +1,6 @@
 {
   "_README": "Real SFDA-sourced medication codes for the demo cohort's drugs, taken from the NPHIES terminology server (the same terminology the claims stack validates against). NOT synthesised: every code below is quoted from the published CodeSystem, with the source URL, version and a digest of the downloaded file recorded so the extraction can be re-derived and checked.",
   "_note_on_completeness": "The published resource is a FRAGMENT (1000 concepts) of the SFDA product set, so some drugs the demo needs are absent from it rather than absent from SFDA. They are listed under not_available_from_this_source so the gap is recorded rather than papered over. Do not invent codes for them; obtain them from the SFDA drug list or the full terminology release and add them here with their own provenance.",
-
   "source": {
     "name": "NPHIES Scientific Codes (CodeSystem)",
     "url": "https://portal.nphies.sa/ig/CodeSystem-scientific-codes.json",
@@ -16,9 +15,7 @@
     "downloaded_file_sha256": "4863c2c5e097fb5c9a0b71a79acb444c",
     "downloaded_file_note": "sha256 prefix of the full CodeSystem JSON as downloaded; re-download and compare before trusting this extract"
   },
-
   "code_format": "<sfda_product_code>-<strength>-<dosage_form_code>, display is <SCIENTIFIC NAME>-<strength><form>. The strength and form segments follow the SFDA product code, so a code identifies a specific product, not a molecule.",
-
   "codes": [
     {
       "matched_drug": "naproxen",
@@ -39,17 +36,16 @@
       "note": "single-ingredient diclofenac sodium 50mg -- matches the drug named in nscre_contraindications.json"
     }
   ],
-
   "not_available_from_this_source": [
     {
       "drug": "warfarin",
       "why_it_matters": "nscre_contraindications.json pairs warfarin with four NSAIDs. Without a warfarin code the interaction rule cannot be satisfied by sourced data at all.",
-      "status": "absent from the published 1000-concept fragment; not proven absent from SFDA"
+      "status": "absent from the published fragment AND from the 1002-concept medication-codes resource (zero matching concepts); not proven absent from SFDA's full product set"
     },
     {
       "drug": "metformin",
       "why_it_matters": "nscre_renal_dose_limits.json applies a renal threshold to metformin. The fragment carries only metformin COMBINATION products (with alogliptin, sitagliptin, dapagliflozin), which are not the same medication.",
-      "status": "single-ingredient metformin absent from the fragment; combinations present and deliberately not substituted"
+      "status": "available from the second source as PACKAGED products (500mg and 750mg prolonged-release); the demo's plain 850mg tablet is not among them, so a code for it is still not sourced"
     },
     {
       "drug": "ibuprofen",
@@ -57,6 +53,93 @@
       "status": "the fragment carries ibuprofen 5% gel and 20mg/ml suspension, not a 400mg tablet; a gel is not the systemic NSAID the rule concerns, so none was substituted"
     }
   ],
-
-  "how_to_use": "Join on scientific name plus strength: a demo medication whose name and strength match a code above may carry that code and be tagged code_system='sfda'. Anything not listed here must be left uncoded -- an uncoded medication makes the NSCRE necessity/dose checks defer honestly, which is the correct behaviour, rather than firing on a code nobody issued."
+  "how_to_use": "Join on scientific name plus strength: a demo medication whose name and strength match a code above may carry that code and be tagged code_system='sfda'. Anything not listed here must be left uncoded -- an uncoded medication makes the NSCRE necessity/dose checks defer honestly, which is the correct behaviour, rather than firing on a code nobody issued.",
+  "additional_sources": [
+    {
+      "name": "NPHIES Medication Codes (CodeSystem)",
+      "url": "https://portal.nphies.sa/ig/CodeSystem-medication-codes.json",
+      "canonical_url": "http://nphies.sa/terminology/CodeSystem/medication-codes",
+      "version": "1.0.0",
+      "last_updated": "2025-12-03T14:27:43+02:00",
+      "concept_count": 1002,
+      "copyright": "Saudi Food and Drug Authority ( https://sfda.gov.sa )",
+      "sha256": "9ae3d5c0a37a86c5fd00ec552141a4f77928435c7f514b1be495d824db2e6692",
+      "size_bytes": 3953628,
+      "retrieved": "2026-09-18",
+      "code_format": "<14-digit SFDA local drug code> identifying a packaged product; the generic ingredient and its strength are properties (genericName, strength), not part of the code.",
+      "codes": [
+        {
+          "matched_drug": "metformin",
+          "code": "06285101003707",
+          "display": "GLUCARE XR 500 MG TABLET",
+          "local_drug_code": "06285101003707",
+          "generic_name": "(METFORMIN HCL : 500 MG)  PROLONGED RELEASE TABLETS [ORAL]",
+          "strength": "500 MG",
+          "package_size": "60'S",
+          "note": "a packaged product, not a generic ingredient code: this resource identifies products, and the demo's plain Metformin 850mg is not among the 500/750mg entries published here."
+        },
+        {
+          "matched_drug": "metformin",
+          "code": "06285101003790",
+          "display": "GLUCARE XR 500 MG TABLET",
+          "local_drug_code": "06285101003790",
+          "generic_name": "(METFORMIN HCL : 500 MG)  PROLONGED RELEASE TABLETS [ORAL]",
+          "strength": "500 MG",
+          "package_size": "90'S",
+          "note": "a packaged product, not a generic ingredient code: this resource identifies products, and the demo's plain Metformin 850mg is not among the 500/750mg entries published here."
+        },
+        {
+          "matched_drug": "metformin",
+          "code": "06285101003714",
+          "display": "GLUCARE XR 750 MG TABLET",
+          "local_drug_code": "06285101003714",
+          "generic_name": "(METFORMIN HCL : 750 MG)  PROLONGED RELEASE TABLETS [ORAL]",
+          "strength": "750 MG",
+          "package_size": "30'S",
+          "note": "a packaged product, not a generic ingredient code: this resource identifies products, and the demo's plain Metformin 850mg is not among the 500/750mg entries published here."
+        },
+        {
+          "matched_drug": "metformin",
+          "code": "06285101003721",
+          "display": "GLUCARE XR 750 MG TABLET",
+          "local_drug_code": "06285101003721",
+          "generic_name": "(METFORMIN HCL : 750 MG)  PROLONGED RELEASE TABLETS [ORAL]",
+          "strength": "750 MG",
+          "package_size": "60'S",
+          "note": "a packaged product, not a generic ingredient code: this resource identifies products, and the demo's plain Metformin 850mg is not among the 500/750mg entries published here."
+        },
+        {
+          "matched_drug": "metformin",
+          "code": "06285101003769",
+          "display": "GLUCARE XR 500 MG TABLET",
+          "local_drug_code": "06285101003769",
+          "generic_name": "(METFORMIN HCL : 500 MG)  PROLONGED RELEASE TABLETS [ORAL]",
+          "strength": "500 MG",
+          "package_size": "30'S",
+          "note": "a packaged product, not a generic ingredient code: this resource identifies products, and the demo's plain Metformin 850mg is not among the 500/750mg entries published here."
+        },
+        {
+          "matched_drug": "metformin",
+          "code": "06281086001523",
+          "display": "FORMIT 850 MG TABLETS",
+          "local_drug_code": "06281086001523",
+          "generic_name": "(METFORMIN HCL : 850 MG)  TABLETS [ORAL]",
+          "strength": "850 MG",
+          "package_size": "60'S",
+          "note": "a packaged product, not a generic ingredient code: this resource identifies products, and the demo's plain Metformin 850mg is not among the 500/750mg entries published here."
+        },
+        {
+          "matched_drug": "metformin",
+          "code": "06285105001440",
+          "display": "OMFORMIN 500MG F.C. TABLETS",
+          "local_drug_code": "06285105001440",
+          "generic_name": "(METFORMIN HCL : 500 MG)  FILM COATED TABLETS [ORAL]",
+          "strength": "500 MG",
+          "package_size": "20'S",
+          "note": "a packaged product, not a generic ingredient code: this resource identifies products, and the demo's plain Metformin 850mg is not among the 500/750mg entries published here."
+        }
+      ],
+      "note": "Retrieved to close the metformin gap the first fragment left. Warfarin is absent here too: zero of the 1002 published concepts name it, so the gap is now evidenced against two separate published resources rather than one."
+    }
+  ]
 }

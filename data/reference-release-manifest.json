@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-18.1",
+  "version": "2026-09-18.2",
   "generated_at": "2026-09-18T00:00:00.000Z",
   "description": "M11 governed reference-release manifest. Each entry is checksummed; the graph-seed step verifies checksums before ingesting. 'illustrative-dev-subset' means the data is not a licensed release and must not be used for clinical decisions — production requires governed licensed releases with named approvers.",
   "entries": [
@@ -105,12 +105,12 @@
     },
     {
       "file": "ontologies/sfda_medication_codes.json",
-      "sha256": "066eddd2bbb28eb47a89b5498bd26901ab6d3cdf2173570e61f7b10f56c6d95d",
-      "size_bytes": 3972,
+      "sha256": "9c4cbcf6e2ad4518c69fdc013a0c46ff113e0d3219d6aabe28d276f34bd0d959",
+      "size_bytes": 8914,
       "ontology": "SFDA Medication Codes (NPHIES terminology server, CodeSystem-scientific-codes)",
       "licensed": false,
       "effective_date": "2026-09-18",
-      "approver": "product-owner (CTO) — session approval",
+      "approver": "[PENDING: confirm] — metformin entries added from the NPHIES Medication Codes resource",
       "status": "illustrative-dev-subset"
     }
   ]

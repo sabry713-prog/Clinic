@@ -24,7 +24,7 @@ dotenv.config({ path: resolve(__dirname, "../../../../.env") });
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-const IN_SCOPE_MRNS = ["MRN-006", "MRN-007", "MRN-008", "MRN-009", "MRN-010"];
+const IN_SCOPE_MRNS = ["MRN-006", "MRN-007", "MRN-008", "MRN-009", "MRN-010", "MRN-051"];
 
 const SRC = "dev-seed-enrich";
 
@@ -116,8 +116,14 @@ async function main(): Promise<void> {
       for (const lab of LABS) {
         for (let i = 0; i < 6; i++) {
           const daysAgo = [90, 60, 30, 14, 3, 0][i]!;
+          // MRN-051 is the renal demo case: a deliberately severe, slowly rising
+          // creatinine (240 umol/L -> eGFR ~24 by CKD-EPI 2021, computed with the
+          // service's own egfr.py) rather than the drawn 53-125 umol/L range the
+          // rest of the cohort gets. Without this the renal rule can never fire.
           const v = round1(
-            seededValue(`${mrn}-${lab.code}-${i}`, lab.low * 0.9, lab.high * 1.2),
+            mrn === "MRN-051" && lab.code === "2160-0"
+              ? 230 + i * 6
+              : seededValue(`${mrn}-${lab.code}-${i}`, lab.low * 0.9, lab.high * 1.2),
           );
           await client.query(
             `INSERT INTO hospital.observation
@@ -260,6 +266,18 @@ async function main(): Promise<void> {
           { code: "387467008", display: "Sulfamethoxazole", reaction: "Skin eruption", severity: "moderate" },
           { code: "256349002", display: "Peanut", reaction: "Angioedema", severity: "severe" },
         ],
+      },
+      {
+        mrn: "MRN-051",
+        conditions: [
+          { code: "431855005", display: "Chronic kidney disease stage 4", status: "active", onsetDaysAgo: 420 },
+          { code: "44054006", display: "Diabetes mellitus type 2", status: "active", onsetDaysAgo: 2600 },
+          { code: "38341003", display: "Hypertension", status: "active", onsetDaysAgo: 3000 },
+        ],
+        medications: [
+          { code: "372567009", display: "Metformin 850mg", dose: "850 mg", route: "Oral", freq: "Twice daily", status: "active", startedDaysAgo: 700, indication: { code: "44054006", display: "Diabetes mellitus type 2" } },
+        ],
+        allergies: [],
       },
       {
         mrn: "MRN-009",
