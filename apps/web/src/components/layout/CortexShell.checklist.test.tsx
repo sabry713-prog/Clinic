@@ -49,6 +49,19 @@ describe("proposeChecklist — deterministic derivation", () => {
     }
   });
 
+  it("proposes from a plan phrased the way a clinician types it", () => {
+    // Typed straight into the Plan field during testing -- and the panel said nothing, because
+    // the catalog knew "x-ray" but not "ultrasound", "culture" or the lab wording here.
+    const hits = proposeChecklist(
+      "",
+      "kidney enzymes and urine culture and kidney ultrasound",
+    );
+    const labels = hits.map((h) => h.label);
+    expect(labels).toContain("Review lab results"); // "urine culture" / "enzymes"
+    expect(labels).toContain("Order imaging"); // "ultrasound"
+    expect(labels).not.toContain("Order ECG"); // nothing cardiac was ordered
+  });
+
   it("matches case-insensitively across transcript and SOAP text", () => {
     const hits = proposeChecklist("", "Plan: chest X-ray and referral to cardiology.");
     expect(hits.map((h) => h.label)).toEqual(expect.arrayContaining(["Order imaging", "Arrange referral"]));

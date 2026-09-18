@@ -258,13 +258,41 @@ const SOAP_STAGES: readonly SoapNote[] = [
  * clinician's own words. An item is only ever suggested because the
  * clinician (or the SOAP drafted from their words) mentioned it — the
  * system recommends nothing beyond their own stated plan. */
+/**
+ * Trigger vocabulary. Each label is a task to carry out, never a clinical finding, and the
+ * keywords are standard clinical wording a clinician would actually dictate or type.
+ *
+ * Kept deliberately in front of the matcher rather than behind an LLM: the decision to put a
+ * row in front of a clinician has to be reproducible and auditable, and it must never propose
+ * anything the clinician did not write down themselves.
+ *
+ * The first version listed one modality ("x-ray") and one lab phrase ("blood test"), so a plan
+ * ordering "kidney ultrasound" or "urine culture" got no row at all. Widened to the modalities
+ * and labs that appear in ordinary notes -- still explicit, still reviewable.
+ */
 const CHECKLIST_CATALOG: readonly { keywords: readonly string[]; id: string; label: string }[] = [
   { id: "c-vitals", keywords: ["vital signs", "blood pressure", "heart rate", "saturation"], label: "Record vital signs" },
   { id: "c-ecg", keywords: ["ecg", "electrocardiogram", "ekg"], label: "Order ECG" },
   { id: "c-lipid", keywords: ["lipid"], label: "Review lipid profile" },
   { id: "c-followup", keywords: ["follow up", "follow-up", "followup"], label: "Arrange follow-up" },
-  { id: "c-labs", keywords: ["blood test", "blood work", "laboratory panel"], label: "Review lab results" },
-  { id: "c-xray", keywords: ["x-ray", "xray", "radiograph"], label: "Order imaging" },
+  {
+    id: "c-labs",
+    keywords: [
+      "blood test", "blood work", "laboratory panel", "lab panel",
+      "urine culture", "urinalysis", "culture", "sensitivity",
+      "cbc", "complete blood count", "renal profile", "kidney function",
+      "liver function", "liver enzymes", "enzyme", "hba1c",
+    ],
+    label: "Review lab results",
+  },
+  {
+    id: "c-imaging",
+    keywords: [
+      "x-ray", "xray", "radiograph", "ultrasound", "ultrasonography", "sonography",
+      "ct scan", "ct ", "mri", "echocardiogram", "echo", "doppler", "mammogram",
+    ],
+    label: "Order imaging",
+  },
   { id: "c-referral", keywords: ["referral", "refer to"], label: "Arrange referral" },
   { id: "c-meds", keywords: ["medication", "medications"], label: "Review medications" },
 ];
