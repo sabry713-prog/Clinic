@@ -859,3 +859,75 @@ B4 was closed on 17 September (§14). What remains is exactly what the row's oth
 clauses say — there is no end-to-end journey test, and no clean-run-twice evidence, in the
 repository or in CI. Recorded with its trigger (before the first operational pilot) rather
 than marked done on the strength of B4.
+
+---
+
+## 21. The PARTIAL residuals, re-derived 2026-09-18
+
+Twelve rows were filed PARTIAL. Read against the repository today, two close, two were
+stale in their first clause, one has a fix that is not pinned, and the rest stand with
+their evidence re-checked.
+
+**Closed**
+
+- **C07 — dev-session and service exposure.** Both clauses were stale. `B2`:
+  `.env.example:195` reads `DEV_SESSION_ENABLED=false`. `B3`: all six exposed services
+  default to loopback — `apps/narrative/main.py:184`, `apps/qa/main.py:222`,
+  `apps/transcription/main.py:201`, `services/veritas-graph/api_router.py:161`,
+  `services/orchestrator/agent_handlers.py:297`, `services/nphies-engine/api_router.py:152`
+  each read `os.environ.get("SERVICE_HOST", "127.0.0.1")`.
+- **H07 — artifacts in the workspace.** Confirmed and fixed. `backups/` held a
+  1,123,412-byte dump and a 2,919-byte `.env` backup that defines `OIDC_CLIENT_SECRET` and
+  `DATABASE_URL`; both were git-ignored, so nothing looked wrong, and any copy of the
+  workspace carried them. Moved out of the repository (`D:\veritas-private\backups\`,
+  reversible, nothing deleted — the scripts reference only the S3 `backups/` prefix, never
+  this directory). The deny list's own gap is closed too: `*.zip`, `*.tar.gz`, `*.tgz`,
+  `*.7z` are ignored now, and `.dockerignore` — which did not exist — keeps `.env`, venvs,
+  dumps, archives and the generated report trees out of image builds.
+
+**Fixed, but not pinned — stated plainly**
+
+- **C02 — patient-switch retention.** `<CortexShell key={patientId}>` now remounts the
+  provider when the route changes patient, which is this audit's own remedy. The
+  behavioural test I wrote for it did not settle: the page renders the shell behind
+  `?view=encounter` only after the record loads, and the mount sequence for the first
+  patient was not deterministic enough to assert across several attempts. The test was
+  removed rather than left failing, so this fix rests on the type checker and the existing
+  suite (237 passed), not on a new test or a live check. Trigger: fold it into the journey
+  E2E that C10 still needs.
+
+**Stale in one clause, open in the other**
+
+- **C08 — the NPHIES claim.** The `EXECUTIVE_PRESENTATION.md:188` claim is retracted
+  (`51fd4dd`), including in the PPTX slide that carried the same sentence. Still open:
+  local-readiness versus payer-outcome states are only partly surfaced in the UI.
+- **H01 — container build.** `.dockerignore` added today. Still open: no launcher recipe
+  and no startup smoke wired to it; `core` and `web` remain deliberately outside the
+  compose stack (that is the L01 item, not an oversight). B6's build failure was reported
+  fixed earlier and was **not** re-verified in this pass.
+
+**Open, with the evidence re-checked**
+
+- **C03 — entailment.** No entailment check exists: a citation is verified to *exist*
+  (`filter_resolved_sources`, the M10 work) and not yet to *support* its sentence.
+  Containment is still a client-side gate that is off by default and bypassed by direct API
+  calls.
+- **C04 — server-side containment.** The client filter exists; `agent_handlers.py` still
+  registers and streams consultant and pharmacist work, and `DEMO_CONTAINMENT` appears in
+  no Python file, so an API caller is not constrained.
+- **C05 — defer fields.** Propagated for pharmacist and consultant; `nphies_agent` verdicts
+  still carry neither field, the defer note still renders only when prose is empty, and no
+  test references these fields.
+- **C09 — rehearsal evidence.** Not re-derived in this pass: the row's B7 count mismatch,
+  the absent encounter IDs, the absent expected findings and the missing rehearsal evidence
+  are recorded as filed.
+- **H02 — Python readiness.** The five Python services still answer a static
+  `{"status":"ok"}`; only nphies-engine adds connector fields. `profiles_verified` remains
+  hardcoded `false` and `graph_nodes` remains a `-1` sentinel.
+- **H03 — request deadlines.** Still bare, with no deadline: `qa-proxy.service.ts:57`,
+  `narrative-proxy.service.ts:86,213`, `nphies/preauth.service.ts:76,105`,
+  `interpreter.service.ts:42`, `linkage-verdicts.service.ts:141`; there is still no shared
+  client and no typed retryable error.
+- **H06 — branding.** Still split: `Cortex.ai` in the interface (`en.json:3,94`) against
+  `Veritas-Medica` in eleven service files. This is a product-naming decision rather than a
+  defect, and it needs the owner's answer, not an engineer's.
