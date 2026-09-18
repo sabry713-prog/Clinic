@@ -134,7 +134,9 @@
     "providerAvailability": "أوقات توفر مقدمي الخدمة",
     "more": "المزيد",
     "aiReceptionist": "موظف الاستقبال الذكي",
-    "encounterView": "عرض المقابلة"
+    "encounterView": "عرض المقابلة",
+    "resizeScribe": "تغيير عرض نافذة المُدوِّن",
+    "resizeTeam": "تغيير عرض نافذة فريق الذكاء الاصطناعي"
   },
   "claimSim": {
     "title": "محاكي المطالبات — تحقق قبل الإرسال",
@@ -208,5 +210,34 @@
     "prospectiveSar": "ريال معرض للخطر (استباقي)",
     "prospectiveNote": "مطالبات مُعلَّمة لم تُرسل بعد، مُقدَّرة بنفس متوسط قيمة المطالبة الثابت. لا يتم إرسال أي مطالبة بهذا الفحص.",
     "prospectiveLink": "افتح محاكي المطالبات"
+  },
+  "interpreter": {
+    "title": "مُترجِم المصطلحات السريرية",
+    "placeholder": "النص المطلوب ترجمته، بصياغة السجل نفسه",
+    "sourceLanguageLabel": "من",
+    "targetLanguageLabel": "إلى",
+    "swapLanguages": "تبديل اللغتين",
+    "translate": "ترجمة",
+    "translating": "جارٍ الترجمة…"
+  },
+  "narrative": {
+    "title": "السرد السريري",
+    "generate": "توليد السرد",
+    "generating": "جارٍ التوليد…",
+    "regenerating": "جارٍ إعادة التوليد…",
+    "regenerate": "إعادة التوليد",
+    "generatingDescription": "يقرأ السجل ويصوغ منه — ولا يُكتب شيء فيه.",
+    "languageLabel": "اللغة",
+    "scopeLabel": "النطاق",
+    "scopeFull": "السجل كامل",
+    "scopeCurrentEncounter": "هذه المقابلة",
+    "scopeLast30Days": "آخر ٣٠ يوماً",
+    "sources": "المصادر",
+    "copyWithSources": "نسخ مع المصادر",
+    "coverage": "التغطية",
+    "coverageHint": "لا يُدرج مصدر إلا إذا كان سجله ما زال في ملف هذا المريض.",
+    "recapShow": "إظهار ملخّص المريض",
+    "recapShowClinical": "إظهار الملخّص السريري",
+    "recapLoading": "جارٍ تحميل الملخّص…"
   }
 }

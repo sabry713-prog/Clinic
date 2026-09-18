@@ -1065,3 +1065,31 @@ spawns sub-processes whose command lines also match the recipe name.
 **Still open, unchanged:** the five core-side clients that call the Python services
 (`narrative-proxy`, `interpreter`, `nphies/preauth`, `nphies/linkage-verdicts`, and the
 qa-proxy equivalent) have no deadlines of their own.
+
+---
+
+## 25. The i18n gap, measured rather than predicted
+
+Section 21 left this open with a trigger ("before the first Arabic-first deployment") and
+named four namespaces that "still do not exist": `encounter`, `scribe`, `timeline` and
+`journey`. Measured against what the code actually asks for, that list was a prediction and
+not the gap. **No component references any of those four.** The namespaces the code asks for
+and the dictionaries lacked were **`interpreter` (7 keys)** and **`narrative` (17)** -- and
+neither call site passes a `defaultValue`, so i18next returned the key itself: an Arabic-first
+clinician was shown `narrative.coverageHint` on screen. The English surrounds were English,
+which is why it survived review; the missing namespace was only visible in Arabic.
+
+Both namespaces are now written in English and Arabic (parity asserted), and a guard test
+walks every `.tsx`, extracts every `t("namespace.key")` reference and fails if either
+dictionary cannot resolve it. It immediately found two more that no sweep had reported:
+`shell.resizeScribe` and `shell.resizeTeam` -- the aria-labels for the resizable panes added
+in section 20, which carried `defaultValue`s and so worked in English while remaining
+English-only for Arabic readers.
+
+**The literal-JSX sweep is still open, and the count in section 21 understates it.** That
+section measured "30 files with `>Text<` content"; a broader sweep -- uppercase-initial text
+between tags, no minimum word count -- measures **50 files and roughly 309 strings**, with
+`AiReceptionistPage.tsx` (24), `PatientBrief.tsx` (22), `AmbientPanel.tsx` (19) and
+`AuditPage.tsx` (16) at the top. Neither number is wrong: they are different instruments, and
+the larger one is the one to plan against. What changed here is the class that was actually
+broken -- a referenced-but-unresolvable key -- and that class now has a test.

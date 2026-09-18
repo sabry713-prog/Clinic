@@ -134,7 +134,9 @@
     "providerAvailability": "Provider availability",
     "more": "More",
     "aiReceptionist": "AI Receptionist",
-    "encounterView": "Encounter view"
+    "encounterView": "Encounter view",
+    "resizeScribe": "Resize the scribe pane",
+    "resizeTeam": "Resize the AI team pane"
   },
   "claimSim": {
     "title": "Claim simulator — check before you send",
@@ -208,5 +210,34 @@
     "prospectiveSar": "Est. SAR at risk (prospective)",
     "prospectiveNote": "Flagged claims that have NOT been sent yet, estimated with the same fixed average claim value. Nothing is submitted by the check.",
     "prospectiveLink": "Open the claim simulator"
+  },
+  "interpreter": {
+    "title": "Clinical language interpreter",
+    "placeholder": "Text to translate, in the record's own words",
+    "sourceLanguageLabel": "From",
+    "targetLanguageLabel": "To",
+    "swapLanguages": "Swap languages",
+    "translate": "Translate",
+    "translating": "Translating…"
+  },
+  "narrative": {
+    "title": "Clinical narrative",
+    "generate": "Generate narrative",
+    "generating": "Generating…",
+    "regenerating": "Regenerating…",
+    "regenerate": "Regenerate",
+    "generatingDescription": "Reading the record and drafting from it — nothing is written back to the chart.",
+    "languageLabel": "Language",
+    "scopeLabel": "Scope",
+    "scopeFull": "Full record",
+    "scopeCurrentEncounter": "This encounter",
+    "scopeLast30Days": "Last 30 days",
+    "sources": "Sources",
+    "copyWithSources": "Copy with sources",
+    "coverage": "Coverage",
+    "coverageHint": "A source is listed only when the row behind it is still in this patient's record.",
+    "recapShow": "Show patient recap",
+    "recapShowClinical": "Show clinical recap",
+    "recapLoading": "Loading recap…"
   }
 }
