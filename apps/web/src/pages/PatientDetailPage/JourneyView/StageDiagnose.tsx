@@ -55,11 +55,12 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
     onDone(hasDocumentedDiagnosis);
   }, [hasDocumentedDiagnosis, onDone]);
 
-  // Auto-analyze once on entry: the SOAP assessment is the natural source.
+  // Analyze the assessment on entry, and again whenever it changes: this step follows the SOAP
+  // step, so the note it reads is the one the clinician just wrote. `analyzedText` records which
+  // text produced the current suggestions, in place of the old once-only boolean.
   useEffect(() => {
     if (!assessment || analyzedText === assessment) return;
     setAnalyzedText(assessment);
-    setAnalyzed(true);
     api.patients
       .suggestCodes(assessment)
       .then((r) => {
