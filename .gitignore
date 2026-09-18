@@ -102,3 +102,6 @@ docs/market-research/*-evidence/
 
 # .dockerignore is a project file, not a dotfile to hide.
 !.dockerignore
+
+# Decision 2 (2026-09-18): the rendered HTML is a build artifact, like the PDFs.
+docs/reports/html/
