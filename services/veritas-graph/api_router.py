@@ -9,6 +9,8 @@ Usage:
         python services/veritas-graph/api_router.py
 """
 from __future__ import annotations
+
+import time
 import os
 
 import sys
@@ -58,9 +60,41 @@ class ValidateNecessityRequest(BaseModel):
     service_or_drug_code: str
 
 
+# A fresh driver handshake costs ~2s on this host, which made /health slower than the
+# 2s deadline the orchestrator probes it with -- a healthy graph read as a timeout. The
+# result is cached briefly so a probe is cheap, still honest, and cannot hang.
+_GRAPH_PROBE_TTL_S = 5.0
+_GRAPH_PROBE: tuple[float, str] | None = None
+
+
 @app.get("/health", response_class=JSONResponse)
-async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "veritas-graph-nscre"}
+async def health() -> dict[str, Any]:
+    """Liveness plus reachability of the graph this service exists to query.
+
+    H02: this returned {"status": "ok"} without touching Neo4j, so a service
+    whose only dependency was down reported healthy to every probe.
+    """
+    global _GRAPH_PROBE
+    now = time.monotonic()
+    if _GRAPH_PROBE is not None and now - _GRAPH_PROBE[0] < _GRAPH_PROBE_TTL_S:
+        graph = _GRAPH_PROBE[1]
+    else:
+        graph = "unreachable"
+        try:
+            client = get_client()
+            try:
+                client.run("RETURN 1 AS ok")
+                graph = "ok"
+            finally:
+                client.close()
+        except Exception as exc:  # noqa: BLE001
+            graph = type(exc).__name__
+        _GRAPH_PROBE = (now, graph)
+    return {
+        "status": "ok" if graph == "ok" else "degraded",
+        "service": "veritas-graph-nscre",
+        "graph": graph,
+    }
 
 
 @app.post("/api/v1/nscre/evaluate-encounter", response_class=JSONResponse)

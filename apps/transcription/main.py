@@ -72,8 +72,21 @@ class ExtractTermsRequest(BaseModel):
 
 
 @app.get("/health", response_class=JSONResponse)
-async def health() -> dict[str, str]:
-    return {"status": "ok", "service": settings.otel_service_name, "engine": _engine.name()}
+async def health() -> dict[str, Any]:
+    """Liveness plus which engine is actually loaded.
+
+    H02: `engine` was reported but nothing said whether it was the real
+    transcription engine or the stub, so a stack running on the stub looked
+    identical to one running on faster-whisper.
+    """
+    name = _engine.name()
+    return {
+        "status": "ok",
+        "service": settings.otel_service_name,
+        "engine": name,
+        "engine_ready": _engine is not None,
+        "stub": "stub" in name.lower(),
+    }
 
 
 @app.post("/transcribe", response_class=JSONResponse)

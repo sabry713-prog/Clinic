@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import asyncio
 import os
 
 # --- workspace package resolution -------------------------------------------
@@ -89,13 +91,27 @@ class AskRequest(BaseModel):
 
 
 @app.get("/health", response_class=JSONResponse)
-async def health() -> dict[str, str]:
-    """HTTP health endpoint for Docker / k8s liveness probes."""
+async def health() -> dict[str, Any]:
+    """Liveness plus the one dependency this service cannot answer without.
 
-
+    H02: this returned {"status": "ok"} unconditionally — including while
+    `_db_pool` was None — so a service that had lost its database still told
+    Docker and Kubernetes it was healthy. The pool *is* the readiness signal
+    here: without it every answer this service gives is ungrounded.
+    """
+    database = "pool_not_initialised"
+    if _db_pool is not None:
+        try:
+            async with asyncio.timeout(2):
+                async with _db_pool.acquire() as conn:
+                    await conn.fetchval("SELECT 1")
+            database = "ok"
+        except Exception as exc:  # noqa: BLE001
+            database = type(exc).__name__
     return {
-        "status": "ok",
+        "status": "ok" if database == "ok" else "degraded",
         "service": settings.otel_service_name,
+        "database": database,
     }
 
 

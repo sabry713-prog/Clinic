@@ -199,8 +199,24 @@ app = FastAPI(title="Cortex.ai Agent Orchestrator", version="0.1.0")
 
 
 @app.get("/health", response_class=JSONResponse)
-async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "orchestrator-agents"}
+async def health() -> dict[str, Any]:
+    """Liveness plus reachability of the service every agent here depends on.
+
+    H02: this returned {"status": "ok"} without asking NSCRE anything, so with the
+    graph service down every agent would fail while the probe said healthy.
+    """
+    nscre = "unreachable"
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.get(f"{NSCRE_API_URL.rstrip('/')}/health")
+        nscre = "ok" if resp.status_code == 200 else f"http_{resp.status_code}"
+    except Exception as exc:  # noqa: BLE001
+        nscre = type(exc).__name__
+    return {
+        "status": "ok" if nscre == "ok" else "degraded",
+        "service": "orchestrator-agents",
+        "nscre": nscre,
+    }
 
 
 async def _run_named_agent(name: str, patient_id: str, client: httpx.AsyncClient) -> dict[str, Any]:

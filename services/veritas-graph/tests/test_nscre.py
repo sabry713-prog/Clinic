@@ -462,9 +462,14 @@ def api_client(monkeypatch):
 
 
 def test_health_endpoint(api_client):
+    """H02: this asserted `status == "ok"` without a graph in play. The endpoint now
+    reports what it actually reached, so the assertion is on the contract."""
     resp = api_client.get("/health")
     assert resp.status_code == 200
-    assert resp.json()["status"] == "ok"
+    body = resp.json()
+    assert body["service"] == "veritas-graph-nscre"
+    assert body["status"] in {"ok", "degraded"}
+    assert body["graph"], "the health answer must name the dependency's state"
 
 
 def test_evaluate_encounter_endpoint(api_client):
