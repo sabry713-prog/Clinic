@@ -42,3 +42,22 @@ describe("suggestCodes — exact matching unchanged", () => {
     expect(suggestCodes("intestinal obstruction")).toEqual([]);
   });
 });
+
+describe("suggestCodes — a reported case", () => {
+  // Reported from a live test: the assessment "patient with previous urinary tract infection"
+  // produced "Acute upper respiratory infection" as a second suggestion, because the two share
+  // the word "infection"; and the plan's "kidney ultrasound" added "Chronic kidney disease".
+  it("does not propose a respiratory infection for a urinary complaint", () => {
+    const labels = suggestCodes("patient with previous urinary tract infection").map((t) => t.code_display);
+    expect(labels).toContain("Urinary tract infection");
+    expect(labels).not.toContain("Acute upper respiratory infection");
+    expect(labels).not.toContain("Chronic kidney disease");
+  });
+
+  it("still proposes short symptom terms and single-word diagnoses", () => {
+    expect(suggestCodes("patient has cough and fever").map((t) => t.code_display)).toEqual(
+      expect.arrayContaining(["Cough", "Fever"]),
+    );
+    expect(suggestCodes("diabetes").map((t) => t.code_display)).toContain("Diabetes mellitus");
+  });
+});

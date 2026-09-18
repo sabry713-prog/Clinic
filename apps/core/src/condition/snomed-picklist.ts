@@ -55,25 +55,49 @@ export const SNOMED_PICKLIST: readonly CodedTerm[] = [
   { code: "248595008", code_display: "Allergic rhinitis" },
 ];
 
-const STOP = new Set(["the", "a", "an", "of", "with", "and", "patient", "has", "history"]);
 
-/** Suggest candidate coded terms for free-text diagnosis input (token overlap). */
+/**
+ * Suggest candidate coded terms for free-text diagnosis input.
+ *
+ * Two rules carry the weight, both learned from a reported note ("patient with previous urinary
+ * tract infection" + a plan of "kidney enzymes and urine culture and kidney ultrasound"):
+ *
+ * 1. Whole words, not substrings. A shared word inside a longer word is not evidence.
+ * 2. One shared word is not evidence either. Scoring used to be "how many query words appear
+ *    anywhere in the display", so the single word "infection" proposed "Acute upper respiratory
+ *    infection" for a urinary complaint. A candidate now has to share at least two words with
+ *    the query, or half of the display's words, or be a one-word term that matched.
+ *
+ * Ranking is the proportion of the display's words the query covers, so the closest term sorts
+ * first. The clinician still confirms: this only decides what is offered.
+ */
+const STOP = new Set(["the", "a", "an", "of", "with", "and", "patient", "has", "history", "for", "on", "in"]);
+
+function significantWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length > 2 && !STOP.has(t));
+}
+
 export function suggestCodes(query: string, limit = 5): CodedTerm[] {
   const q = query.toLowerCase();
-  const qTokens = q.split(/[^a-z0-9]+/).filter((t) => t.length > 2 && !STOP.has(t));
-  if (qTokens.length === 0) return [];
+  const qWords = new Set(significantWords(query));
+  if (qWords.size === 0) return [];
   const scored = SNOMED_PICKLIST.map((term) => {
-    const d = term.code_display.toLowerCase();
-    let score = 0;
-    for (const t of qTokens) if (d.includes(t)) score += 1;
-    // Boost when the whole display name appears in the query (exact-ish match).
-    if (q.includes(d.split(" (")[0]!.toLowerCase())) score += 2;
-    return { term, score };
-  }).filter((s) => s.score > 0);
+    const display = term.code_display.toLowerCase();
+    const head = display.split(" (")[0]!;
+    const words = significantWords(display);
+    const matched = words.filter((w) => qWords.has(w)).length;
+    const coverage = words.length === 0 ? 0 : matched / words.length;
+    const qualifies = matched >= 2 || coverage >= 0.5 || (words.length === 1 && matched === 1);
+    let score = coverage * 10 + matched;
+    if (q.includes(head)) score += 5;
+    return { term, score, qualifies };
+  }).filter((s) => s.qualifies && s.score > 0);
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, limit).map((s) => s.term);
 }
-
 
 /** Levenshtein edit distance — deterministic, no dependencies. */
 function editDistance(a: string, b: string): number {

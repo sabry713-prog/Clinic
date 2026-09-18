@@ -20,9 +20,11 @@ function readSoapAssessment(patientId: string): string {
     const raw = sessionStorage.getItem(`cortex.scribe.${patientId}`);
     if (!raw) return "";
     const parsed = JSON.parse(raw) as { soap?: Partial<Record<"assessment" | "plan", string>> };
-    return [parsed.soap?.assessment, parsed.soap?.plan]
-      .filter((p): p is string => typeof p === "string" && p.trim().length > 0)
-      .join(" ");
+    // The ASSESSMENT only. The plan holds orders -- "kidney ultrasound", "urine culture" --
+    // and feeding those to a diagnosis suggester produced "Chronic kidney disease" from the
+    // word "kidney". Orders are tasks, not diagnoses; the checklist reads the plan, this reads
+    // the place the clinician states the diagnosis.
+    return typeof parsed.soap?.assessment === "string" ? parsed.soap.assessment.trim() : "";
   } catch {
     return "";
   }
@@ -33,12 +35,20 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
   const [candidates, setCandidates] = useState<readonly CodedTerm[]>([]);
   const [didYouMean, setDidYouMean] = useState<readonly CodedTerm[]>([]);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
-  const [analyzed, setAnalyzed] = useState(false);
+  const [analyzedText, setAnalyzedText] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const assessment = useMemo(() => readSoapAssessment(patient.id), [patient.id]);
+  // Re-read the note while the step is on screen. This was a useMemo keyed on the patient id
+  // alone, so the analysis ran once and never noticed a note edited afterwards -- coming back to
+  // the step showed suggestions for a note that no longer existed.
+  const [assessment, setAssessment] = useState(() => readSoapAssessment(patient.id));
+  useEffect(() => {
+    const reread = () => setAssessment(readSoapAssessment(patient.id));
+    window.addEventListener("focus", reread);
+    return () => window.removeEventListener("focus", reread);
+  }, [patient.id]);
   const hasDocumentedDiagnosis = documented.length > 0;
 
   useEffect(() => {
@@ -47,7 +57,8 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
 
   // Auto-analyze once on entry: the SOAP assessment is the natural source.
   useEffect(() => {
-    if (analyzed || !assessment) return;
+    if (!assessment || analyzedText === assessment) return;
+    setAnalyzedText(assessment);
     setAnalyzed(true);
     api.patients
       .suggestCodes(assessment)
@@ -59,7 +70,7 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
       .catch(() => {
         /* analysis is a convenience — manual entry still works below */
       });
-  }, [analyzed, assessment]);
+  }, [assessment, analyzedText]);
 
   const toggle = (code: string): void => {
     setSelected((prev) => {
