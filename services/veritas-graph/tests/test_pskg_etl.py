@@ -169,9 +169,32 @@ class FakeAsyncGraph:
         self.prescribed_edges: dict[tuple[str, str], dict] = {}
         self.has_lab_edges: set[tuple[str, str]] = set()
         self.derived_markers: dict[str, dict] = {}
+        # M06: a per-edge ledger. The sets above model existence; retirement needs
+        # to know WHICH RUN last saw an edge, so that is tracked separately rather
+        # than reshaping the structures the existing assertions rely on.
+        self.edge_runs: dict[tuple, str] = {}
+        self.retired_edges: set[tuple] = set()
 
     async def run(self, cypher, **params):
+        import etl_pskg as _etl  # lazily: this module is on sys.path only later
+
         self.calls.append((cypher, params))
+
+        if cypher == _etl.RETIRE_UNSEEN_FACTS:
+            pid, run = params["patient_id"], params["run_id"]
+            for ident, edge_run in self.edge_runs.items():
+                if ident[0] == "patient" and ident[1] == pid and edge_run != run:
+                    self.retired_edges.add(ident)
+            return []
+        if cypher == _etl.CLEAR_RETIRED_ON_SEEN_FACTS:
+            pid, run = params["patient_id"], params["run_id"]
+            for ident in list(self.retired_edges):
+                if ident[1] == pid and self.edge_runs.get(ident) == run:
+                    self.retired_edges.discard(ident)
+            return []
+        if cypher == _etl.PUBLISH_PATIENT_SNAPSHOT:
+            self.patients.setdefault(params["patient_id"], {})["published_run"] = params["run_id"]
+            return []
         if cypher == MERGE_PATIENT:
             self.patients[params["id"]] = params
         elif cypher == MERGE_ENCOUNTER:
@@ -199,7 +222,8 @@ class FakeAsyncGraph:
             self.has_lab_edges.add(("encounter", params["encounter_id"], params["id"]))
         elif cypher == LINK_LAB_TO_PATIENT:
             self.has_lab_edges.add(("patient", params["patient_id"], params["id"]))
-        elif cypher == MARK_LAB_AS_DERIVED:
+        _record_edge_run(self, cypher, params)
+        if cypher == MARK_LAB_AS_DERIVED:
             self.derived_markers[params["id"]] = params
         # CREATE CONSTRAINT statements -- no-op in the fake
         return []
@@ -695,3 +719,70 @@ def test_no_statement_references_a_parameter_its_call_site_omits():
             if wanted not in params:
                 missing.append((wanted, cypher.strip().splitlines()[0][:60]))
     assert not missing, f"statements asking for parameters they were not given: {missing}"
+
+
+
+_PATIENT_EDGE_STATEMENTS = None  # set below, after etl_pskg is imported
+
+
+def _record_edge_run(graph, cypher, params):
+    """The fake's ledger of which run last wrote each patient-scoped edge."""
+    import etl_pskg as _e
+
+    global _PATIENT_EDGE_STATEMENTS
+    if _PATIENT_EDGE_STATEMENTS is None:
+        _PATIENT_EDGE_STATEMENTS = {
+            _e.MERGE_ENCOUNTER,
+            _e.LINK_CONDITION_TO_PATIENT,
+            _e.LINK_MEDICATION_TO_PATIENT,
+            _e.LINK_LAB_TO_PATIENT,
+        }
+    if cypher in _PATIENT_EDGE_STATEMENTS and params.get("run_id"):
+        key = params.get("key") or params.get("id")
+        if key is not None:
+            graph.edge_runs[("patient", str(params.get("patient_id")), str(key))] = params["run_id"]
+
+
+# --- M06, slice 2: retire, do not delete ---------------------------------------
+
+@pytest.mark.asyncio
+async def test_a_fact_the_source_no_longer_has_is_retired_not_deleted():
+    pool = _make_pool(
+        conditions=CONDITION_ROWS_CONFIRMED, medications=MEDICATION_ROWS_SFDA, labs=LAB_ROWS_HIGH
+    )
+    graph = FakeAsyncGraph()
+    # an edge from a previous run: the source described it then, not now
+    stale = ("patient", "patient-1", "MED-OLD-1")
+    graph.edge_runs[stale] = "a-previous-run"
+
+    await ingest_patient("patient-1", pool, graph)
+
+    assert stale in graph.retired_edges, "an edge the source dropped must be retired"
+    assert stale in graph.edge_runs, "...and must still be there: retired, never deleted"
+
+
+@pytest.mark.asyncio
+async def test_a_clean_run_retires_nothing():
+    pool = _make_pool(
+        conditions=CONDITION_ROWS_CONFIRMED, medications=MEDICATION_ROWS_SFDA, labs=LAB_ROWS_HIGH
+    )
+    graph = FakeAsyncGraph()
+
+    await ingest_patient("patient-1", pool, graph)
+
+    assert graph.retired_edges == set(), f"nothing was withdrawn, so nothing retires: {graph.retired_edges}"
+
+
+@pytest.mark.asyncio
+async def test_the_snapshot_is_published_in_the_run_that_wrote_it():
+    pool = _make_pool(
+        conditions=CONDITION_ROWS_CONFIRMED, medications=MEDICATION_ROWS_SFDA, labs=LAB_ROWS_HIGH
+    )
+    graph = FakeAsyncGraph()
+
+    await ingest_patient("patient-1", pool, graph)
+
+    published = graph.patients["patient-1"].get("published_run")
+    assert published, "the patient must record which run is visible"
+    runs = {params["run_id"] for _, params in graph.calls if params.get("run_id")}
+    assert published in runs, "the published run must be the run that wrote the facts"

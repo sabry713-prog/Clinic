@@ -91,7 +91,8 @@ MERGE (e:Encounter {id: $id})
 SET e.date = $date, e.provider = $provider, e.run_id = $run_id, e.loaded_at = $loaded_at
 WITH e
 MATCH (p:Patient {id: $patient_id})
-MERGE (p)-[:HAS_ENCOUNTER]->(e)
+MERGE (p)-[r:HAS_ENCOUNTER]->(e)
+SET r.run_id = $run_id, r.loaded_at = $loaded_at
 """
 
 MERGE_CONDITION = """
@@ -102,7 +103,8 @@ SET c.icd10 = $icd10, c.display_name = $display_name, c.run_id = $run_id, c.load
 LINK_CONDITION_TO_ENCOUNTER = """
 MATCH (e:Encounter {id: $encounter_id})
 MATCH (c:Condition {key: $key})
-MERGE (e)-[:DIAGNOSED_WITH]->(c)
+MERGE (e)-[r:DIAGNOSED_WITH]->(c)
+SET r.run_id = $run_id, r.loaded_at = $loaded_at
 """
 
 # Fallback when no encounter correlates (hospital.condition has no
@@ -110,7 +112,8 @@ MERGE (e)-[:DIAGNOSED_WITH]->(c)
 LINK_CONDITION_TO_PATIENT = """
 MATCH (p:Patient {id: $patient_id})
 MATCH (c:Condition {key: $key})
-MERGE (p)-[:DIAGNOSED_WITH]->(c)
+MERGE (p)-[r:DIAGNOSED_WITH]->(c)
+SET r.run_id = $run_id, r.loaded_at = $loaded_at
 """
 
 MERGE_MEDICATION = """
@@ -146,18 +149,53 @@ SET l.test_name = $test_name, l.value = $value, l.unit = $unit, l.flag = $flag, 
 LINK_LAB_TO_ENCOUNTER = """
 MATCH (e:Encounter {id: $encounter_id})
 MATCH (l:LabResult {id: $id})
-MERGE (e)-[:HAS_LAB]->(l)
+MERGE (e)-[r:HAS_LAB]->(l)
+SET r.run_id = $run_id, r.loaded_at = $loaded_at
 """
 
 LINK_LAB_TO_PATIENT = """
 MATCH (p:Patient {id: $patient_id})
 MATCH (l:LabResult {id: $id})
-MERGE (p)-[:HAS_LAB]->(l)
+MERGE (p)-[r:HAS_LAB]->(l)
+SET r.run_id = $run_id, r.loaded_at = $loaded_at
 """
 
 # Marks a projected value as computed rather than measured, and records what it
 # was computed from, so a reader of the graph can tell the two apart. Kept
 # separate from MERGE_LABRESULT because measured labs never carry these.
+# -- Retirement and publication (M06, slice 2) --------------------------------
+#
+# A fact that disappears from the source is RETIRED, never deleted. An override
+# issued in March has to stay explainable in September, and deleting the fact that
+# justified it destroys the explanation. Retired facts remain in the graph with the
+# run that withdrew them recorded on them.
+#
+# Both statements match `(p)-[r]->()` -- edges FROM the patient, which is what this
+# ETL owns. They never touch `Condition` or `Medication` nodes: those are shared
+# dictionary nodes keyed by code, and another patient points at the same one. The
+# relationship types are enumerated on purpose, so a new edge type is not silently
+# swept by an untyped `-[r]->`.
+RETIRE_UNSEEN_FACTS = """
+MATCH (p:Patient {id: $patient_id})-[r:PRESCRIBED|DIAGNOSED_WITH|HAS_LAB|HAS_ENCOUNTER]->()
+WHERE r.run_id IS NOT NULL AND r.run_id <> $run_id
+SET r.retired_at = $loaded_at, r.retired_by_run = $run_id
+"""
+
+# MERGE does not clear properties, so an edge that comes back must have last run's
+# retirement lifted explicitly.
+CLEAR_RETIRED_ON_SEEN_FACTS = """
+MATCH (p:Patient {id: $patient_id})-[r:PRESCRIBED|DIAGNOSED_WITH|HAS_LAB|HAS_ENCOUNTER]->()
+WHERE r.run_id = $run_id
+SET r.retired_at = null, r.retired_by_run = null
+"""
+
+# One property write, so a reader sees either the whole previous snapshot or the
+# whole new one -- never a patient half-materialized by an interrupted run.
+PUBLISH_PATIENT_SNAPSHOT = """
+MATCH (p:Patient {id: $patient_id})
+SET p.published_run = $run_id, p.published_at = $loaded_at
+"""
+
 MARK_LAB_AS_DERIVED = """
 MATCH (l:LabResult {id: $id})
 SET l.derived = true, l.formula = $formula, l.derived_from = $derived_from, l.run_id = $run_id, l.loaded_at = $loaded_at
@@ -568,6 +606,12 @@ async def ingest_patient(
         await _write(graph, MARK_LAB_AS_DERIVED, **marker_params)
         await _write(graph, LINK_LAB_TO_PATIENT, patient_id=str(patient_id), id=lab_params["id"])
         counts["derived_egfr"] = counts.get("derived_egfr", 0) + 1
+
+    # Order matters: lift last run's retirements first, then retire what this run
+    # did not see, then publish. A reader between the two sees the old snapshot.
+    await _write(graph, CLEAR_RETIRED_ON_SEEN_FACTS, patient_id=str(patient_id))
+    await _write(graph, RETIRE_UNSEEN_FACTS, patient_id=str(patient_id))
+    await _write(graph, PUBLISH_PATIENT_SNAPSHOT, patient_id=str(patient_id))
 
     return counts
 
