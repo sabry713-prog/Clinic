@@ -1015,3 +1015,53 @@ invented to fill it.
 its approver left as `[PENDING: confirm]`; the gate itself is green (11 files match manifest
 v2026-09-18.2, all illustrative, `licensed=false`). Signing a governed artifact is not an
 engineer's act, so it waits.
+
+---
+
+## 24. The last of the register: invented values, and two traps in the dev stack
+
+**Three of the core's own health values were literals in the one place that promises
+accuracy.** `profiles_verified: false` was a constant, so it could never become true however
+many profiles were verified; it is now asked of the NPHIES engine, which already published
+the answer, and fails closed when the engine is unreachable. `graph_nodes = -1` carried the
+comment "signal 'graph reachable' without a real count" -- a number that is not a count reads
+as a measurement, so the graph service gained a counts-only endpoint and preflight reports
+**919** on the running stack, or `null` when the count cannot be had. The third was found
+live: **`app.audit_event` does not exist**, so `audit_events` reported `0` on every preflight
+because a bare catch turned the failure into a plausible-looking zero -- the same disease as
+the `-1`. The real table is `audit.event`, and the number is **18,256**.
+
+The five new spec cases matter more than the code, because today's *value* of
+`profiles_verified` is `false` either way and a live curl cannot tell derived from hardcoded.
+One test makes the engine answer `true` and asserts readiness reports `true` -- impossible
+against the old literal.
+
+**C02's proof gap is closed.** `key={patientId}` had been shipped but never proven, because
+the behaviour test had been deleted rather than left red after six attempts. The reason is
+now clear: `vi.mock` factories are hoisted above the module's imports, so a factory that
+renders JSX or calls an imported `useState` runs before either exists. The replacement is
+deterministic -- no timers -- and ships with a control test proving the counter tracks
+mounts, not renders, which is what makes the first assertion mean "remounted".
+
+**C03 asked the missing question.** Existence of a citation was checked; support was not.
+`verify_support` is a lexical floor, labelled as a floor: it is not entailment, the docstring
+says so, and the wiring **reports without narrowing the list** because dropping unsupported
+citations would hide the drift they are evidence of. Writing its own test surfaced the
+weakness -- "daily" alone kept a warfarin citation for a metformin answer -- and that case is
+now pinned rather than papered over.
+
+**Two dev-stack traps, both self-inflicted.** `uvicorn --reload` did not pick up an edit to
+the graph service: the new route returned 404 from a process already serving its new
+`/health` shape, so a Python service edit here needs a full clean cycle. And a cleanup hook
+chained ahead of the start in one shell **kills that shell**, because the shell's own command
+line contains the recipe name the hook searches for; the observed symptom is
+`exit 4294967295` with services left half-up. The hook now excludes its own ancestry.
+
+**One long-standing mystery closed by accident.** The repeated "Nest application successfully
+started" notifications were not phantom restarts: **three** `just dev` supervisors were
+running at once, each with its own watcher. Counting them is itself misleading, since `just`
+spawns sub-processes whose command lines also match the recipe name.
+
+**Still open, unchanged:** the five core-side clients that call the Python services
+(`narrative-proxy`, `interpreter`, `nphies/preauth`, `nphies/linkage-verdicts`, and the
+qa-proxy equivalent) have no deadlines of their own.
