@@ -775,3 +775,50 @@ the solution is hosted, which is not yet decided.
 - **[W]** three independent workstreams: C-group (36 API calls), H/L-group (36 calls, including a real `docker build` reproduction), M-group (39 calls, including read-only SQL and a `--dry-run` migration check). Each returned per-item verdicts with file:line evidence; their strongest unfixed items were re-derived by the parent where consequential.
 - **Not verified:** the anti-hallucination/clinical-correctness properties of generated prose (no clinical adjudication was performed); PPTX and PDF slide-by-slide equivalence beyond the prohibited-phrase scan; behaviour under load; behaviour on a second host for the exposure findings (loopback reasoning is from bindings plus LAN-interface probes).
 - **No application file was modified during this audit.** One scratch vitest file was created and deleted by a workstream; `git status` is unchanged. Documents added by the parent: this audit, and the earlier findings register and market research.
+
+---
+
+## 19. Production programme (L01–L06) and two items reclassified — verified 2026-09-18
+
+The L-section below is what section 4 filed as "all six NOT DONE — untouched". Re-derived
+from the repository today, item by item, because a filed status is a lead and not a fact.
+
+| Item | State today | Evidence |
+|---|---|---|
+| **L01** Helm/Terraform | **Open, narrowed.** `infra/helm` deploys four services (`core`, `narrative`, `qa`, `web`) — `transcription`, `graph`, `orchestrator` and `nphies-engine` have **no templates and no values**. The Terraform postgres module *names* the production settings and comments them out (`modules/postgres/main.tf:51-59`: `backup_retention_period`, `backup_window`, `skip_final_snapshot`), and the k8s module never mentions replicas. | `infra/helm/templates/*-deployment.yaml`; `infra/terraform/modules/*/main.tf` |
+| **L02** Service authentication | **Open, unchanged.** No caller authentication between services and no NetworkPolicy templates. | No auth middleware in any service entrypoint; no `networkpolicy` template in `infra/helm/templates/` |
+| **L03** Telemetry and alerting | **Half true.** Five Grafana dashboards exist with provisioning (`infra/grafana/dashboards/*.json`, `provisioning/dashboards.yaml`) and the chart sets `prometheus.io/scrape` annotations on core and narrative. **No alert rules exist anywhere** — provisioning holds `dashboards.yaml` only. Dashboards that nobody is paged from are a picture, not monitoring. | `infra/grafana/provisioning/`; `infra/helm/templates/core-deployment.yaml:23-25` |
+| **L04** Capacity and load | **Half true.** `values-prod.yaml` has real autoscaling (core `replicaCount: 3`, HPA 2–6 and 2–8 at 70% CPU) and load tests **do exist** — `tests/load/` with a shared auth helper and `just load-test <service>` (`justfile:221`). But the HPA is CPU-only, and neither the load tests nor the classifier evaluation run as release gates. | `infra/helm/values-prod.yaml:15-34`; `tests/load/`; `justfile:221` |
+| **L05** Supply chain | **Closed here.** Every action reference in `ci.yml` and `security.yml` was a **moving ref** — `actions/checkout@v4` and its siblings resolve to `refs/heads/releases/v4`, not a tag, and `trivy-action@master` / `trufflehog@main` are branches by name. All 30 references are pinned to commit SHAs (each SHA looked up on its own remote and verified to exist there), and the image build now emits `sbom: true` + `provenance: true`. No image signing yet. | `.github/workflows/ci.yml`, `security.yml` |
+| **L06** Continuity | **Closed here, as a stated position rather than a capability.** RPO today is 24 hours (one encrypted dump at 02:00; no WAL archiving, no PITR); RTO is **not measured** — `restore-drill.sh` proves restorability and times nothing; the drill needs `GPG_PASSPHRASE` and `S3_*`/`AWS_*`, none of which are in the repository's `.env`. | `infra/scripts/README.md` (new section); `infra/terraform/modules/postgres/main.tf:51-59` |
+
+Recorded with triggers rather than dropped — these are production-programme items, and the
+DEV doctrine is to simulate what can be simulated and to write down what production owes:
+chart the remaining four services; enable Terraform backup/PITR settings; service-to-service
+authentication and NetworkPolicies; alert rules with an owner and a routing target; make the
+load tests and the classifier evaluation release gates. Trigger for all of them: before the
+first operational pilot.
+
+**Two items reclassified out of "false claims", because they are not:**
+
+- **H04 (lint).** Filed as a clean core lint "achieved partly by weakening config". The
+  config change is real, but it is **documented in the commit that made it** (`88ead32`:
+  safety rules left as errors, style rules downgraded to warnings, test-file relief,
+  rationale per rule, 252 warnings left visible) and both this audit and
+  `PRE_DEMO_READINESS_ASSESSMENT.md:48` already report the gate as **FAIL**. Nothing claims
+  it passes. What remains is engineering debt, not a false statement: 426 errors in
+  `apps/web`.
+- **C06 (transcription stub).** Filed as "stub still serves live capture". The stub
+  **identifies itself** — `StubEngine.name()` returns `stub-stt-v1`, its own comments state
+  that it does not do speech recognition, and the UI labels dictation as placeholder mode —
+  and the running dev stack is on the real engine (`.env: TRANSCRIPTION_ENGINE=faster_whisper`,
+  with faster-whisper's own multiprocessing workers visible in the process table). The
+  remaining point is that a *default* of `stub` must never be deployed as if it were live,
+  which the self-identification satisfies.
+
+**One claim retracted and one file withdrawn (section 18's subject, now done):** the deck's
+"nothing abroad, no exceptions" was false for the development build (which calls a hosted
+model), and `specialist-deck.pdf` was removed rather than re-exported because the rewritten
+`SPECIALIST_DECK.md` has lost its slide separators — marp renders it as a single slide — so
+the shipped PDF could only be an export of the pre-correction source. Trigger to restore it:
+before the deck is sent to anyone externally.
