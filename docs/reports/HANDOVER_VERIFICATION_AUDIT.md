@@ -822,3 +822,40 @@ model), and `specialist-deck.pdf` was removed rather than re-exported because th
 `SPECIALIST_DECK.md` has lost its slide separators — marp renders it as a single slide — so
 the shipped PDF could only be an export of the pre-correction source. Trigger to restore it:
 before the deck is sent to anyone externally.
+
+---
+
+## 20. H05 and C10 — re-derived 2026-09-18
+
+**H05 (layout, i18n, accessibility) — closed.** Filed as "no file in scope touched" with
+four named defects. Three are fixed, each with the behaviour pinned by a test rather than
+described:
+
+- **Fixed panes, no resize.** Both panes were `w-[340px]` / `w-[320px]` with no control at
+  all. They now carry drag handles **and arrow-key resizing** (a resize only a pointer can
+  perform is a keyboard trap), each with a minimum and maximum, the width remembered per
+  pane, and the handle exposed as `role="separator"` with `aria-valuenow/min/max`. Five
+  cases in `CortexShell.test.tsx` cover both handles at the historic widths, resizing in
+  both directions and back, the right-hand pane growing leftwards, the bound, and the
+  header key.
+- **`Encounter view ·` hardcoded.** Now `shell.encounterView`, with `عرض المقابلة` in
+  `ar.json` and `en.json`; the test asserts the header resolves through the key.
+- **The copy conflict, which turned out to be worse than a wording clash.**
+  `TimelinePane.tsx:65` passed the literal string `"current encounter"` as the encounter id
+  into a dialog whose own copy promised "These values are sent to NPHIES exactly as shown".
+  A placeholder in a field the product explicitly promises is exact is a fabricated value,
+  and it was structural: `CortexState` never exposed the encounter id, so the pane had
+  nothing real to show. The context exposes it now, the preview renders the real id or an em
+  dash, and the dialog's promise names what it guarantees (a field shown as `—` is not
+  sent).
+- **The i18n namespaces remain.** `encounter`, `scribe`, `timeline` and `journey` still do
+  not exist, and **30 files still contain literal JSX text** (measured: 30 files with
+  `>Text<` content, e.g. `AmbientPanel.tsx` 10, `ReceptionistTab.tsx` 8). `shell` does
+  exist and the surfaces touched here now use it. The sweep is open with a trigger: before
+  the first Arabic-first deployment.
+
+**C10 (journey E2E and repeat-run evidence) — open, narrowed.** Its first clause is stale:
+B4 was closed on 17 September (§14). What remains is exactly what the row's other two
+clauses say — there is no end-to-end journey test, and no clean-run-twice evidence, in the
+repository or in CI. Recorded with its trigger (before the first operational pilot) rather
+than marked done on the strength of B4.
