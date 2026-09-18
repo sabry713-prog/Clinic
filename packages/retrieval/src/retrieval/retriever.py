@@ -1,12 +1,26 @@
-"""Hybrid retriever — combines vector (cosine) and BM25 (tsvector) results
-via Reciprocal Rank Fusion (RRF).
+"""Retrieval — deterministic lexical (BM25) and hybrid vector + BM25 search.
+
+Both arms read ``hospital.retrieval_chunk``, whose ``source_id`` is the
+**immutable id of the source row** (not the patient), so a returned chunk can
+be dereferenced back to the fact that produced it.
+
+Ordering is deterministic in every arm: the SQL orders by score with the chunk
+id as the final tie-break, and the fusion sort uses the same tie-break.  A
+relevance list that reshuffles between two identical calls cannot be
+reproduced, compared or cited, so ties are broken by id rather than by
+whatever the planner returned.
+
+Vector ranking is gated on an **evaluated** embedding model: the stub's
+ordering is arbitrary, so ``hybrid_retrieve`` refuses it (M10).  Until such a
+model is provisioned, Q&A runs ``lexical_retrieve`` — retained deliberately,
+per the M10 recommendation.
 """
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
 
-from .embedder import EmbeddingProvider
+from .embedder import EmbeddingProvider, UnevaluatedEmbedderError
 from .types import RetrievalResult
 
 if TYPE_CHECKING:
@@ -19,12 +33,13 @@ SELECT
     id::text,
     content_text,
     source_type,
-    source_id,
+    source_id::text,
     1 - (embedding <=> $3::vector) AS score
 FROM hospital.retrieval_chunk
 WHERE patient_id = $1
   AND language   = $2
-ORDER BY embedding <=> $3::vector
+  AND embedding IS NOT NULL
+ORDER BY embedding <=> $3::vector, id
 LIMIT 20
 """
 
@@ -33,7 +48,7 @@ SELECT
     id::text,
     content_text,
     source_type,
-    source_id,
+    source_id::text,
     ts_rank(
         to_tsvector('simple', content_text),
         plainto_tsquery('simple', $3)
@@ -42,6 +57,12 @@ FROM hospital.retrieval_chunk
 WHERE patient_id = $1
   AND language   = $2
   AND to_tsvector('simple', content_text) @@ plainto_tsquery('simple', $3)
+ORDER BY
+    ts_rank(
+        to_tsvector('simple', content_text),
+        plainto_tsquery('simple', $3)
+    ) DESC,
+    id
 LIMIT 20
 """
 
@@ -54,7 +75,11 @@ def _rrf_fuse(
     top_k: int,
     language: str = "en",
 ) -> list[RetrievalResult]:
-    """Reciprocal Rank Fusion: score = 1/(k+rank_v) + 1/(k+rank_b)."""
+    """Reciprocal Rank Fusion: score = 1/(k+rank_v) + 1/(k+rank_b).
+
+    Ties are broken by chunk id so the fused order is total and stable: two
+    calls over the same rows return the same list, in the same order.
+    """
     scores: dict[str, float] = {}
     vector_rank: dict[str, int] = {}
     bm25_rank: dict[str, int] = {}
@@ -78,7 +103,7 @@ def _rrf_fuse(
         if cid not in row_data:
             row_data[cid] = dict(row)
 
-    sorted_ids = sorted(scores, key=lambda cid: scores[cid], reverse=True)[:top_k]
+    sorted_ids = sorted(scores, key=lambda cid: (-scores[cid], cid))[:top_k]
 
     return [
         RetrievalResult(
@@ -93,6 +118,35 @@ def _rrf_fuse(
         )
         for cid in sorted_ids
     ]
+
+
+async def lexical_retrieve(
+    patient_id: str,
+    query: str,
+    pool: "asyncpg.Pool[asyncpg.Record]",
+    top_k: int = 8,
+    language: str = "en",
+) -> list[RetrievalResult]:
+    """BM25 (tsvector) retrieval over the patient's index.
+
+    This is the arm that runs today: it needs no model, and its ranking is
+    reproducible from the stored text alone.
+    """
+    async with pool.acquire() as conn:
+        bm25_records = await conn.fetch(_BM25_SQL, patient_id, language, query)
+
+    bm25_rows = [dict(r) for r in bm25_records]
+    results = _rrf_fuse([], bm25_rows, top_k=top_k, language=language)
+
+    logger.debug(
+        "lexical_retrieve_done",
+        extra={
+            "patient_id": patient_id,
+            "bm25_hits": len(bm25_rows),
+            "returned": len(results),
+        },
+    )
+    return results
 
 
 async def hybrid_retrieve(
@@ -114,12 +168,22 @@ async def hybrid_retrieve(
     pool:
         asyncpg connection pool.
     embedder:
-        EmbeddingProvider to embed the query.
+        EmbeddingProvider to embed the query.  Must be an **evaluated** model:
+        an unevaluated one (the stub) raises instead of contributing an
+        arbitrary ordering to the fusion.
     top_k:
         Number of results to return after fusion.
     language:
         ``"en"`` or ``"ar"`` — filters to chunks of this language.
     """
+    if not embedder.is_evaluated():
+        raise UnevaluatedEmbedderError(
+            f"hybrid_retrieve refuses unevaluated embedder {embedder.model_id()!r}: "
+            "its vector ordering has not been measured against a labelled "
+            "clinical set, so it cannot be presented as relevance. Use "
+            "lexical_retrieve, or provision an evaluated model."
+        )
+
     [query_vector] = await embedder.embed([query])
     vec_str = "[" + ",".join(str(v) for v in query_vector) + "]"
 
@@ -139,6 +203,7 @@ async def hybrid_retrieve(
             "vector_hits": len(vector_rows),
             "bm25_hits": len(bm25_rows),
             "fused_returned": len(results),
+            "embedding_model": embedder.model_id(),
         },
     )
     return results
