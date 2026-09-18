@@ -110,7 +110,7 @@
       "ontology": "SFDA Medication Codes (NPHIES terminology server, CodeSystem-scientific-codes)",
       "licensed": false,
       "effective_date": "2026-09-18",
-      "approver": "[PENDING: confirm] — metformin entries added from the NPHIES Medication Codes resource",
+      "approver": "product-owner (CTO) — session approval 2026-09-18: metformin entries added from the NPHIES Medication Codes resource (1002-concept fragment)",
       "status": "illustrative-dev-subset"
     }
   ]
