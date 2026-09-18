@@ -1058,11 +1058,17 @@ export function CortexProvider({
     }
   }, []);
 
+  // Re-propose whenever the encounter's text changes -- not only when the transcript grows.
+  // This effect read `soapRef.current` while depending on `transcriptText` alone, so a note the
+  // clinician typed or pasted straight into the SOAP fields never reached the matcher and the
+  // checklist quietly stayed at its template rows: the feature looked dead in exactly the
+  // workflow people use to test it. Both dictionaries are dependencies now, and the text comes
+  // from the state they hold rather than from a ref that lags behind them.
   useEffect(() => {
-    const soapText = soapRef.current ? Object.values(soapRef.current).join(" ") : "";
+    const soapText = [...Object.values(liveSoap ?? {}), ...Object.values(soapOverride)].join(" ");
     const suggestions = proposeChecklist(transcriptText, soapText);
     mergeSuggestions(suggestions);
-  }, [transcriptText, mergeSuggestions]);
+  }, [transcriptText, liveSoap, soapOverride, mergeSuggestions]);
 
   // LLM-assisted extraction (layer 2) — debounced like the SOAP generation
   // so both share the transcript-growth cadence.

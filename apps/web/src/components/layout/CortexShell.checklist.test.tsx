@@ -1,7 +1,7 @@
 /**
  * Smart checklist auto-proposal (Sully-style): entries the clinician
  * mentions in dictation join the checklist automatically, tagged
- * "suggested", and can be removed (the deselect). Deterministic keyword
+ * "recommended", and can be removed (the deselect). Deterministic keyword
  * matching only — the system never recommends beyond the clinician's
  * own words.
  */
@@ -106,7 +106,25 @@ describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
     vi.clearAllMocks();
   });
 
-  it("adds suggested entries as dictation mentions them, and removal dismisses", async () => {
+  it("recommends from a note pasted into the SOAP fields with nothing dictated", async () => {
+    // No dictation at all -- the workflow someone uses to try this feature out.
+    const container = renderScribe([]);
+
+    // SOAP_SECTIONS order is Subjective, Objective, Assessment, Plan.
+    const plan = container.querySelectorAll("textarea")[3] as HTMLTextAreaElement;
+    expect(plan).toBeTruthy();
+    fireEvent.change(plan, { target: { value: "ECHO. And MRI. Follow up in one week" } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/recommended from your note/i)).toBeInTheDocument();
+    });
+    // "Follow up in one week" matches the follow-up keyword, so that template row is tagged.
+    expect(
+      screen.getByRole("button", { name: "Remove recommended item: Arrange follow-up" }),
+    ).toBeInTheDocument();
+  });
+
+  it("adds recommended entries as dictation mentions them, and removal dismisses", async () => {
     renderScribe([
       "Blood pressure is 148 over 92.",
       "Let's get an ECG and review your lipid profile.",
@@ -114,18 +132,18 @@ describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
 
     // template rows the dictation mentioned become tagged as suggested
     await waitFor(() => {
-      expect(screen.getAllByTestId("checklist-suggested-tag").length).toBeGreaterThanOrEqual(3);
+      expect(screen.getAllByTestId("checklist-recommended-tag").length).toBeGreaterThanOrEqual(3);
     });
-    expect(screen.getByText(/suggested from your dictation/i)).toBeInTheDocument();
+    expect(screen.getByText(/recommended from your note/i)).toBeInTheDocument();
 
     // removing one suggested entry dismisses it for the encounter
-    const remove = screen.getByRole("button", { name: "Remove suggested item: Order ECG" });
+    const remove = screen.getByRole("button", { name: "Remove recommended item: Order ECG" });
     fireEvent.click(remove);
     await waitFor(() => {
-      expect(screen.queryByRole("button", { name: "Remove suggested item: Order ECG" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Remove recommended item: Order ECG" })).not.toBeInTheDocument();
     });
     // the others remain
-    expect(screen.getByRole("button", { name: "Remove suggested item: Review lipid profile" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove recommended item: Review lipid profile" })).toBeInTheDocument();
   });
 
 });

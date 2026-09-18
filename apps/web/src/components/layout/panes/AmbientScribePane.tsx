@@ -327,7 +327,7 @@ export default function AmbientScribePane(): JSX.Element {
           </h2>
           {checklist.some((item) => item.proposed) && (
             <p className="mb-1.5 text-[10px] text-ink-faint" data-testid="checklist-proposal-note">
-              · suggested from your dictation — check when done, × to remove
+              · recommended from your note — check when done, × to remove
             </p>
           )}
           <ul className="space-y-1.5">
@@ -343,8 +343,8 @@ export default function AmbientScribePane(): JSX.Element {
                   <span className={item.done ? "text-ink-soft line-through" : "text-ink-deep"}>
                     {item.label}
                     {item.proposed && (
-                      <span className="ms-1.5 rounded-full border border-ev-pill-line bg-ev-pill-bg px-1.5 py-0.5 text-[9px] font-semibold text-ev-pill" data-testid="checklist-suggested-tag">
-                        suggested
+                      <span className="ms-1.5 rounded-full border border-ev-pill-line bg-ev-pill-bg px-1.5 py-0.5 text-[9px] font-semibold text-ev-pill" data-testid="checklist-recommended-tag">
+                        recommended
                       </span>
                     )}
                   </span>
@@ -353,10 +353,10 @@ export default function AmbientScribePane(): JSX.Element {
                   <button
                     type="button"
                     onClick={() => removeChecklistItem(item.id)}
-                    aria-label={`Remove suggested item: ${item.label}`}
+                    aria-label={`Remove recommended item: ${item.label}`}
                     title={checklistQuote(item.id)
                       ? `From your dictation: “${checklistQuote(item.id)}” — click × to remove`
-                      : "Remove this suggested item"}
+                      : "Remove this recommended item"}
                     className="mt-0.5 shrink-0 rounded-full border border-line bg-white px-1.5 text-[10px] text-ink-soft hover:border-status-rej-line hover:text-status-rej transition-colors"
                   >
                     ×
