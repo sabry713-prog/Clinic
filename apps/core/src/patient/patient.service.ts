@@ -34,6 +34,35 @@ export interface ConditionItem {
   readonly onset_date: string | null;
 }
 
+export interface InsuranceCover {
+  readonly id: string;
+  readonly payer_name: string;
+  readonly payer_id: string | null;
+  readonly policy_number: string;
+  readonly member_id: string;
+  readonly plan_name: string | null;
+  readonly network_tier: string | null;
+  readonly klass: string | null;
+  readonly effective_from: string;
+  readonly effective_to: string | null;
+  readonly source: string;
+  /** Whether this cover is in force today -- an expired policy is shown, but not as current. */
+  readonly in_force: boolean;
+}
+
+export interface EligibilitySummary {
+  readonly status: string;
+  readonly mode: string;
+  readonly checked_at: string;
+  /** The payer's own response payload. In dev the connector is a stub; `mode` says which. */
+  readonly response: Record<string, unknown>;
+}
+
+export interface PatientInsurance {
+  readonly covers: readonly InsuranceCover[];
+  readonly last_eligibility: EligibilitySummary | null;
+}
+
 export interface PatientDetail extends PatientSummary {
   readonly allergies: readonly AllergyItem[];
   readonly conditions: readonly ConditionItem[];
@@ -1076,5 +1105,43 @@ export class PatientService {
     );
 
     return { data: result.rows, next_cursor: null, total: result.rows.length };
+  }
+
+  /**
+   * The patient's cover and the last eligibility answer.
+   *
+   * Both are needed together: a claim is judged against the policy in force, and the payer's
+   * answer is what the eligibility transaction returned for that policy. `mode` on the
+   * eligibility row keeps a dev stub answer from being read as a payer decision.
+   */
+  async insurance(patientId: string): Promise<PatientInsurance> {
+    const covers = await this.pool.query<{
+      id: string; payer_name: string; payer_id: string | null; policy_number: string;
+      member_id: string; plan_name: string | null; network_tier: string | null; klass: string | null;
+      effective_from: string; effective_to: string | null; source: string; in_force: boolean;
+    }>(
+      `SELECT id, payer_name, payer_id, policy_number, member_id, plan_name, network_tier,
+              class AS klass, effective_from::text, effective_to::text, source,
+              (effective_from <= CURRENT_DATE AND (effective_to IS NULL OR effective_to >= CURRENT_DATE)) AS in_force
+         FROM app.patient_insurance
+        WHERE patient_id = $1
+        ORDER BY effective_from DESC, payer_name`,
+      [patientId],
+    );
+    const elig = await this.pool.query<{ status: string; mode: string; checked_at: string; response_json: Record<string, unknown> }>(
+      `SELECT status, mode, checked_at::text, response_json
+         FROM app.nphies_eligibility_check
+        WHERE patient_id = $1
+        ORDER BY checked_at DESC
+        LIMIT 1`,
+      [patientId],
+    );
+    const row = elig.rows[0];
+    return {
+      covers: covers.rows,
+      last_eligibility: row
+        ? { status: row.status, mode: row.mode, checked_at: row.checked_at, response: row.response_json }
+        : null,
+    };
   }
 }

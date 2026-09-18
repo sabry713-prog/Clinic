@@ -44,6 +44,29 @@ export class PatientController {
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
+  @Get(":id/insurance")
+  @HttpCode(200)
+  @ApiOperation({
+    summary: "The patient's cover (payer, plan, membership) and the last eligibility check",
+  })
+  async insurance(@Req() req: Request, @Param("id") id: string) {
+    const userId = getRequestingUserId(req);
+    const requestId = (req.requestId ?? uuidv4()) as RequestId;
+    await this.scopeService.assertPatientInScope(userId, id);
+    const result = await this.patientService.insurance(id);
+    await writeAuditEvent(this.pool, {
+      actor_id: userId as UserId,
+      actor_role: (req.authenticatedUserRole ?? null) as UserRole | null,
+      action: "PATIENT_INSURANCE_VIEW",
+      target_type: "patient",
+      target_id: id,
+      outcome: "SUCCESS",
+      metadata_json: { covers: result.covers.length, eligibility: result.last_eligibility?.status ?? null },
+      request_id: requestId,
+    });
+    return result;
+  }
+
   @Get()
   @HttpCode(200)
   @ApiOperation({ summary: "List in-scope patients with cursor pagination" })

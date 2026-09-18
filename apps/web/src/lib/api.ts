@@ -121,6 +121,8 @@ export interface ConditionItem {
 }
 
 export interface PatientDetail extends PatientSummary {
+
+
   readonly allergies: readonly AllergyItem[];
   readonly conditions: readonly ConditionItem[];
 }
@@ -1071,6 +1073,34 @@ export interface PostCarePackageResult {
   readonly disclaimer: string;
 }
 
+/** The patient's cover, and the payer's last eligibility answer for it. */
+export interface InsuranceCover {
+  readonly id: string;
+  readonly payer_name: string;
+  readonly payer_id: string | null;
+  readonly policy_number: string;
+  readonly member_id: string;
+  readonly plan_name: string | null;
+  readonly network_tier: string | null;
+  readonly klass: string | null;
+  readonly effective_from: string;
+  readonly effective_to: string | null;
+  readonly source: string;
+  readonly in_force: boolean;
+}
+
+export interface EligibilitySummary {
+  readonly status: string;
+  /** "stub" | "live" -- a stub answer is development data, not a payer decision. */
+  readonly mode: string;
+  readonly checked_at: string;
+  readonly response: Record<string, unknown>;
+}
+
+export interface PatientInsurance {
+  readonly covers: readonly InsuranceCover[];
+  readonly last_eligibility: EligibilitySummary | null;
+}
 export const api = {
   patients: {
     list: (params?: {
@@ -1093,6 +1123,8 @@ export const api = {
     },
 
     get: (id: string) => request<PatientDetail>(`/api/v1/patients/${id}`),
+
+    insurance: (id: string) => request<PatientInsurance>(`/api/v1/patients/${id}/insurance`),
 
     observations: (
       id: string,

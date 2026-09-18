@@ -12,6 +12,7 @@ vi.mock("../../lib/api", () => ({
       observations: vi.fn(),
       medications: vi.fn(),
       medicationReconciliation: vi.fn(),
+      insurance: vi.fn().mockResolvedValue({ covers: [], last_eligibility: null }),
       brief: vi.fn(),
       sinceLastVisit: vi.fn(),
       serviceRequests: vi.fn(),

@@ -15,7 +15,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { api, type PatientDetail, type ObservationItem, type MedicationItem, type MedicationReconciliation } from "../../lib/api";
+import { api, type PatientDetail, type ObservationItem, type MedicationItem, type MedicationReconciliation, type PatientInsurance } from "../../lib/api";
+import InsurancePanel from "../../components/InsurancePanel/InsurancePanel";
 import PatientHeader from "../../components/PatientHeader/PatientHeader";
 import PatientBrief from "../../components/PatientBrief/PatientBrief";
 import LabPanel from "../../components/LabPanel/LabPanel";
@@ -31,6 +32,8 @@ export default function PatientFilePage({ patient }: { readonly patient: Patient
   const [isLoadingMeds, setIsLoadingMeds] = useState(true);
   const [isLoadingReconciliation, setIsLoadingReconciliation] = useState(true);
   const [isLoadingMoreObs, setIsLoadingMoreObs] = useState(false);
+  const [insurance, setInsurance] = useState<PatientInsurance | null>(null);
+  const [isLoadingInsurance, setIsLoadingInsurance] = useState(true);
 
   const patientId = patient.id;
 
@@ -60,6 +63,19 @@ export default function PatientFilePage({ patient }: { readonly patient: Patient
       .finally(() => setIsLoadingReconciliation(false));
   }, [patientId]);
 
+  const loadInsurance = useCallback((): void => {
+    setIsLoadingInsurance(true);
+    api.patients
+      .insurance(patientId)
+      .then((data) => setInsurance(data))
+      .catch(() => { /* handled silently */ })
+      .finally(() => setIsLoadingInsurance(false));
+  }, [patientId]);
+
+  useEffect(() => {
+    loadInsurance();
+  }, [loadInsurance]);
+
   const handleLoadMoreObs = useCallback((): void => {
     if (!obsNextCursor || isLoadingMoreObs) return;
     setIsLoadingMoreObs(true);
@@ -88,6 +104,15 @@ export default function PatientFilePage({ patient }: { readonly patient: Patient
       />
 
       <PatientBrief patientId={patient.id} />
+
+      {/* Cover comes before the clinical panels: it is the payer fact every claim is judged
+          against, and the desk needs it without scrolling past the chart. */}
+      <InsurancePanel
+        patientId={patient.id}
+        data={insurance}
+        isLoading={isLoadingInsurance}
+        onChecked={loadInsurance}
+      />
 
       <LabPanel
         observations={observations}
