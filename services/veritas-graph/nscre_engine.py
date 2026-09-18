@@ -74,30 +74,51 @@ MERGE (m)-[dr:RENAL_DOSE_LIMIT]->(rule)
 SET dr.egfr_threshold = $egfr_threshold, dr.max_dose = $max_dose
 """
 
+# -- Published-snapshot filter (M06, slice 2) -----------------------------------
+#
+# Every patient-scoped fact read requires the fact to belong to the patient's
+# PUBLISHED run: `r.run_id = p.published_run`. One condition enforces both halves of
+# the design. A fact the source has withdrawn is retired, and a retired fact carries
+# an older run id by construction (the run that withdrew it does not re-stamp it), so
+# it can never equal the published run -- retirement takes effect with no second
+# condition to keep in step. An interrupted run never publishes, so the facts it
+# wrote are invisible and the previous snapshot stays whole.
+#
+# `p.published_run IS NULL` keeps patients materialized before this existed readable
+# rather than silently finding nothing: an unpublished patient is filtered the old
+# way, not erased.
+
 ACTIVE_MEDICATIONS_CYPHER = """
-MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[:PRESCRIBED]->(m:Medication)
+MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[rp:PRESCRIBED]->(m:Medication)
+WHERE rp.retired_at IS NULL AND (p.published_run IS NULL OR rp.run_id = p.published_run)
 RETURN DISTINCT m.key AS key, m.name AS name, m.sfda_code AS sfda_code
 """
 
 DRUG_INTERACTION_CYPHER = """
-MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[:PRESCRIBED]->(m1:Medication)
-MATCH (p)-[:HAS_ENCOUNTER*0..1]->()-[:PRESCRIBED]->(m2:Medication)
+MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[rp1:PRESCRIBED]->(m1:Medication)
+MATCH (p)-[:HAS_ENCOUNTER*0..1]->()-[rp2:PRESCRIBED]->(m2:Medication)
 WHERE m1.key < m2.key
+  AND (p.published_run IS NULL OR rp1.run_id = p.published_run)
+  AND (p.published_run IS NULL OR rp2.run_id = p.published_run)
 MATCH (m1)-[r:CONTRAINDICATED_WITH]-(m2)
 RETURN DISTINCT m1.name AS name1, m2.name AS name2, r.severity AS severity, r.rationale AS rationale
 """
 
 PROPOSED_DRUG_INTERACTIONS_CYPHER = """
-MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[:PRESCRIBED]->(existing:Medication)
+MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[rp:PRESCRIBED]->(existing:Medication)
 WHERE existing.key <> $proposed_key
+  AND (p.published_run IS NULL OR rp.run_id = p.published_run)
+  AND rp.retired_at IS NULL
 MATCH (existing)-[r:CONTRAINDICATED_WITH]-(proposed:Medication {key: $proposed_key})
 RETURN DISTINCT existing.name AS existing_name, proposed.name AS proposed_name,
        r.severity AS severity, r.rationale AS rationale
 """
 
 MOST_RECENT_EGFR_CYPHER = """
-MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[:HAS_LAB]->(l:LabResult)
+MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[rp:HAS_LAB]->(l:LabResult)
 WHERE toLower(l.test_name) CONTAINS 'gfr' AND l.effective_at IS NOT NULL AND l.value IS NOT NULL
+  AND (p.published_run IS NULL OR rp.run_id = p.published_run)
+  AND rp.retired_at IS NULL
 RETURN l.value AS value, l.effective_at AS effective_at, l.test_name AS test_name
 ORDER BY l.effective_at DESC
 LIMIT 1
@@ -111,8 +132,10 @@ LIMIT 1
 """
 
 CONDITIONS_CYPHER = """
-MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[:DIAGNOSED_WITH]->(c:Condition)
+MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[rp:DIAGNOSED_WITH]->(c:Condition)
 WHERE c.icd10 IS NOT NULL
+  AND (p.published_run IS NULL OR rp.run_id = p.published_run)
+  AND rp.retired_at IS NULL
 RETURN DISTINCT c.icd10 AS icd10, c.display_name AS display_name
 """
 
@@ -140,7 +163,8 @@ ORDER BY key
 
 # Every medication that conflicts with something this patient is already on.
 PATIENT_CONFLICTING_DRUGS_CYPHER = """
-MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[:PRESCRIBED]->(cur:Medication)
+MATCH (p:Patient {id: $patient_id})-[:HAS_ENCOUNTER*0..1]->()-[rp:PRESCRIBED]->(cur:Medication)
+WHERE rp.retired_at IS NULL AND (p.published_run IS NULL OR rp.run_id = p.published_run)
 MATCH (cur)-[:CONTRAINDICATED_WITH]-(other:Medication)
 RETURN DISTINCT other.key AS key, cur.name AS conflicts_with
 """
