@@ -1,6 +1,6 @@
 {
-  "version": "2026-09-15.1",
-  "generated_at": "2026-09-15T00:00:00.000Z",
+  "version": "2026-09-18.1",
+  "generated_at": "2026-09-18T00:00:00.000Z",
   "description": "M11 governed reference-release manifest. Each entry is checksummed; the graph-seed step verifies checksums before ingesting. 'illustrative-dev-subset' means the data is not a licensed release and must not be used for clinical decisions — production requires governed licensed releases with named approvers.",
   "entries": [
     {
@@ -101,6 +101,16 @@
       "licensed": null,
       "effective_date": "2026-09-15",
       "approver": "product-owner (CTO) — session approval",
+      "status": "illustrative-dev-subset"
+    },
+    {
+      "file": "ontologies/sfda_medication_codes.json",
+      "sha256": "066eddd2bbb28eb47a89b5498bd26901ab6d3cdf2173570e61f7b10f56c6d95d",
+      "size_bytes": 3972,
+      "ontology": "SFDA Medication Codes (NPHIES terminology server, CodeSystem-scientific-codes)",
+      "licensed": false,
+      "effective_date": "2026-09-18",
+      "approver": "product-owner (CTO) — session approval [PENDING: confirm]",
       "status": "illustrative-dev-subset"
     }
   ]

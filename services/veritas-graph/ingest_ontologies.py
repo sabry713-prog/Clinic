@@ -214,12 +214,14 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
                     MERGE_ATC_CLASS,
                     class_code=class_code,
                     description=_ATC_DESCRIPTIONS.get(class_code, ""),
+                    **_LINEAGE,
                 )
                 counts["atc_classes"] += 1
             graph.run(
                 LINK_MEDICATION_ATC_CLASS,
                 code=node["code"].strip().upper(),
                 class_code=class_code,
+                **_LINEAGE,
             )
 
     for row in necessity:
@@ -231,6 +233,7 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
             rule_id=row["rule_id"],
             source=row["source"],
             note=row["note"],
+            **_LINEAGE,
         )
         counts["necessity_edges"] += 1
 

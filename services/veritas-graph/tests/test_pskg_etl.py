@@ -653,3 +653,45 @@ async def test_two_patients_are_two_runs():
     assert len(run_a) == len(run_b) == 1
     assert run_a != run_b, "a re-materialization must be a new run, not a continuation"
 
+
+
+
+# --- the parameters a statement asks for must be the parameters it is given ----
+#
+# A statement can reference $release_version while its call site never sends it,
+# and a fake graph that ignores unknown parameters reports success. That happened
+# live (Neo.ClientError.Statement.ParameterMissing) after every unit test passed,
+# so this checks the contract directly, for every statement in both ingesters.
+
+def test_no_statement_references_a_parameter_its_call_site_omits():
+    import re
+    import ingest_ontologies
+    import ingest_nphies_rules
+
+    statements = {
+        name: value
+        for module in (ingest_ontologies, ingest_nphies_rules)
+        for name, value in vars(module).items()
+        if isinstance(value, str) and re.search(r"\b(MERGE|MATCH)\b", value)
+    }
+
+    recorded: list[tuple[str, dict]] = []
+
+    class RecordingGraph:
+        def run(self, cypher, **params):
+            recorded.append((cypher, params))
+            return []
+
+    ingest_ontologies.ingest(RecordingGraph())
+    for module in (ingest_nphies_rules,):
+        entry = getattr(module, "ingest", None)
+        if entry is not None:
+            entry(RecordingGraph())
+
+    assert recorded, "nothing was recorded"
+    missing = []
+    for cypher, params in recorded:
+        for wanted in set(re.findall(r"\$(\w+)", cypher)):
+            if wanted not in params:
+                missing.append((wanted, cypher.strip().splitlines()[0][:60]))
+    assert not missing, f"statements asking for parameters they were not given: {missing}"
