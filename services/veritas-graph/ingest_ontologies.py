@@ -1,4 +1,4 @@
-"""Seed the Veritas-Medica knowledge graph with NPHIES coding ontologies.
+"""Seed the Cortex.ai knowledge graph with NPHIES coding ontologies.
 
 Loads three code systems as nodes and the payer necessity rules as edges:
 

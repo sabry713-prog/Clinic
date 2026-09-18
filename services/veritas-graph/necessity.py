@@ -1,4 +1,4 @@
-"""NPHIES medical-necessity lookup against the Veritas-Medica graph.
+"""NPHIES medical-necessity lookup against the Cortex.ai graph.
 
 `check_nphies_necessity` answers one question deterministically: does the
 knowledge graph contain a documented rule in which this diagnosis justifies

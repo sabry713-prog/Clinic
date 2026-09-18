@@ -33,7 +33,7 @@ from nscre_engine import (  # noqa: E402
 structlog.configure(processors=[structlog.processors.JSONRenderer()])
 logger = structlog.get_logger()
 
-app = FastAPI(title="Veritas-Medica NSCRE", version="0.1.0")
+app = FastAPI(title="Cortex.ai NSCRE", version="0.1.0")
 
 
 class EvaluateEncounterRequest(BaseModel):

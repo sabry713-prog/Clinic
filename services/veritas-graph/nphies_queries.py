@@ -6,7 +6,7 @@ graph record a documented rule in which this diagnosis justifies this
 service or drug, and if so, does it require pre-authorization? This is a
 set-membership lookup over payer-published mapping rules loaded into the
 graph -- NOT a clinical-appropriateness judgment, and never an LLM call
-(CLAUDE.md / Veritas-Medica Principle 1, same discipline as necessity.py).
+(CLAUDE.md / Cortex.ai Principle 1, same discipline as necessity.py).
 
 Status meaning:
     GREEN  -- a NPHIES_JUSTIFIES edge exists, pre_auth_required is false.

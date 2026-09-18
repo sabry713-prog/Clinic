@@ -1,4 +1,4 @@
-"""DeepSeek API client for the Veritas-Medica orchestrator.
+"""DeepSeek API client for the Cortex.ai orchestrator.
 
 Scope (CLAUDE.md, Core Principles 1 & 2): the DeepSeek API is used ONLY for
 natural-language formatting — structuring ambient transcripts into SOAP notes

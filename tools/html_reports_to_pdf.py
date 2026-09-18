@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print the Veritas-Medica HTML report set to PDF and verify the output (pypdf).
+"""Print the Cortex.ai HTML report set to PDF and verify the output (pypdf).
 
 Usage:  python tools/html_reports_to_pdf.py <html_dir> <pdf_dir>
 Requires Chrome (headless) and pypdf.

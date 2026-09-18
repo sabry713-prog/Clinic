@@ -1,7 +1,7 @@
 [project]
 name = "nphies-engine"
 version = "0.1.0"
-description = "Veritas-Medica NPHIES FHIR client: eligibility, prior authorization, and async status events"
+description = "Cortex.ai NPHIES FHIR client: eligibility, prior authorization, and async status events"
 # 3.12 to match packages/phi-guard, which this service depends on for the
 # outbound data-residency check.
 requires-python = ">=3.12"

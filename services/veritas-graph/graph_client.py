@@ -1,4 +1,4 @@
-"""Neo4j connection and query helper for the Veritas-Medica knowledge graph.
+"""Neo4j connection and query helper for the Cortex.ai knowledge graph.
 
 This module is the deterministic query path required by CLAUDE.md Principle 1:
 clinical facts, procedure/service codes, and NPHIES necessity decisions are

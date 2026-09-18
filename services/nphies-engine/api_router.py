@@ -50,7 +50,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         await broker.stop()
 
 
-app = FastAPI(title="Veritas-Medica NPHIES Engine", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Cortex.ai NPHIES Engine", version="0.1.0", lifespan=lifespan)
 
 
 class PriorAuthRequest(BaseModel):

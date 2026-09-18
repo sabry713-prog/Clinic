@@ -1,1 +1,1 @@
-"""Veritas-Medica orchestrator services."""
+"""Cortex.ai orchestrator services."""

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the Veritas-Medica markdown report set to print-ready HTML (then PDF via Chrome).
+"""Render the Cortex.ai markdown report set to print-ready HTML (then PDF via Chrome).
 
 Usage:  python tools/md_report_to_html.py <out_dir> <md_file> [<md_file> ...]
 Writes one .html per input plus an index.html listing them.
@@ -111,8 +111,8 @@ def main() -> int:
         print(f"OK  {md_path.name}  ->  {html_path.name}")
 
     index = ["<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">"
-             f"<title>Veritas-Medica report set</title><style>{CSS}</style></head><body>"
-             "<h1>Veritas-Medica — report set</h1>"
+             f"<title>Cortex.ai report set</title><style>{CSS}</style></head><body>"
+             "<h1>Cortex.ai — report set</h1>"
              "<p class=\"doc-meta\">Generated from the markdown sources in this repository. "
              "Each document is also available as an individual PDF.</p><ul>"]
     for md_path, html_path in written:

@@ -1,5 +1,5 @@
 """Neuro-Symbolic Causal Reasoning Engine (NSCRE) -- unified deterministic
-Cypher reasoning over the Veritas-Medica graph. No LLM call anywhere in this
+Cypher reasoning over the Cortex.ai graph. No LLM call anywhere in this
 module; every result is derived by graph traversal against reference data
 loaded by `ingest_nscre_rules()` and patient facts already in the graph from
 `etl_pskg.py` (Sprint 5) / `nphies_queries.py` (Sprint 6).
@@ -8,7 +8,7 @@ loaded by `ingest_nscre_rules()` and patient facts already in the graph from
 Module A (drug-drug interaction) and Module B (renal dose-safety alerting)
 are clinical decision-support capabilities. The project's original CLAUDE.md
 explicitly forbade both, verbatim, as SaMD-boundary-crossing features; the
-current CLAUDE.md (Veritas-Medica) is silent on scope rather than
+current CLAUDE.md (Cortex.ai) is silent on scope rather than
 affirmatively permitting them. This was flagged and explicitly confirmed by
 the requester before this module was written -- see the Sprint 7 plan. This
 module is not gated behind a feature flag; it ships enabled, per that

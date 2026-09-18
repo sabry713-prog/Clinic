@@ -195,7 +195,7 @@ AGENTS: dict[str, Any] = {
 
 # -- HTTP / SSE surface (this service's first) --------------------------------
 
-app = FastAPI(title="Veritas-Medica Agent Orchestrator", version="0.1.0")
+app = FastAPI(title="Cortex.ai Agent Orchestrator", version="0.1.0")
 
 
 @app.get("/health", response_class=JSONResponse)

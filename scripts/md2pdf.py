@@ -92,7 +92,7 @@ S = {
                            fontSize=8, leading=10.5, textColor=colors.HexColor("#1B3A57")),
 }
 
-DOC_TITLE = "Veritas-Medica"
+DOC_TITLE = "Cortex.ai"
 
 
 def _split_row(line: str) -> list[str]:
@@ -275,7 +275,7 @@ def main() -> None:
         str(out), pagesize=A4,
         leftMargin=18 * mm, rightMargin=18 * mm,
         topMargin=20 * mm, bottomMargin=16 * mm,
-        title=DOC_TITLE, author="Veritas-Medica",
+        title=DOC_TITLE, author="Cortex.ai",
     )
     frame = Frame(doc.leftMargin, doc.bottomMargin,
                   doc.width, doc.height, id="body")
