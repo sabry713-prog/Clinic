@@ -269,4 +269,19 @@ describe("JourneyView", () => {
     renderJourney();
     expect(screen.getByTestId("journey-stage-panel-codelink")).toBeInTheDocument();
   });
+
+  // Reported with a screenshot: the step read "the SOAP assessment was analyzed automatically"
+  // above an empty space, so a wording gap looked like a broken step. Silence is not a status.
+  it("says so when the assessment matched nothing", () => {
+    sessionStorage.setItem(`cortex.scribe.${PATIENT.id}`, JSON.stringify({ soap: { assessment: "zzz unknown wording zzz", plan: "" } }));
+    renderJourney();
+    gotoStage("diagnose");
+    expect(screen.getByText(/Nothing in the assessment matched the coded vocabulary/i)).toBeInTheDocument();
+  });
+
+  it("says so when the note has no assessment yet", () => {
+    renderJourney();
+    gotoStage("diagnose");
+    expect(screen.getByText(/has no assessment yet/i)).toBeInTheDocument();
+  });
 });

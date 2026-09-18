@@ -101,7 +101,9 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
       <header>
         <h2 className="text-lg font-bold text-ink">2 · Diagnoses</h2>
         <p className="text-sm text-ink-soft">
-          The SOAP assessment was analyzed automatically. Confirm what belongs on the problem list — you author the diagnosis and confirm its code.
+          {assessment
+            ? "The SOAP assessment was analyzed. Confirm what belongs on the problem list — you author the diagnosis and confirm its code."
+            : "This encounter's SOAP note has no assessment yet. Write it in step 1 and suggestions appear here on their own — you author the diagnosis and confirm its code."}
         </p>
       </header>
 
@@ -150,6 +152,16 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
         </div>
       )}
 
+      {/* Silence used to be the only signal that nothing matched: the header claimed the
+          assessment "was analyzed automatically" and the space below it stayed empty, so a
+          clinician could not tell a wording gap from a broken step. Say which it is. */}
+      {assessment && candidates.length === 0 && didYouMean.length === 0 && (
+        <p className="text-sm text-ink-soft">
+          Nothing in the assessment matched the coded vocabulary, so there is nothing to suggest.
+          That is a wording gap rather than a failure — add the diagnosis from the Diagnosis card,
+          or rephrase the assessment to the clinical term.
+        </p>
+      )}
       {assessment && candidates.length === 0 && didYouMean.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-ink-soft">Closest vocabulary terms for the assessment wording:</span>
