@@ -7,7 +7,33 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, type ServiceCandidate, type ServiceRequestItem, ApiError } from "../../../lib/api";
+import { api, type ServiceCandidate, type ServiceRequestItem, type NecessityVerdict, ApiError } from "../../../lib/api";
+
+
+/** The payer's reading of one order. Coloured on purpose: this is the ordering decision, not
+ * the read-only chart, and it is the same badge vocabulary the encounter's order entry uses. */
+function NecessityBadge({ verdict }: { readonly verdict: NecessityVerdict }): JSX.Element {
+  const styles: Record<NecessityVerdict["status"], string> = {
+    GREEN: "border-status-ok-line bg-status-ok-bg text-status-ok",
+    YELLOW: "border-amber-300 bg-amber-50 text-amber-800",
+    RED: "border-rose-300 bg-rose-50 text-rose-800",
+    UNAVAILABLE: "border-line bg-white text-ink-faint",
+  };
+  const labels: Record<NecessityVerdict["status"], string> = {
+    GREEN: "payable",
+    YELLOW: "pre-auth",
+    RED: "no rule",
+    UNAVAILABLE: "unchecked",
+  };
+  return (
+    <span
+      className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${styles[verdict.status]}`}
+      data-testid={`order-necessity-${verdict.status}`}
+    >
+      {labels[verdict.status]}
+    </span>
+  );
+}
 
 interface StageOrderProps {
   readonly patientId: string;
@@ -125,19 +151,56 @@ export default function StageOrder({ patientId, onDone, onChanged }: StageOrderP
           )}
           <ul className="space-y-1.5">
             {rowsToCreate.map((c) => (
-              <li key={keyOf(c)} className="flex items-center gap-2.5 rounded-xl border border-line bg-mist px-3 py-2">
-                <input
-                  type="checkbox"
-                  checked={selected.has(keyOf(c))}
-                  onChange={() => toggle(keyOf(c))}
-                  aria-label={c.code_display}
-                  className="h-4 w-4 accent-brand-indigo"
-                />
-                <span className="min-w-0 flex-1 text-sm text-ink truncate" dir="ltr">
-                  <span className="font-medium">{c.code_display}</span>
-                  <span className="text-ink-soft text-xs"> · {c.category}</span>
-                </span>
-                <span className="font-mono text-[11px] text-ink-faint" dir="ltr">{c.code}</span>
+              <li key={keyOf(c)} className="rounded-xl border border-line bg-mist px-3 py-2">
+                <div className="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(keyOf(c))}
+                    onChange={() => toggle(keyOf(c))}
+                    aria-label={c.code_display}
+                    className="h-4 w-4 accent-brand-indigo"
+                  />
+                  <span className="min-w-0 flex-1 text-sm text-ink truncate" dir="ltr">
+                    <span className="font-medium">{c.code_display}</span>
+                    <span className="text-ink-soft text-xs"> · {c.category}</span>
+                  </span>
+                  {c.necessity && <NecessityBadge verdict={c.necessity} />}
+                  <span className="font-mono text-[11px] text-ink-faint" dir="ltr">{c.code}</span>
+                </div>
+                {c.necessity?.status === "GREEN" && c.necessity.justifying_display && (
+                  <p className="mt-1 ps-6 text-[11px] text-ink-soft" data-testid="order-justified-by">
+                    Justified by {c.necessity.justifying_icd10} · {c.necessity.justifying_display}
+                  </p>
+                )}
+                {c.necessity?.status === "YELLOW" && (
+                  <p className="mt-1 ps-6 text-[11px] text-ink-soft" data-testid="order-pre-auth">
+                    Pre-authorization is required for this order
+                    {c.necessity.justifying_icd10 ? ` (justified by ${c.necessity.justifying_icd10})` : ""}.
+                  </p>
+                )}
+                {c.necessity?.status === "RED" && (
+                  <div className="mt-1 ps-6 text-[11px] text-ink-soft" data-testid="order-no-rule">
+                    <p>No payer rule covers this order, so it would be rejected as it stands.</p>
+                    {c.necessity.suggested_codes.length > 0 ? (
+                      <p className="mt-0.5">
+                        To make it payable, document one of:{" "}
+                        {c.necessity.suggested_codes
+                          .map((s) => `${s.icd10} · ${s.description}`)
+                          .join(" · ")}
+                      </p>
+                    ) : (
+                      <p className="mt-0.5">
+                        No diagnosis on file justifies it either — check the payer&apos;s cover before
+                        ordering.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {c.necessity?.status === "UNAVAILABLE" && (
+                  <p className="mt-1 ps-6 text-[11px] text-ink-soft" data-testid="order-unavailable">
+                    The payer rules could not be reached, so this order has not been checked.
+                  </p>
+                )}
               </li>
             ))}
           </ul>

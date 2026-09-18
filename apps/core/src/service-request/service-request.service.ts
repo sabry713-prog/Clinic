@@ -22,6 +22,27 @@ export interface ServiceCandidate {
   readonly source_type: string;
   readonly source_document_id: string | null;
   readonly source_excerpt: string;
+  /** What a payer would make of this order for this patient, when it can be determined. */
+  readonly necessity?: NecessityVerdict | null;
+}
+
+/**
+ * A payer's reading of one order, against this patient's coded diagnoses.
+ *
+ * `justifying_icd10` is the coded diagnosis that made the order acceptable -- naming it is the
+ * point, because that is the link the claim will carry. `suggested_codes` is the way out of a
+ * RED: the diagnoses that would justify the same order, straight from the payer rules. Both come
+ * from the deterministic Cypher lookup, never from a model (CLAUDE.md Principle 1).
+ *
+ * UNAVAILABLE means the graph could not be reached. It is deliberately not RED: "we could not
+ * check" and "the payer has no rule" are different claims, and only one of them is ours to make.
+ */
+export interface NecessityVerdict {
+  readonly status: "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE";
+  readonly pre_auth_required: boolean | null;
+  readonly justifying_icd10: string | null;
+  readonly justifying_display: string | null;
+  readonly suggested_codes: readonly { readonly icd10: string; readonly description: string }[];
 }
 
 export interface ServiceRequestRow {
@@ -114,11 +135,111 @@ function matchCatalog(text: string): CatalogMatch[] {
 
 @Injectable()
 export class ServiceRequestService {
+  private readonly graphUrl: string;
+
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly scope: PatientScopeService,
     private readonly encryption: EncryptionService,
-  ) {}
+  ) {
+    this.graphUrl = process.env.GRAPH_SERVICE_URL ?? "http://127.0.0.1:5004";
+  }
+
+  /**
+   * Attach the payer's reading to proposed orders, before anything is created.
+   *
+   * The ordering step is where a rejection is still avoidable: once the order exists it carries a
+   * code and a justification into the claim. So the same deterministic necessity lookup the claim
+   * simulator uses is applied here, per candidate, against this patient's coded diagnoses -- and
+   * the best outcome is reported, because a claim only needs one valid link to stand.
+   *
+   * Shares the shape of claim-simulator.service.ts's lookupNecessity rather than the code: one
+   * client for this call is the right refactor, and that is recorded as the debt it is.
+   */
+  async withNecessity(
+    patientId: string,
+    candidates: readonly ServiceCandidate[],
+  ): Promise<readonly ServiceCandidate[]> {
+    if (candidates.length === 0) return candidates;
+    const orderCodes = [...new Set(candidates.map((c) => c.code).filter((c): c is string => !!c))];
+    if (orderCodes.length === 0) return candidates;
+
+    const mapped = await this.pool.query<{ order_code: string; sbs_code: string }>(
+      `SELECT order_code, sbs_code FROM app.order_sbs_map WHERE order_code = ANY($1)`,
+      [orderCodes],
+    );
+    const sbsByOrderCode = new Map(mapped.rows.map((r) => [r.order_code, r.sbs_code]));
+
+    // A claim is justified by a CODED diagnosis, not by the words in the assessment.
+    const diagnoses = await this.pool.query<{ icd10am_code: string; icd10am_display: string | null }>(
+      `SELECT DISTINCT icd10am_code, icd10am_display
+         FROM app.condition_icd_coding WHERE patient_id = $1`,
+      [patientId],
+    );
+    if (diagnoses.rows.length === 0) {
+      return candidates.map((c) => ({ ...c, necessity: null }));
+    }
+
+    const rank: Record<string, number> = { GREEN: 0, YELLOW: 1, RED: 2, UNAVAILABLE: 3 };
+    return Promise.all(
+      candidates.map(async (candidate) => {
+        const sbs = candidate.code ? sbsByOrderCode.get(candidate.code) : undefined;
+        if (!sbs) return { ...candidate, necessity: null };
+        let best: NecessityVerdict | null = null;
+        for (const d of diagnoses.rows) {
+          const verdict = await this.lookupNecessity(d.icd10am_code, sbs);
+          if (verdict === null) {
+            best ??= { status: "UNAVAILABLE", pre_auth_required: null, justifying_icd10: null,
+                       justifying_display: null, suggested_codes: [] };
+            continue;
+          }
+          const outcome: NecessityVerdict = {
+            status: verdict.status,
+            pre_auth_required: verdict.pre_auth_required,
+            justifying_icd10: verdict.status === "RED" ? null : d.icd10am_code,
+            justifying_display: verdict.status === "RED" ? null : d.icd10am_display,
+            suggested_codes: verdict.suggested_codes,
+          };
+          if (best === null || rank[outcome.status]! < rank[best.status]!) best = outcome;
+          if (best.status === "GREEN") break;
+        }
+        return { ...candidate, necessity: best };
+      }),
+    );
+  }
+
+  /** One deterministic necessity lookup. Null when the graph is unreachable -- never a guess. */
+  private async lookupNecessity(
+    icd10Code: string,
+    sbsCode: string,
+  ): Promise<{
+    status: "GREEN" | "YELLOW" | "RED";
+    pre_auth_required: boolean | null;
+    suggested_codes: { icd10: string; description: string }[];
+  } | null> {
+    try {
+      const response = await fetch(`${this.graphUrl}/api/v1/nphies/validate-necessity`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ icd10_code: icd10Code, service_or_drug_code: sbsCode }),
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok) return null;
+      const body = (await response.json()) as {
+        status?: string;
+        pre_auth_required?: boolean;
+        suggested_codes?: { icd10: string; description: string }[];
+      };
+      if (body.status !== "GREEN" && body.status !== "YELLOW" && body.status !== "RED") return null;
+      return {
+        status: body.status,
+        pre_auth_required: body.pre_auth_required ?? null,
+        suggested_codes: body.suggested_codes ?? [],
+      };
+    } catch {
+      return null;
+    }
+  }
 
   /**
    * Extract candidate service requests from the patient's documented orders and

@@ -65,7 +65,10 @@ export class ServiceRequestController {
   @RequirePermission("patient:read")
   @ApiOperation({ summary: "Extract candidate service requests from documented orders (nothing created)" })
   async candidates(@Req() req: Request, @Param("id") id: string) {
-    const data = await this.svc.extractCandidates(uid(req), id);
+    // The verdict travels WITH the candidates: the ordering step is the last place a rejection
+    // is still avoidable, and it must not need a second round trip to see it.
+    const extracted = await this.svc.extractCandidates(uid(req), id);
+    const data = await this.svc.withNecessity(id, extracted);
     await this.audit(req, "SERVICE_REQUEST_EXTRACTED", id, { count: data.length });
     return { data };
   }
@@ -77,7 +80,8 @@ export class ServiceRequestController {
       "Match a typed or dictated order phrase against the deterministic catalog (nothing created)",
   })
   async quickEntry(@Req() req: Request, @Param("id") id: string, @Body() body: QuickEntryDto) {
-    const data = await this.svc.extractFromAdHocText(uid(req), id, body.text);
+    const matched = await this.svc.extractFromAdHocText(uid(req), id, body.text);
+    const data = await this.svc.withNecessity(id, matched);
     await this.audit(req, "SERVICE_REQUEST_QUICK_ENTRY_MATCH", id, { count: data.length });
     return { data };
   }

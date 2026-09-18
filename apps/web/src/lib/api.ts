@@ -162,6 +162,16 @@ export interface BriefMedication {
   readonly status: string | null;
 }
 
+export interface NecessityVerdict {
+  readonly status: "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE";
+  readonly pre_auth_required: boolean | null;
+  /** The coded diagnosis that makes this order payable -- the link the claim will carry. */
+  readonly justifying_icd10: string | null;
+  readonly justifying_display: string | null;
+  /** Diagnoses that WOULD justify the same order: the way out of a RED. */
+  readonly suggested_codes: readonly { readonly icd10: string; readonly description: string }[];
+}
+
 export interface ServiceCandidate {
   readonly category: string;
   readonly code_system: string | null;
@@ -170,6 +180,7 @@ export interface ServiceCandidate {
   readonly source_type: string;
   readonly source_document_id: string | null;
   readonly source_excerpt: string;
+  readonly necessity?: NecessityVerdict | null;
 }
 
 export interface ServiceRequestItem {
