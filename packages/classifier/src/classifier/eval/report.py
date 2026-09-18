@@ -36,6 +36,7 @@ class EvalReport:
     total_refused: int
     result: MetricResult
     failures: list[tuple[str, str, str | None]]  # (text, actual, predicted)
+    classifier_layer: str = "rules_only"
     date: str = field(default_factory=lambda: datetime.date.today().isoformat())
 
 
@@ -44,6 +45,7 @@ def build_report(
     predictions: list[str],
     corpus: str,
     lang: str,
+    classifier_layer: str = "rules_only",
 ) -> EvalReport:
     tp = fp = tn = fn = 0  # REFUSED = positive class
 
@@ -98,6 +100,7 @@ def build_report(
     )
 
     return EvalReport(
+        classifier_layer=classifier_layer,
         corpus=corpus,
         lang=lang,
         total=len(examples),
@@ -119,6 +122,7 @@ def print_report(report: EvalReport) -> None:
     print(f"Version:   {CLASSIFIER_VERSION}")
     print(f"Date:      {report.date}")
     print(f"Corpus:    {report.corpus}/{report.lang}")
+    print(f"Classifier:{report.classifier_layer}")
     print(f"Total:     {report.total} ({report.total_allowed} ALLOWED, {report.total_refused} REFUSED)")
     print()
     print("Confusion matrix:")

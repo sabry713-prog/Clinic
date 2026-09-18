@@ -88,8 +88,34 @@ def _load_jsonl(path: Path) -> list[EvalExample]:
     return examples
 
 
+def build_model(spec: str) -> tuple[object | None, str]:
+    """Resolve --model into a classifier model and the label the report must carry.
+
+    None means the rule layer alone, which is what every number in this harness
+    used to come from without saying so.  A run that measures the model must say
+    which model, because "sensitivity 1.000" from rules and from a model are
+    different claims.
+    """
+    kind = (spec or "none").strip().lower()
+    if kind in ("none", "rules", "rules_only"):
+        return None, "rules_only"
+    if kind == "stub":
+        from classifier.model_layer import StubModelClassifier
+
+        return StubModelClassifier(), "stub"
+    if kind.startswith("provider:"):
+        target = kind.split(":", 1)[1]
+        module_name, _, factory = target.partition(":")
+        import importlib
+
+        module = importlib.import_module(module_name)
+        model = getattr(module, factory or "get_classifier_model")()
+        return model, f"provider:{target}"
+    raise ValueError(f"Unknown --model {spec!r}: use none, stub, or provider:module:factory")
+
+
 async def run_evaluation(
-    corpus: str, lang: str
+    corpus: str, lang: str, model: object | None = None
 ) -> tuple[list[EvalExample], list[str]]:
     """Classify all examples and return (examples, predictions)."""
     examples = load_corpus(corpus, lang)
@@ -99,7 +125,7 @@ async def run_evaluation(
 
     predictions: list[str] = []
     for ex in examples:
-        result = await classify(ex.text, language=ex.language)
+        result = await classify(ex.text, language=ex.language, model=model)
         predictions.append(result.label)
 
     return examples, predictions
@@ -120,19 +146,26 @@ def main() -> None:
         help="Language filter (holdout only)",
     )
     parser.add_argument(
+        "--model",
+        default="none",
+        help="none (rules only, the default) | stub | provider:module:factory",
+    )
+    parser.add_argument(
         "--fail-fast",
         action="store_true",
         help="Exit immediately on first metric failure",
     )
     args = parser.parse_args()
 
-    examples, predictions = asyncio.run(run_evaluation(args.corpus, args.lang))
+    model, layer = build_model(args.model)
+    examples, predictions = asyncio.run(run_evaluation(args.corpus, args.lang, model))
 
     report = build_report(
         examples=examples,
         predictions=predictions,
         corpus=args.corpus,
         lang=args.lang,
+        classifier_layer=layer,
     )
     print_report(report)
 
