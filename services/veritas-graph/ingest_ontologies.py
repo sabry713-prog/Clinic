@@ -186,7 +186,7 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
         )
         counts["medications"] += 1
 
-    # ATC therapeutic-subgroup classes (first 3 characters of ATC code) and
+    # ATC therapeutic-subgroup classes (first 4 characters of the ATC code) and
     # HAS_ATC_CLASS edges.  Idempotent: MERGE-based.
     _ATC_DESCRIPTIONS: dict[str, str] = {
         "N02B": "Other analgesics and antipyretics",
@@ -206,8 +206,13 @@ def ingest(client: Optional[GraphClient] = None) -> dict[str, int]:
     seen_atc: set[str] = set()
     for node in medications:
         atc = (node.get("atc") or "").strip()
-        if len(atc) >= 3:
-            class_code = atc[:3]
+        # The ATC therapeutic subgroup is 4 characters (A10B), which is also the
+        # key length _ATC_DESCRIPTIONS uses. Slicing 3 both emptied every
+        # description and merged distinct subgroups -- A10B and A10J collapsed into
+        # "A10", so the NSCRE alternative-candidate filter treated GLP-1 analogues
+        # and oral antidiabetics as one therapeutic class.
+        if len(atc) >= 4:
+            class_code = atc[:4]
             if class_code not in seen_atc:
                 seen_atc.add(class_code)
                 graph.run(
