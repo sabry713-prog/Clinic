@@ -177,6 +177,10 @@ export default function PatientDetailPage(): JSX.Element {
         {view === "encounter" && (
           <div className="min-h-0 flex-1 px-3 pb-3">
             <CortexShell
+              // Remount on patient change: the provider holds transcript, SOAP, orders
+              // and agent messages, and without a key a mounted provider keeps the
+              // previous patient's dataset (audit C02, proven by test).
+              key={patientId}
               patientName={patient.display_name ?? patient.mrn ?? undefined}
               patientId={patientId}
               encounterId={activeEncounterId}

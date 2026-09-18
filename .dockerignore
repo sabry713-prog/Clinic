@@ -1,0 +1,23 @@
+# Never into an image: secrets, local environments, build output and data dumps.
+# H01: the compose builds had no ignore file, so a context could carry any of these.
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/dist
+**/build
+**/coverage
+**/*.log
+**/*.dump
+**/*.dump.gpg
+**/*.bak
+**/*.zip
+**/*.tar.gz
+backups/
+docs/market-research/
+docs/reports/pdf/
+docs/reports/html/
+**/.terraform
