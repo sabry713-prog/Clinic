@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { proposeChecklist, mergeChecklistItems, deriveChecklistDone, CortexProvider, useCortex, type ChecklistItem } from "./CortexContext";
+import { IMAGING_KEYWORDS, LAB_KEYWORDS } from "../../lib/clinicalVocabulary";
 import { api } from "../../lib/api";
 
 vi.mock("../../lib/api", () => ({
@@ -60,6 +61,31 @@ describe("proposeChecklist — deterministic derivation", () => {
     expect(labels).toContain("Review lab results"); // "urine culture" / "enzymes"
     expect(labels).toContain("Order imaging"); // "ultrasound"
     expect(labels).not.toContain("Order ECG"); // nothing cardiac was ordered
+  });
+
+  it("matches whole words, so short abbreviations cannot fire inside other words", () => {
+    // "alt" is ALT. As a substring test it also lived inside "salt", "although" and
+    // "alternative", which is why it had to be kept out of the vocabulary; the matcher requires
+    // word boundaries now, so the abbreviation is safe to carry.
+    expect(proposeChecklist("", "add salt to the diet").map((h) => h.label)).not.toContain("Review lab results");
+    expect(proposeChecklist("", "ALT and AST are raised").map((h) => h.label)).toContain("Review lab results");
+    // ...while an inflection of a real term still matches.
+    expect(proposeChecklist("", "check lipids").map((h) => h.label)).toContain("Review lipid profile");
+  });
+
+  it("carries the generated vocabulary, and none of its unsafe short forms", () => {
+    // Imaging modalities come from DICOM PS3.16 CID 29 and the labs from LOINC Top 2000+
+    // (rank order). See tools/build_clinical_vocabulary.py.
+    expect(IMAGING_KEYWORDS).toContain("ultrasound");
+    expect(IMAGING_KEYWORDS).toContain("mri");
+    expect(LAB_KEYWORDS).toContain("urine culture");
+    expect(LAB_KEYWORDS).toContain("hba1c");
+    // Two-character source codes are exactly the substring hazards above: "us" lives in "pus"
+    // and "usual", "ct" in "product". They are deliberately absent.
+    for (const bad of ["us", "ct", "mr", "nm"]) {
+      expect(IMAGING_KEYWORDS).not.toContain(bad);
+    }
+    expect(LAB_KEYWORDS.every((k) => k.length >= 2)).toBe(true);
   });
 
   it("matches case-insensitively across transcript and SOAP text", () => {

@@ -28,6 +28,7 @@ import { api } from "../../lib/api";
 import { formatNurseVitals, mergeObjective, type NurseVitals } from "./vitals";
 import type { PostCarePackage } from "../ai-team/ReceptionistTab";
 import type { AgentHandoff } from "../../lib/api";
+import { IMAGING_KEYWORDS, LAB_KEYWORDS } from "../../lib/clinicalVocabulary";
 
 // ---------------------------------------------------------------- types
 /** `blue` = pended: submitted to the payer, no decision yet (Sprint 9). */
@@ -275,27 +276,25 @@ const CHECKLIST_CATALOG: readonly { keywords: readonly string[]; id: string; lab
   { id: "c-ecg", keywords: ["ecg", "electrocardiogram", "ekg"], label: "Order ECG" },
   { id: "c-lipid", keywords: ["lipid"], label: "Review lipid profile" },
   { id: "c-followup", keywords: ["follow up", "follow-up", "followup"], label: "Arrange follow-up" },
-  {
-    id: "c-labs",
-    keywords: [
-      "blood test", "blood work", "laboratory panel", "lab panel",
-      "urine culture", "urinalysis", "culture", "sensitivity",
-      "cbc", "complete blood count", "renal profile", "kidney function",
-      "liver function", "liver enzymes", "enzyme", "hba1c",
-    ],
-    label: "Review lab results",
-  },
-  {
-    id: "c-imaging",
-    keywords: [
-      "x-ray", "xray", "radiograph", "ultrasound", "ultrasonography", "sonography",
-      "ct scan", "ct ", "mri", "echocardiogram", "echo", "doppler", "mammogram",
-    ],
-    label: "Order imaging",
-  },
+  { id: "c-labs", keywords: LAB_KEYWORDS, label: "Review lab results" },
+  { id: "c-imaging", keywords: IMAGING_KEYWORDS, label: "Order imaging" },
   { id: "c-referral", keywords: ["referral", "refer to"], label: "Arrange referral" },
   { id: "c-meds", keywords: ["medication", "medications"], label: "Review medications" },
 ];
+
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Trigger match: whole words, with one inflection allowed.
+ *
+ * Substring matching was the source of two different failures. It let short abbreviations fire
+ * inside unrelated words -- "alt" inside "salt" and "although" -- which is why the vocabulary
+ * first had to exclude them, and it missed nothing else worth having. Requiring word boundaries
+ * keeps "lipid" matching "lipids" and "ALT" matching only ALT.
+ */
+export function mentionsKeyword(haystack: string, keyword: string): boolean {
+  return new RegExp(`\\b${escapeRe(keyword)}(?:s|es|ed|ing)?\\b`, "i").test(haystack);
+}
 
 /** Pure: derive suggested checklist entries from encounter text. */
 export function proposeChecklist(
@@ -306,7 +305,7 @@ export function proposeChecklist(
   if (haystack.trim().length === 0) return [];
   const hits: ChecklistItem[] = [];
   for (const entry of CHECKLIST_CATALOG) {
-    if (entry.keywords.some((k) => haystack.includes(k))) {
+    if (entry.keywords.some((k) => mentionsKeyword(haystack, k))) {
       hits.push({ id: entry.id, label: entry.label, done: false, proposed: true });
     }
   }
