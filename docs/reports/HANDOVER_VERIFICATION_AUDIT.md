@@ -931,3 +931,32 @@ their evidence re-checked.
 - **H06 — branding.** Still split: `Cortex.ai` in the interface (`en.json:3,94`) against
   `Veritas-Medica` in eleven service files. This is a product-naming decision rather than a
   defect, and it needs the owner's answer, not an engineer's.
+
+---
+
+## 22. H06 — the product name, decided 2026-09-18
+
+H06's remaining clause was "branding still split: `Cortex.ai` at `en.json:3,94` versus
+`Veritas-Medica` in eleven service files". That is not an engineering decision, so it was
+put to the owner, who answered: **the official product name is Cortex.ai.**
+
+The code and the tooling now say one thing. Twenty occurrences across sixteen files: the
+three FastAPI titles (NPHIES Engine, Agent Orchestrator, NSCRE), the module docstrings that
+described themselves as Veritas-Medica, the two service `pyproject.toml` files, and the
+four report generators — so documents produced from here on carry the official name in
+their header as well (`e843f71`).
+
+**What was deliberately left, and why**
+
+- **Identifiers, paths and environment prefixes.** `services/veritas-graph`, the
+  `veritas-*` module and package names, and the environment keys that follow them are names
+  of *things*, not branding. Renaming them changes imports, containers and deployment
+  manifests for no reader's benefit; prose and identifiers are different edits.
+- **Dated documents.** This audit, the executive decks, the onboarding brief and the market
+  research keep the wording they were issued under. A document that quotes itself as
+  evidence cannot have its own history rewritten underneath it.
+
+**The convention, so the split does not return:** user-facing copy, service metadata and
+newly generated documents say **Cortex.ai**; historical and dated material keeps the name
+it was published with. A future reader comparing the two is looking at a decision, not an
+inconsistency.
