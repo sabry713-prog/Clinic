@@ -185,8 +185,10 @@ the visual proof of Slide 4's promise.*
   HIS/EHR systems via FHIR client + HL7 v2 adapter — this is an addition
   to the hospital's stack, not a replacement requiring a rip-and-replace
   migration.
-- **NPHIES-native**: built against the live NPHIES FHIR sandbox from day
-  one, not retrofitted.
+- **NPHIES-native by specification**: built to the published NPHIES FHIR profiles
+from day one, not retrofitted. The payer connection itself is not wired yet — the
+connector runs in stub mode in development, and production needs the payer's
+certification before any real submission.
 
 *Speaker note: this slide exists to get IT/security sign-off in the same
 meeting as clinical sign-off — don't skip it even in a clinically-focused
