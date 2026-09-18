@@ -110,7 +110,7 @@
       "ontology": "SFDA Medication Codes (NPHIES terminology server, CodeSystem-scientific-codes)",
       "licensed": false,
       "effective_date": "2026-09-18",
-      "approver": "product-owner (CTO) — session approval [PENDING: confirm]",
+      "approver": "product-owner (CTO) — session approval",
       "status": "illustrative-dev-subset"
     }
   ]
