@@ -17,6 +17,7 @@ dependencies = [
     # outbound endpoint is checked against the same fail-closed policy that
     # governs model calls (CLAUDE.md sec 7 / PDPL).
     "phi-guard",
+    "redis>=5.0",
 ]
 
 [tool.uv.sources]

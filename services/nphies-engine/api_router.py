@@ -2,7 +2,8 @@
 
 Lean by design, matching services/veritas-graph/api_router.py and
 services/orchestrator/agent_handlers.py: no gRPC, no Postgres pool -- this
-service talks to NPHIES and to its own in-process broker only. Patient scope,
+service talks to NPHIES, and the status broker fans events out to the
+other replicas over Redis when REDIS_URL is set. Patient scope,
 RBAC, and audit logging live in apps/core, which proxies these routes; nothing
 here is intended to be reachable from a browser directly.
 
@@ -10,11 +11,12 @@ Usage:
     NPHIES_CONNECTOR=stub python -m uvicorn api_router:app --port 5006
 """
 from __future__ import annotations
-import os
 
+import os
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, AsyncGenerator, Optional
 
 import structlog
 from fastapi import BackgroundTasks, FastAPI
@@ -25,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fhir_client import connector_mode, profiles_verified  # noqa: E402
 from tasks import (  # noqa: E402
+    broker,
     check_eligibility_task,
     status_event_stream,
     submit_prior_auth_task,
@@ -33,7 +36,21 @@ from tasks import (  # noqa: E402
 structlog.configure(processors=[structlog.processors.JSONRenderer()])
 logger = structlog.get_logger()
 
-app = FastAPI(title="Veritas-Medica NPHIES Engine", version="0.1.0")
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
+    """Join the status fan-out for the life of the process (M01).
+
+    Without this the broker publishes into a void that only it can hear, and an SSE
+    subscriber on another replica never learns that a prior-auth was approved.
+    """
+    await broker.start()
+    try:
+        yield
+    finally:
+        await broker.stop()
+
+
+app = FastAPI(title="Veritas-Medica NPHIES Engine", version="0.1.0", lifespan=lifespan)
 
 
 class PriorAuthRequest(BaseModel):

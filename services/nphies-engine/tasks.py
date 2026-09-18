@@ -30,8 +30,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import socket
 from collections import defaultdict
-from typing import Any, AsyncGenerator, Optional
+from contextlib import suppress
+from typing import Any, AsyncGenerator, Awaitable, Callable, Optional, Protocol
 
 import structlog
 
@@ -46,6 +49,14 @@ logger = structlog.get_logger()
 
 EVENT_NAME = "nphies_status_updated"
 
+# One channel per encounter: a replica subscribes to the pattern and filters
+# nothing, so adding an encounter needs no subscription bookkeeping.
+_CHANNEL_PREFIX = "nphies:status:"
+
+
+def _channel(encounter_id: str) -> str:
+    return f"{_CHANNEL_PREFIX}{encounter_id}"
+
 # Bounded so a slow/detached SSE client can never grow memory without limit.
 _SUBSCRIBER_QUEUE_MAXSIZE = 64
 
@@ -59,16 +70,107 @@ __all__ = [
 ]
 
 
-class StatusBroker:
-    """In-process pub/sub fanning NPHIES status changes out to SSE subscribers.
+class StatusTransport(Protocol):
+    """How a status event reaches the other replicas."""
 
-    Subscribers are keyed by encounter so a clinician viewing one encounter is
-    never sent another encounter's traffic.
+    async def publish(self, channel: str, payload: str) -> None: ...
+
+    async def start(self, handler: Callable[[dict[str, Any]], Awaitable[None]]) -> None: ...
+
+    async def stop(self) -> None: ...
+
+
+class RedisStatusTransport:
+    """Redis pub/sub, subscribed to every encounter's channel.
+
+    A replica holds the SSE connections of the clinicians it happens to serve, so
+    the event has to reach every replica, not just the one that talked to the payer.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, url: str) -> None:
+        self._url = url
+        self._client: Any = None
+        self._pubsub: Any = None
+        self._task: asyncio.Task[None] | None = None
+
+    async def start(self, handler: Callable[[dict[str, Any]], Awaitable[None]]) -> None:
+        import redis.asyncio as redis_asyncio  # imported here: the package is optional
+
+        self._client = redis_asyncio.from_url(self._url, decode_responses=True)
+        self._pubsub = self._client.pubsub()
+        await self._pubsub.psubscribe(f"{_CHANNEL_PREFIX}*")
+        self._task = asyncio.create_task(self._listen(handler))
+        logger.info("nphies_status_fanout_joined", url=self._url, pattern=f"{_CHANNEL_PREFIX}*")
+
+    async def _listen(self, handler: Callable[[dict[str, Any]], Awaitable[None]]) -> None:
+        try:
+            async for message in self._pubsub.listen():
+                if message.get("type") != "pmessage":
+                    continue
+                try:
+                    await handler(json.loads(message["data"]))
+                except Exception:  # noqa: BLE001 -- one bad message must not end the listener
+                    logger.warning("nphies_status_fanout_bad_message", raw=str(message)[:200])
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # noqa: BLE001
+            logger.exception("nphies_status_fanout_listener_died")
+
+    async def publish(self, channel: str, payload: str) -> None:
+        if self._client is None:
+            return
+        await self._client.publish(channel, payload)
+
+    async def stop(self) -> None:
+        if self._task is not None:
+            self._task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._task
+            self._task = None
+        if self._pubsub is not None:
+            with suppress(Exception):
+                await self._pubsub.aclose()
+            self._pubsub = None
+        if self._client is not None:
+            with suppress(Exception):
+                await self._client.aclose()
+            self._client = None
+
+
+class StatusBroker:
+    """Fan-out of NPHIES status changes to SSE subscribers.
+
+    Subscribers are keyed by encounter so a clinician viewing one encounter is
+    never sent another encounter's traffic. Local queues only hold the connections
+    this process owns; the events themselves travel between replicas over the
+    transport, because the clinician's SSE connection is on whichever replica the
+    load balancer chose and the NPHIES response arrives on whichever replica made
+    the call. Those are usually not the same process.
+
+    Without a transport it degrades to the old in-process behaviour, and says so.
+    """
+
+    def __init__(
+        self,
+        transport: StatusTransport | None = None,
+        replica_id: str | None = None,
+    ) -> None:
         self._subscribers: dict[str, set[asyncio.Queue[dict[str, Any]]]] = defaultdict(set)
         self._lock = asyncio.Lock()
+        self._transport = transport
+        self._replica_id = replica_id or f"{socket.gethostname()}:{os.getpid()}"
+
+    @property
+    def shared(self) -> bool:
+        return self._transport is not None
+
+    async def start(self) -> None:
+        if self._transport is not None:
+            await self._transport.start(self._on_remote)
+
+    async def stop(self) -> None:
+        if self._transport is not None:
+            await self._transport.stop()
 
     async def subscribe(self, encounter_id: str) -> asyncio.Queue[dict[str, Any]]:
         queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=_SUBSCRIBER_QUEUE_MAXSIZE)
@@ -82,14 +184,12 @@ class StatusBroker:
             if not self._subscribers[encounter_id]:
                 self._subscribers.pop(encounter_id, None)
 
-    async def publish(self, encounter_id: str, event: dict[str, Any]) -> int:
-        """Publish to every subscriber of `encounter_id`. Returns the delivery
-        count. A full queue is dropped rather than blocking the publisher -- a
-        stalled reader must not stall a NPHIES transaction."""
-        async with self._lock:
-            queues = list(self._subscribers.get(encounter_id, ()))
+    def deliver_local(self, encounter_id: str, event: dict[str, Any]) -> int:
+        """Hand an event to this process's subscribers. A full queue is dropped
+        rather than blocking the publisher -- a stalled reader must not stall a
+        NPHIES transaction."""
         delivered = 0
-        for queue in queues:
+        for queue in list(self._subscribers.get(encounter_id, ())):
             try:
                 queue.put_nowait(event)
                 delivered += 1
@@ -97,11 +197,43 @@ class StatusBroker:
                 logger.warning("nphies_event_dropped_slow_subscriber", encounter_id=encounter_id)
         return delivered
 
+    async def publish(self, encounter_id: str, event: dict[str, Any]) -> int:
+        """Deliver here and to every other replica. Returns the local delivery count."""
+        delivered = self.deliver_local(encounter_id, event)
+        if self._transport is not None:
+            envelope = {
+                "origin": self._replica_id,
+                "encounter_id": encounter_id,
+                "event": event,
+            }
+            try:
+                await self._transport.publish(_channel(encounter_id), json.dumps(envelope))
+            except Exception:  # noqa: BLE001 -- local delivery already happened
+                logger.warning("nphies_status_fanout_publish_failed", encounter_id=encounter_id)
+        return delivered
+
+    async def _on_remote(self, envelope: dict[str, Any]) -> None:
+        if envelope.get("origin") == self._replica_id:
+            return  # our own event, already delivered locally before it was published
+        self.deliver_local(str(envelope["encounter_id"]), envelope["event"])
+
     def subscriber_count(self, encounter_id: str) -> int:
         return len(self._subscribers.get(encounter_id, ()))
 
 
-broker = StatusBroker()
+def _build_transport() -> StatusTransport | None:
+    url = os.getenv("REDIS_URL")
+    if not url:
+        logger.warning(
+            "nphies_status_fanout_local_only",
+            detail="REDIS_URL is not set, so an SSE subscriber only sees events "
+            "published by this process. Set REDIS_URL to share them.",
+        )
+        return None
+    return RedisStatusTransport(url)
+
+
+broker = StatusBroker(transport=_build_transport())
 
 
 def _event(
