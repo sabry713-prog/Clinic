@@ -110,213 +110,6 @@ def _fmt_dt(value: Any) -> str:
     return str(value)
 
 
-async def _fetch_patient_chunks(patient_id: str) -> list[dict[str, Any]]:
-    """
-    Fetch patient facts directly from the DB and format them as retrieval chunks.
-    Used in stub/dev mode when the vector index is not populated.
-    """
-    if _db_pool is None:
-        return []
-
-    chunks: list[dict[str, Any]] = []
-    now = datetime.utcnow().isoformat()
-
-    async with _db_pool.acquire() as conn:
-        # Conditions
-        rows = await conn.fetch(
-            """SELECT code, code_display, status, onset_date
-               FROM hospital.condition
-               WHERE patient_id = $1
-               ORDER BY onset_date DESC NULLS LAST""",
-            patient_id,
-        )
-        for r in rows:
-            chunks.append({
-                "source_type": "condition",
-                "source_id": patient_id,
-                "content_text": (
-                    f"Condition: {r['code_display']} (code: {r['code']}) "
-                    f"status: {r['status']}, onset: {_fmt_dt(r['onset_date'])}"
-                ),
-                "language": "en",
-                "effective_at": str(r["onset_date"]) if r["onset_date"] else now,
-                "code": r["code"] or "",
-                "source_system": "hospital",
-                "field": "condition",
-            })
-
-        # Observations (vitals, labs)
-        rows = await conn.fetch(
-            """SELECT code, code_display, category, value_numeric, unit,
-                      value_text, effective_at, ref_range_low, ref_range_high, ref_range_text
-               FROM hospital.observation
-               WHERE patient_id = $1
-               ORDER BY effective_at DESC
-               LIMIT 200""",
-            patient_id,
-        )
-        for r in rows:
-            val = (
-                f"{r['value_numeric']} {r['unit'] or ''}".strip()
-                if r["value_numeric"] is not None
-                else (r["value_text"] or "")
-            )
-            ref = ""
-            if r["ref_range_low"] is not None and r["ref_range_high"] is not None:
-                ref = f" (ref: {r['ref_range_low']}-{r['ref_range_high']} {r['unit'] or ''})"
-            elif r["ref_range_text"]:
-                ref = f" (ref: {r['ref_range_text']})"
-            chunks.append({
-                "source_type": "observation",
-                "source_id": patient_id,
-                "content_text": (
-                    f"{r['category'] or 'Lab'}: {r['code_display']} = {val}{ref} "
-                    f"(recorded: {_fmt_dt(r['effective_at'])})"
-                ),
-                "language": "en",
-                "effective_at": str(r["effective_at"]),
-                "code": r["code"] or "",
-                "source_system": "hospital",
-                "field": r["category"] or "observation",
-            })
-
-        # Allergies
-        rows = await conn.fetch(
-            """SELECT code, code_display, reaction, recorded_at
-               FROM hospital.allergy_intolerance
-               WHERE patient_id = $1""",
-            patient_id,
-        )
-        for r in rows:
-            chunks.append({
-                "source_type": "allergy",
-                "source_id": patient_id,
-                "content_text": (
-                    f"Allergy: {r['code_display']} "
-                    f"reaction: {r['reaction'] or 'unspecified'} "
-                    f"(recorded: {_fmt_dt(r['recorded_at'])})"
-                ),
-                "language": "en",
-                "effective_at": str(r["recorded_at"]) if r["recorded_at"] else now,
-                "code": r["code"] or "",
-                "source_system": "hospital",
-                "field": "allergy",
-            })
-
-        # Encounters
-        rows = await conn.fetch(
-            """SELECT encounter_type, status, started_at, ended_at, ward
-               FROM hospital.encounter
-               WHERE patient_id = $1
-               ORDER BY started_at DESC
-               LIMIT 40""",
-            patient_id,
-        )
-        for r in rows:
-            chunks.append({
-                "source_type": "encounter",
-                "source_id": patient_id,
-                "content_text": (
-                    f"Encounter: {r['encounter_type']} status: {r['status']} "
-                    f"ward: {r['ward'] or 'unknown'} "
-                    f"from {_fmt_dt(r['started_at'])} "
-                    f"to {_fmt_dt(r['ended_at']) if r['ended_at'] else 'ongoing'}"
-                ),
-                "language": "en",
-                "effective_at": str(r["started_at"]),
-                "code": "",
-                "source_system": "hospital",
-                "field": "encounter",
-            })
-
-        # Medications (joined to the ordering encounter so clinic-prescribed
-        # treatment can be attributed to its clinic)
-        rows = await conn.fetch(
-            """SELECT m.medication_display, m.status, m.prescriber_display,
-                      m.dose, m.route, m.frequency, m.started_at, e.ward AS clinic
-               FROM hospital.medication_request m
-               LEFT JOIN hospital.encounter e ON e.id = m.encounter_id
-               WHERE m.patient_id = $1
-               ORDER BY m.started_at DESC
-               LIMIT 40""",
-            patient_id,
-        )
-        for r in rows:
-            # Only outpatient clinic encounters carry a meaningful clinic name;
-            # inpatient meds (ward like "Ward-4A") are left unattributed.
-            clinic = r["clinic"] if r["clinic"] and str(r["clinic"]).endswith("Clinic") else None
-            clinic_suffix = f" (prescribed at {clinic})" if clinic else ""
-            chunks.append({
-                "source_type": "medication",
-                "source_id": patient_id,
-                "content_text": (
-                    f"Medication: {r['medication_display']} "
-                    f"dose: {r['dose'] or 'unspecified'} "
-                    f"route: {r['route'] or ''} "
-                    f"frequency: {r['frequency'] or ''} "
-                    f"status: {r['status']} "
-                    f"(started: {_fmt_dt(r['started_at'])})"
-                    f"{clinic_suffix}"
-                ),
-                "language": "en",
-                "effective_at": str(r["started_at"]) if r["started_at"] else now,
-                "code": "",
-                "source_system": "hospital",
-                "field": "medication",
-            })
-
-        # Documents (notes)
-        rows = await conn.fetch(
-            """SELECT type, content_text, authored_at
-               FROM hospital.document_reference
-               WHERE patient_id = $1
-               ORDER BY authored_at DESC
-               LIMIT 40""",
-            patient_id,
-        )
-        for r in rows:
-            content = (r["content_text"] or "")[:500]
-            chunks.append({
-                "source_type": "document",
-                "source_id": patient_id,
-                "content_text": f"Note ({r['type']}): {content}",
-                "language": "en",
-                "effective_at": str(r["authored_at"]) if r["authored_at"] else now,
-                "code": "",
-                "source_system": "hospital",
-                "field": r["type"] or "note",
-            })
-
-        # Procedures / interventions (operations, cath lab, stents)
-        rows = await conn.fetch(
-            """SELECT code_display, status, performed_at, performer_display, note
-               FROM hospital.procedure
-               WHERE patient_id = $1
-               ORDER BY performed_at DESC
-               LIMIT 40""",
-            patient_id,
-        )
-        for r in rows:
-            note = (r["note"] or "")[:400]
-            chunks.append({
-                "source_type": "procedure",
-                "source_id": patient_id,
-                "content_text": (
-                    f"Procedure: {r['code_display']} "
-                    f"status: {r['status']} "
-                    f"(performed: {_fmt_dt(r['performed_at'])}"
-                    f"{f', {note}' if note else ''})"
-                ),
-                "language": "en",
-                "effective_at": str(r["performed_at"]) if r["performed_at"] else now,
-                "code": "",
-                "source_system": "hospital",
-                "field": "procedure",
-            })
-
-    return chunks
-
-
 async def _fetch_patient_names(patient_id: str) -> list[str]:
     """Names for the PHI egress guard to redact before any external call.
 
@@ -368,12 +161,32 @@ def _name_variants(name: str) -> list[str]:
     return variants
 
 
+def _configured_embedder() -> Any:
+    """The embedding provider this deployment has, or None.
+
+    ``create_embedder()`` returns None for the development stub, whose vectors are
+    seeded from a hash: ranking by cosine distance over them would present an
+    arbitrary order as relevance.  Returning None keeps retrieval lexical, and the
+    route is logged, so an answer never claims vector grounding it did not have.
+    """
+    try:
+        from retrieval.embedder import create_embedder
+
+        embedder = create_embedder()
+        logger.info(
+            "qa_embedder_configured",
+            model_id=embedder.model_id() if embedder is not None else "none",
+        )
+        return embedder
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("qa_embedder_unavailable", error=str(exc))
+        return None
+
+
 @app.post("/qa/answer", response_class=JSONResponse)
 async def ask(body: AskRequest) -> dict:
     """Classify and answer a factual question about a patient."""
     try:
-        # In stub/dev mode: fetch patient facts directly from DB as context chunks
-        chunks = await _fetch_patient_chunks(body.patient_id)
         patient_names = await _fetch_patient_names(body.patient_id)
 
         result = await qa_answer(
@@ -381,12 +194,13 @@ async def ask(body: AskRequest) -> dict:
             question=body.question,
             language=body.language,
             conversation_id=body.conversation_id,
-            pool=None,    # vector retrieval disabled in stub mode
-            embedder=None,
+            pool=_db_pool,
+            # None when the deployment has no *evaluated* embedding model, which
+            # keeps retrieval lexical instead of ranking a stub's vectors
+            embedder=_configured_embedder(),
             # names handed to the PHI egress guard for redaction
             model=get_model(patient_names=patient_names),
             classifier_model=get_classifier_model(),
-            _override_chunks=chunks,  # pass DB facts directly
         )
         return asdict(result)
     except BlocklistUnavailableError as exc:

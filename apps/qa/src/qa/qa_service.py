@@ -120,33 +120,40 @@ async def answer(
         )
 
     # Step 2: Retrieve (ALLOWED path only)
-    chunks: list[dict[str, Any]] = _override_chunks if _override_chunks is not None else []
-    if pool is not None and embedder is not None:
+    #
+    # M10: the route is chosen and named, never blurred.  The index is used when
+    # the patient has chunks in it, ranked lexically by the packaged retriever;
+    # otherwise the record is read directly and every fact carries the immutable
+    # id of the row it came from.  A hybrid route needs an *evaluated* embedding
+    # model -- create_embedder() refuses the development stub, whose vectors are
+    # seeded from a hash -- so a deployment without one stays lexical rather than
+    # presenting an arbitrary cosine order as relevance.
+    retrieval_path = "override" if _override_chunks is not None else "none"
+    chunks: list[dict[str, Any]] = list(_override_chunks or [])
+    if _override_chunks is None and pool is not None:
         try:
-            from retrieval.retriever import hybrid_retrieve
-            retrieval_results = await hybrid_retrieve(
-                patient_id=patient_id,
-                query=question,
+            from .fact_contract import retrieve_patient_chunks
+
+            outcome = await retrieve_patient_chunks(
                 pool=pool,
+                patient_id=patient_id,
+                question=question,
+                language=lang,
+                mode="hybrid" if embedder is not None else "lexical",
                 embedder=embedder,
                 top_k=8,
-                language=lang,
             )
-            chunks = [
-                {
-                    "source_type": r.source_type,
-                    "source_id": r.source_id,
-                    "content_text": r.content_text,
-                    "language": r.language,
-                    "effective_at": r.effective_at,
-                    "code": getattr(r, "code", ""),
-                    "source_system": getattr(r, "source_system", "hospital"),
-                    "field": getattr(r, "field", ""),
-                }
-                for r in retrieval_results
-            ]
+            chunks = list(outcome.chunks)
+            retrieval_path = outcome.path
         except Exception as exc:  # noqa: BLE001
             logger.warning("qa_retrieval_failed", error=str(exc), patient_id=patient_id)
+    logger.info(
+        "qa_retrieved",
+        patient_id=patient_id,
+        path=retrieval_path,
+        chunks=len(chunks),
+        embedding_model=embedder.model_id() if embedder is not None else "none",
+    )
 
     # Step 3: Synthesize
     from .model_client import StubModelProvider, _question_terms
@@ -172,6 +179,27 @@ async def answer(
         patient_id=patient_id,
         model=_model,
     )
+
+    # A citation is kept only if the row behind it is still in this patient's
+    # record.  Failing closed is the point: an answer that cannot verify its
+    # evidence says nothing rather than citing a record it never checked.
+    if pool is not None and sources:
+        try:
+            from .fact_contract import filter_resolved_sources
+
+            sources, unresolved = await filter_resolved_sources(
+                pool, patient_id, sources, chunks
+            )
+            if unresolved:
+                logger.warning(
+                    "qa_sources_dropped",
+                    patient_id=patient_id,
+                    unresolved=len(unresolved),
+                    kept=len(sources),
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("qa_source_filter_failed", error=str(exc), patient_id=patient_id)
+            sources = []
 
     return QAResponse(
         interaction_id=interaction_id,
