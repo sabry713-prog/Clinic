@@ -47,6 +47,9 @@ export class InterpreterService {
         source_language: sourceLanguage,
         target_language: targetLanguage,
       }),
+      // Same convention as the other service clients: a client that waits for ever is
+      // indistinguishable from a hung one, and the caller has nowhere to look.
+      signal: AbortSignal.timeout(30_000),
     }).catch((err: unknown) => {
       this.logger.error("interpreter_service_unreachable", {
         error: err instanceof Error ? err.message : String(err),

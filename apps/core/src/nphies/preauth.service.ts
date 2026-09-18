@@ -77,6 +77,7 @@ export class PreAuthService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(30_000),
       });
     } catch (err) {
       this.logger.error("nphies_engine_unreachable", {
@@ -110,6 +111,7 @@ export class PreAuthService {
           patient_civil_id: patientCivilId,
           payer_id: payerId,
         }),
+        signal: AbortSignal.timeout(30_000),
       });
     } catch (err) {
       this.logger.warn("nphies_encounter_activity_notify_failed", {

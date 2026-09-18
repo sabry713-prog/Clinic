@@ -142,6 +142,7 @@ export class LinkageVerdictsService {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ icd10_code: icd10Code, service_or_drug_code: sbsCode }),
+        signal: AbortSignal.timeout(30_000),
       });
     } catch (err) {
       this.logger.warn("linkage_verdicts_graph_fetch_failed", {

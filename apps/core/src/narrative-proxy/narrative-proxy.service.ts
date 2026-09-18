@@ -92,6 +92,7 @@ export class NarrativeProxyService {
           scope,
           force_regenerate: forceRegenerate,
         }),
+        signal: AbortSignal.timeout(30_000),
       });
 
       if (!res.ok) {
@@ -214,6 +215,7 @@ export class NarrativeProxyService {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ narrative_text: narrative.text, language: narrative.language }),
+      signal: AbortSignal.timeout(30_000),
     });
     if (!res.ok) {
       throw new ServiceUnavailableException({

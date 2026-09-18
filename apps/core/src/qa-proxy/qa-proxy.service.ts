@@ -63,6 +63,9 @@ export class QAProxyService {
           language,
           conversation_id: resolvedConversationId,
         }),
+        // Without this the clinician waits on a hung Q&A service with no error and no
+        // way to tell a slow answer from a dead one.
+        signal: AbortSignal.timeout(30_000),
       });
 
       if (!res.ok) {
