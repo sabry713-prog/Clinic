@@ -960,3 +960,58 @@ their header as well (`e843f71`).
 newly generated documents say **Cortex.ai**; historical and dated material keeps the name
 it was published with. A future reader comparing the two is looking at a decision, not an
 inconsistency.
+
+---
+
+## 23. The remaining decisions, taken 2026-09-18
+
+Six questions were put to the owner rather than answered by an engineer. The product name
+is section 22; the rest are here.
+
+**The rendered HTML is a build artifact.** `docs/reports/html/` is now ignored
+(`.gitignore:107`) exactly as `docs/reports/pdf/` already was: `tools/md_report_to_html.py`
+writes it and `tools/html_reports_to_pdf.py` consumes it, so a regeneration no longer
+leaves an untracked tree behind.
+
+**The stale branches are gone — five of them, each proven redundant first.** `git diff`
+against HEAD is useless here (135, 60 and 58 files differ, because every change since is in
+HEAD) and hash-based ancestry is useless too, because the identity rewrites replaced every
+commit. `git cherry`, which compares patch ids, is the instrument that settles it: five
+branches carried zero unique content and were deleted — all five still exist on origin, so
+nothing was lost. The sixth, `audit/feature-verification`, was **stopped by that same
+check**: it holds an earlier revision of `docs/STABILIZATION_AUDIT.md`, a file that exists
+in HEAD with 62 more lines. Nothing is genuinely lost, but the gate is the gate and the
+decision is the owner's. `main` and `origin/feature/sprint-4-ambient-scribe` were left
+alone — the first is the default branch, the second holds the only copy of
+`data/mock_audio/*`.
+
+**M03's KMS deferral is confirmed, not forgotten.** The customer-managed key path throws
+`CustomerKmsNotConfiguredError` rather than falling back to a dev key, and the trigger
+stands: resolve it **before real patient data enters any environment**.
+
+**The renal demo patient exists now, and the finding does not fire.** MRN-051 — CKD stage
+4, metformin, a deliberate creatinine trend of 230→260 umol/L — produces a derived eGFR of
+**21.9** (CKD-EPI 2021, computed, not asserted), comfortably under the threshold of 30. It is
+visible to the engine through the engine's own query, M06 filter included. The check still
+returns zero findings and zero gaps while the graph holds every input it needs (the eGFR, an
+active Metformin 850mg, and a `RENAL_DOSE_LIMIT` edge to a rule with `egfr_threshold: 30` and
+`flag: CRITICAL_OVERRIDE`). This audit said that seeing a finding "needs a seed with renal
+impairment — a data decision, not plumbing"; the data half is now done and verified, so the
+remaining cause is on the engine side. **Open finding:** the dose-safety module does not
+raise a violation whose inputs are all present. Starting point: the justfile's own comment
+that the module "has no rules to evaluate".
+
+**The metformin codes exist; warfarin's do not, evidenced twice.** The NPHIES Medication
+Codes resource (SFDA copyright, 1002 concepts, sha256 and size recorded) was retrieved to
+close the metformin gap the first fragment left: metformin appears there as seven packaged
+products with 14-digit local drug codes. They are recorded under a second source with their
+own code format, noting that they identify *products* — the demo's plain 850mg tablet is not
+among them, so a code for it is still unsourced rather than borrowed from a different
+strength. Warfarin is absent from **both** published resources (zero matching concepts in
+1002), so the gap is now evidenced against two sources instead of one, and nothing was
+invented to fill it.
+
+**One signature is outstanding.** The governed manifest is updated to the new checksum with
+its approver left as `[PENDING: confirm]`; the gate itself is green (11 files match manifest
+v2026-09-18.2, all illustrative, `licensed=false`). Signing a governed artifact is not an
+engineer's act, so it waits.
