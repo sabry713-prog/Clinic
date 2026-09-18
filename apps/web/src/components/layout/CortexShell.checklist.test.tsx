@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useEffect } from "react";
 import { act, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { proposeChecklist, mergeChecklistItems, CortexProvider, useCortex, type ChecklistItem } from "./CortexContext";
+import { proposeChecklist, mergeChecklistItems, deriveChecklistDone, CortexProvider, useCortex, type ChecklistItem } from "./CortexContext";
 import { api } from "../../lib/api";
 
 vi.mock("../../lib/api", () => ({
@@ -104,6 +104,41 @@ describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
     // clear calls only — restoreAllMocks would wipe the factory-level
     // mockResolvedValue implementations the next test depends on.
     vi.clearAllMocks();
+  });
+
+  it("earns the documentation ticks from the encounter, not from the fixture", () => {
+    // The exact note used to test this by hand: written outside, pasted into the fields.
+    const note = [
+      "Chest tightness on exertion for two weeks. No pain at rest.",
+      "BP 114/82, HR 74, SpO2 96%, Temp 37.1C, RR 14/min. Heart sounds NOT NORMAL, murmurs. Chest unclear.",
+      "ECHO. And MRI. Follow up in one week",
+    ].join(" ");
+
+    const earned = deriveChecklistDone(note, false);
+    expect(earned.has("c1")).toBe(true); // "for two weeks"
+    expect(earned.has("c3")).toBe(true); // "heart sounds"
+    // Vitals are observations; prose in a note cannot stand in for a recorded vital sign.
+    expect(earned.has("c2")).toBe(false);
+    expect(deriveChecklistDone(note, true).has("c2")).toBe(true);
+
+    // A note with nothing to document earns nothing.
+    expect(deriveChecklistDone("", false).size).toBe(0);
+  });
+
+  it("ticks what the pasted note documents, and leaves vitals to the record", async () => {
+    const container = renderScribe([]);
+    const textareas = container.querySelectorAll("textarea");
+    fireEvent.change(textareas[0] as HTMLTextAreaElement, {
+      target: { value: "Chest tightness on exertion for two weeks. No pain at rest." },
+    });
+    fireEvent.change(textareas[1] as HTMLTextAreaElement, {
+      target: { value: "Heart sounds NOT NORMAL, murmurs. Chest unclear." },
+    });
+    // onset/duration + cardiovascular examination, and NOT vitals: the mocked API returns no
+    // observations for this encounter, so the row stays open.
+    await waitFor(() => {
+      expect(screen.getByText(/^2\/6$/)).toBeInTheDocument();
+    });
   });
 
   it("recommends from a note pasted into the SOAP fields with nothing dictated", async () => {

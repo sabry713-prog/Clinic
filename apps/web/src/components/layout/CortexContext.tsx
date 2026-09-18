@@ -312,14 +312,81 @@ export function mergeChecklistItems(
   return changed ? next : null;
 }
 
-const MOCK_CHECKLIST: readonly ChecklistItem[] = [
-  { id: "c1", label: "Document onset and duration", done: true },
-  { id: "c2", label: "Record vital signs", done: true },
-  { id: "c3", label: "Cardiovascular examination", done: true },
+/**
+ * Template rows. None of them ships ticked: three of these used to be `done: true` literals, so
+ * the panel opened at "3/6" reporting documentation no clinician had written and -- because the
+ * flag never depended on the encounter -- it did not move no matter what the note said. Rows now
+ * start open and are ticked by evidence below.
+ */
+const CHECKLIST_TEMPLATE: readonly ChecklistItem[] = [
+  { id: "c1", label: "Document onset and duration", done: false },
+  { id: "c2", label: "Record vital signs", done: false },
+  { id: "c3", label: "Cardiovascular examination", done: false },
   { id: "c4", label: "Order ECG", done: false },
   { id: "c5", label: "Review lipid profile", done: false },
   { id: "c6", label: "Arrange follow-up", done: false },
 ];
+
+/**
+ * What counts as evidence for each documentation row, and where it has to come from.
+ *
+ * `c2` is deliberately **not** a text match. Vitals in this system are entered by nursing as
+ * observations and merged into the objective (see `mergeObjective`), so a sentence in the note
+ * is not the same as a recorded vital sign and must not tick the row. A note claiming
+ * "BP 114/82" with nothing in the record leaves this open -- which is the honest reading, and
+ * the one a reviewer would take.
+ */
+const CHECKLIST_EVIDENCE: readonly {
+  id: string;
+  readonly why: string;
+  readonly test: (note: string, hasVitals: boolean) => boolean;
+}[] = [
+  {
+    id: "c1",
+    why: "an onset or duration phrase in the note",
+    test: (note) =>
+      /\bonset\b/.test(note) ||
+      /\b(for|since)\s+(\w+\s+){0,2}(hour|day|week|month|year)/.test(note),
+  },
+  {
+    id: "c2",
+    why: "nurse observations recorded on the encounter",
+    test: (_note, hasVitals) => hasVitals,
+  },
+  {
+    id: "c3",
+    why: "a cardiovascular examination in the objective",
+    test: (note) =>
+      /\bheart sounds?\b|\bmurmurs?\b|\bjvp\b|\bapex beat\b|\bperipheral (pulse|pulses|edema|oedema)\b/.test(note),
+  },
+];
+
+/** Pure: the documentation rows this encounter actually supports. */
+export function deriveChecklistDone(noteText: string, hasVitals: boolean): ReadonlySet<string> {
+  const note = noteText.toLowerCase();
+  const earned = new Set<string>();
+  for (const row of CHECKLIST_EVIDENCE) {
+    if (row.test(note, hasVitals)) earned.add(row.id);
+  }
+  return earned;
+}
+
+/** Pure: apply earned ticks. A row the clinician toggled by hand is never overwritten. */
+export function applyEarnedDone(
+  items: readonly ChecklistItem[],
+  earned: ReadonlySet<string>,
+  touched: ReadonlySet<string>,
+): readonly ChecklistItem[] {
+  let changed = false;
+  const next = items.map((item) => {
+    if (touched.has(item.id)) return item;
+    const done = earned.has(item.id);
+    if (item.done === done) return item;
+    changed = true;
+    return { ...item, done };
+  });
+  return changed ? next : items;
+}
 
 const MOCK_TIMELINE: readonly TimelineEntry[] = [
   { id: "e1", kind: "encounter", title: "Cardiology clinic visit", detail: "Routine review — hypertension follow-up", at: "2026-07-18" },
@@ -705,8 +772,9 @@ export function CortexProvider({
   const [lineCount, setLineCount] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [soapOverride, setSoapOverride] = useState<Partial<SoapNote>>({});
-  const [checklist, setChecklist] = useState<readonly ChecklistItem[]>(MOCK_CHECKLIST);
+  const [checklist, setChecklist] = useState<readonly ChecklistItem[]>(CHECKLIST_TEMPLATE);
   const dismissedChecklistIds = useRef<ReadonlySet<string>>(new Set());
+  const touchedChecklistIds = useRef<ReadonlySet<string>>(new Set());
   /** Supporting quotes for LLM-derived suggestions (tooltip provenance). */
   const checklistQuotes = useRef<ReadonlyMap<string, string>>(new Map());
   const [activeAgent, setActiveAgentState] = useState<AgentId>("scribe");
@@ -1066,9 +1134,12 @@ export function CortexProvider({
   // from the state they hold rather than from a ref that lags behind them.
   useEffect(() => {
     const soapText = [...Object.values(liveSoap ?? {}), ...Object.values(soapOverride)].join(" ");
-    const suggestions = proposeChecklist(transcriptText, soapText);
-    mergeSuggestions(suggestions);
-  }, [transcriptText, liveSoap, soapOverride, mergeSuggestions]);
+    mergeSuggestions(proposeChecklist(transcriptText, soapText));
+    const hasVitals =
+      nurseVitals != null && Object.values(nurseVitals).some((v) => v != null && v !== "");
+    const earned = deriveChecklistDone(`${transcriptText} ${soapText}`, hasVitals);
+    setChecklist((prev) => applyEarnedDone(prev, earned, touchedChecklistIds.current));
+  }, [transcriptText, liveSoap, soapOverride, nurseVitals, mergeSuggestions]);
 
   // LLM-assisted extraction (layer 2) — debounced like the SOAP generation
   // so both share the transcript-growth cadence.
@@ -1279,6 +1350,9 @@ export function CortexProvider({
   }, []);
 
   const toggleChecklistItem = useCallback((id: string) => {
+    // Remember the manual toggle. Derivation runs again on every note change, and without this
+    // a clinician who ticked a row by hand would watch it revert on their next keystroke.
+    touchedChecklistIds.current = new Set([...touchedChecklistIds.current, id]);
     setChecklist((items) =>
       items.map((i) => (i.id === id ? { ...i, done: !i.done } : i)),
     );
