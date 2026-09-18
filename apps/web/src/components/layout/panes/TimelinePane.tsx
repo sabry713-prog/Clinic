@@ -40,7 +40,7 @@ const CATEGORY_ICONS: Record<OrderCategory, typeof Beaker> = {
 };
 
 export default function TimelinePane(): JSX.Element {
-  const { timeline, timelineLoading, timelineError, orders, soap, runAgentAction, submitPreAuth } = useCortex();
+  const { timeline, timelineLoading, timelineError, orders, soap, runAgentAction, submitPreAuth, encounterId } = useCortex();
   const [preAuthOrder, setPreAuthOrder] = useState<OrderLine | null>(null);
   const [, setSearchParams] = useSearchParams();
 
@@ -62,7 +62,8 @@ export default function TimelinePane(): JSX.Element {
         orderId: preAuthOrder.id,
         // Displayed for transparency; the real encounter id is supplied by the
         // provider at submit time (the shell may be in demo mode).
-        encounterId: "current encounter",
+        // The real id, or an explicit absence — never a word standing in for one.
+        encounterId: encounterId ?? "—",
         orderDisplay: preAuthOrder.display,
         sbsCode: preAuthOrder.code,
         sbsDisplay: preAuthOrder.display,

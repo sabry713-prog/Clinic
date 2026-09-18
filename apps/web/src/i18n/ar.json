@@ -133,7 +133,8 @@
     "frontDeskQueue": "طابور المواعيد",
     "providerAvailability": "أوقات توفر مقدمي الخدمة",
     "more": "المزيد",
-    "aiReceptionist": "موظف الاستقبال الذكي"
+    "aiReceptionist": "موظف الاستقبال الذكي",
+    "encounterView": "عرض المقابلة"
   },
   "claimSim": {
     "title": "محاكي المطالبات — تحقق قبل الإرسال",

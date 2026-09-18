@@ -148,6 +148,11 @@ interface CortexState {
   readonly dictationMode: DictationMode;
   /** Null in demo mode -- real dictation needs a patient to post audio against. */
   readonly patientId: string | null;
+  /** The encounter the shell is operating on; null when none is routed in.
+   * Exposed because a preview that cannot name the encounter shows a placeholder
+   * instead (audit H05) -- and a placeholder in a field asserted to be exact is
+   * a fabricated value. */
+  readonly encounterId: string | null;
   /** True while audio is being transcribed server-side. */
   readonly transcribing: boolean;
   /** Surfaces mic/transcription failures instead of failing silently. */
@@ -1375,6 +1380,7 @@ export function CortexProvider({
 
   const value = useMemo<CortexState>(
     () => ({
+      encounterId,
       recording,
       elapsedSeconds,
       transcript,

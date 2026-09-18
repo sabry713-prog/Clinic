@@ -133,7 +133,8 @@
     "frontDeskQueue": "Appointments queue",
     "providerAvailability": "Provider availability",
     "more": "More",
-    "aiReceptionist": "AI Receptionist"
+    "aiReceptionist": "AI Receptionist",
+    "encounterView": "Encounter view"
   },
   "claimSim": {
     "title": "Claim simulator — check before you send",

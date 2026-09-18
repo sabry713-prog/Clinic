@@ -110,9 +110,8 @@ export default function PreAuthModal({
 
         <div className="px-5 py-3">
           <p className="mb-3 text-[11px] leading-relaxed text-ink-soft">
-            These values are sent to NPHIES exactly as shown. Codes are the ones already
-            confirmed for this order — nothing here is generated or substituted.
-          </p>
+            The codes and doses below are sent to NPHIES exactly as shown — nothing here is
+              generated or substituted. A field shown as — is not sent.</p>
 
           <Field label="Order" value={fields.orderDisplay} />
           <Field

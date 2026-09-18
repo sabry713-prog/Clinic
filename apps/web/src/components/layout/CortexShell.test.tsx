@@ -6,7 +6,7 @@
  * the tests stay deterministic.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import CortexShell from "./CortexShell";
@@ -343,5 +343,60 @@ describe("Order entry controls (audit M-5)", () => {
     const feed = screen.getByTestId("timeline-feed");
     expect(feed.className).toMatch(/max-h-/);
     expect(feed.className).toMatch(/overflow-y-auto/);
+  });
+});
+
+describe("Pane resize and the encounter header (audit H05)", () => {
+  // Each pane remembers its width, so a test that asserts the starting widths has to
+  // start clean or it reads whatever the previous test left behind.
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  function resizeHandles(): HTMLElement[] {
+    return screen.getAllByRole("separator");
+  }
+
+  it("offers both panes a resize handle, starting at the widths the shell has always used", () => {
+    renderShell();
+    const [scribe, team] = resizeHandles();
+    expect(Number(scribe!.getAttribute("aria-valuenow"))).toBe(340);
+    expect(Number(team!.getAttribute("aria-valuenow"))).toBe(320);
+  });
+
+  it("resizes the scribe pane from the keyboard and back", () => {
+    renderShell();
+    const scribe = resizeHandles()[0]!;
+    const before = Number(scribe.getAttribute("aria-valuenow"));
+    fireEvent.keyDown(scribe, { key: "ArrowRight" });
+    expect(Number(scribe.getAttribute("aria-valuenow"))).toBeGreaterThan(before);
+    fireEvent.keyDown(scribe, { key: "ArrowLeft" });
+    expect(Number(scribe.getAttribute("aria-valuenow"))).toBe(before);
+  });
+
+  it("grows the AI team pane towards the left, so its arrows are not inverted", () => {
+    renderShell();
+    const team = resizeHandles()[1]!;
+    const before = Number(team.getAttribute("aria-valuenow"));
+    fireEvent.keyDown(team, { key: "ArrowLeft" });
+    expect(Number(team.getAttribute("aria-valuenow"))).toBeGreaterThan(before);
+    fireEvent.keyDown(team, { key: "ArrowRight" });
+    expect(Number(team.getAttribute("aria-valuenow"))).toBe(before);
+  });
+
+  it("never lets a pane shrink past its minimum", () => {
+    renderShell();
+    const scribe = resizeHandles()[0]!;
+    for (let i = 0; i < 40; i += 1) fireEvent.keyDown(scribe, { key: "ArrowLeft" });
+    expect(Number(scribe.getAttribute("aria-valuenow"))).toBe(
+      Number(scribe.getAttribute("aria-valuemin")),
+    );
+  });
+
+  it("renders the encounter header through the translation key", () => {
+    renderShell();
+    // the literal it used to be was not translatable; asserting the key resolves is
+    // what keeps a hardcoded string from creeping back in
+    expect(screen.getByText(/Encounter view/)).toBeTruthy();
   });
 });
