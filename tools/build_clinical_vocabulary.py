@@ -27,7 +27,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SRC = HERE.parent / "docs" / "reference" / "clinical-vocabulary"
 OUT = HERE.parent / "apps" / "web" / "src" / "lib" / "clinicalVocabulary.ts"
-RANK_CUTOFF = 150
+RANK_CUTOFF = 500
+
+# Rank alone would eventually drag in the allergy panels -- 121 entries like "Almond IgEAb",
+# phrases no clinician types. Measured before excluding: there are none of them inside rank 500,
+# so the rule costs nothing today and holds the line if the cutoff moves again.
+EXCLUDED_CLASSES = {"allergy"}
 
 # Synonyms and panel abbreviations clinicians actually type. Each expands to a term that already
 # exists in the two sources above (ALT -> alanine aminotransferase, HbA1c -> hemoglobin a1c,
@@ -49,27 +54,59 @@ CURATED_IMAGING = {
     "IO": ["dental x-ray", "opg"],
 }
 CURATED_LABS = {
-    "cbc": "complete blood count", "fbc": "complete blood count",
-    "wbc": "leukocytes", "rbc": "erythrocytes", "plt": "platelets",
-    "hb": "hemoglobin", "hgb": "hemoglobin", "hct": "hematocrit", "alt": "alanine aminotransferase",
-    "ast": "aspartate aminotransferase", "alp": "alkaline phosphatase", "ptt": "partial thromboplastin time",
-    "pt": "prothrombin time", "inr": "international normalized ratio",
-    "mcv": "erythrocyte mean corpuscular volume", "mch": "erythrocyte mean corpuscular hemoglobin",
+    # Haematology
+    "cbc": "complete blood count", "fbc": "complete blood count", "wbc": "leukocytes",
+    "rbc": "erythrocytes", "plt": "platelets", "hb": "hemoglobin", "hgb": "hemoglobin",
+    "hct": "hematocrit", "pcv": "hematocrit", "mcv": "erythrocyte mean corpuscular volume",
+    "mch": "erythrocyte mean corpuscular hemoglobin", "rdw": "erythrocyte distribution width",
+    "esr": "erythrocyte sedimentation rate", "retic": "reticulocytes",
+    # Chemistry and renal
     "lft": "liver function", "lfts": "liver function panel", "rft": "renal function",
     "kft": "kidney function", "bun": "urea nitrogen", "egfr": "glomerular filtration",
-    "gfr": "glomerular filtration", "tft": "thyroid function", "tsh": "thyrotropin",
-    "ft4": "free thyroxine", "ft3": "free triiodothyronine", "hba1c": "hemoglobin a1c",
-    "a1c": "hemoglobin a1c", "fbs": "glucose", "rbs": "glucose",
-    "alt": "alanine aminotransferase", "sgpt": "alanine aminotransferase",
-    "ast": "aspartate aminotransferase", "sgot": "aspartate aminotransferase",
-    "alp": "alkaline phosphatase", "ggt": "gamma glutamyl transferase",
-    "ldl": "ldl cholesterol", "hdl": "hdl cholesterol", "tg": "triglycerides",
-    "chol": "cholesterol", "crp": "c reactive protein", "esr": "erythrocyte sedimentation rate",
+    "gfr": "glomerular filtration", "alt": "alanine aminotransferase",
+    "sgpt": "alanine aminotransferase", "ast": "aspartate aminotransferase",
+    "sgot": "aspartate aminotransferase", "alp": "alkaline phosphatase",
+    "ggt": "gamma glutamyl transferase", "tbil": "bilirubin", "dbil": "bilirubin",
+    "alb": "albumin", "ldh": "lactate dehydrogenase", "ck": "creatine kinase",
+    "u&e": "electrolytes", "ue": "electrolytes", "ca": "calcium", "mg": "magnesium",
+    "po4": "phosphate", "ua": "uric acid", "amy": "amylase", "lip": "lipase",
+    # Lipids and glucose
+    "lipid": "lipid", "ldl": "ldl cholesterol", "hdl": "hdl cholesterol",
+    "tg": "triglycerides", "chol": "cholesterol", "hba1c": "hemoglobin a1c",
+    "a1c": "hemoglobin a1c", "fbs": "glucose", "rbs": "glucose", "ogtt": "glucose tolerance",
+    # Endocrinology
+    "tft": "thyroid function", "tsh": "thyrotropin", "ft4": "free thyroxine",
+    "ft3": "free triiodothyronine", "pth": "parathyrin", "cortisol": "cortisol",
+    "testosterone": "testosterone", "prolactin": "prolactin", "fsh": "follicle stimulating hormone",
+    "lh": "lutropin", "estradiol": "estradiol", "progesterone": "progesterone",
+    # Cardiac and inflammatory markers
+    "trop": "troponin", "troponin": "troponin", "bnp": "natriuretic peptide",
+    "crp": "c reactive protein", "hs-crp": "c reactive protein", "pct": "procalcitonin",
+    "d-dimer": "d dimer", "ferritin": "ferritin", "iron": "iron",
+    "tibc": "iron binding capacity", "b12": "cobalamin", "folate": "folate",
+    "vitd": "25-hydroxyvitamin d", "vitamin d": "25-hydroxyvitamin d",
+    # Coagulation
     "inr": "international normalized ratio", "pt": "prothrombin time",
-    "aptt": "activated partial thromboplastin time", "abg": "blood gas",
-    "psa": "prostate specific ag", "vitd": "25-hydroxyvitamin d", "b12": "cobalamin",
-    "u&e": "electrolytes", "ue": "electrolytes", "lfts": "liver function panel",
-    "urine culture": "urine culture", "mcs": "culture and sensitivity",
+    "ptt": "partial thromboplastin time", "aptt": "activated partial thromboplastin time",
+    "fib": "fibrinogen", "ddimer": "d dimer",
+    # Microbiology and urinalysis
+    "urine culture": "urine culture", "urine mcs": "urine culture", "mcs": "culture and sensitivity",
+    "culture": "culture", "c&s": "culture and sensitivity", "blood culture": "blood culture",
+    "stool culture": "stool culture", "sputum culture": "sputum culture",
+    "wound swab": "wound culture", "csf culture": "culture",
+    "urinalysis": "urinalysis", "ua dipstick": "urinalysis", "urine analysis": "urinalysis",
+    "stool analysis": "stool analysis", "occult blood": "occult blood",
+    # Serology, molecular and histopathology
+    "serology": "serology", "hiv": "human immunodeficiency virus", "hepatitis": "hepatitis",
+    "hbsag": "hepatitis b surface antigen", "anti-hcv": "hepatitis c antibody",
+    "vdrl": "treponema pallidum", "pcr": "polymerase chain reaction", "culture and sensitivity": "culture and sensitivity",
+    "biopsy": "biopsy", "histopathology": "histopathology", "cytology": "cytology",
+    "pap smear": "cytology", "fna": "fine needle aspirate",
+    # Tumour markers and other orderables
+    "psa": "prostate specific ag", "cea": "carcinoembryonic ag", "afp": "alpha fetoprotein",
+    "ca125": "cancer antigen 125", "ca19-9": "cancer antigen 19-9",
+    "abg": "blood gas", "vbg": "blood gas", "spo2": "oxygen saturation",
+    "cbc with diff": "complete blood count", "esr/crp": "c reactive protein",
 }
 
 
@@ -97,7 +134,7 @@ def loinc() -> list[tuple[int, str, str]]:
                 digits = re.sub(r"\D", "", parts[-1])
                 rank = int(digits) if digits else 0
                 name = parts[1].strip()
-                if rank and parts[0].strip() not in rows:
+                if rank and parts[3].strip().lower() not in EXCLUDED_CLASSES and parts[0].strip() not in rows:
                     rows[parts[0].strip()] = (rank, name)
     return [(r, c, n) for c, (r, n) in sorted(rows.items(), key=lambda kv: kv[1][0]) if r <= RANK_CUTOFF]
 

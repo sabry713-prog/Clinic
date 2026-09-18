@@ -73,6 +73,19 @@ describe("proposeChecklist — deterministic derivation", () => {
     expect(proposeChecklist("", "check lipids").map((h) => h.label)).toContain("Review lipid profile");
   });
 
+  it("scans the whole vocabulary fast enough to run on every keystroke", () => {
+    // The proposal runs on each note edit and the vocabulary is now several hundred phrases, so
+    // an accidental per-call RegExp compilation or quadratic scan would be felt while typing.
+    // The bound is deliberately loose: this catches a collapse, not a slow machine.
+    const note =
+      "Chest tightness on exertion for two weeks. BP 114/82, HR 74, SpO2 96%, Temp 37.1C. " +
+      "Heart sounds not normal, murmurs. Kidney ultrasound and urine culture, follow up in a week.";
+    const started = performance.now();
+    for (let i = 0; i < 50; i += 1) proposeChecklist(note, note);
+    const perScan = (performance.now() - started) / 50;
+    expect(perScan).toBeLessThan(50);
+  });
+
   it("carries the generated vocabulary, and none of its unsafe short forms", () => {
     // Imaging modalities come from DICOM PS3.16 CID 29 and the labs from LOINC Top 2000+
     // (rank order). See tools/build_clinical_vocabulary.py.

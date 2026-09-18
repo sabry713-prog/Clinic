@@ -293,8 +293,18 @@ const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
  * keeps "lipid" matching "lipids" and "ALT" matching only ALT.
  */
 export function mentionsKeyword(haystack: string, keyword: string): boolean {
-  return new RegExp(`\\b${escapeRe(keyword)}(?:s|es|ed|ing)?\\b`, "i").test(haystack);
+  // Compiled once per term. The vocabulary runs to hundreds of phrases and this is called for
+  // every entry on every keystroke, so building the RegExp inline made each keystroke pay for
+  // several hundred compilations.
+  let re = KEYWORD_RE_CACHE.get(keyword);
+  if (!re) {
+    re = new RegExp(`\\b${escapeRe(keyword)}(?:s|es|ed|ing)?\\b`, "i");
+    KEYWORD_RE_CACHE.set(keyword, re);
+  }
+  return re.test(haystack);
 }
+
+const KEYWORD_RE_CACHE = new Map<string, RegExp>();
 
 /** Pure: derive suggested checklist entries from encounter text. */
 export function proposeChecklist(
