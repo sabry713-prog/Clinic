@@ -1093,3 +1093,27 @@ between tags, no minimum word count -- measures **50 files and roughly 309 strin
 `AuditPage.tsx` (16) at the top. Neither number is wrong: they are different instruments, and
 the larger one is the one to plan against. What changed here is the class that was actually
 broken -- a referenced-but-unresolvable key -- and that class now has a test.
+
+### 24.1 Correction, same day: transcription is live-verified after all
+
+Section 24 recorded one thing as *not* live-verified: transcription's `/health` returned the
+new body in the file and in the commit, and passed its 39 tests, but the running process kept
+answering with the old shape, so the claim was withheld.
+
+It was withheld correctly, but the cause was not what the note guessed. The service was being
+served by **two processes started at 15:56 and 16:34** -- before the edit -- whose command
+lines contain **no port and no repository path**. Every sweep in this session killed by
+process *name*, by *command line*, or by the PID that owned the socket, and all three walked
+past them; the port owner reported by the OS was not the process answering, and four freshly
+launched processes could not take a socket that was already held. Enumerating python
+interpreters by **executable path** under the repository found them, and after they were killed
+`:5003` went to zero listeners for the first time in the session.
+
+Then a clean start served it correctly:
+
+    :5003 transcription {"status":"ok","service":"clinical-copilot-transcription",
+                         "engine":"faster-whisper:large-v3","engine_ready":true,"stub":false}
+
+So the item closes, and the lesson is the project's own earlier one, relearned: **kill by
+executable path, never by command line**, and treat the OS's reported socket owner as a hint
+rather than a fact. Both the stack-stop tool and the local-dev skill now carry it.
