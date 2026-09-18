@@ -24,6 +24,8 @@ until such a model is provisioned and measured.
 """
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Optional
@@ -512,3 +514,70 @@ async def filter_resolved_sources(
             unmappable_chunks=unmappable,
         )
     return kept, unresolved
+
+_SUPPORT_NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+_SUPPORT_WORD = re.compile(r"[A-Za-z\u0600-\u06FF]{4,}")
+_SUPPORT_STOP = frozenset(
+    {
+        "with", "from", "that", "this", "have", "been", "were", "will", "your", "their",
+        "there", "which", "when", "what", "about", "into", "over", "under", "after",
+        "before", "patient", "patients", "hospital", "record", "records", "current",
+        "recent", "shows", "show", "noted", "given", "order", "orders",
+        # Frequency and time-of-day words are shared by almost every medication line and
+        # therefore carry no evidence. A first draft of the test below proved the point by
+        # accident: "warfarin 5mg once daily" counted as supported by "metformin 500mg
+        # twice daily" on the strength of the word "daily" alone.
+        "daily", "hourly", "weekly", "monthly", "once", "twice", "thrice", "every",
+        "morning", "evening", "night", "prn", "needed", "required", "continue",
+    }
+)
+
+
+def checkable_tokens(text: str) -> set[str]:
+    """The parts of a text a reader could check against a record.
+
+    Numbers (doses, values, dates) and words long enough to be more than glue. Chosen
+    because these are exactly the tokens whose *absence* means two texts are about
+    different things.
+    """
+    lowered = text.lower()
+    return {m.group(0) for m in _SUPPORT_NUMBER.finditer(lowered)} | {
+        m.group(0) for m in _SUPPORT_WORD.finditer(lowered) if m.group(0) not in _SUPPORT_STOP
+    }
+
+
+def verify_support(
+    answer_text: str,
+    sources: list[AnswerSource],
+) -> tuple[list[AnswerSource], list[AnswerSource]]:
+    """Split sources into ``(supported, unsupported)`` on lexical evidence alone.
+
+    This is **not** entailment and must never be described as it. An answer can repeat a
+    source's number and still assert something that source does not say; nothing here
+    reads meaning. It is a floor, and the failure it catches is real and was observed: a
+    citation whose text shares nothing at all with the answer carrying it -- the class of
+    defect behind ``source_id = patient_id``, where the link resolved to a row that had
+    nothing to do with the claim.
+
+    ``filter_resolved_sources`` answers "does this citation point at a row that exists";
+    this answers "does that row's text have anything in common with what was said". Both
+    questions have to be asked, and they are different questions.
+
+    A source whose text offers no checkable token at all is returned as supported: the
+    absence of checkable content in a short field is not evidence of mismatch, and
+    treating it as such would silently discard true citations.
+
+    **Known weakness, stated rather than papered over:** one shared word that is not on
+    the stop list is enough, so two unrelated *medication* lines that both say "tablet"
+    would pass. Tightening this (two independent tokens, or a value that matches) trades
+    false confidence for the risk of discarding true citations, and that trade belongs to
+    whoever consumes the verdict. What this must not do -- and what the code it replaces
+    did -- is let a citation stand with *nothing* in common with its claim.
+    """
+    answer_tokens = checkable_tokens(answer_text or "")
+    supported: list[AnswerSource] = []
+    unsupported: list[AnswerSource] = []
+    for source in sources:
+        tokens = checkable_tokens(source.fact_segment or "")
+        (supported if not tokens or tokens & answer_tokens else unsupported).append(source)
+    return supported, unsupported

@@ -201,6 +201,27 @@ async def answer(
             logger.warning("qa_source_filter_failed", error=str(exc), patient_id=patient_id)
             sources = []
 
+    # Existence was asked above; support is a different question, and C03 was that nobody
+    # asked it. The list is deliberately **not** narrowed here: an unsupported citation is
+    # evidence that the answer drifted from its sources, and a shorter citation list would
+    # hide that drift while looking tidier. The floor in `verify_support` is lexical, so
+    # dropping on it could also discard a true citation -- so it reports, and the decision
+    # stays with whoever reads the log.
+    if sources:
+        try:
+            from .fact_contract import verify_support
+
+            _supported, unsupported = verify_support(answer_text, sources)
+            if unsupported:
+                logger.warning(
+                    "qa_sources_unsupported",
+                    patient_id=patient_id,
+                    unsupported=len(unsupported),
+                    checked=len(sources),
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("qa_support_check_failed", error=str(exc), patient_id=patient_id)
+
     return QAResponse(
         interaction_id=interaction_id,
         patient_id=patient_id,
