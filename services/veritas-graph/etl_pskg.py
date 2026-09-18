@@ -57,6 +57,8 @@ import asyncio
 import os
 import re
 import sys
+from contextvars import ContextVar
+from uuid import uuid4
 from datetime import date, datetime, time, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -81,12 +83,12 @@ CONSTRAINTS = [
 
 MERGE_PATIENT = """
 MERGE (p:Patient {id: $id})
-SET p.mrn = $mrn, p.age = $age, p.gender = $gender
+SET p.mrn = $mrn, p.age = $age, p.gender = $gender, p.run_id = $run_id, p.loaded_at = $loaded_at
 """
 
 MERGE_ENCOUNTER = """
 MERGE (e:Encounter {id: $id})
-SET e.date = $date, e.provider = $provider
+SET e.date = $date, e.provider = $provider, e.run_id = $run_id, e.loaded_at = $loaded_at
 WITH e
 MATCH (p:Patient {id: $patient_id})
 MERGE (p)-[:HAS_ENCOUNTER]->(e)
@@ -94,7 +96,7 @@ MERGE (p)-[:HAS_ENCOUNTER]->(e)
 
 MERGE_CONDITION = """
 MERGE (c:Condition {key: $key})
-SET c.icd10 = $icd10, c.display_name = $display_name
+SET c.icd10 = $icd10, c.display_name = $display_name, c.run_id = $run_id, c.loaded_at = $loaded_at
 """
 
 LINK_CONDITION_TO_ENCOUNTER = """
@@ -113,14 +115,14 @@ MERGE (p)-[:DIAGNOSED_WITH]->(c)
 
 MERGE_MEDICATION = """
 MERGE (m:Medication {key: $key})
-SET m.sfda_code = $sfda_code, m.rxnorm_code = $rxnorm_code, m.name = $name
+SET m.sfda_code = $sfda_code, m.rxnorm_code = $rxnorm_code, m.name = $name, m.run_id = $run_id, m.loaded_at = $loaded_at
 """
 
 LINK_MEDICATION_TO_ENCOUNTER = """
 MATCH (e:Encounter {id: $encounter_id})
 MATCH (m:Medication {key: $key})
 MERGE (e)-[r:PRESCRIBED]->(m)
-SET r.dose = $dose, r.route = $route, r.frequency = $frequency
+SET r.dose = $dose, r.route = $route, r.frequency = $frequency, r.run_id = $run_id, r.loaded_at = $loaded_at
 """
 
 # Fallback when no encounter correlates -- same rationale as
@@ -133,12 +135,12 @@ LINK_MEDICATION_TO_PATIENT = """
 MATCH (p:Patient {id: $patient_id})
 MATCH (m:Medication {key: $key})
 MERGE (p)-[r:PRESCRIBED]->(m)
-SET r.dose = $dose, r.route = $route, r.frequency = $frequency
+SET r.dose = $dose, r.route = $route, r.frequency = $frequency, r.run_id = $run_id, r.loaded_at = $loaded_at
 """
 
 MERGE_LABRESULT = """
 MERGE (l:LabResult {id: $id})
-SET l.test_name = $test_name, l.value = $value, l.unit = $unit, l.flag = $flag, l.effective_at = $effective_at
+SET l.test_name = $test_name, l.value = $value, l.unit = $unit, l.flag = $flag, l.effective_at = $effective_at, l.run_id = $run_id, l.loaded_at = $loaded_at
 """
 
 LINK_LAB_TO_ENCOUNTER = """
@@ -158,7 +160,7 @@ MERGE (p)-[:HAS_LAB]->(l)
 # separate from MERGE_LABRESULT because measured labs never carry these.
 MARK_LAB_AS_DERIVED = """
 MATCH (l:LabResult {id: $id})
-SET l.derived = true, l.formula = $formula, l.derived_from = $derived_from
+SET l.derived = true, l.formula = $formula, l.derived_from = $derived_from, l.run_id = $run_id, l.loaded_at = $loaded_at
 """
 
 
@@ -336,6 +338,34 @@ def _nearest_encounter_id(encounters: list[dict[str, Any]], reference: Any) -> O
 
 # -- Graph writes --------------------------------------------------------------
 
+# -- Run lineage (M06, slice 1) ------------------------------------------------
+#
+# Every fact written by the ETL records which run wrote it. Nothing reads this
+# yet; it is the prerequisite for retiring facts that the source has withdrawn,
+# because retiring needs to know which run last saw a fact. Additive by design:
+# a reader that ignores it sees exactly what it saw before.
+
+_run_id: "ContextVar[str]" = ContextVar("pskg_run_id", default="")
+
+
+def _new_run_id() -> str:
+    return f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{uuid4().hex[:8]}"
+
+
+async def _write(graph: Any, query: str, **params: Any) -> Any:
+    """`graph.run` with the lineage of the current run attached.
+
+    A wrapper rather than an extra keyword at each call site: there are two dozen
+    write sites, and a single one that forgets to stamp would be invisible.
+    """
+    run_id = _run_id.get() or _new_run_id()
+    params.setdefault("run_id", run_id)
+    params.setdefault("loaded_at", datetime.now(timezone.utc).isoformat())
+    # the driver call itself, not `_write`: routing this line through the wrapper
+    # made the wrapper call itself (caught by the graph suite, not by review)
+    return await graph.run(query, **params)
+
+
 def _normalise_unit(unit: Any) -> str:
     """Lower-case a unit and fold the two mu characters together.
 
@@ -416,7 +446,7 @@ def _derived_egfr(
 
 async def _ensure_constraints(graph: AsyncGraphClient) -> None:
     for statement in CONSTRAINTS:
-        await graph.run(statement)
+        await _write(graph, statement)
 
 
 async def ingest_patient(
@@ -426,7 +456,16 @@ async def ingest_patient(
 ) -> dict[str, int]:
     """Re-materializes ONE patient's graph. MERGE-based throughout, so
     calling this twice for the same patient produces the same graph, never
-    duplicate nodes -- safe to re-run as a full refresh or a one-off sync."""
+    duplicate nodes -- safe to re-run as a full refresh or a one-off sync.
+
+    One run per patient, and every fact this run writes carries its `run_id` and
+    `loaded_at` (M06, slice 1). That is what makes a withdrawn fact traceable to
+    the run that last saw it, which is the prerequisite for retiring it -- the
+    shared Condition/Medication nodes must never be touched for one patient.
+    No reset of the run id is needed: every entry sets a fresh one, so a stale
+    value cannot outlive the call that set it.
+    """
+    _run_id.set(_new_run_id())
     counts = {"patients": 0, "encounters": 0, "conditions": 0, "medications": 0, "lab_results": 0}
 
     async with pool.acquire() as conn:
@@ -438,7 +477,8 @@ async def ingest_patient(
         medications = await _fetch_medications(conn, patient_id)
         lab_results = await _fetch_lab_results(conn, patient_id)
 
-    await graph.run(
+    await _write(
+        graph,
         MERGE_PATIENT,
         id=str(patient["id"]),
         mrn=patient.get("mrn"),
@@ -452,7 +492,8 @@ async def ingest_patient(
             str(enc["attending_user_id"]) if enc.get("attending_user_id") else None
         )
         enc_date = enc.get("date")
-        await graph.run(
+        await _write(
+        graph,
             MERGE_ENCOUNTER,
             id=str(enc["id"]),
             patient_id=str(patient_id),
@@ -463,17 +504,18 @@ async def ingest_patient(
 
     for cond in conditions:
         key, icd10 = _condition_key(cond)
-        await graph.run(MERGE_CONDITION, key=key, icd10=icd10, display_name=cond.get("code_display"))
+        await _write(graph, MERGE_CONDITION, key=key, icd10=icd10, display_name=cond.get("code_display"))
         encounter_id = _nearest_encounter_id(encounters, cond.get("onset_date"))
         if encounter_id:
-            await graph.run(LINK_CONDITION_TO_ENCOUNTER, encounter_id=str(encounter_id), key=key)
+            await _write(graph, LINK_CONDITION_TO_ENCOUNTER, encounter_id=str(encounter_id), key=key)
         else:
-            await graph.run(LINK_CONDITION_TO_PATIENT, patient_id=str(patient_id), key=key)
+            await _write(graph, LINK_CONDITION_TO_PATIENT, patient_id=str(patient_id), key=key)
         counts["conditions"] += 1
 
     for med in medications:
         key, sfda_code, rxnorm_code = _medication_identity(med)
-        await graph.run(
+        await _write(
+        graph,
             MERGE_MEDICATION,
             key=key,
             sfda_code=sfda_code,
@@ -488,16 +530,17 @@ async def ingest_patient(
             "frequency": med.get("frequency"),
         }
         if encounter_id:
-            await graph.run(LINK_MEDICATION_TO_ENCOUNTER, encounter_id=str(encounter_id), **edge_params)
+            await _write(graph, LINK_MEDICATION_TO_ENCOUNTER, encounter_id=str(encounter_id), **edge_params)
         else:
-            await graph.run(LINK_MEDICATION_TO_PATIENT, patient_id=str(patient_id), **edge_params)
+            await _write(graph, LINK_MEDICATION_TO_PATIENT, patient_id=str(patient_id), **edge_params)
         counts["medications"] += 1
 
     for lab in lab_results:
         flag = _lab_flag(lab.get("value_numeric"), lab.get("ref_range_low"), lab.get("ref_range_high"))
         value = lab.get("value_numeric") if lab.get("value_numeric") is not None else lab.get("value_text")
         lab_effective_at = lab.get("effective_at")
-        await graph.run(
+        await _write(
+        graph,
             MERGE_LABRESULT,
             id=str(lab["id"]),
             test_name=lab.get("code_display") or lab.get("code"),
@@ -508,9 +551,9 @@ async def ingest_patient(
         )
         encounter_id = lab.get("encounter_id") or _nearest_encounter_id(encounters, lab.get("effective_at"))
         if encounter_id:
-            await graph.run(LINK_LAB_TO_ENCOUNTER, encounter_id=str(encounter_id), id=str(lab["id"]))
+            await _write(graph, LINK_LAB_TO_ENCOUNTER, encounter_id=str(encounter_id), id=str(lab["id"]))
         else:
-            await graph.run(LINK_LAB_TO_PATIENT, patient_id=str(patient_id), id=str(lab["id"]))
+            await _write(graph, LINK_LAB_TO_PATIENT, patient_id=str(patient_id), id=str(lab["id"]))
         counts["lab_results"] += 1
 
     # Derived eGFR (B5). Computed here rather than read from a lab the hospital
@@ -521,9 +564,9 @@ async def ingest_patient(
     derived = _derived_egfr(lab_results, patient)
     if derived:
         lab_params, marker_params = derived
-        await graph.run(MERGE_LABRESULT, **lab_params)
-        await graph.run(MARK_LAB_AS_DERIVED, **marker_params)
-        await graph.run(LINK_LAB_TO_PATIENT, patient_id=str(patient_id), id=lab_params["id"])
+        await _write(graph, MERGE_LABRESULT, **lab_params)
+        await _write(graph, MARK_LAB_AS_DERIVED, **marker_params)
+        await _write(graph, LINK_LAB_TO_PATIENT, patient_id=str(patient_id), id=lab_params["id"])
         counts["derived_egfr"] = counts.get("derived_egfr", 0) + 1
 
     return counts

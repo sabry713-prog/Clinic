@@ -611,3 +611,45 @@ async def test_creatinine_in_mg_dl_is_converted_not_assumed():
     # 1.5 mg/dL == 132.6 umol/L; reading it as umol/L would put a healthy 20-something
     # value where a stage-3 one belongs
     assert 35 < float(derived["value"]) < 50
+
+
+# --- M06, slice 1: run lineage -------------------------------------------------
+#
+# Every fact records the run that wrote it. Nothing reads it yet; it is the
+# prerequisite for retiring a fact the source has withdrawn, because retiring has
+# to know which run last saw it. These two tests pin the invariant that would
+# otherwise rot silently: one patient materialization is exactly one run.
+
+@pytest.mark.asyncio
+async def test_every_write_records_the_identical_run():
+    pool = _make_pool(
+        conditions=CONDITION_ROWS_CONFIRMED, medications=MEDICATION_ROWS_SFDA, labs=LAB_ROWS_HIGH
+    )
+    graph = FakeAsyncGraph()
+
+    await ingest_patient("patient-1", pool, graph)
+
+    assert graph.calls, "the fake recorded no writes"
+    for cypher, params in graph.calls:
+        assert params.get("run_id"), f"a write carried no run id: {cypher[:40]}"
+        assert params.get("loaded_at"), f"a write carried no timestamp: {cypher[:40]}"
+
+    runs = {params["run_id"] for _, params in graph.calls}
+    assert len(runs) == 1, f"one patient materialization must be one run, saw {runs}"
+
+
+@pytest.mark.asyncio
+async def test_two_patients_are_two_runs():
+    pool = _make_pool(
+        conditions=CONDITION_ROWS_CONFIRMED, medications=MEDICATION_ROWS_SFDA, labs=LAB_ROWS_HIGH
+    )
+
+    first, second = FakeAsyncGraph(), FakeAsyncGraph()
+    await ingest_patient("patient-1", pool, first)
+    await ingest_patient("patient-1", pool, second)
+
+    run_a = {params["run_id"] for _, params in first.calls}
+    run_b = {params["run_id"] for _, params in second.calls}
+    assert len(run_a) == len(run_b) == 1
+    assert run_a != run_b, "a re-materialization must be a new run, not a continuation"
+
