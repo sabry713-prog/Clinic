@@ -172,6 +172,14 @@ export interface NecessityVerdict {
   readonly suggested_codes: readonly { readonly icd10: string; readonly description: string }[];
 }
 
+export interface PrerequisiteVerdict {
+  readonly requires_code: string;
+  readonly requires_display: string;
+  /** An order of that kind is on the record. It does NOT claim the result has come back. */
+  readonly satisfied: boolean;
+  readonly rationale: string;
+}
+
 export interface ServiceCandidate {
   readonly category: string;
   readonly code_system: string | null;
@@ -181,6 +189,7 @@ export interface ServiceCandidate {
   readonly source_document_id: string | null;
   readonly source_excerpt: string;
   readonly necessity?: NecessityVerdict | null;
+  readonly prerequisite?: PrerequisiteVerdict | null;
 }
 
 export interface ServiceRequestItem {

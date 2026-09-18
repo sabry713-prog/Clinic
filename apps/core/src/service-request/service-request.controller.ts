@@ -68,7 +68,7 @@ export class ServiceRequestController {
     // The verdict travels WITH the candidates: the ordering step is the last place a rejection
     // is still avoidable, and it must not need a second round trip to see it.
     const extracted = await this.svc.extractCandidates(uid(req), id);
-    const data = await this.svc.withNecessity(id, extracted);
+    const data = await this.svc.enrich(id, extracted);
     await this.audit(req, "SERVICE_REQUEST_EXTRACTED", id, { count: data.length });
     return { data };
   }
@@ -81,7 +81,7 @@ export class ServiceRequestController {
   })
   async quickEntry(@Req() req: Request, @Param("id") id: string, @Body() body: QuickEntryDto) {
     const matched = await this.svc.extractFromAdHocText(uid(req), id, body.text);
-    const data = await this.svc.withNecessity(id, matched);
+    const data = await this.svc.enrich(id, matched);
     await this.audit(req, "SERVICE_REQUEST_QUICK_ENTRY_MATCH", id, { count: data.length });
     return { data };
   }

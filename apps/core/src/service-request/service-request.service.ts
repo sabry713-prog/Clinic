@@ -24,6 +24,8 @@ export interface ServiceCandidate {
   readonly source_excerpt: string;
   /** What a payer would make of this order for this patient, when it can be determined. */
   readonly necessity?: NecessityVerdict | null;
+  /** Whether this order must follow another one, and if the record shows it did. */
+  readonly prerequisite?: PrerequisiteVerdict | null;
 }
 
 /**
@@ -37,6 +39,20 @@ export interface ServiceCandidate {
  * UNAVAILABLE means the graph could not be reached. It is deliberately not RED: "we could not
  * check" and "the payer has no rule" are different claims, and only one of them is ours to make.
  */
+/**
+ * A sequencing rule: this order is meant to follow another one.
+ *
+ * `satisfied` reports whether an order of the required kind is on the patient's record. It does
+ * NOT claim the result has come back -- nothing in the schema records that yet (see migration
+ * 1721300000000). The wording in the UI has to match what this can actually decide.
+ */
+export interface PrerequisiteVerdict {
+  readonly requires_code: string;
+  readonly requires_display: string;
+  readonly satisfied: boolean;
+  readonly rationale: string;
+}
+
 export interface NecessityVerdict {
   readonly status: "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE";
   readonly pre_auth_required: boolean | null;
@@ -206,6 +222,63 @@ export class ServiceRequestService {
         return { ...candidate, necessity: best };
       }),
     );
+  }
+
+  /**
+   * Everything the ordering step needs about a candidate, in one call: the payer's reading and
+   * the sequencing rule. Two questions, deliberately kept as two answers -- an order can be
+   * payable and still be the wrong next step, which is the whole reason the second check exists.
+   */
+  async enrich(patientId: string, candidates: readonly ServiceCandidate[]): Promise<readonly ServiceCandidate[]> {
+    const withNecessity = await this.withNecessity(patientId, candidates);
+    return this.withPrerequisites(patientId, withNecessity);
+  }
+
+  /**
+   * Attach the sequencing rules: for each candidate that must follow another order, whether an
+   * order of that kind is already on this patient's record.
+   *
+   * Note what is NOT claimed: that the earlier order has been reported. Reporting that needs an
+   * order lifecycle and a result-to-request link, neither of which exists yet, so the check is
+   * stated for what it is.
+   */
+  async withPrerequisites(
+    patientId: string,
+    candidates: readonly ServiceCandidate[],
+  ): Promise<readonly ServiceCandidate[]> {
+    if (candidates.length === 0) return candidates;
+    const orderCodes = [...new Set(candidates.map((c) => c.code).filter((c): c is string => !!c))];
+    if (orderCodes.length === 0) return candidates;
+
+    const rules = await this.pool.query<{
+      order_code: string; requires_code: string; requires_display: string; rationale: string;
+    }>(
+      `SELECT order_code, requires_code, requires_display, rationale
+         FROM app.order_prerequisite WHERE order_code = ANY($1)`,
+      [orderCodes],
+    );
+    if (rules.rows.length === 0) return candidates;
+
+    const required = [...new Set(rules.rows.map((r) => r.requires_code))];
+    const present = await this.pool.query<{ code: string | null }>(
+      `SELECT DISTINCT code FROM app.service_request WHERE patient_id = $1 AND code = ANY($2)`,
+      [patientId, required],
+    );
+    const onRecord = new Set(present.rows.map((r) => r.code).filter((c): c is string => !!c));
+
+    return candidates.map((candidate) => {
+      const rule = rules.rows.find((r) => r.order_code === candidate.code);
+      if (!rule) return candidate;
+      return {
+        ...candidate,
+        prerequisite: {
+          requires_code: rule.requires_code,
+          requires_display: rule.requires_display,
+          satisfied: onRecord.has(rule.requires_code),
+          rationale: rule.rationale,
+        },
+      };
+    });
   }
 
   /** One deterministic necessity lookup. Null when the graph is unreachable -- never a guess. */
