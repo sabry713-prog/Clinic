@@ -17,6 +17,25 @@ services:
       timeout: 5s
       retries: 10
 
+  # Shared state for anything that must survive a restart or be visible to more
+  # than one replica (M01/M09): sessions, OIDC pending states, OTP rate limits and
+  # the NPHIES submission status broker. With the production chart requesting 3
+  # replicas, in-process state means users are logged out at random and statuses
+  # vanish.
+  redis:
+    image: redis:7-alpine
+    container_name: cc-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
     container_name: cc-keycloak
@@ -116,3 +135,4 @@ volumes:
   minio_data:
   keycloak_data:
   neo4j_data:
+  redis_data:

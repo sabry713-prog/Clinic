@@ -157,14 +157,15 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours
     };
 
-    const sessionId = this.sessions.create(sessionData);
+    // the session lives in the shared store now, so this is a write
+    const sessionId = await this.sessions.create(sessionData);
 
     return { sessionId, returnTo: pending.returnTo };
   }
 
   async buildLogoutUrl(sessionId: string): Promise<string> {
     const session = await this.sessions.get(sessionId);
-    this.sessions.delete(sessionId);
+    await this.sessions.delete(sessionId);
 
     const client = await this.getClient();
     const issuerUrl = this.config.getOrThrow<string>("OIDC_ISSUER_URL");

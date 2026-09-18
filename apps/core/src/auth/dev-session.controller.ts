@@ -74,7 +74,7 @@ export class DevSessionController {
       [user.id],
     );
 
-    const sessionId = this.sessions.create({
+    const sessionId = await this.sessions.create({
       userId: user.id,
       tenantId: "00000000-0000-0000-0000-000000000001",
       externalSubject: body.external_subject,

@@ -7,6 +7,7 @@ import { AuthModule } from "./auth/auth.module";
 import { DatabaseModule } from "./database/database.module";
 import { AuditMiddleware } from "./audit/audit.middleware";
 import { AuditModule } from "./audit/audit.module";
+import { RedisModule } from "./redis/redis.module";
 import { IngestionModule } from "./ingestion/ingestion.module";
 import { PatientModule } from "./patient/patient.module";
 import { RbacModule } from "./rbac/rbac.module";
@@ -47,6 +48,10 @@ function composeFeatureModules() {
   const claimIntegrity = appProfile() === "claim-integrity";
   return [
     DatabaseModule,
+    // Provides REDIS_CLIENT: the shared store for sessions and the
+    // live-authorization cache. Global, so every module that needs it resolves
+    // without importing this one -- but it still has to be imported here.
+    RedisModule,
     // Provides AuditOutboxService. The middleware below is applied from this
     // module's context (consumer.apply in AppModule), so the outbox it injects
     // has to be visible here -- a provider registered only in AuditModule is

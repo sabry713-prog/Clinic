@@ -1,5 +1,13 @@
 /**
- * SessionService — in-process session store with DB-backed revocation.
+ * SessionService — sessions in a shared store, with DB-backed revocation.
+ *
+ * M01/M09: sessions used to live in a `Map` inside the API process. The
+ * production chart runs 3 replicas, so a session created by one pod was unknown
+ * to the other two: the user was logged out at random depending on which replica
+ * answered the next request. Session data now lives in Redis (REDIS_URL), which
+ * every replica reads, and the same store holds the short-lived live-authorization
+ * cache so that a disabled user is rejected everywhere, not just on the pod that
+ * noticed.
  *
  * M02 (readiness assessment): role/disable updates must revoke active
  * sessions. The session cookie lives 8 hours, but the user's actual
@@ -18,6 +26,7 @@ import type { Pool } from "pg";
 import type { AuthUser } from "@clinical-copilot/shared-types";
 import { asUserId, asTenantId } from "@clinical-copilot/shared-types";
 import { PG_POOL } from "../database/database.module";
+import { REDIS_CLIENT, type SharedStore } from "../redis/redis.module";
 
 export interface SessionData {
   readonly userId: string;
@@ -40,18 +49,33 @@ interface LiveUserState {
 
 /** Cache duration for the DB user-state check (avoids a query per request). */
 const USER_STATE_CACHE_MS = 5_000;
-const USER_STATE_CACHE = new Map<string, { state: LiveUserState; fetchedAt: number }>();
+
+/** Key namespace, so the store can be inspected without guessing. */
+const SESSION_KEY = (sessionId: string): string => `session:${sessionId}`;
+const USER_STATE_KEY = (userId: string): string => `userstate:${userId}`;
 
 @Injectable()
 export class SessionService {
   private readonly logger = new Logger(SessionService.name);
-  private readonly store = new Map<string, SessionData>();
 
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    @Inject(REDIS_CLIENT) private readonly redis: SharedStore,
+  ) {}
 
-  create(data: SessionData): string {
+  /**
+   * Store a session. The entry expires on its own (Redis TTL), so a crashed
+   * process cannot leave sessions behind indefinitely.
+   */
+  async create(data: SessionData): Promise<string> {
     const sessionId = uuidv4();
-    this.store.set(sessionId, data);
+    const ttlMs = data.expiresAt.getTime() - Date.now();
+    if (ttlMs <= 0) {
+      // An already-expired session is a caller bug; refusing is better than
+      // writing a key that vanishes on the next read.
+      throw new Error("SessionService.create called with an already-expired session");
+    }
+    await this.redis.set(SESSION_KEY(sessionId), JSON.stringify(data), "PX", ttlMs);
     return sessionId;
   }
 
@@ -61,10 +85,29 @@ export class SessionService {
    * the user's roles have changed from what the session was created with.
    */
   async get(sessionId: string): Promise<SessionData | null> {
-    const session = this.store.get(sessionId);
+    let session: SessionData | null = null;
+    try {
+      const raw = await this.redis.get(SESSION_KEY(sessionId));
+      if (raw !== null) {
+        // JSON carries dates as strings; expiresAt has to come back as a Date or
+        // every comparison below silently compares a string to a Date.
+        const parsed = JSON.parse(raw) as Omit<SessionData, "expiresAt"> & { expiresAt: string };
+        session = { ...parsed, expiresAt: new Date(parsed.expiresAt) };
+      }
+    } catch (err) {
+      // A store that cannot be read is treated as "no session": forcing a
+      // re-login is the safe direction, and it is what the DB-unreachable path
+      // already does below.
+      this.logger.warn({
+        event: "session_store_unavailable",
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return null;
+    }
+
     if (!session) return null;
     if (session.expiresAt < new Date()) {
-      this.store.delete(sessionId);
+      await this.redis.del(SESSION_KEY(sessionId)).catch(() => undefined);
       return null;
     }
 
@@ -74,13 +117,15 @@ export class SessionService {
     if (liveState == null) {
       // DB unreachable or user deleted — fail closed
       this.logger.warn({ event: "session_revocation_check_failed", userId: session.userId });
-      this.store.delete(sessionId);
+      await this.redis.del(SESSION_KEY(sessionId)).catch(() => undefined);
       return null;
     }
 
     if (!liveState.isEnabled) {
       this.logger.warn({ event: "session_revoked_user_disabled", userId: session.userId });
-      this.store.delete(sessionId);
+      // Deleting from the shared store is what makes the revocation immediate on
+      // every replica, not only on the one that handled the request.
+      await this.redis.del(SESSION_KEY(sessionId)).catch(() => undefined);
       return null;
     }
 
@@ -94,15 +139,18 @@ export class SessionService {
         newRoles: liveState.roles,
       });
       const updated: SessionData = { ...session, roles: liveState.roles };
-      this.store.set(sessionId, updated);
+      // KEEPTTL: refreshing the payload must not extend the session's life.
+      await this.redis
+        .set(SESSION_KEY(sessionId), JSON.stringify(updated), "KEEPTTL")
+        .catch(() => undefined);
       return updated;
     }
 
     return session;
   }
 
-  delete(sessionId: string): void {
-    this.store.delete(sessionId);
+  async delete(sessionId: string): Promise<void> {
+    await this.redis.del(SESSION_KEY(sessionId));
   }
 
   toAuthUser(session: SessionData): AuthUser {
@@ -123,9 +171,12 @@ export class SessionService {
    * cache to avoid querying on every single request. Returns null when
    * the DB is unreachable (fail-closed) or the user no longer exists. */
   private async getLiveUserState(userId: string): Promise<LiveUserState | null> {
-    const cached = USER_STATE_CACHE.get(userId);
-    if (cached && Date.now() - cached.fetchedAt < USER_STATE_CACHE_MS) {
-      return cached.state;
+    try {
+      const cached = await this.redis.get(USER_STATE_KEY(userId));
+      if (cached !== null) return JSON.parse(cached) as LiveUserState;
+    } catch {
+      // fall through to the database: an unreadable cache is not an authorization
+      // decision
     }
 
     try {
@@ -144,22 +195,30 @@ export class SessionService {
       );
       if (result.rows.length === 0 || !result.rows[0]!.enabled) {
         const state: LiveUserState = { isEnabled: false, roles: [] };
-        USER_STATE_CACHE.set(userId, { state, fetchedAt: Date.now() });
+        await this.cacheUserState(userId, state);
         return state;
       }
       const roles = result.rows.map((r) => r.role).filter(Boolean);
       const state: LiveUserState = { isEnabled: true, roles };
-      USER_STATE_CACHE.set(userId, { state, fetchedAt: Date.now() });
+      await this.cacheUserState(userId, state);
       return state;
     } catch (err) {
       this.logger.error({
         event: "session_user_state_db_error",
         error: err instanceof Error ? err.message : String(err),
       });
-      // Invalidate cache so the next attempt retries
-      USER_STATE_CACHE.delete(userId);
+      // Invalidate the cache so the next attempt retries
+      await this.redis.del(USER_STATE_KEY(userId)).catch(() => undefined);
       return null;
     }
+  }
+
+  /** Cache the user's live state briefly, in the shared store so that every
+   * replica sees a disabled user within the same window. */
+  private async cacheUserState(userId: string, state: LiveUserState): Promise<void> {
+    await this.redis
+      .set(USER_STATE_KEY(userId), JSON.stringify(state), "PX", USER_STATE_CACHE_MS)
+      .catch(() => undefined);
   }
 
   private rolesDiffer(a: readonly string[], b: readonly string[]): boolean {
@@ -169,8 +228,5 @@ export class SessionService {
     return sorted.some((v, i) => v !== sortedB[i]);
   }
 
-  /** Test helper: clear the user-state cache. */
-  static clearUserStateCache(): void {
-    USER_STATE_CACHE.clear();
-  }
+
 }
