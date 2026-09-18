@@ -48,7 +48,7 @@ const CATALOG: { re: RegExp; category: string; code_system: string; code: string
   { re: /\bct\b(?:\s*scan)?/i, category: "imaging", code_system: "http://snomed.info/sct", code: "77477000", code_display: "CT scan" },
   { re: /\bmri\b/i, category: "imaging", code_system: "http://snomed.info/sct", code: "113091000", code_display: "MRI" },
   { re: /\b(ecg|ekg|electrocardiogram)\b/i, category: "procedure", code_system: "http://snomed.info/sct", code: "29303009", code_display: "Electrocardiogram (ECG)" },
-  { re: /\bechocardiogra(?:m|phy)\b/i, category: "procedure", code_system: "http://snomed.info/sct", code: "40701008", code_display: "Echocardiography" },
+  { re: /\b(?:echo|echocardiogra(?:m|phy))\b/i, category: "procedure", code_system: "http://snomed.info/sct", code: "40701008", code_display: "Echocardiography" },  // "ECHO" is how this is dictated
   { re: /\bcolonoscop(?:y|ies)\b/i, category: "procedure", code_system: "http://snomed.info/sct", code: "73761001", code_display: "Colonoscopy" },
   { re: /\bsigmoidoscop(?:y|ies)\b/i, category: "procedure", code_system: "http://snomed.info/sct", code: "44441009", code_display: "Sigmoidoscopy" },
   { re: /\b(gastroscop(?:y|ies)|ogd|esophagogastroduodenoscop(?:y|ies)|upper gi endoscop(?:y|ies))\b/i, category: "procedure", code_system: "http://snomed.info/sct", code: "1919006", code_display: "Upper GI endoscopy (OGD)" },

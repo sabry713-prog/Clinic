@@ -58,6 +58,16 @@ describe("ServiceRequestService", () => {
       expect(result.every((c) => c.source_excerpt === "chest x-ray, CBC")).toBe(true);
     });
 
+    it("extracts ECHO, the dictated shorthand for echocardiography", async () => {
+      // Reported from a live test: the Plan read "ECHO. And MRI." and only MRI came back,
+      // because the catalogue pattern expected "echocardiogram"/"echocardiography" spelled out.
+      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption());
+      const result = await svc.extractFromAdHocText(USER_ID, PATIENT_ID, "ECHO. And MRI.");
+
+      const displays = result.map((c) => c.code_display).sort();
+      expect(displays).toEqual(["Echocardiography", "MRI"]);
+    });
+
     it("drops the generic X-ray when Chest X-ray also matches the same phrase", async () => {
       const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption());
       const result = await svc.extractFromAdHocText(USER_ID, PATIENT_ID, "chest x-ray");
