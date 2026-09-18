@@ -10,7 +10,25 @@ const mockPool: any = {
 describe("HealthController", () => {
   let controller: HealthController;
 
+  // Every test in this file must be offline. `readiness()` and `preflight()` fetch the NPHIES
+  // engine and two service probes, and the suite was reaching whatever happened to be
+  // listening: it took 66 seconds and failed on a machine where a stack was running. That is
+  // the worst kind of test -- it passes or fails for reasons outside the code -- and it is
+  // also a demo risk, because a running stack is exactly the demo condition. Each test that
+  // cares overrides this with its own answers.
+  const offlineFetch = () =>
+    jest.fn(async (url: unknown) => {
+      if (String(url).includes(":5006")) {
+        return { ok: true, json: async () => ({ profiles_verified: false }) };
+      }
+      if (String(url).includes("/api/v1/graph/stats")) {
+        return { ok: true, json: async () => ({ nodes: 155, relationships: 812 }) };
+      }
+      return { ok: true, json: async () => ({ status: "ok" }) };
+    });
+
   beforeEach(async () => {
+    global.fetch = offlineFetch() as unknown as typeof fetch;
     const module = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [{ provide: PG_POOL, useValue: mockPool }],
