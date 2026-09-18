@@ -1,5 +1,15 @@
 const API_BASE = import.meta.env["VITE_API_BASE_URL"] ?? "";
 
+/**
+ * Every browser call in this application goes through `request`, and it had no
+ * deadline: a hung core or a service that accepts a connection and never answers
+ * left the clinician staring at a spinner forever, with no error to act on.
+ *
+ * The audit filed this as several bare `fetch` calls in files that do not exist at
+ * those paths; the calls that matter are the ones behind this one function.
+ */
+const DEFAULT_TIMEOUT_MS = 20_000;
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -9,20 +19,47 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
   }
+
+  /**
+   * Whether trying again could plausibly succeed. A timeout or a 5xx is worth a
+   * retry; a 4xx is the caller's problem and repeating it only wastes the
+   * clinician's time.
+   */
+  get retryable(): boolean {
+    return this.code === "TIMEOUT" || this.status === 0 || this.status >= 500;
+  }
 }
 
-async function request<T>(
+/** `RequestInit` plus a per-call deadline, so a slow endpoint can be given longer. */
+export type RequestOptions = RequestInit & { readonly timeoutMs?: number };
+
+/** The one place a browser call is made. Exported so its deadline is testable. */
+export async function request<T>(
   path: string,
-  options: RequestInit = {},
+  options: RequestOptions = {},
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  const { timeoutMs = DEFAULT_TIMEOUT_MS, ...init } = options;
+  // A caller-supplied signal wins: it may be the component's own unmount abort, and
+  // aborting that early is correct while a second, longer deadline is not.
+  const signal = init.signal ?? AbortSignal.timeout(timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      signal,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...init.headers,
+      },
+    });
+  } catch (err) {
+    if (err instanceof DOMException && (err.name === "TimeoutError" || err.name === "AbortError")) {
+      throw new ApiError(0, "TIMEOUT", `No answer within ${timeoutMs} ms`);
+    }
+    throw err;
+  }
 
   if (!res.ok) {
     let code = "UNKNOWN_ERROR";
