@@ -15,6 +15,7 @@ import { writeAuditEvent } from "@clinical-copilot/audit";
 import type { RequestId } from "@clinical-copilot/shared-types";
 import { PatientOtpService } from "./patient-otp.service";
 import { checkOtpRequestRateLimit, checkOtpVerifyRateLimit } from "./otp-rate-limit";
+import { REDIS_CLIENT, type SharedStore } from "../redis/redis.module";
 import { BOOKING_SESSION_COOKIE } from "./patient-booking-session.guard";
 
 const PHONE_RE = /^\+?[1-9]\d{6,14}$/;
@@ -52,13 +53,16 @@ export class PatientIdentityController {
   constructor(
     private readonly otpSvc: PatientOtpService,
     @Inject(PG_POOL) private readonly pool: Pool,
+    // M01: the OTP windows live in the shared store, so three replicas cannot
+    // each hand out the full allowance
+    @Inject(REDIS_CLIENT) private readonly store: SharedStore,
   ) {}
 
   @Post("request")
   @HttpCode(204)
   @ApiOperation({ summary: "Request a one-time verification code (dummy/stub delivery, no real SMS provider)" })
   async request(@Req() req: Request, @Body() body: RequestOtpDto): Promise<void> {
-    if (!checkOtpRequestRateLimit(body.phone, clientIp(req))) rateLimited();
+    if (!(await checkOtpRequestRateLimit(this.store, body.phone, clientIp(req)))) rateLimited();
 
     const patientId = await this.otpSvc.requestOtp(body.phone);
     // Audited only on a real match -- an unmatched phone gets no DB/audit
@@ -85,7 +89,7 @@ export class PatientIdentityController {
     @Res({ passthrough: true }) res: Response,
     @Body() body: VerifyOtpDto,
   ): Promise<{ verified: true }> {
-    if (!checkOtpVerifyRateLimit(body.phone)) rateLimited();
+    if (!(await checkOtpVerifyRateLimit(this.store, body.phone))) rateLimited();
 
     try {
       const { sessionToken, patientId } = await this.otpSvc.verifyOtp(body.phone, body.code);

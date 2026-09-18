@@ -9,6 +9,7 @@ import {
 import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
 import { SessionService, type SessionData } from "./session.service";
+import { REDIS_CLIENT, type SharedStore } from "../redis/redis.module";
 
 interface OidcState {
   readonly codeVerifier: string;
@@ -16,16 +17,22 @@ interface OidcState {
   readonly createdAt: number;
 }
 
+const OIDC_STATE_KEY = "oidcstate:";
+const OIDC_STATE_TTL_MS = 600_000; // 10 minutes, as the sweep intended
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private oidcClient: Client | null = null;
-  // PKCE state map: state → OidcState
-  private readonly pendingStates = new Map<string, OidcState>();
+  // PKCE state lives in the shared store (M01): with more than one replica the
+  // callback is served by whichever pod the load balancer picks, and a per-process
+  // map made the other pods answer "Invalid or expired OIDC state" for a login that
+  // was perfectly valid. The TTL replaces the old manual sweep.
 
   constructor(
     private readonly config: ConfigService,
     private readonly sessions: SessionService,
+    @Inject(REDIS_CLIENT) private readonly store: SharedStore,
     @Inject(PG_POOL) private readonly pool: Pool,
   ) {}
 
@@ -70,16 +77,14 @@ export class AuthService {
     const codeChallenge = generators.codeChallenge(codeVerifier);
     const state = generators.state();
 
-    this.pendingStates.set(state, {
-      codeVerifier,
-      returnTo,
-      createdAt: Date.now(),
-    });
-
-    // Clean up stale states (older than 10 minutes)
-    for (const [k, v] of this.pendingStates.entries()) {
-      if (Date.now() - v.createdAt > 600_000) this.pendingStates.delete(k);
-    }
+    // TTL does the cleanup the manual sweep used to do: an abandoned login
+    // cannot leave state behind, on any replica.
+    await this.store.set(
+      `${OIDC_STATE_KEY}${state}`,
+      JSON.stringify({ codeVerifier, returnTo, createdAt: Date.now() }),
+      "PX",
+      OIDC_STATE_TTL_MS,
+    );
 
     return client.authorizationUrl({
       scope: "openid profile email",
@@ -94,11 +99,13 @@ export class AuthService {
     state: string,
     currentUrl: string,
   ): Promise<{ sessionId: string; returnTo: string }> {
-    const pending = this.pendingStates.get(state);
-    if (!pending) {
+    const rawState = await this.store.get(`${OIDC_STATE_KEY}${state}`);
+    if (!rawState) {
       throw new UnauthorizedException("Invalid or expired OIDC state");
     }
-    this.pendingStates.delete(state);
+    const pending = JSON.parse(rawState) as OidcState;
+    // consumed on use, so a replayed callback cannot mint a second session
+    await this.store.del(`${OIDC_STATE_KEY}${state}`);
 
     const client = await this.getClient();
     const params = client.callbackParams(currentUrl);

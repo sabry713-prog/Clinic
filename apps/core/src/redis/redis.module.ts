@@ -29,11 +29,23 @@ export interface SharedStore {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, ...args: unknown[]): Promise<unknown>;
   del(key: string): Promise<unknown>;
+  /**
+   * How many events are inside the trailing window, WITHOUT recording one.
+   * Paired with `windowAdd` so a caller can check two dimensions and only
+   * consume a slot when both pass -- which is what the OTP limiter needs.
+   */
+  windowPeek(key: string, nowMs: number, windowMs: number): Promise<number>;
+  /** Record an event in the trailing window. */
+  windowAdd(key: string, nowMs: number, windowMs: number): Promise<number>;
 }
+
+const WINDOW_PRUNE_INTERVAL_MS = 60_000;
 
 /** Development fallback: a store that only this process can see. */
 export class InProcessStore implements SharedStore {
   private readonly entries = new Map<string, string>();
+  private readonly windows = new Map<string, number[]>();
+  private lastPrune = Date.now();
 
   get(key: string): Promise<string | null> {
     return Promise.resolve(this.entries.get(key) ?? null);
@@ -45,7 +57,86 @@ export class InProcessStore implements SharedStore {
   }
 
   del(key: string): Promise<unknown> {
-    return Promise.resolve(this.entries.delete(key) ? 1 : 0);
+    this.entries.delete(key);
+    return Promise.resolve(this.windows.delete(key) ? 1 : 0);
+  }
+
+  private pruneWindows(nowMs: number): void {
+    // without a TTL to lean on, the fallback has to sweep its own keys or it
+    // grows for the life of the process
+    if (nowMs - this.lastPrune < WINDOW_PRUNE_INTERVAL_MS) return;
+    this.lastPrune = nowMs;
+    for (const [key, times] of this.windows) {
+      if (times.every((ts) => nowMs - ts > WINDOW_PRUNE_INTERVAL_MS)) this.windows.delete(key);
+    }
+  }
+
+  windowPeek(key: string, nowMs: number, windowMs: number): Promise<number> {
+    this.pruneWindows(nowMs);
+    const fresh = (this.windows.get(key) ?? []).filter((ts) => nowMs - ts < windowMs);
+    this.windows.set(key, fresh);
+    return Promise.resolve(fresh.length);
+  }
+
+  windowAdd(key: string, nowMs: number, windowMs: number): Promise<number> {
+    const fresh = (this.windows.get(key) ?? []).filter((ts) => nowMs - ts < windowMs);
+    fresh.push(nowMs);
+    this.windows.set(key, fresh);
+    return Promise.resolve(fresh.length);
+  }
+}
+
+/**
+ * Sliding-window operations, run atomically inside the store.
+ *
+ * Pruning, counting and expiry happen in one round trip so two replicas cannot
+ * interleave a read-modify-write and each let the other's attempts through --
+ * which is the whole point of moving the limiter off the process.
+ */
+const WINDOW_PEEK_SCRIPT = `
+  redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1])
+  return redis.call('ZCARD', KEYS[1])
+`;
+
+const WINDOW_ADD_SCRIPT = `
+  redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1])
+  redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3])
+  redis.call('PEXPIRE', KEYS[1], ARGV[4])
+  return redis.call('ZCARD', KEYS[1])
+`;
+
+class RedisSharedStore implements SharedStore {
+  constructor(private readonly client: Redis) {}
+
+  get(key: string): Promise<string | null> {
+    return this.client.get(key);
+  }
+
+  set(key: string, value: string, ...args: unknown[]): Promise<unknown> {
+    // the caller passes Redis' own option words ("PX", 60000 / "KEEPTTL")
+    return (this.client.set as (...a: unknown[]) => Promise<unknown>)(key, value, ...args);
+  }
+
+  del(key: string): Promise<unknown> {
+    return this.client.del(key);
+  }
+
+  async windowPeek(key: string, nowMs: number, windowMs: number): Promise<number> {
+    const result = await this.client.eval(
+      WINDOW_PEEK_SCRIPT, 1, key, String(nowMs - windowMs),
+    );
+    return Number(result);
+  }
+
+  async windowAdd(key: string, nowMs: number, windowMs: number): Promise<number> {
+    const result = await this.client.eval(
+      WINDOW_ADD_SCRIPT, 1, key,
+      String(nowMs - windowMs),
+      String(nowMs),
+      `${nowMs}-${Math.random()}`,
+      String(windowMs),
+    );
+    return Number(result);
   }
 }
 
@@ -95,7 +186,7 @@ const PRODUCTION_LIKE = new Set(["production", "prod", "staging"]);
           logger.error(`shared store error: ${err.message}`);
         });
 
-        return client as unknown as SharedStore;
+        return new RedisSharedStore(client);
       },
     },
   ],
