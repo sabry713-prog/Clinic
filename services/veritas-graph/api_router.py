@@ -97,6 +97,35 @@ async def health() -> dict[str, Any]:
     }
 
 
+@app.get("/api/v1/graph/stats", response_class=JSONResponse)
+async def graph_stats() -> dict[str, Any]:
+    """Counts, for a caller that needs the graph's size rather than its health.
+
+    Added because the core's preflight, having no way to ask, hardcoded
+    `graph_nodes = -1` with the comment "signal 'graph reachable' without a real
+    count". A number that is not a count is worse than no number, because `-1` reads
+    as a measurement. Counts only -- nodes and relationships, no patient existence
+    and no identifiers -- so this is safe to call from a readiness probe.
+    """
+    client = get_client()
+    try:
+        counts = client.run(
+            "MATCH (n) WITH count(n) AS nodes "
+            "MATCH ()-[r]->() RETURN nodes, count(r) AS relationships"
+        )[0]
+    except GraphError as exc:
+        logger.error("graph_stats_failed", error=str(exc))
+        raise HTTPException(status_code=503, detail="Graph query failed") from exc
+    finally:
+        client.close()
+    logger.info("graph_stats", nodes=counts["nodes"], relationships=counts["relationships"])
+    return {
+        "status": "ok",
+        "nodes": counts["nodes"],
+        "relationships": counts["relationships"],
+    }
+
+
 @app.post("/api/v1/nscre/evaluate-encounter", response_class=JSONResponse)
 async def evaluate_encounter_route(body: EvaluateEncounterRequest) -> dict[str, Any]:
     graph = get_client()

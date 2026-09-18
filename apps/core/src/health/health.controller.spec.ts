@@ -55,4 +55,62 @@ describe("HealthController", () => {
     expect(result.workflow.patient_count).toBeGreaterThanOrEqual(0);
     expect(result.workflow.audit_events).toBeGreaterThanOrEqual(0);
   });
+
+  describe("the values it must not invent (H02)", () => {
+    // Every fetch this controller makes: the NPHIES engine and the two service probes.
+    const engineSays = (verified: unknown) =>
+      jest.fn(async (url: unknown) => {
+        const u = String(url);
+        if (u.includes(":5006")) {
+          return { ok: true, json: async () => ({ profiles_verified: verified }) };
+        }
+        if (u.includes("/api/v1/graph/stats")) {
+          return { ok: true, json: async () => ({ nodes: 155, relationships: 812 }) };
+        }
+        return { ok: true, json: async () => ({ status: "ok" }) };
+      });
+
+    const originalFetch = global.fetch;
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    it("reports the engine's answer, so it can become true", async () => {
+      // The old code was the literal `false`. This test could not have passed against
+      // it, which is the point: the value is now asked for rather than asserted.
+      global.fetch = engineSays(true) as unknown as typeof fetch;
+      const result = await controller.readiness();
+      expect(result.connector_modes.profiles_verified).toBe(true);
+    });
+
+    it("stays false when the engine says so", async () => {
+      global.fetch = engineSays(false) as unknown as typeof fetch;
+      const result = await controller.readiness();
+      expect(result.connector_modes.profiles_verified).toBe(false);
+    });
+
+    it("fails closed when the engine cannot be reached", async () => {
+      global.fetch = jest.fn(async () => {
+        throw new Error("ECONNREFUSED");
+      }) as unknown as typeof fetch;
+      const result = await controller.readiness();
+      expect(result.connector_modes.profiles_verified).toBe(false);
+    });
+
+    it("preflight reports a real node count, never a sentinel", async () => {
+      global.fetch = engineSays(false) as unknown as typeof fetch;
+      const result = await controller.preflight();
+      expect(result.workflow.graph_nodes).toBe(155);
+      expect(result.workflow.graph_nodes).not.toBe(-1);
+    });
+
+    it("preflight reports null rather than -1 when the count is unavailable", async () => {
+      global.fetch = jest.fn(async (url: unknown) => {
+        if (String(url).includes("/api/v1/graph/stats")) return { ok: false };
+        return { ok: true, json: async () => ({ profiles_verified: false }) };
+      }) as unknown as typeof fetch;
+      const result = await controller.preflight();
+      expect(result.workflow.graph_nodes).toBeNull();
+    });
+  });
 });

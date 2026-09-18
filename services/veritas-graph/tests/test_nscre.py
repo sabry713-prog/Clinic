@@ -713,3 +713,23 @@ def test_evaluate_encounter_endpoint_includes_evidence_gaps(api_client):
     assert "evidence_gaps" in body
     assert "overall_defer" in body
     assert body["overall_defer"] is True
+
+
+def test_graph_stats_reports_real_counts(monkeypatch):
+    """The number the core reports must be a count, not a sentinel."""
+    import api_router
+
+    class _Counting:
+        def run(self, cypher: str, **_kw):
+            return [{"nodes": 51, "relationships": 812}] if "nodes" in cypher else [{"c": 0}]
+
+        def close(self):
+            return None
+
+    monkeypatch.setattr(api_router, "get_client", lambda: _Counting())
+    resp = TestClient(api_router.app).get("/api/v1/graph/stats")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["nodes"] == 51
+    assert body["relationships"] == 812
+    assert body["nodes"] != -1

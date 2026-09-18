@@ -48,6 +48,7 @@ interface ReadinessResponse {
 @Controller("health")
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
+  private readonly engineUrl = process.env.NPHIES_ENGINE_URL ?? "http://127.0.0.1:5006";
 
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
 
@@ -69,10 +70,9 @@ export class HealthController {
   @Get("ready")
   @ApiOperation({ summary: "Readiness check — external dependencies reachable" })
   async readiness(): Promise<ReadinessResponse> {
-    const checks = await Promise.all([
-      this.checkPostgres(),
-      this.checkGraphService(),
-      this.checkOrchestrator(),
+    const [checks, profilesVerified] = await Promise.all([
+      Promise.all([this.checkPostgres(), this.checkGraphService(), this.checkOrchestrator()]),
+      this.nphiesProfilesVerified(),
     ]);
 
     const anyDown = checks.some((c) => c.status === "down");
@@ -89,7 +89,10 @@ export class HealthController {
       dependencies: checks,
       connector_modes: {
         nphies: process.env.NPHIES_CONNECTOR ?? "stub",
-        profiles_verified: false,
+        // Asked, not assumed. This was the literal `false`, which could never become
+        // true no matter how many profiles were verified -- and the engine already
+        // publishes the real answer on its own /health.
+        profiles_verified: profilesVerified,
       },
     };
   }
@@ -97,12 +100,23 @@ export class HealthController {
   /** Preflight: readiness + a real read-only workflow check. Run before a demo. */
   @Get("preflight")
   @ApiOperation({ summary: "Full pre-demo check: dependencies + real workflow assertions" })
-  async preflight(): Promise<ReadinessResponse & { workflow: { patient_count: number; audit_events: number; graph_nodes: number | null } }> {
+  async preflight(): Promise<
+    ReadinessResponse & {
+      workflow: {
+        patient_count: number | null;
+        audit_events: number | null;
+        graph_nodes: number | null;
+      };
+    }
+  > {
     const base = await this.readiness();
 
-    // Real read-only workflow checks
-    let patient_count = 0;
-    let audit_events = 0;
+    // Real read-only workflow checks. A count that cannot be taken is reported as
+    // null, never as 0: `app.audit_event` does not exist in this database, the query
+    // failed on every run, and the silent catch below turned that failure into a
+    // plausible-looking zero -- the same disease as the `-1` that used to live here.
+    let patient_count: number | null = null;
+    let audit_events: number | null = null;
     let graph_nodes: number | null = null;
 
     try {
@@ -110,30 +124,49 @@ export class HealthController {
         `SELECT count(*)::text AS count FROM hospital.patient`,
       );
       patient_count = Number(patients.rows[0]?.count ?? 0);
-    } catch { /* already reported in dependencies */ }
+    } catch (err) {
+      this.logger.warn(`preflight patient_count unavailable: ${String(err)}`);
+    }
 
     try {
       const audit = await this.pool.query<{ count: string }>(
-        `SELECT count(*)::text AS count FROM app.audit_event`,
+        `SELECT count(*)::text AS count FROM audit.event`,
       );
       audit_events = Number(audit.rows[0]?.count ?? 0);
-    } catch { /* already reported */ }
+    } catch (err) {
+      this.logger.warn(`preflight audit_events unavailable: ${String(err)}`);
+    }
 
     try {
       const graphUrl = process.env.GRAPH_SERVICE_URL ?? "http://127.0.0.1:5004";
-      const resp = await fetch(`${graphUrl}/api/v1/nscre/evaluate-encounter`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient_id: "preflight-check" }),
+      const resp = await fetch(`${graphUrl}/api/v1/graph/stats`, {
         signal: AbortSignal.timeout(5000),
       });
       if (resp.ok) {
-        // Just checking it responds — the patient doesn't need to exist
-        graph_nodes = -1; // signal "graph reachable" without a real count
+        const body = (await resp.json()) as { nodes?: unknown };
+        // A real count, or nothing. `-1` was here before as "reachable, but I did not
+        // count" and it read as a measurement; null is honest about not knowing.
+        graph_nodes = typeof body.nodes === "number" ? body.nodes : null;
       }
     } catch { /* already reported */ }
 
     return { ...base, workflow: { patient_count, audit_events, graph_nodes } };
+  }
+
+  /** The engine's own answer about NPHIES profile verification, never an assumption. */
+  private async nphiesProfilesVerified(): Promise<boolean> {
+    try {
+      const resp = await fetch(`${this.engineUrl}/health`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      if (!resp.ok) return false;
+      const body = (await resp.json()) as { profiles_verified?: unknown };
+      return body.profiles_verified === true;
+    } catch {
+      // Unreachable is not "verified". Fails closed, and the reason is visible in
+      // the dependencies list rather than hidden behind a plausible-looking boolean.
+      return false;
+    }
   }
 
   private async checkPostgres(): Promise<DependencyCheck> {
