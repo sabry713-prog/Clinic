@@ -86,15 +86,16 @@ SET m.display = $display, m.form = $form, m.atc = $atc, m.system = 'SFDA'{_LINEA
 # therapeutic subgroup level (e.g. A10B = "Blood glucose lowering drugs,
 # excl. insulins").  Used by NSCRE's Module D to filter alternative
 # candidates to the same therapeutic class as the flagged medication.
-MERGE_ATC_CLASS = """
-MERGE (a:AtcClass {code: $class_code})
-SET a.code = $class_code, a.description = $description
+MERGE_ATC_CLASS = f"""
+MERGE (a:AtcClass {{code: $class_code}})
+SET a.code = $class_code, a.description = $description{_LINEAGE_SET.replace('n.', 'a.')}
 """
 
 LINK_MEDICATION_ATC_CLASS = """
 MATCH (m:Medication {code: $code})
 MATCH (a:AtcClass {code: $class_code})
 MERGE (m)-[r:HAS_ATC_CLASS]->(a)
+SET r.release_version = $release_version, r.ingested_at = $ingested_at
 """
 
 # Target label varies, so the edge statement is templated per target type.
@@ -102,7 +103,8 @@ MERGE_NECESSITY = """
 MATCH (d:Diagnosis {{code: $diagnosis_code}})
 MATCH (t:{label} {{code: $target_code}})
 MERGE (d)-[r:JUSTIFIES]->(t)
-SET r.rule_id = $rule_id, r.source = $source, r.note = $note
+SET r.rule_id = $rule_id, r.source = $source, r.note = $note,
+    r.release_version = $release_version, r.ingested_at = $ingested_at
 """
 
 TARGET_LABELS = {"service": "Service", "medication": "Medication"}
