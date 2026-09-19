@@ -153,3 +153,53 @@ recovery demonstrated; hospital clinical/coding + DPO/security sign-off.
 Approve this plan, then start Phase 1 items 1–2 (C02 mock/live separation,
 C07 port containment) — the two cheapest items that remove the largest
 demo-credibility risks.
+
+
+## Agreed 2026-09-19, pending — to be built after the current pass
+
+Two changes were agreed in review and deliberately **not** built yet. Both answer the same
+question — *who pays for this encounter?* — and both touch the same places, so they are best done
+in one pass, self-pay first.
+
+### P1. Self-pay (cash) encounters
+
+**Problem, measured.** Nothing in the system represents a patient with no insurer. The only
+readers of `app.patient_insurance` are the panel added on 2026-09-19; the journey never consults
+cover. Consequences today:
+
+- the insurance panel reports a cash patient as *missing cover*, which reads as incomplete data
+  rather than as a valid billing path;
+- step 3 would show a payer verdict (it reads diagnoses, not cover) for a patient with no payer
+  to reject anything;
+- step 5 runs eligibility and submits a claim through the stub payer, which answers **accepted** —
+  a claim for a payer that does not exist, honestly labelled as a stub connector but wrong in
+  principle: the claim itself should not exist.
+
+**Agreed change.**
+- Cover gains a `kind`: `insurance` | `self_pay` (later `government`, `corporate`). A self-pay row
+  needs no policy number and no member id.
+- Step 3 shows **"Self-pay — no payer rules apply"** instead of a verdict. Sequencing rules
+  (MRI after ECHO) still apply: that is clinical workflow, not billing.
+- Step 5 skips eligibility and the NPHIES claim entirely; the step becomes *close encounter /
+  issue invoice*, and completion is an invoice, not a claim.
+- Coding (SBS + ICD) is still required — an invoice needs codes as much as a claim does.
+- Documentation and audit are unchanged.
+
+**Say this in the room:** 0% rejection applies to **insured** encounters. A cash encounter has no
+claim, so its measures are revenue capture and coding completeness instead.
+
+### P2. Provisional coding at the ordering step (Option A)
+
+**Problem, measured.** Step 3's payer check reads `app.condition_icd_coding`, which is written by
+**step 4** — but step 3 runs *before* step 4, so the code does not exist yet and every order reads
+"not checkable", including on patients with diagnoses documented in step 2. Step 2 documents the
+diagnosis (SNOMED, `clinician-entry` in `hospital.condition`); it does not code it.
+
+**Agreed change.** At step 3, use the **confirmed** ICD code when one exists; otherwise derive a
+**provisional** code by looking the diagnosis's SNOMED code up in the repository's own
+`app.snomed_icd10am_map`, and label the verdict **"Provisional — code not yet confirmed in
+step 4"**. Read-only: nothing is written, and the provisional code is never sent to a payer. The
+journey order stays as designed and step 4's confirmation remains the authority.
+
+**Considered and not chosen:** moving the coding step before the ordering step. Cleanest data,
+but it changes the designed journey — a product decision, not an engineering one.
