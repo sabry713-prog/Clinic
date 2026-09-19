@@ -1,0 +1,83 @@
+# Journey Consolidation Assessment
+
+**Date**: 2026-09-19 · **Scope**: make the Journey the doctor's single working surface.
+**Status**: assessment only — no code written. Items marked P* are recorded in
+`UNIFIED_DEMO_TO_PILOT_PLAN.md`; E* are the backlog's own (`ENGINEERING_WORK_BREAKDOWN.md`).
+
+## 1. The directive
+
+> "I don't want to use anything from the old development like encounter or etc. I need to unify the
+> doctor — this is why we developed the new journey where the doctor will run everything within this
+> wizard. Assess and come back with the needed changes so everything will be in the journey, not only
+> for the diagnose step, for anything else which needs to be done outside the journey steps."
+
+So the goal is not a better stage 2. It is that **no doctor task requires leaving the wizard**, and
+that the surfaces which currently duplicate or shadow the journey are retired or absorbed.
+
+## 2. Measured current state
+
+`PatientDetailPage` renders **four** views for one patient (`PatientDetailPage.tsx:163-189`):
+
+| view | component | who it is for | journey overlap |
+|---|---|---|---|
+| `workspace` | `PatientWorkspace` | the doctor's tool row (Consultant · Draft · Search · Interpreter) + "More tools" | none directly, but it is a **second** doctor surface |
+| `chart` | `PatientFilePage` | read-only record (kept by explicit request) | none |
+| `journey` | `JourneyView` | the encounter wizard (stages 1-5) | — |
+| `encounter` | `CortexShell` | the 3-pane shell: scribe pane + timeline + AI Team drawer | **duplicates stages 1-3** |
+
+The workspace's own comment already states the intended rule — "The Journey owns the encounter flow
+(Document → Diagnose → Order → Code & link → Submit) … The row keeps what the Journey does not
+cover" — with the duplicate chips moved to a menu: Diagnosis, Orders, Scribe, Coder
+(`PatientWorkspace.tsx:66-79`). **Consolidation was started. The assessment below is what is left.**
+
+## 3. Gaps that still put the doctor outside the journey
+
+| # | Gap | Evidence | Consequence |
+|---|---|---|---|
+| **G1** | **Stage 2 reads the browser session, not the saved note.** Stage 1 saves the reviewed note to the record via the drafts API and its comment says the note becomes "reachable from later journey stages" — but `StageDiagnose` reads `sessionStorage['cortex.scribe.<id>'].soap.assessment` | `StageDocument.tsx` header vs `StageDiagnose.tsx:20` | Close the tab and step 2 shows "no assessment", although the note is on the record. The intended contract and the implementation diverge. |
+| **G2** | **The smart checklist is not persisted.** It lives in React state; leaving the stage loses it | `CortexContext` + backlog **E4c** (`app.encounter_checklist` does not exist) | The clinician does checklist work that does not survive, and it is invisible to anyone else. |
+| **G3** | **A confirmed diagnosis is not linked to the encounter or the note.** `hospital.condition` has no `encounter_id` and no document reference | column list verified; no condition↔encounter link in the source | "Which problems came from this encounter?" is unanswerable from the record, and per-encounter diagnosis reporting cannot be derived. |
+| **G4** | **The payer check (stage 3) runs before the coding it depends on (stage 4)** | `StageOrder` reads `app.condition_icd_coding`, written by `icd-coding.service.ts` in stage 4 | Every order reads "not checkable" — recorded as **P2** (Option A). |
+| **G5** | **The AI Team drawer lives only in the old encounter shell.** The journey's stage 1 renders the scribe pane without it | `CortexShell` vs `StageDocument` | The doctor must open the old surface to use the Consultant/Pharmacist/NPHIES agents. |
+| **G6** | **Eight agent-action buttons do nothing** | backlog **E4a** | Buttons that look live are inert — worse than absent. |
+| **G7** | **Stage 1 can save a note but cannot sign it inside the journey** | `DraftPanel` holds `api.drafts.update` + `sign` | Sign-off — a clinical act — happens on a surface outside the wizard. |
+| **G8** | **NPHIES claim readiness detail is outside the wizard** | `ClaimReadinessPanel` / `/nphies/*` vs stage 5's summary | Stage 5 submits what another surface explains. |
+| **G9** | **No self-pay path** | recorded **P1** | A cash patient's claim would be "accepted" by a payer that does not exist. |
+
+## 4. Endpoints — to add or enhance
+
+| # | Endpoint | Today | Action | Source |
+|---|---|---|---|---|
+| E-1 | `POST patients/:id/ai-team/soap` | **missing** (`generate_soap_note` exists, never called) | **add** — stage 1's real SOAP generation | **E4b** |
+| E-2 | `app.encounter_checklist` + `GET/PUT patients/:id/encounters/:eid/checklist` | **missing** | **add** — checklist persistence | **E4c** |
+| E-3 | `GET/POST patients/:id/drafts` + `:id/sign` | exists (`api.drafts.*`) | **enhance** — expose save **and sign** inside stage 1 | G7 |
+| E-4 | `POST patients/:id/conditions` | exists | **enhance** — accept `encounter_id` (+ draft id) | G3 / P3 |
+| E-5 | `PATCH patients/:id/service-requests/:orderId` | **missing** | **add** — order lifecycle (`active → completed/cancelled`) | order-lifecycle v2 |
+| E-6 | provisional coding at stage 3 | **missing** | **enhance** (`icd-coding` exists; add the provisional read) | **P2** |
+| E-7 | `POST patients/:id/nphies/eligibility` | exists | **enhance** — skip for self-pay; stage 5 becomes invoice | **P1** |
+| E-8 | the 8 agent actions | missing/inert | **wire 4, label the rest "Pending integration"** — do not invent backends | **E4a** |
+| E-9 | `runAgentAction` | exists in `CortexContext` | **move the AI Team drawer into the journey** | G5 |
+
+## 5. Prioritised plan
+
+**Phase 1 — the journey becomes self-sufficient** (doctor never leaves)
+1. G1/E-1: stage 2 reads the **saved** note (with the session as a fallback), stage 1 gains real SOAP generation.
+2. G7/E-3: save **and sign** inside stage 1.
+3. G2/E-2: checklist persistence.
+4. G3/E-4: encounter linkage on the diagnosis write.
+5. G5/G6/E-9/E-8: the AI Team inside the journey; agent buttons wired or honestly labelled.
+
+**Phase 2 — the answers become correct**
+6. P1/E-7 self-pay. 7. P2/E-6 provisional coding. 8. E-5 order lifecycle.
+
+**Phase 3 — retire the duplicates** (decision required, nothing deleted without it)
+9. Remove the Diagnosis / Orders / Scribe / Coder menu entries once the stages cover them.
+10. Decide the fate of the `encounter` view (the Cortex shell). Its unique content is the AI Team
+   drawer and the order timeline; once G5 lands and stage 3 carries the payer status, it has no
+   doctor-facing function left — and it is the surface the directive names.
+
+## 6. Boundary note
+
+None of this adds clinical judgement. Every item is persistence, linkage, or surfacing a fact that
+already exists. The one item that changes what the doctor is *told* — P2's provisional coding — is
+labelled provisional and never reaches a payer.
