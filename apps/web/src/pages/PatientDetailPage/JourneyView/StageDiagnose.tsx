@@ -4,6 +4,9 @@
  * are shown as on-file (nothing to do). The clinician taps suggestions to
  * select, one "Add selected" creates them (suggest→confirm unchanged).
  * Completion = the record already has at least one active diagnosis.
+ *
+ * The assessment it analyses comes from the SAVED note first, with the browser
+ * session only as a fallback — see loadSoapAssessment.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -15,7 +18,7 @@ interface StageDiagnoseProps {
   readonly onChanged: () => void;
 }
 
-function readSoapAssessment(patientId: string): string {
+function readSessionAssessment(patientId: string): string {
   try {
     const raw = sessionStorage.getItem(`cortex.scribe.${patientId}`);
     if (!raw) return "";
@@ -30,6 +33,32 @@ function readSoapAssessment(patientId: string): string {
   }
 }
 
+/**
+ * The assessment this stage analyses: the SAVED note first, the browser session only as a fallback.
+ *
+ * Reading the session draft alone made this step depend on the tab staying open — closing it emptied
+ * the stage while the note sat on the record. Stage 1 already saves the reviewed note through the
+ * drafts API, and its comment promises later stages can reach it; this is that promise kept.
+ */
+async function loadSoapAssessment(patientId: string): Promise<string> {
+  try {
+    const list = await api.patients.listDrafts(patientId);
+    const notes = (list.data ?? [])
+      .filter((d) => d.document_type === "encounter_note")
+      .slice()
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    const newest = notes[0];
+    if (newest) {
+      const draft = await api.drafts.get(newest.id);
+      const saved = (draft.sections_json ?? []).find((s) => s.key === "assessment")?.text?.trim() ?? "";
+      if (saved) return saved;
+    }
+  } catch {
+    /* the record could not be reached — the session draft below still works */
+  }
+  return readSessionAssessment(patientId);
+}
+
 export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagnoseProps): JSX.Element {
   const documented = patient.conditions ?? [];
   const [candidates, setCandidates] = useState<readonly CodedTerm[]>([]);
@@ -40,14 +69,23 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Re-read the note while the step is on screen. This was a useMemo keyed on the patient id
-  // alone, so the analysis ran once and never noticed a note edited afterwards -- coming back to
-  // the step showed suggestions for a note that no longer existed.
-  const [assessment, setAssessment] = useState(() => readSoapAssessment(patient.id));
+  // Re-read the note while the step is on screen — from the record, and again on focus. This was a
+  // useMemo keyed on the patient id alone, so the analysis ran once and never noticed a note edited
+  // afterwards: coming back to the step showed suggestions for a note that no longer existed.
+  const [assessment, setAssessment] = useState("");
   useEffect(() => {
-    const reread = () => setAssessment(readSoapAssessment(patient.id));
-    window.addEventListener("focus", reread);
-    return () => window.removeEventListener("focus", reread);
+    let live = true;
+    const load = (): void => {
+      void loadSoapAssessment(patient.id).then((text) => {
+        if (live) setAssessment(text);
+      });
+    };
+    load();
+    window.addEventListener("focus", load);
+    return () => {
+      live = false;
+      window.removeEventListener("focus", load);
+    };
   }, [patient.id]);
   const hasDocumentedDiagnosis = documented.length > 0;
 

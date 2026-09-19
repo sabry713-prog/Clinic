@@ -45,6 +45,9 @@ vi.mock("../../../lib/api", () => ({
     patients: {
       suggestCodes: vi.fn().mockResolvedValue({ suggestions: [] }),
       addCondition: vi.fn(),
+      // No saved notes by default: the stage falls back to the session draft, which is what the
+      // tests below set up. The one test that covers the record path overrides this.
+      listDrafts: vi.fn().mockResolvedValue({ data: [] }),
       serviceRequests: vi.fn().mockResolvedValue({ data: [] }),
       serviceRequestCandidates: vi.fn().mockResolvedValue({ data: [] }),
       matchQuickEntry: vi.fn().mockResolvedValue({ data: [] }),
@@ -59,6 +62,12 @@ vi.mock("../../../lib/api", () => ({
       checkEligibility: vi.fn().mockResolvedValue({ status: "eligible" }),
       submitClaim: vi.fn(),
       listClaims: vi.fn().mockResolvedValue({ data: [] }),
+    },
+    drafts: {
+      get: vi.fn(),
+      update: vi.fn(),
+      sign: vi.fn(),
+      export: vi.fn(),
     },
   },
   ApiError: class ApiError extends Error {},
@@ -272,11 +281,44 @@ describe("JourneyView", () => {
 
   // Reported with a screenshot: the step read "the SOAP assessment was analyzed automatically"
   // above an empty space, so a wording gap looked like a broken step. Silence is not a status.
-  it("says so when the assessment matched nothing", () => {
+  it("says so when the assessment matched nothing", async () => {
     sessionStorage.setItem(`cortex.scribe.${PATIENT.id}`, JSON.stringify({ soap: { assessment: "zzz unknown wording zzz", plan: "" } }));
     renderJourney();
     gotoStage("diagnose");
-    expect(screen.getByText(/Nothing in the assessment matched the coded vocabulary/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Nothing in the assessment matched the coded vocabulary/i)).toBeInTheDocument();
+  });
+
+  // Item 1 of the consolidation plan: the step analyses the SAVED note first. Reading the session
+  // alone made the stage depend on the tab staying open — closing it emptied the stage while the
+  // note sat on the record, which is exactly how the gap was reported.
+  it("analyses the saved note, not only the browser session", async () => {
+    sessionStorage.setItem(
+      `cortex.scribe.${PATIENT.id}`,
+      JSON.stringify({ soap: { assessment: "wording only in the session", plan: "" } }),
+    );
+    mocked.listDrafts.mockResolvedValueOnce({
+      data: [
+        {
+          id: "d1",
+          document_type: "encounter_note",
+          language: "en",
+          status: "draft",
+          created_at: "2026-09-19T10:00:00Z",
+          signed_at: null,
+        },
+      ],
+    } as never);
+    vi.mocked(api.drafts.get).mockResolvedValueOnce({
+      sections_json: [
+        { key: "assessment", title: "Assessment", policy: "clinician_authored_only", text: "type 2 diabetes" },
+      ],
+    } as never);
+    mocked.suggestCodes.mockClear();
+
+    renderJourney();
+    gotoStage("diagnose");
+
+    await waitFor(() => expect(mocked.suggestCodes).toHaveBeenCalledWith("type 2 diabetes"));
   });
 
   it("says so when the note has no assessment yet", () => {
