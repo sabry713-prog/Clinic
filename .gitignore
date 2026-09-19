@@ -109,3 +109,6 @@ docs/reports/html/
 # generated from data/ontologies/_sources/SBS_V2_Code_list.xlsx (2.5 MB)
 # regenerate with: uv run --with openpyxl python tools/build_sbs_catalog.py
 data/ontologies/nphies_services.json
+
+# dev-stack supervisor logs
+dev-logs/

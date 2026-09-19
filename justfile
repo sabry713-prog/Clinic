@@ -130,18 +130,33 @@ restart-services:
 # so ORCHESTRATOR_MODEL_PROVIDER=stub's scripted_model.py fallback and the
 # AI Team drawer had nothing to talk to.
 # Start all services in dev mode (core/web/narrative/qa/transcription/veritas-graph/orchestrator/nphies-engine)
+#
+# Every service runs under a supervisor: if one exits it is restarted after a pause, its output
+# goes to .dev-logs/<name>.log, and a crash in one cannot take the others down.
+#
+# What this replaced, and why: the recipe used to start the services flat with `trap 'kill 0'
+# EXIT` and a single `wait`. When any child exited, `wait` returned, the EXIT trap fired and the
+# entire stack was killed -- so one flaky service meant losing core, web and every Python service
+# mid-test, three times in a single working session. `kill 0` is still right for Ctrl-C; what
+# changed is that a child no longer ends the recipe.
 dev:
     #!/usr/bin/env bash
     set -e
+    mkdir -p .dev-logs
+    sup() {
+        local name="$1"; shift
+        ( while true; do "$@" >>".dev-logs/${name}.log" 2>&1; echo "[supervisor] ${name} exited ($?), restarting" >>".dev-logs/${name}.log"; sleep 2; done ) &
+    }
     trap 'kill 0' EXIT
-    pnpm --filter @app/core run dev &
-    pnpm --filter @app/web run dev &
-    cd apps/narrative && uv run uvicorn main:app --port 5001 --reload &
-    cd apps/qa && uv run uvicorn main:app --port 5002 --reload &
-    cd apps/transcription && uv run uvicorn main:app --port 5003 --reload &
-    cd services/veritas-graph && uv run python api_router.py &
-    cd services/orchestrator && uv run python agent_handlers.py &
-    cd services/nphies-engine && uv run python api_router.py &
+    sup core         pnpm --filter @app/core run dev
+    sup web          pnpm --filter @app/web run dev
+    sup narrative    bash -c 'cd apps/narrative && uv run uvicorn main:app --port 5001 --reload'
+    sup qa           bash -c 'cd apps/qa && uv run uvicorn main:app --port 5002 --reload'
+    sup transcription bash -c 'cd apps/transcription && uv run uvicorn main:app --port 5003 --reload'
+    sup graph        bash -c 'cd services/veritas-graph && uv run python api_router.py'
+    sup orchestrator bash -c 'cd services/orchestrator && uv run python agent_handlers.py'
+    sup nphies-engine bash -c 'cd services/nphies-engine && uv run python api_router.py'
+    echo "services supervised; logs in .dev-logs/ (core web narrative qa transcription graph orchestrator nphies-engine)"
     wait
 
 # The task this was written against asked for a literal
