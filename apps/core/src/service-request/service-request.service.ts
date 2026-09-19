@@ -57,7 +57,7 @@ export interface PrerequisiteVerdict {
 }
 
 export interface NecessityVerdict {
-  readonly status: "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE";
+  readonly status: "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE" | "NO_DIAGNOSIS";
   readonly pre_auth_required: boolean | null;
   readonly justifying_icd10: string | null;
   readonly justifying_display: string | null;
@@ -196,10 +196,22 @@ export class ServiceRequestService {
       [patientId],
     );
     if (diagnoses.rows.length === 0) {
-      return candidates.map((c) => ({ ...c, necessity: null }));
+      // Silence here was the bug: a patient with diagnoses on file but none CODED produced no
+      // badge at all, so the ordering step looked broken rather than unfinished. A claim is
+      // checked against codes, and step 2's confirmation is what produces them.
+      return candidates.map((c) => ({
+        ...c,
+        necessity: {
+          status: "NO_DIAGNOSIS" as const,
+          pre_auth_required: null,
+          justifying_icd10: null,
+          justifying_display: null,
+          suggested_codes: [],
+        },
+      }));
     }
 
-    const rank: Record<string, number> = { GREEN: 0, YELLOW: 1, RED: 2, UNAVAILABLE: 3 };
+    const rank: Record<string, number> = { GREEN: 0, YELLOW: 1, RED: 2, UNAVAILABLE: 3, NO_DIAGNOSIS: 4 };
     return Promise.all(
       candidates.map(async (candidate) => {
         const sbs = candidate.code ? sbsByOrderCode.get(candidate.code) : undefined;

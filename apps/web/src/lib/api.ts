@@ -163,7 +163,8 @@ export interface BriefMedication {
 }
 
 export interface NecessityVerdict {
-  readonly status: "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE";
+  /** NO_DIAGNOSIS: diagnoses are on file but none is coded, so there is nothing to check against. */
+  readonly status: "GREEN" | "YELLOW" | "RED" | "UNAVAILABLE" | "NO_DIAGNOSIS";
   readonly pre_auth_required: boolean | null;
   /** The coded diagnosis that makes this order payable -- the link the claim will carry. */
   readonly justifying_icd10: string | null;

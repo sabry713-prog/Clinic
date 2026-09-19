@@ -18,12 +18,14 @@ function NecessityBadge({ verdict }: { readonly verdict: NecessityVerdict }): JS
     YELLOW: "border-amber-300 bg-amber-50 text-amber-800",
     RED: "border-rose-300 bg-rose-50 text-rose-800",
     UNAVAILABLE: "border-line bg-white text-ink-faint",
+    NO_DIAGNOSIS: "border-amber-300 bg-amber-50 text-amber-800",
   };
   const labels: Record<NecessityVerdict["status"], string> = {
     GREEN: "payable",
     YELLOW: "pre-auth",
     RED: "no rule",
     UNAVAILABLE: "unchecked",
+    NO_DIAGNOSIS: "not checkable",
   };
   return (
     <span
@@ -202,6 +204,13 @@ export default function StageOrder({ patientId, onDone, onChanged }: StageOrderP
                       ? `${c.prerequisite.requires_display} is ordered but no result is on file yet — this order should wait for it.`
                       : `Needs ${c.prerequisite.requires_display} on record first — none is on file for this patient.`}{" "}
                     {c.prerequisite.rationale}
+                  </p>
+                )}
+                {c.necessity?.status === "NO_DIAGNOSIS" && (
+                  <p className="mt-1 ps-6 text-[11px] text-ink-soft" data-testid="order-no-diagnosis">
+                    No coded diagnosis is on file for this patient, so this order has nothing to be
+                    checked against. Confirm the diagnosis and its code in step 2, then come back —
+                    a claim is judged on codes, not on the assessment wording.
                   </p>
                 )}
                 {c.necessity?.status === "UNAVAILABLE" && (
