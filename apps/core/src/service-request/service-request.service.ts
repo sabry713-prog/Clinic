@@ -49,6 +49,9 @@ export interface ServiceCandidate {
 export interface PrerequisiteVerdict {
   readonly requires_code: string;
   readonly requires_display: string;
+  /** How far the required order has got: not on file, placed, or reported. */
+  readonly prior_state: "none" | "ordered" | "resulted";
+  /** True only once the required order has a result linked to it. */
   readonly satisfied: boolean;
   readonly rationale: string;
 }
@@ -260,21 +263,37 @@ export class ServiceRequestService {
     if (rules.rows.length === 0) return candidates;
 
     const required = [...new Set(rules.rows.map((r) => r.requires_code))];
-    const present = await this.pool.query<{ code: string | null }>(
-      `SELECT DISTINCT code FROM app.service_request WHERE patient_id = $1 AND code = ANY($2)`,
+    const placed = await this.pool.query<{ id: string; code: string | null }>(
+      `SELECT id, code FROM app.service_request WHERE patient_id = $1 AND code = ANY($2)`,
       [patientId, required],
     );
-    const onRecord = new Set(present.rows.map((r) => r.code).filter((c): c is string => !!c));
+    const placedByCode = new Map(placed.rows.map((r) => [r.code, r.id]));
+
+    // "Seen the result" is a link, not a status: an observation that names the order it came from
+    // (Observation.basedOn). Where the HIS supplies that link is where this becomes decidable.
+    let resultedIds = new Set<string>();
+    const ids = placed.rows.map((r) => r.id);
+    if (ids.length > 0) {
+      const resulted = await this.pool.query<{ based_on: string | null }>(
+        `SELECT DISTINCT based_on FROM hospital.observation WHERE based_on = ANY($1)`,
+        [ids],
+      );
+      resultedIds = new Set(resulted.rows.map((r) => r.based_on).filter((b): b is string => !!b));
+    }
 
     return candidates.map((candidate) => {
       const rule = rules.rows.find((r) => r.order_code === candidate.code);
       if (!rule) return candidate;
+      const orderId = placedByCode.get(rule.requires_code) ?? null;
+      const priorState: PrerequisiteVerdict["prior_state"] =
+        orderId === null ? "none" : resultedIds.has(orderId) ? "resulted" : "ordered";
       return {
         ...candidate,
         prerequisite: {
           requires_code: rule.requires_code,
           requires_display: rule.requires_display,
-          satisfied: onRecord.has(rule.requires_code),
+          prior_state: priorState,
+          satisfied: priorState === "resulted",
           rationale: rule.rationale,
         },
       };

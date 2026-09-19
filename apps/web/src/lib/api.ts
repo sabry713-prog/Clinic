@@ -175,7 +175,8 @@ export interface NecessityVerdict {
 export interface PrerequisiteVerdict {
   readonly requires_code: string;
   readonly requires_display: string;
-  /** An order of that kind is on the record. It does NOT claim the result has come back. */
+  readonly prior_state: "none" | "ordered" | "resulted";
+  /** True only once the required order has a result linked to it. */
   readonly satisfied: boolean;
   readonly rationale: string;
 }

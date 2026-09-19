@@ -198,8 +198,10 @@ export default function StageOrder({ patientId, onDone, onChanged }: StageOrderP
                 )}
                 {c.prerequisite && !c.prerequisite.satisfied && (
                   <p className="mt-1 ps-6 text-[11px] text-ink-soft" data-testid="order-prerequisite">
-                    Needs {c.prerequisite.requires_display} on record first — none is on file for
-                    this patient. {c.prerequisite.rationale}
+                    {c.prerequisite.prior_state === "ordered"
+                      ? `${c.prerequisite.requires_display} is ordered but no result is on file yet — this order should wait for it.`
+                      : `Needs ${c.prerequisite.requires_display} on record first — none is on file for this patient.`}{" "}
+                    {c.prerequisite.rationale}
                   </p>
                 )}
                 {c.necessity?.status === "UNAVAILABLE" && (
