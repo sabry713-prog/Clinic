@@ -58,6 +58,40 @@ cover" — with the duplicate chips moved to a menu: Diagnosis, Orders, Scribe, 
 | E-8 | the 8 agent actions | missing/inert | **wire 4, label the rest "Pending integration"** — do not invent backends | **E4a** |
 | E-9 | `runAgentAction` | exists in `CortexContext` | **move the AI Team drawer into the journey** | G5 |
 
+## 5. What belongs inside the journey — the test
+
+Raised in review: the AI Team may be needed for some tasks and is not mandatory for the encounter,
+so why move it into the wizard? Why not leave it in a menu? The same question applies to every item
+above, and it needs a rule rather than a preference.
+
+**The test:**
+
+1. Does the **next stage consume it**? Then it is inside. (Stage 2 cannot work without the note;
+   stage 3 cannot be checked without the codes.)
+2. Must the **record contain it** for the encounter to be complete or the claim to stand? Then it is
+   inside. (A diagnosis must be tied to the encounter it was made in.)
+3. Otherwise it is **situational**: the doctor reaches for it when the case calls for it, and it
+   belongs one click away — **openable from inside the journey without losing the encounter**, but
+   not a step.
+
+That third clause is the one that matters for the AI Team: the requirement is not "make the agents a
+stage", it is "do not force the doctor to leave the wizard to reach them." A drawer satisfies it; a
+stage would not.
+
+Applied to the items above:
+
+| Item | Verdict | Where |
+|---|---|---|
+| Stage 2 reads the **saved** note | inside — dependency | stage 2 |
+| Real SOAP generation (E4b) | inside — stage 1's core function | stage 1 |
+| Save **and sign** the note | inside — produces the record | stage 1 |
+| Checklist persistence (E4c) | inside — per-encounter by definition | stage 1 |
+| Encounter linkage on the diagnosis | inside — record integrity | stage 2 |
+| **The AI Team** | **situational** | **drawer/menu, openable in-journey** |
+| The 8 inert agent buttons (E4a) | neither — fix in place | wherever they already live |
+| Draft / Search / Interpreter / Handoff / Refills / Researcher | situational | menu |
+| Appointments / intake / pharmacy queues | **not the doctor's** | sidebar (role-guarded) |
+
 ## 5. Prioritised plan
 
 **Phase 1 — the journey becomes self-sufficient** (doctor never leaves)
@@ -65,7 +99,10 @@ cover" — with the duplicate chips moved to a menu: Diagnosis, Orders, Scribe, 
 2. G7/E-3: save **and sign** inside stage 1.
 3. G2/E-2: checklist persistence.
 4. G3/E-4: encounter linkage on the diagnosis write.
-5. G5/G6/E-9/E-8: the AI Team inside the journey; agent buttons wired or honestly labelled.
+5. G5/G6/E-9/E-8 — **revised after review**: the AI Team is **situational**, not a stage. The
+   requirement is only that it can be opened **from inside the journey without losing the encounter**
+   (a drawer), and that the 8 inert buttons are wired where cheap or labelled "Pending integration"
+   (E4a's own disposition). Nothing about the agents becomes mandatory per encounter.
 
 **Phase 2 — the answers become correct**
 6. P1/E-7 self-pay. 7. P2/E-6 provisional coding. 8. E-5 order lifecycle.
@@ -76,7 +113,14 @@ cover" — with the duplicate chips moved to a menu: Diagnosis, Orders, Scribe, 
    drawer and the order timeline; once G5 lands and stage 3 carries the payer status, it has no
    doctor-facing function left — and it is the surface the directive names.
 
-## 6. Boundary note
+## 6. Revised by review
+
+The first version of this assessment proposed moving the AI Team **into** the journey. That
+over-reached: the agents answer situational questions, and forcing them into the wizard would make
+optional work look mandatory. The test in §5 now governs the whole list, and the only in-journey
+requirement for them is reachability without context loss.
+
+## 7. Boundary note
 
 None of this adds clinical judgement. Every item is persistence, linkage, or surfacing a fact that
 already exists. The one item that changes what the doctor is *told* — P2's provisional coding — is
