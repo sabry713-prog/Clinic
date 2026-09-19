@@ -159,6 +159,16 @@ screens and two approvals saved per encounter, every encounter.
 | 7 | Auto-run the read-only agents; drawer stays for the rest | 1 d | a click and a wait per use |
 | 8 | Auto-link order↔diagnosis when unambiguous | 1.5 d | several taps per encounter |
 
+**Progress.** Items 1 (`d03a2c8`), 3 for stage 2, and 5 (`de35738`) are done and verified; item 3
+for stage 4, item 2, and the rest remain. Stage 4's skip needs the same treatment once its
+"nothing to approve" condition is defined against live data.
+
+**G10 — found while doing item 3: no in-stage manual coding path.** Stage 2's analysis catch block
+says "manual entry still works below", and the render has no manual entry at all. So when the
+vocabulary does not recognise the note, the only remedy the screen offered was a trip to the
+Diagnosis card — a duplicate the consolidation removes. The remedy is a search box over the same
+`suggestCodes` endpoint inside the stage; recorded as work, not as a wording fix.
+
 **≈ 9.5 engineering days.** The first three (2 days total) remove the two screens and the lost-work
 risk before any new capability is built; SOAP generation is the single largest time saver and comes
 fourth because it is the largest piece of work.
