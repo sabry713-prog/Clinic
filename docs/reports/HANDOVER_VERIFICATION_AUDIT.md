@@ -1117,3 +1117,92 @@ Then a clean start served it correctly:
 So the item closes, and the lesson is the project's own earlier one, relearned: **kill by
 executable path, never by command line**, and treat the OS's reported socket owner as a hint
 rather than a fact. Both the stack-stop tool and the local-dev skill now carry it.
+
+
+## 26. The claim data itself: codes that do not exist in the standard, 2026-09-18
+
+Everything above concerns whether the software does what it says. This section concerns whether
+the **codes it submits** exist at all, which for a claims-integrity product is the more dangerous
+question. It was found while wiring the ordering step to the payer rules, and it is the most
+consequential finding of the day.
+
+**What the catalogue was.** `data/ontologies/nphies_services.json` was an illustrative subset of
+ten services, self-described in its own `_meta` as "Illustrative dev subset -- achi_code is
+simplified here as the sbs_code's item+block root (dropping the SBS-specific suffix)". In other
+words the root of each code was real and the suffix was not, and the file said so.
+
+**What the published standard contains.** CHI's SBS V2.0 code list (March 2023), retrieved and
+committed under `data/ontologies/_sources/`: 10,081 codes, every one of them in 5-2-2 form,
+verified programmatically. All seven codes the dev file used, and later all thirty entries in
+`app.order_sbs_map`, are absent from it:
+
+| service | dev code | present in SBS V2.0 | official code |
+|---|---|---|---|
+| ECG | 11700-00-10 | no | **11700-00-00** |
+| Echocardiography | 55113-00-10 | no | **55113-00-00** |
+| MRI | 63001-00-10 | no | **90901-00-10** |
+| HbA1c | 66551-00-10 | no | **73050-18-50** |
+| Ankle X-ray | 65060-00-10 | no | **57518-03-11** |
+
+**Why it mattered twice.** A claim whose service code is not in the standard is rejected on coding
+alone, so every claim the prototype could assemble carried a rejection cause. And because the
+pre-authorization matrix keyed on those same codes, **no rule could ever bind**: the necessity
+engine returned RED for every diagnosis against every service, which is why the first measurement
+of it looked like an empty rule set rather than a broken join.
+
+**What was done.**
+- `tools/build_sbs_catalog.py` generates the service catalogue from the official workbook, which
+  is committed as the source. The generated file is .gitignored for size and reproducible, so
+  what a reviewer checks is the source and the script, not a 2.5 MB artefact.
+- Eighteen `order_sbs_map` entries were corrected to codes verified present in the standard, each
+  chosen as the closest published match and each listed in migration 1721200000000.
+- After re-ingestion the engine answers with a spread instead of blanket RED: `I10 + ECG` GREEN,
+  `E11.9 + HbA1c` GREEN, `M54.3 + lumbar MRI` YELLOW (pre-authorization required), and RED carries
+  the diagnoses that would justify the same order.
+
+**Left undone, with its trigger.** Eleven mappings are unverified: CBC, thyroid function,
+mammography, biopsy, cardiac stress testing, faecal occult blood, flexible sigmoidoscopy, CT of a
+general body site, upper GI endoscopy, coagulation profile, and the troponin assays. Searching the
+published list returned either nothing or a different procedure for each, and inventing a code is
+the precise failure this section documents. They keep their current values, are marked in the
+migration as unverified against SBS V2.0, and must be curated from the payer's own service
+catalogue before go-live.
+
+## 27. There was no order lifecycle, 2026-09-18
+
+Challenged during review with the right question, and the precise answer matters because the
+loose one would have been wrong:
+
+- The **fields exist** -- `app.service_request.status` and `.intent`, FHIR names.
+- Nothing ever **moves** them. Measured: 25 of 25 rows sat at `active`; the four routes on the
+  controller are candidates, quick-entry, create and list, none of which change a status; the
+  stored `fhir_resource_json` carried no status either; and no `UPDATE ... service_request ...
+  status` appears anywhere in the source.
+
+So an order could never be told apart from an order that had been performed, which is what a
+sequencing rule needs. Fixed the FHIR way rather than with a bespoke column: `hospital.observation`
+gained `based_on` (Observation.basedOn), and the prerequisite check now reports `none | ordered |
+resulted`, satisfying only on `resulted`.
+
+`resulted` is deliberately unreachable in dev. An observation and its link arrive from the HIS,
+which this prototype does not have, so no result was fabricated to make the screen look complete;
+the UI wording distinguishes the two states it can actually reach. A sample completed
+echocardiogram order for MRN-001 makes both reachable states visible side by side.
+
+## 28. Coverage is a payer contract, not a national publication, 2026-09-18
+
+Worth recording because it bounds what any amount of engineering here can achieve. CHI publishes
+the **SBS catalogue** and NPHIES publishes the **prior-authorization process**; neither publishes
+which diagnosis justifies which service for which member, because that is the payer's contract.
+The NPHIES prior-authorization use case states it plainly -- the process "ensures that the
+requested services meet **payer criteria** for coverage" -- and the coverage itself arrives as a
+**Table of Benefits** during the **eligibility** transaction.
+
+Consequences recorded:
+- The app's own necessity matrix stays labelled `dev-illustrative`, and its codes are now real
+  while its **opinions are not**. That distinction is stated in the data and in the UI.
+- Per-patient cover is now modelled (`app.patient_insurance`: payer, plan, policy, member, class,
+  network tier, date range, source), because a check that ignores cover is wrong for some
+  patients -- six seeded patients are deliberately with six different insurers and plans.
+- In production the authoring source for coverage is the payer's eligibility response, not a file
+  in this repository.
