@@ -14,6 +14,8 @@ import { api, type PatientDetail, type CodedTerm, ApiError } from "../../../lib/
 
 interface StageDiagnoseProps {
   readonly patient: PatientDetail;
+  /** The encounter this diagnosis is being made in, recorded as provenance on the write. */
+  readonly encounterId?: string | null;
   readonly onDone: (done: boolean) => void;
   readonly onChanged: () => void;
 }
@@ -59,7 +61,7 @@ async function loadSoapAssessment(patientId: string): Promise<string> {
   return readSessionAssessment(patientId);
 }
 
-export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagnoseProps): JSX.Element {
+export default function StageDiagnose({ patient, encounterId, onDone, onChanged }: StageDiagnoseProps): JSX.Element {
   const documented = patient.conditions ?? [];
   const [candidates, setCandidates] = useState<readonly CodedTerm[]>([]);
   const [didYouMean, setDidYouMean] = useState<readonly CodedTerm[]>([]);
@@ -124,7 +126,17 @@ export default function StageDiagnose({ patient, onDone, onChanged }: StageDiagn
     if (selected.size === 0) return;
     setBusy(true); setError(null); setMsg(null);
     const chosen = candidates.filter((t) => selected.has(t.code));
-    Promise.all(chosen.map((t) => api.patients.addCondition(patient.id, { code: t.code, code_display: t.code_display, status: "active" })))
+    Promise.all(chosen.map((t) => api.patients.addCondition(patient.id, {
+            code: t.code,
+            code_display: t.code_display,
+            status: "active",
+            // Provenance on the write: which encounter asked for this diagnosis. Without it the
+            // problem list cannot say what this visit was for (a gap found by asking the question
+            // out loud), and the claim has no encounter-level justification to point at.
+            // Conditional spread, not `encounter_id: x ?? undefined`: the project builds with
+            // exactOptionalPropertyTypes, so an explicit undefined is not an absent property.
+            ...(encounterId ? { encounter_id: encounterId } : {}),
+          })))
       .then(() => {
         setMsg(`Added ${chosen.length} diagnosis(es) to the problem list.`);
         setCandidates([]); setSelected(new Set());

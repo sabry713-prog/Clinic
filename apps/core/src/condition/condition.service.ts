@@ -39,7 +39,10 @@ export class ConditionService {
   async add(
     userId: string,
     patientId: string,
-    input: { code: string; code_display: string; status?: string; onset_date?: string },
+    input: { code: string; code_display: string; status?: string; onset_date?: string;
+    /** The encounter this diagnosis was made in, and the note it came from. Optional, so the
+     *  problem list still accepts a diagnosis added outside an encounter. */
+    encounter_id?: string; draft_id?: string },
   ): Promise<AddedCondition> {
     await this.scope.assertPatientInScope(userId, patientId);
     const code = (input.code ?? "").trim();
@@ -50,9 +53,9 @@ export class ConditionService {
     const res = await this.pool.query<AddedCondition>(
       `INSERT INTO hospital.condition
          (patient_id, source_system, source_id, code_system, code, code_display,
-          status, onset_date, fhir_resource_json, last_synced_at)
+          status, onset_date, fhir_resource_json, last_synced_at, encounter_id, draft_id)
        VALUES ($1,'clinician-entry',$2,'http://snomed.info/sct',$3,$4,$5,
-               $6::date, $7::jsonb, now())
+               $6::date, $7::jsonb, now(), $8::uuid, $9::uuid)
        RETURNING id, code, code_display, status, onset_date::text AS onset_date`,
       [
         patientId,
@@ -62,6 +65,10 @@ export class ConditionService {
         status,
         input.onset_date ?? null,
         JSON.stringify({ resourceType: "Condition", _authoredBy: userId, _clinicianEntry: true }),
+        // Provenance: which encounter, and which note, asked for this diagnosis. Set when the
+        // clinician confirms it inside the Journey; null when the row comes from anywhere else.
+        input.encounter_id ?? null,
+        input.draft_id ?? null,
       ],
     );
     return res.rows[0]!;

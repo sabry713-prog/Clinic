@@ -128,7 +128,12 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
             />
           )}
           {stage === "diagnose" && (
-            <StageDiagnose patient={patient} onDone={(d) => markCompleted("diagnose", d)} onChanged={bumpRefresh} />
+            <StageDiagnose
+              patient={patient}
+              encounterId={encounterId}
+              onDone={(d) => markCompleted("diagnose", d)}
+              onChanged={bumpRefresh}
+            />
           )}
           {stage === "order" && <StageOrder patientId={patient.id} onDone={(d) => markCompleted("order", d)} onChanged={bumpRefresh} />}
           {stage === "codelink" && (

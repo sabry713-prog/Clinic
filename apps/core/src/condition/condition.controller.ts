@@ -15,6 +15,10 @@ class AddConditionDto {
   @IsString() code_display!: string;
   @IsOptional() @IsString() @IsIn(["active", "resolved"]) status?: string;
   @IsOptional() @IsString() onset_date?: string;
+  // The encounter (and note) this diagnosis was made in — supplied by the Journey so the record can
+  // answer "what was this visit for?", and so the claim carries the encounter's justification.
+  @IsOptional() @IsString() encounter_id?: string;
+  @IsOptional() @IsString() draft_id?: string;
 }
 
 function uid(req: Request): string {

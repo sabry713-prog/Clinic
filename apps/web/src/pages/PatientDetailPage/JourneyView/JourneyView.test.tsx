@@ -288,6 +288,41 @@ describe("JourneyView", () => {
     expect(await screen.findByText(/Nothing in the assessment matched the coded vocabulary/i)).toBeInTheDocument();
   });
 
+  // Item 5 of the consolidation plan: the confirmed diagnosis carries its provenance. Without the
+  // encounter on the write, the problem list cannot answer "what was this visit for?" from the
+  // record — the gap that started this whole assessment — and the claim has no encounter-level
+  // justification to point at. The id is invisible to the clinician: nothing extra to press.
+  it("records the encounter on the confirmed diagnosis", async () => {
+    sessionStorage.setItem(
+      `cortex.scribe.${PATIENT.id}`,
+      JSON.stringify({ soap: { assessment: "type 2 diabetes", plan: "" } }),
+    );
+    mocked.suggestCodes.mockResolvedValueOnce({
+      suggestions: [
+        { code: "44054006", code_display: "Diabetes mellitus type 2", code_system: "http://snomed.info/sct" },
+      ],
+    } as never);
+    mocked.addCondition.mockResolvedValueOnce({
+      id: "c1",
+      code: "44054006",
+      code_display: "Diabetes mellitus type 2",
+      status: "active",
+    } as never);
+
+    renderJourney();
+    gotoStage("diagnose");
+
+    const add = await screen.findByRole("button", { name: /Add selected/i });
+    await userEvent.click(add);
+
+    await waitFor(() =>
+      expect(mocked.addCondition).toHaveBeenCalledWith(
+        PATIENT.id,
+        expect.objectContaining({ encounter_id: "e1" }),
+      ),
+    );
+  });
+
   // Item 1 of the consolidation plan: the step analyses the SAVED note first. Reading the session
   // alone made the stage depend on the tab staying open — closing it emptied the stage while the
   // note sat on the record, which is exactly how the gap was reported.
