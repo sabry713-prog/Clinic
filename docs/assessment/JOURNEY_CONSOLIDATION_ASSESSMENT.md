@@ -113,14 +113,64 @@ Applied to the items above:
    drawer and the order timeline; once G5 lands and stage 3 carries the payer status, it has no
    doctor-facing function left — and it is the surface the directive names.
 
-## 6. Revised by review
+## 6. Second filter — needed? mergeable? automatable?
+
+Standing instruction from review: for every feature or task in the journey, ask in order —
+
+1. **Is it really needed?** (Does it exist because the encounter requires it, or because the screen
+   was designed that way?)
+2. **Can it be merged** into something the doctor already does?
+3. **Can it be automated** so the doctor does not do it at all?
+
+The goal is to cut the doctor's time and effort as far as the boundary allows. The boundary is
+fixed: **never automate a clinical assertion or a signature.** Reads, derivations, persistence and
+traversal are fair game.
+
+Applied to the items above:
+
+| Item | Needed? | Merge? | Automate? | Verdict |
+|---|---|---|---|---|
+| Stage 2 reads the saved note | yes — it is a dependency, not a feature | — | **already automatic**, just broken | fix the read path |
+| SOAP generation (E4b) | yes — the note is the encounter's product | — | **yes: draft from the transcript, doctor edits** | **the biggest saving** |
+| Save the note | yes | yes — no button | **yes: auto-save as it is edited** | removes G1 by construction |
+| Sign the note | yes | — | **no — a signature is an explicit act** | keep one clear Sign |
+| Checklist (E4c) | yes | **yes — fold into the note's completeness strip** | **yes: ticks derive from the note (already do)** | persist + merge, not a panel |
+| Encounter linkage (P3) | yes | — | **yes: invisible, an id on insert** | correctness, zero doctor cost |
+| AI Team | situational | — | **partly: auto-run the read-only ones** (Consultant summary; Pharmacist only when a medication is ordered; necessity already merged into stage 3) | drawer + auto-run where free |
+| Order↔diagnosis link (step 4) | yes | **yes: one approval instead of taps** | **auto-link when unambiguous** (one candidate diagnosis), ask when not | fewer taps |
+| Code confirmation (step 4) | yes | — | **no — the clinician confirms the code; that is the boundary** | keep |
+
+**The structural finding.** The runbook itself says stage 2 is *"usually nothing to add"* and stage
+4 is *"pre-checked → approve"*. So two of the five stages are frequently **no-ops** that still cost a
+click and a screen each. The cheapest change in the whole list is therefore not a feature: **skip a
+stage that has nothing for the doctor to decide, and say so.** Applied to stages 2 and 4 that is two
+screens and two approvals saved per encounter, every encounter.
+
+## 7. Revised plan, ordered by saving per day of effort
+
+| # | Change | Effort | Doctor's saving |
+|---|---|---|---|
+| 1 | Fix stage 2 to read the **saved** note (session as fallback only) | 0.5 d | correctness; the assessment stops depending on a live tab |
+| 2 | **Auto-save the note** as it is edited, one explicit **Sign** | 0.5 d | nothing to lose, nothing to press |
+| 3 | **Skip a stage with nothing to decide** (stages 2 and 4, with the reason shown) | 1 d | **2 screens + 2 approvals per encounter** |
+| 4 | Real **SOAP generation** from the transcript (E4b) | 3 d | **minutes per encounter** |
+| 5 | Encounter linkage on the diagnosis write (P3) | 0.5 d | none — correctness only |
+| 6 | Checklist: persist + fold into the note's completeness strip (E4c) | 1.5 d | one panel and one manual pass |
+| 7 | Auto-run the read-only agents; drawer stays for the rest | 1 d | a click and a wait per use |
+| 8 | Auto-link order↔diagnosis when unambiguous | 1.5 d | several taps per encounter |
+
+**≈ 9.5 engineering days.** The first three (2 days total) remove the two screens and the lost-work
+risk before any new capability is built; SOAP generation is the single largest time saver and comes
+fourth because it is the largest piece of work.
+
+## 8. Revised by review
 
 The first version of this assessment proposed moving the AI Team **into** the journey. That
 over-reached: the agents answer situational questions, and forcing them into the wizard would make
 optional work look mandatory. The test in §5 now governs the whole list, and the only in-journey
 requirement for them is reachability without context loss.
 
-## 7. Boundary note
+## 9. Boundary note
 
 None of this adds clinical judgement. Every item is persistence, linkage, or surfacing a fact that
 already exists. The one item that changes what the doctor is *told* — P2's provisional coding — is
