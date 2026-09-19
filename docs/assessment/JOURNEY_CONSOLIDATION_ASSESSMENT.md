@@ -173,14 +173,37 @@ Diagnosis card — a duplicate the consolidation removes. The remedy is a search
 risk before any new capability is built; SOAP generation is the single largest time saver and comes
 fourth because it is the largest piece of work.
 
-## 8. Revised by review
+## 8. Stage 1 has two input paths, and both must keep working
+
+Raised in review: the SOAP can come from the ambient recording, or the clinician can write it
+themselves, because **a patient may decline to be recorded**. Three things follow.
+
+**Verified — the manual path saves correctly.** `draft.service.ts:404`: when a section is authored
+(the `authoredSections` path `StageDocument` already uses), `isAuthored` short-circuits the
+transcript-containment gate in as many words — *"the clinician reviewed this text in the SOAP editor
+and is its author of record, so the transcript-containment gate does not apply"*. So a note written
+by hand against an empty transcript saves, which is exactly the declining-patient case. Nothing to
+fix; a test belongs in the suite so it stays true.
+
+**Gap — the refusal is not recorded anywhere.** No consent or refusal concept exists in the schema
+or the UI. A refusal is a fact about the encounter, and the record should be able to show that the
+note was *authored* rather than *transcribed*, and why. Recommended: a per-encounter
+`recording_declined` flag (or a `documentation_source: ambient | manual`) set in stage 1, shown on
+the note, and carried into the claim's provenance. Until then the difference is invisible in the
+record — the note simply has no transcript behind it.
+
+**Consequence for item 4 (SOAP generation).** It drafts from a transcript, so it applies only when a
+recording exists. A hand-written note skips it, and the stage must not imply that generation was
+expected.
+
+## 9. Revised by review
 
 The first version of this assessment proposed moving the AI Team **into** the journey. That
 over-reached: the agents answer situational questions, and forcing them into the wizard would make
 optional work look mandatory. The test in §5 now governs the whole list, and the only in-journey
 requirement for them is reachability without context loss.
 
-## 9. Boundary note
+## 10. Boundary note
 
 None of this adds clinical judgement. Every item is persistence, linkage, or surfacing a fact that
 already exists. The one item that changes what the doctor is *told* — P2's provisional coding — is
