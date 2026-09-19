@@ -16,6 +16,9 @@ interface StageDiagnoseProps {
   readonly patient: PatientDetail;
   /** The encounter this diagnosis is being made in, recorded as provenance on the write. */
   readonly encounterId?: string | null;
+  /** Offered when this stage has nothing for the clinician to decide (see the "nothing to add"
+   *  block) — the way on, without sending them to another surface to finish the step. */
+  readonly onAdvance?: () => void;
   readonly onDone: (done: boolean) => void;
   readonly onChanged: () => void;
 }
@@ -61,7 +64,7 @@ async function loadSoapAssessment(patientId: string): Promise<string> {
   return readSessionAssessment(patientId);
 }
 
-export default function StageDiagnose({ patient, encounterId, onDone, onChanged }: StageDiagnoseProps): JSX.Element {
+export default function StageDiagnose({ patient, encounterId, onAdvance, onDone, onChanged }: StageDiagnoseProps): JSX.Element {
   const documented = patient.conditions ?? [];
   const [candidates, setCandidates] = useState<readonly CodedTerm[]>([]);
   const [didYouMean, setDidYouMean] = useState<readonly CodedTerm[]>([]);
@@ -208,8 +211,8 @@ export default function StageDiagnose({ patient, encounterId, onDone, onChanged 
       {assessment && candidates.length === 0 && didYouMean.length === 0 && (
         <p className="text-sm text-ink-soft">
           Nothing in the assessment matched the coded vocabulary, so there is nothing to suggest.
-          That is a wording gap rather than a failure — add the diagnosis from the Diagnosis card,
-          or rephrase the assessment to the clinical term.
+          That is a wording gap rather than a failure — rephrasing the assessment to the clinical
+          term will match it.
         </p>
       )}
       {assessment && candidates.length === 0 && didYouMean.length > 0 && (
@@ -221,6 +224,32 @@ export default function StageDiagnose({ patient, encounterId, onDone, onChanged 
             </span>
           ))}
           <span className="text-[11px] text-ink-faint">— add via the Diagnosis card if clinically intended.</span>
+        </div>
+      )}
+
+      {/* Nothing to decide. The runbook says this stage is "usually nothing to add", and until now
+          the only thing it said was "nothing matched" — which reads like a failure and, worse, sent
+          the clinician to another surface to finish a step they were standing in. When the note
+          raises nothing the vocabulary knows AND the problem list already carries this patient's
+          diagnoses, say that and offer the way on. */}
+      {assessment && candidates.length === 0 && documented.length > 0 && (
+        <div
+          className="flex flex-wrap items-center gap-3 rounded-xl border border-status-ok-line bg-status-ok-bg px-3 py-2"
+          data-testid="diagnose-nothing-to-do"
+        >
+          <span className="text-sm text-status-ok">
+            Nothing to add — the problem list already carries this patient&apos;s diagnoses, and this
+            note raises none that are missing from it.
+          </span>
+          {onAdvance && (
+            <button
+              type="button"
+              onClick={onAdvance}
+              className="ml-auto px-3 py-1.5 rounded-full border border-status-ok-line bg-white text-sm font-semibold text-ink hover:bg-mist transition-colors"
+            >
+              Continue to Order →
+            </button>
+          )}
         </div>
       )}
 

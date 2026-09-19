@@ -131,6 +131,7 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
             <StageDiagnose
               patient={patient}
               encounterId={encounterId}
+              onAdvance={() => setStage("order")}
               onDone={(d) => markCompleted("diagnose", d)}
               onChanged={bumpRefresh}
             />

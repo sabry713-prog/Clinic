@@ -288,6 +288,22 @@ describe("JourneyView", () => {
     expect(await screen.findByText(/Nothing in the assessment matched the coded vocabulary/i)).toBeInTheDocument();
   });
 
+  // Item 3 of the consolidation plan: a stage with nothing to decide says so and offers the way on.
+  // The runbook calls this stage "usually nothing to add", yet the only thing it ever said was
+  // "nothing matched" — which reads as a failure and sent the clinician to another surface to finish
+  // a step they were already standing in. Now it says nothing-to-add and offers the next stage.
+  it("says nothing to add, and offers the way on, when the note raises nothing new", async () => {
+    sessionStorage.setItem(
+      `cortex.scribe.${PATIENT.id}`,
+      JSON.stringify({ soap: { assessment: "zzz unknown wording zzz", plan: "" } }),
+    );
+    renderJourney();
+    gotoStage("diagnose");
+
+    expect(await screen.findByTestId("diagnose-nothing-to-do")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Continue to Order/i })).toBeInTheDocument();
+  });
+
   // Item 5 of the consolidation plan: the confirmed diagnosis carries its provenance. Without the
   // encounter on the write, the problem list cannot answer "what was this visit for?" from the
   // record — the gap that started this whole assessment — and the claim has no encounter-level
