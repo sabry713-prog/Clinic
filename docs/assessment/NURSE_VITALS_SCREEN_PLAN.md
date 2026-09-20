@@ -1,5 +1,30 @@
 # Nurse vitals screen — plan
 
+> **SUPERSEDED, 2026-09-20, by the owner's review.** The plan below proposed a capture screen for the
+> nurse. The owner's objection is correct and the screen is **not needed**: the hospital's HIS is where
+> nursing records vitals, and building a second capture surface in our product would create two sources
+> of truth for the same measurement — the exact failure mode removed from the note this same day (the
+> session draft drifting from the saved note). In DEV the HIS is simulated by the ingestion service and
+> the seed data; that is the stand-in, not a screen.
+>
+> **What was verified instead:** the read path is already complete and already carries the range.
+> `vitals.ts` ("Nurse-recorded vital signs → the Objective", "no defaults invented") feeds stage 1, the
+> handoff renders `[120–80]`, the draft renders `(ref: 90-120)`, and claim readiness fails an order with
+> no `vital-signs` evidence. Nothing is missing on the way in, because nothing needs to come in — the
+> HIS supplies it.
+>
+> **What the owner actually wants is on the read side**: make a value that falls outside its recorded
+> range visible. That is the whole remaining scope, and it is one item, not five and a half days.
+>
+> **The boundary note that goes with it** (CLAUDE.md §2 / SFDA MDS-G027, and the rulebook's "nothing
+> flags, scores or alerts"): the colour may present a **recorded fact** — *"outside the range recorded
+> in the HIS"* — attributed to its source. It may **not** word it as a diagnosis ("abnormal", "critical")
+> or invent a range the record does not carry. Manual vitals (blood pressure on a ward) typically arrive
+> with **no** reference range, so a clinical threshold like 140/90 would be **our** judgement, not the
+> HIS's fact — a separate decision, flagged in §7 below and not taken.
+
+## Original plan (kept for the record)
+
 **Asked for:** a screen for the nurse to record vital signs; whatever else the nurse is needed for; and a
 look at Sully's "AI Nurse" as a reference. Assessment only — nothing built.
 
