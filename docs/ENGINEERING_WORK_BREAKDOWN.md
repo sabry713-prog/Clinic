@@ -64,7 +64,30 @@ post-care package regresses to 500s.
 
 ---
 
-### E4 — Finish UI wiring — **6 days**
+### E4 — Finish UI wiring — ~~**6 days**~~ → **CLOSED** (all three gaps verified done)
+
+**Status, established by reading the code rather than the plan (2026-09-19):**
+
+* **E4a — agent action cards — DONE, and was already done.** `runAgentAction`
+  (`apps/web/src/components/layout/CortexContext.tsx:1464`) dispatches four of the ten actions to live
+  backends (Regenerate SOAP → the orchestrator, Summarise prior encounters → the narrative endpoint,
+  Show related results → observations, Submit Pre-Auth → the existing flow) and the other six carry
+  `pendingIntegration: true`, which returns early and tells the clinician so — exactly the disposition
+  this item asked for. Nothing was built.
+* **E4b — SOAP generation — DONE, and was already done.** The route exists
+  (`apps/core/src/ai-team/ai-team.controller.ts:156` `@Post("soap")`, with scope and the
+  `AI_TEAM_SOAP_GENERATED` audit event), the orchestrator's endpoint answers live, and
+  `CortexContext.tsx:1208-1236` calls it on a 2s debounce in live mode while preserving the canned
+  stages in demo mode — the exact split this item specified. Nothing was built.
+* **E4c — checklist persistence — DONE.** `app.encounter_checklist` (encounter-keyed), service,
+  client and wiring; only the clinician's non-derivable decisions are stored, so no stored value can
+  disagree with the note it came from. Commits `b12f58f`, `3cbf0ec`.
+
+**Lesson for this document:** two of the three gaps were already closed when this was written, which
+made the item read as larger than it was. Verify against the code before sizing, and mark items here
+when they close.
+
+### E4 — Finish UI wiring — original text, for reference — **6 days**
 
 Three separate gaps, different sizes.
 
