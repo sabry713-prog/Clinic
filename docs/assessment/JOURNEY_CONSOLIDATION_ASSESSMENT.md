@@ -171,7 +171,7 @@ sections alone, so the failure would have been **divergence**, not destruction: 
 their first saved value while the note moved on, and stage 2 analysing a note the clinician had
 already rewritten.
 
-**E4c shipped** (`b12f58f`, `b87...`): the checklist's non-derivable decisions — manual ticks and
+**E4c shipped** (`b12f58f` (backend), `3cbf0ec` (client + wiring)): the checklist's non-derivable decisions — manual ticks and
 per-encounter dismissals — now survive a refresh, keyed on the encounter. The table stores decisions
 only; everything derivable stays computed, so a stored value cannot disagree with the note it came
 from. Two limits recorded: un-ticking a row the derivation would tick does not survive a reload (a
