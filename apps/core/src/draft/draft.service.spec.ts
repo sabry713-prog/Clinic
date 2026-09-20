@@ -380,4 +380,26 @@ describe("DraftService clinician-authored ambient note (audit C10)", () => {
       }),
     ).rejects.toThrow(/verbatim substring/);
   });
+
+  // Raised in review: a patient may decline to be recorded, so the clinician writes the note by
+  // hand. Then there is no transcript at all and every section is theirs. The containment gate must
+  // not refuse it — they are the author of record, and there is no transcript for the text to be
+  // contained in. The rule was verified by reading the service before anything was built on it;
+  // this test is what keeps it true, because the refusing-patient case is otherwise untested.
+  it("saves a hand-written note when the patient declined recording (empty transcript)", async () => {
+    const service = new DraftService(makePool(), makeScope(), makeEncryption());
+    const draft = await service.generate("user-1", "patient-1", "encounter_note", "en", "general", {
+      transcript: "",
+      sections: SOAP,
+      authored: SOAP,
+    });
+
+    const sections = draft.sections_json as unknown as {
+      key: string;
+      text: string;
+      authored?: boolean;
+    }[];
+    expect(sections.find((s) => s.key === "assessment")?.text).toBe(SOAP.assessment);
+    expect(sections.find((s) => s.key === "assessment")?.authored).toBe(true);
+  });
 });
