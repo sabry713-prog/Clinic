@@ -295,7 +295,19 @@ over-reached: the agents answer situational questions, and forcing them into the
 optional work look mandatory. The test in §5 now governs the whole list, and the only in-journey
 requirement for them is reachability without context loss.
 
-## 10. Boundary note
+## 10. Phase 3 — scope narrowed by decision
+
+**The timeline does not move, and the `encounter` view stays.** Decided explicitly. The consequence is
+recorded because it changes what Phase 3 is: the old three-pane shell is **not** redundant — it is where
+the encounter's timeline lives, and the timeline is context rather than a step in the encounter flow, so
+it has no place in the wizard. The view keeps a doctor-facing function and is therefore not a
+retirement candidate.
+
+Phase 3 therefore covers **only the duplicate menu chips** — Diagnosis, Orders, Scribe and Coder, each a
+second entrance to a stage the Journey already owns — and that retirement still needs its own explicit
+word, since nothing here deletes a surface without one.
+
+## 11. Boundary note
 
 None of this adds clinical judgement. Every item is persistence, linkage, or surfacing a fact that
 already exists. The one item that changes what the doctor is *told* — P2's provisional coding — is
