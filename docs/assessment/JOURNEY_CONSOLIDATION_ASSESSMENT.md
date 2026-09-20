@@ -159,8 +159,29 @@ screens and two approvals saved per encounter, every encounter.
 | 7 | Auto-run the read-only agents; drawer stays for the rest | 1 d | a click and a wait per use |
 | 8 | Auto-link order↔diagnosis when unambiguous | 1.5 d | several taps per encounter |
 
-**Progress.** Items 1 (`d03a2c8`), 3 for stage 2, and 5 (`de35738`) are done and verified; item 3
-for stage 4, item 2, and the rest remain. Stage 4's skip needs the same treatment once its
+**Progress.** Items 1 (`d03a2c8`), 3 for **both** stages (`a1dfacf`, `5651d42`), 5 (`de35738`) and
+G10 (`c21bbe1`) are done and verified. Item 2 waits on the section-preserving PATCH decision.
+
+**Item 4 is already built — the backlog's E4b is stale.** Verified before writing any code:
+
+* the route exists — `apps/core/src/ai-team/ai-team.controller.ts:156` `@Post("soap")`, with patient
+  scope, the `AI_TEAM_SOAP_GENERATED` audit event, and the orchestrator's `/api/v1/agents/soap`,
+  which answers live (checked with a real transcript);
+* the client and wiring exist — `CortexContext.tsx:1208-1236` calls `api.aiTeam.generateSoap` on a
+  2s debounce when `dictationMode === "live"` and the transcript has 3+ lines, and lines 1239-1240
+  state the split the backlog asks for: *"In live mode, the DeepSeek-generated SOAP note replaces the
+  canned stages. In demo mode, the canned stages are preserved (no backend call)."*
+
+So E4b's 3 days are **zero**, and part of E4a is done too (the "Regenerate SOAP note" action calls
+the same endpoint). **E4c is genuinely open**: there is no `app.encounter_checklist` table and no
+persistence endpoint — only `POST /checklist`, which returns quote-verified suggestions and stores
+nothing. The estimate drops accordingly.
+
+**One behaviour worth stating in the demo.** The real generator is formatting-only, so a transcript
+that states no assessment returns an **empty** assessment rather than an invented one — the section
+is the clinician's judgement, not the model's. The canned demo stages still show a full note, so the
+difference will be visible in live mode. That is the honest direction, and it matches the non-SaMD
+boundary the runbook claims. Stage 4's skip needs the same treatment once its
 "nothing to approve" condition is defined against live data.
 
 **G10 — found while doing item 3: no in-stage manual coding path.** Stage 2's analysis catch block
