@@ -169,6 +169,18 @@ vocabulary does not recognise the note, the only remedy the screen offered was a
 Diagnosis card — a duplicate the consolidation removes. The remedy is a search box over the same
 `suggestCodes` endpoint inside the stage; recorded as work, not as a wording fix.
 
+**G10's scope, clarified in review.** Everything stays **inside step 2**. The box *searches*, the
+clinician *selects*, and "Add selected" *creates* — exactly the flow the suggestions already use. No
+step of the write leaves the stage, and no new backend is needed: `GET /conditions/suggest` and
+`POST /patients/:id/conditions` both exist. The Diagnosis card is **not** part of this flow; it is a
+duplicate of stage 2 and is retired with the other duplicates — it is not a prerequisite for adding a
+diagnosis, and never was.
+
+One honest limit. The vocabulary is curated and coded, so the box searches *that* list. A term the
+list lacks is a **vocabulary gap** to be sourced and added, not something the system invents: the API
+requires both `code` and `code_display`, so there is no free-text diagnosis by design. (Patients may
+refuse recording; the vocabulary does not get to refuse accuracy.)
+
 **≈ 9.5 engineering days.** The first three (2 days total) remove the two screens and the lost-work
 risk before any new capability is built; SOAP generation is the single largest time saver and comes
 fourth because it is the largest piece of work.
