@@ -304,6 +304,66 @@ describe("JourneyView", () => {
     expect(screen.getByRole("button", { name: /Continue to Order/i })).toBeInTheDocument();
   });
 
+  // G10: when the note's wording is not in the curated vocabulary, the clinician had to leave the
+  // wizard and add the diagnosis on another surface. The box searches the vocabulary here, merges the
+  // result into the SAME list the matcher fills, and the one "Add selected" button writes it — so the
+  // write path is unchanged and no new endpoint is needed.
+  it("finds a term through the vocabulary search and adds it with the same button", async () => {
+    sessionStorage.setItem(
+      `cortex.scribe.${PATIENT.id}`,
+      JSON.stringify({ soap: { assessment: "zzz unmatched wording zzz", plan: "" } }),
+    );
+    // Answer by query, not by call order: the mount analysis also calls this endpoint, so a
+    // once-mock would be consumed before the search ever ran.
+    mocked.suggestCodes.mockImplementation((q: string) =>
+      Promise.resolve(
+        q.toLowerCase().includes("urinary")
+          ? {
+              suggestions: [
+                {
+                  code: "68566005",
+                  code_display: "Urinary tract infection",
+                  code_system: "http://snomed.info/sct",
+                },
+              ],
+            }
+          : { suggestions: [] },
+      ) as never,
+    );
+    mocked.addCondition.mockResolvedValueOnce({
+      id: "c2",
+      code: "68566005",
+      code_display: "Urinary tract infection",
+      status: "active",
+    } as never);
+
+    renderJourney();
+    gotoStage("diagnose");
+    await userEvent.type(screen.getByTestId("diagnose-vocabulary-search"), "urinary");
+
+    expect(await screen.findByText("Urinary tract infection")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /Add selected/i }));
+    await waitFor(() =>
+      expect(mocked.addCondition).toHaveBeenCalledWith(
+        PATIENT.id,
+        expect.objectContaining({ code: "68566005", encounter_id: "e1" }),
+      ),
+    );
+  });
+
+  // The honest half of G10: the list is curated, so a term it lacks is a vocabulary gap. The system
+  // says that rather than inventing a code — the same rule that stopped the fabricated SBS codes.
+  it("names a vocabulary gap instead of inventing a term when nothing matches", async () => {
+    renderJourney();
+    gotoStage("diagnose");
+    mocked.suggestCodes.mockResolvedValue({ suggestions: [] } as never);
+
+    await userEvent.type(screen.getByTestId("diagnose-vocabulary-search"), "zzz");
+
+    expect(await screen.findByTestId("diagnose-search-note")).toHaveTextContent(/vocabulary gap/i);
+  });
+
   // Item 5 of the consolidation plan: the confirmed diagnosis carries its provenance. Without the
   // encounter on the write, the problem list cannot answer "what was this visit for?" from the
   // record — the gap that started this whole assessment — and the claim has no encounter-level

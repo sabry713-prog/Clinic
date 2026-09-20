@@ -116,6 +116,53 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
       });
   }, [assessment, analyzedText]);
 
+  // The vocabulary search. The matcher reads the note; this reads what the clinician types — the only
+  // remedy when the note's wording is not in the curated list. Before this, that case said "nothing
+  // matched" and the clinician had to leave the wizard to add the diagnosis on another surface.
+  const [query, setQuery] = useState("");
+  const [searchNote, setSearchNote] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 3) {
+      setSearchNote(null);
+      return;
+    }
+    let live = true;
+    setSearching(true);
+    const timer = setTimeout(() => {
+      api.patients
+        .suggestCodes(q)
+        .then((r) => {
+          if (!live) return;
+          // Merge into the SAME list the matcher fills. "Add selected" filters `candidates` to write,
+          // so merging keeps the write path byte-for-byte what it was — only the source of the terms
+          // changes. This is why the box needs no new endpoint and no new button.
+          setCandidates((prev) => {
+            const seen = new Set(prev.map((t) => t.code));
+            return [...prev, ...r.suggestions.filter((t) => !seen.has(t.code))];
+          });
+          setSelected((prev) => new Set([...prev, ...r.suggestions.map((t) => t.code)]));
+          setSearchNote(
+            r.suggestions.length > 0
+              ? null
+              : "No coded term matches that wording. The list is curated, so a missing term is a vocabulary gap to be sourced — not a code to invent.",
+          );
+        })
+        .catch(() => {
+          if (live) setSearchNote("The coded vocabulary could not be reached.");
+        })
+        .finally(() => {
+          if (live) setSearching(false);
+        });
+    }, 300);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
   const toggle = (code: string): void => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -178,6 +225,34 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
         )}
       </div>
 
+      <div>
+        <label
+          htmlFor="diagnose-search"
+          className="block text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-faint mb-1"
+        >
+          Search the coded vocabulary
+        </label>
+        <input
+          id="diagnose-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Type the clinical term — e.g. urinary tract infection"
+          data-testid="diagnose-vocabulary-search"
+          className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
+        />
+        <p className="mt-1 text-[11px] text-ink-faint">
+          {searching
+            ? "Searching the vocabulary…"
+            : "Coded terms only. Searching is not ordering: nothing is added until you confirm below."}
+        </p>
+        {searchNote && (
+          <p className="mt-1 text-xs text-status-pend" data-testid="diagnose-search-note">
+            {searchNote}
+          </p>
+        )}
+      </div>
+
       {assessment && candidates.length > 0 && (
         <div>
           <h3 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-faint mb-1">
@@ -210,9 +285,9 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
           clinician could not tell a wording gap from a broken step. Say which it is. */}
       {assessment && candidates.length === 0 && didYouMean.length === 0 && (
         <p className="text-sm text-ink-soft">
-          Nothing in the assessment matched the coded vocabulary, so there is nothing to suggest.
-          That is a wording gap rather than a failure — rephrasing the assessment to the clinical
-          term will match it.
+          Nothing in the assessment matched the coded vocabulary, so there is nothing to suggest
+          from it. That is a wording gap rather than a failure — rephrase the assessment, or search
+          the vocabulary above for the term itself.
         </p>
       )}
       {assessment && candidates.length === 0 && didYouMean.length > 0 && (
