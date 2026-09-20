@@ -159,8 +159,27 @@ screens and two approvals saved per encounter, every encounter.
 | 7 | Auto-run the read-only agents; drawer stays for the rest | 1 d | a click and a wait per use |
 | 8 | Auto-link order↔diagnosis when unambiguous | 1.5 d | several taps per encounter |
 
-**Progress.** Items 1 (`d03a2c8`), 3 for **both** stages (`a1dfacf`, `5651d42`), 5 (`de35738`) and
-G10 (`c21bbe1`) are done and verified. Item 2 waits on the section-preserving PATCH decision.
+**Progress.** Items 1 (`d03a2c8`), 2 (`66899b6` + `cc27f26`), 3 for **both** stages (`a1dfacf`,
+`5651d42`), 5 (`de35738`) and G10 (`c21bbe1`) are done and verified. Web suite 262/262, typecheck
+clean, tree clean.
+
+**Item 2 shipped as decided (option 1).** The section-preserving update (`66899b6`) plus the wiring
+(`cc27f26`): the note persists 2.5s after it changes, into ONE draft, and the sections stage 2 reads
+move with the text sign() freezes. The reading that started this — "the update would collapse the
+sections" — was wrong in an instructive way: the old update wrote `edited_text` only and left the
+sections alone, so the failure would have been **divergence**, not destruction: sections frozen at
+their first saved value while the note moved on, and stage 2 analysing a note the clinician had
+already rewritten.
+
+Still open: E4c (checklist persistence — genuinely absent), G5 (the AI Team reachable from inside the
+journey), auto-running the read-only agents, auto-linking order↔diagnosis when unambiguous, the
+recording-refusal flag, G7 (signing inside stage 1), and Phase 3's retirement of the duplicates —
+which needs an explicit decision, since nothing here deletes a surface without one.
+
+**New limit recorded: `app.document_draft` has no encounter column.** So "this encounter's note"
+means "the newest encounter_note for the patient", in stage 2's read as well as stage 1's auto-save.
+That assumes one open note per patient; two encounters in a day would share one. A
+`draft.encounter_id` (same shape as the `condition` link in item 5) is the real fix.
 
 **Item 4 is already built — the backlog's E4b is stale.** Verified before writing any code:
 
