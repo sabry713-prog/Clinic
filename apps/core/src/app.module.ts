@@ -21,6 +21,7 @@ import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { DraftModule } from "./draft/draft.module";
 import { ConditionModule } from "./condition/condition.module";
 import { ChecklistModule } from "./checklist/checklist.module";
+import { DocumentationModule } from "./documentation/documentation.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
 import { NphiesModule } from "./nphies/nphies.module";
 import { ClaimIntegrityModule } from "./claim-integrity/claim-integrity.module";
@@ -66,6 +67,7 @@ function composeFeatureModules() {
     AdminModule,
     ConditionModule,
     ChecklistModule,
+    DocumentationModule,
     ServiceRequestModule,
     NphiesModule,
     ClaimIntegrityModule,
