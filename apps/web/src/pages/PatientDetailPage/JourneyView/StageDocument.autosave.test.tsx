@@ -22,6 +22,9 @@ vi.mock("../../../components/layout/CortexContext", () => ({
     transcript: [{ id: "t1", speaker: "clinician", text: "what brings you in" }],
   }),
 }));
+vi.mock("../../../components/layout/panes/AiTeamDrawer", () => ({
+  default: () => <div data-testid="ai-team-drawer-stub" />,
+}));
 vi.mock("../../../components/layout/panes/AmbientScribePane", () => ({
   default: () => <div data-testid="scribe-pane-stub" />,
 }));
@@ -46,6 +49,14 @@ describe("StageDocument — the working copy saves itself", () => {
   });
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  // G5: consulting an agent must not mean leaving the encounter. The AI Team lives in the old
+  // three-pane shell; here it sits beside the note, on the same provider, as a drawer the clinician
+  // opens when the case calls for it — not as a stage, because the agents are situational.
+  it("keeps the AI Team reachable from inside the stage", async () => {
+    render(<StageDocument patientId="p1" onDone={vi.fn()} />);
+    expect(screen.getByTestId("ai-team-drawer-stub")).toBeInTheDocument();
   });
 
   it("creates the draft once, without waiting to be asked", async () => {

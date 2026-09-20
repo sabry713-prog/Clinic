@@ -36,6 +36,9 @@ vi.mock("../../../components/layout/CortexContext", () => ({
     refreshPostCare: vi.fn(), submitPreAuth: vi.fn(),
   }),
 }));
+vi.mock("../../../components/layout/panes/AiTeamDrawer", () => ({
+  default: () => <div data-testid="ai-team-drawer-stub" />,
+}));
 vi.mock("../../../components/layout/panes/AmbientScribePane", () => ({
   default: () => <div data-testid="scribe-pane-stub" />,
 }));

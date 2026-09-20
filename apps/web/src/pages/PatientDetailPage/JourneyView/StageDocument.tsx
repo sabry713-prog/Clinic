@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CortexProvider, useCortex } from "../../../components/layout/CortexContext";
 import AmbientScribePane from "../../../components/layout/panes/AmbientScribePane";
+import AiTeamDrawer from "../../../components/layout/panes/AiTeamDrawer";
 import { api, ApiError } from "../../../lib/api";
 
 interface StageDocumentProps {
@@ -167,9 +168,19 @@ export default function StageDocument({ patientId, onDone, onAdvance }: StageDoc
           same SOAP/transcript state. A second provider here would create
           an isolated context whose SOAP is always empty. */}
       <CortexProvider patientId={patientId} autoStream>
-        <div className="rounded-2xl border border-line overflow-hidden h-[480px] bg-wash">
-          <CompletionProbe onDone={onDone} />
-          <AmbientScribePane />
+        <div className="flex gap-3">
+          <div className="rounded-2xl border border-line overflow-hidden h-[480px] flex-1 min-w-0 bg-wash">
+            <CompletionProbe onDone={onDone} />
+            <AmbientScribePane />
+          </div>
+          {/* G5: the AI Team used to be reachable only from the old three-pane shell, so consulting an
+              agent meant leaving the journey and carrying the encounter with it. It is a collapsible
+              drawer rather than a stage — the agents are situational, and per the review the only
+              requirement is that they open without losing the encounter. The drawer manages its own
+              collapsed rail, so nothing here decides whether it is open. */}
+          <div className="h-[480px] shrink-0">
+            <AiTeamDrawer />
+          </div>
         </div>
         <AutoSaveNote patientId={patientId} onAdvance={onAdvance} />
       </CortexProvider>
