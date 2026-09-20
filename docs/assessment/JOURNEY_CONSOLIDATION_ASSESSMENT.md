@@ -195,6 +195,22 @@ summary), which returns early and says so. That is exactly the disposition the b
 not building — the backlog and this assessment both overstated what was missing. Verification before
 construction has now saved three builds, which is the case for keeping option (ب) as the method.
 
+**Auto-linking order↔diagnosis — resolved by NOT building it, on the rule's own boundary.** The link
+is genuinely absent (`StageCodeLink` has `linkDiagnosis` behind a clinician tap and nothing else), and
+it is genuinely required for the claim. But the link *is* the clinical assertion the payer checks —
+"this order is justified by this diagnosis" — and stage 4's own header states the governance posture
+in as many words: *"Linkage remains fully clinician-chosen (the system never suggests which diagnosis
+supports which order)."* Automating it would automate a clinical judgement and overrule a deliberate
+design decision. The boundary in §6 settles it: reads, derivations, persistence and traversal are fair
+game; a clinical assertion is not.
+
+That leaves the saving on the table deliberately. The taps stay, because each one is a clinician saying
+why this order is justified — which is exactly the artefact a rejection is argued against.
+
+**Four items resolved, zero built (E4b, E4a, item 7, auto-link).** The first two were already done; the
+last two should not be done. The lesson is not that the plan was wrong to list them — it is that
+verification, and the boundary, kept deciding — and that direction is the point of the exercise.
+
 Still open: G5 (the AI Team reachable from inside the
 journey), auto-running the read-only agents, auto-linking order↔diagnosis when unambiguous, the
 recording-refusal flag, G7 (signing inside stage 1), and Phase 3's retirement of the duplicates —
