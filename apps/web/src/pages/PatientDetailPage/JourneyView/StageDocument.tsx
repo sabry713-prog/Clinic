@@ -10,10 +10,10 @@
  * just the browser session.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CortexProvider, useCortex } from "../../../components/layout/CortexContext";
 import AmbientScribePane from "../../../components/layout/panes/AmbientScribePane";
-import { api, type DocumentDraft, ApiError } from "../../../lib/api";
+import { api, ApiError } from "../../../lib/api";
 
 interface StageDocumentProps {
   readonly patientId: string;
@@ -32,71 +32,123 @@ function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void 
   return null;
 }
 
-function SaveToRecord({ patientId, onSaved }: { readonly patientId: string; readonly onSaved?: (() => void) | undefined }): JSX.Element | null {
+/**
+ * The working copy of the note, saved as the clinician edits.
+ *
+ * This was a button ("Save note to record") that created a NEW draft on every press, which meant the
+ * note only reached the record when someone remembered to press it — and a second press duplicated it.
+ * Item 2 of the consolidation plan makes it automatic: the note is persisted as it is written, and the
+ * clinician's only remaining explicit act is signing, which still happens through the drafts flow.
+ *
+ * Guardrail (CLAUDE.md §2): a draft is not documentation. Nothing here signs anything, the status says
+ * so in as many words, and sign-off remains an explicit clinician act.
+ *
+ * The draft is located the same way stage 2 locates it — the newest encounter_note for the patient,
+ * since app.document_draft has no encounter column. One open note per patient is the assumption; a
+ * draft.encounter_id is the real fix and is recorded in the assessment.
+ */
+function AutoSaveNote({ patientId, onAdvance }: { readonly patientId: string; readonly onAdvance?: (() => void) | undefined }): JSX.Element | null {
   const { soap, transcript } = useCortex();
-  const [saved, setSaved] = useState<DocumentDraft | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const hasNote = Boolean(soap.subjective.trim() || soap.objective.trim() || soap.assessment.trim() || soap.plan.trim());
+  const hasNote = Boolean(
+    soap.subjective.trim() || soap.objective.trim() || soap.assessment.trim() || soap.plan.trim(),
+  );
 
-  const save = useCallback((): void => {
-    if (!hasNote || busy) return;
-    setBusy(true); setError(null);
-    const transcriptText = transcript.map((l) => `${l.speaker}: ${l.text}`).join("\n");
-    api.patients
-      .createDraft(patientId, "encounter_note", "en", "general", {
-        transcript: transcriptText,
-        sections: [],
-        // The SOAP note as the clinician reviewed it. These are their words, not
-        // a transcript extract, so they are sent as authored sections: a
-        // restructured note is never a verbatim substring of the transcript, and
-        // the containment gate rejected exactly that (400 on save) until this
-        // path existed. Provenance is recorded per section and sign-off is still
-        // required before the draft becomes documentation.
-        authoredSections: [
-          { key: "subjective", text: soap.subjective },
-          { key: "objective", text: soap.objective },
-          { key: "assessment", text: soap.assessment },
-          { key: "plan", text: soap.plan },
-        ].filter((s) => s.text.trim().length > 0),
-      })
-      .then((draft) => {
-        setSaved(draft);
-        onSaved?.();
-      })
-      .catch((e) => setError(e instanceof ApiError ? e.message : "Failed to save note"))
-      .finally(() => setBusy(false));
-  }, [patientId, soap, transcript, hasNote, busy, onSaved]);
+  // Always all four, including empties: clearing a field must clear its section rather than leave the
+  // previous text behind in the copy the later stages read.
+  const sections = useMemo(
+    () => [
+      { key: "subjective", text: soap.subjective },
+      { key: "objective", text: soap.objective },
+      { key: "assessment", text: soap.assessment },
+      { key: "plan", text: soap.plan },
+    ],
+    [soap.subjective, soap.objective, soap.assessment, soap.plan],
+  );
+
+  const save = useCallback(async (): Promise<void> => {
+    if (!hasNote || saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      let id = draftId;
+      if (id == null) {
+        const list = await api.patients.listDrafts(patientId);
+        const existing = (list.data ?? [])
+          .filter((d) => d.document_type === "encounter_note" && d.status === "draft")
+          .slice()
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0];
+        id = existing ? existing.id : null;
+      }
+      if (id != null) {
+        await api.drafts.updateSections(id, sections);
+      } else {
+        const transcriptText = transcript.map((l) => `${l.speaker}: ${l.text}`).join("\n");
+        const created = await api.patients.createDraft(patientId, "encounter_note", "en", "general", {
+          transcript: transcriptText,
+          sections: [],
+          // The clinician's own words rather than a transcript extract, so they are authored sections:
+          // a restructured note is never a verbatim substring of a transcript, and with no recording
+          // (a patient may decline) there is no transcript at all. Provenance is recorded per section.
+          authoredSections: sections.filter((s) => s.text.trim().length > 0),
+        });
+        id = created.id;
+      }
+      setDraftId(id);
+      setSavedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Could not save the working copy");
+    } finally {
+      setSaving(false);
+    }
+  }, [patientId, sections, transcript, hasNote, saving, draftId]);
+
+  useEffect(() => {
+    if (!hasNote) return;
+    const timer = setTimeout(() => {
+      void save();
+    }, 2_500);
+    return () => clearTimeout(timer);
+  }, [save, hasNote]);
 
   if (!hasNote) return null;
 
-  if (saved) {
-    return (
-      <div className="flex items-center gap-2 rounded-xl border border-status-ok-line bg-status-ok-bg px-3 py-2" data-testid="note-saved">
-        <span className="text-sm font-semibold text-status-ok">✓ Note saved to record</span>
-        <span className="text-xs text-ink-soft">
-          Draft {saved.id.slice(0, 8)} — review and sign from the Drafts card.
-        </span>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={save}
-        disabled={busy}
-        data-testid="save-note-to-record"
-        className="px-4 py-2 rounded-full bg-grad-accent text-white text-sm font-semibold shadow-pill hover:brightness-110 disabled:opacity-50 transition-all"
-      >
-        {busy ? "Saving…" : "Save note to record"}
-      </button>
-      <span className="text-[11px] text-ink-faint">
-        Creates a draft in the patient&apos;s record — review and sign before it becomes clinical documentation.
+    <div
+      className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white px-3 py-2"
+      data-testid="note-autosave"
+    >
+      <span className="text-sm text-ink-soft">
+        {saving
+          ? "Saving the working copy…"
+          : savedAt
+            ? `Working copy saved ${savedAt} — not signed.`
+            : "The note saves itself as you write."}
       </span>
-      {error && <span className="text-xs text-status-rej" role="alert">{error}</span>}
+      {savedAt && (
+        <span className="text-[11px] text-ink-faint">
+          It is a draft until a clinician signs it; signing is the explicit act that makes it
+          documentation.
+        </span>
+      )}
+      {error && (
+        <span className="text-xs text-status-rej" role="alert">
+          {error}
+        </span>
+      )}
+      {savedAt && onAdvance && (
+        <button
+          type="button"
+          onClick={onAdvance}
+          className="ml-auto px-3 py-1.5 rounded-full border border-line bg-white text-sm font-semibold text-ink hover:bg-mist transition-colors"
+        >
+          Continue to Diagnose →
+        </button>
+      )}
     </div>
   );
 }
@@ -119,7 +171,7 @@ export default function StageDocument({ patientId, onDone, onAdvance }: StageDoc
           <CompletionProbe onDone={onDone} />
           <AmbientScribePane />
         </div>
-        <SaveToRecord patientId={patientId} onSaved={onAdvance} />
+        <AutoSaveNote patientId={patientId} onAdvance={onAdvance} />
       </CortexProvider>
     </section>
   );
