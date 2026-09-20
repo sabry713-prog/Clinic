@@ -364,6 +364,53 @@ describe("JourneyView", () => {
     expect(await screen.findByTestId("diagnose-search-note")).toHaveTextContent(/vocabulary gap/i);
   });
 
+  // Item 3 for stage 4 — the same treatment stage 2 got. The stage reported each clean half on its
+  // own but never said the useful thing: that there is nothing left to approve and the next stage is
+  // waiting. This case is the one an encounter with no orders at all used to render as a blank stage.
+  it("says so on stage 4 when there is nothing to code or link, and offers the way on", async () => {
+    renderJourney();
+    gotoStage("codelink");
+
+    expect(await screen.findByTestId("codelink-nothing-to-do")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Continue to Submit/i })).toBeInTheDocument();
+  });
+
+  // ...and the same treatment when there ARE orders but nothing left to decide: the "every order is
+  // coded and linked" case. Before this the clinician had to infer from two separate quiet messages
+  // that the stage was finished with them.
+  it("says nothing to approve on stage 4 when every order is coded and linked", async () => {
+    mocked.orderCodingStatus.mockResolvedValue({
+      orders: [
+        {
+          service_request_id: "o1",
+          order_display: "ECG",
+          order_code: "11700-00-00",
+          category: "procedure",
+          requested_at: "2026-09-10",
+          confirmed: "11700-00-00",
+          suggestion: { sbs_code: "11700-00-00", sbs_display: "ECG" },
+        },
+      ],
+    } as never);
+    mocked.linkageStatus.mockResolvedValue({
+      orders: [
+        {
+          service_request_id: "o1",
+          order_display: "ECG",
+          category: "procedure",
+          requested_at: "2026-09-10",
+          linked: [{ condition_id: "c1", condition_display: "Abdominal pain" }],
+        },
+      ],
+      available_conditions: [],
+    } as never);
+
+    renderJourney();
+    gotoStage("codelink");
+
+    expect(await screen.findByText(/Nothing to approve — every order is coded and linked/i)).toBeInTheDocument();
+  });
+
   // Item 5 of the consolidation plan: the confirmed diagnosis carries its provenance. Without the
   // encounter on the write, the problem list cannot answer "what was this visit for?" from the
   // record — the gap that started this whole assessment — and the claim has no encounter-level

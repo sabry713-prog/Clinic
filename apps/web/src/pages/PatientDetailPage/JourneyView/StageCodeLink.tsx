@@ -27,6 +27,9 @@ import { formatDate } from "../../../lib/dates";
 
 interface StageCodeLinkProps {
   readonly patientId: string;
+  /** Offered when this stage has nothing left for the clinician to decide — the way on, without
+   *  leaving them to work out that the stage is finished. */
+  readonly onAdvance?: () => void;
   readonly onDone: (done: boolean) => void;
   readonly onChanged: () => void;
 }
@@ -45,7 +48,7 @@ const VERDICT_DOT: Record<string, string> = {
   UNAVAILABLE: "bg-ink-faint",
 };
 
-export default function StageCodeLink({ patientId, onDone, onChanged }: StageCodeLinkProps): JSX.Element {
+export default function StageCodeLink({ patientId, onAdvance, onDone, onChanged }: StageCodeLinkProps): JSX.Element {
   const [coding, setCoding] = useState<OrderCodingStatus | null>(null);
   const [linkage, setLinkage] = useState<LinkageStatus | null>(null);
   const [verdicts, setVerdicts] = useState<LinkageVerdicts | null>(null);
@@ -217,6 +220,48 @@ export default function StageCodeLink({ patientId, onDone, onChanged }: StageCod
 
       {msg && <p className="text-sm text-status-ok">{msg}</p>}
       {error && <p className="text-sm text-status-rej" role="alert">{error}</p>}
+      {/* Nothing to decide — item 3's treatment, applied here. The stage already reported each clean
+          half separately, but never said the obvious thing: that there is nothing left to approve and
+          the next stage is waiting. Also covers the case with no orders at all, which used to render
+          as an empty stage with no explanation. */}
+      {coding != null &&
+        (coding.orders ?? []).length === 0 && (
+          <p className="text-sm text-ink-soft" data-testid="codelink-nothing-to-do">
+            No orders on this encounter, so there is nothing to code or link here.
+            {onAdvance && (
+              <button
+                type="button"
+                onClick={onAdvance}
+                className="ml-3 px-3 py-1.5 rounded-full border border-line bg-white text-sm font-semibold text-ink hover:bg-mist transition-colors"
+              >
+                Continue to Submit →
+              </button>
+            )}
+          </p>
+        )}
+      {coding != null &&
+        (coding.orders ?? []).length > 0 &&
+        unconfirmed.length === 0 &&
+        unlinked.length === 0 && (
+          <div
+            className="flex flex-wrap items-center gap-3 rounded-xl border border-status-ok-line bg-status-ok-bg px-3 py-2"
+            data-testid="codelink-nothing-to-do"
+          >
+            <span className="text-sm text-status-ok">
+              Nothing to approve — every order is coded and linked.
+            </span>
+            {onAdvance && (
+              <button
+                type="button"
+                onClick={onAdvance}
+                className="ml-auto px-3 py-1.5 rounded-full border border-status-ok-line bg-white text-sm font-semibold text-ink hover:bg-mist transition-colors"
+              >
+                Continue to Submit →
+              </button>
+            )}
+          </div>
+        )}
+
     </section>
   );
 }
