@@ -1,6 +1,6 @@
 {
-  "version": "2026-09-18.2",
-  "generated_at": "2026-09-18T00:00:00.000Z",
+  "version": "2026-09-20.1",
+  "generated_at": "2026-09-20T00:00:00.000Z",
   "description": "M11 governed reference-release manifest. Each entry is checksummed; the graph-seed step verifies checksums before ingesting. 'illustrative-dev-subset' means the data is not a licensed release and must not be used for clinical decisions — production requires governed licensed releases with named approvers.",
   "entries": [
     {
@@ -35,12 +35,12 @@
     },
     {
       "file": "ontologies/nphies_services.json",
-      "sha256": "5a732ce3f6c60bf21d27767bac1784c9596e1ab1dc50d11ddbdbf004b7105377",
-      "size_bytes": 1135,
-      "ontology": "NPHIES Service (SBS / ACHI)",
+      "sha256": "0e09e3eb70797422ad7291d02d07399946c5e8e9a3588a48ddcab5943a81a0f0",
+      "size_bytes": 2538934,
+      "ontology": "NPHIES Service (SBS V2.0 — CHI published code list, March 2023)",
       "licensed": false,
-      "effective_date": "2026-09-15",
-      "approver": "product-owner (CTO) — session approval",
+      "effective_date": "2026-09-20",
+      "approver": "product-owner (CTO) — approved 2026-09-20 (user: «موافق»): the dev file's root-real/suffix-invented codes replaced with the full published SBS V2.0 code list (10,081 entries, CHI March 2023), so the payer verdicts are computed against codes that exist. Still not a licensed production release.",
       "status": "illustrative-dev-subset"
     },
     {
@@ -95,12 +95,12 @@
     },
     {
       "file": "ontologies/nphies_preauth_necessity_map.csv",
-      "sha256": "6a234246fbbba02a6da8d07f2a2475b7608f509c0fefbfcce956131991e0dfc6",
-      "size_bytes": 858,
+      "sha256": "89a05633f631a6f965f3fab8865ed60693f09bb00a71a8a456edeb81f3fea74c",
+      "size_bytes": 1581,
       "ontology": "",
       "licensed": null,
-      "effective_date": "2026-09-15",
-      "approver": "product-owner (CTO) — session approval",
+      "effective_date": "2026-09-20",
+      "approver": "product-owner (CTO) — approved 2026-09-20 (user: «موافق»): every target_code corrected to the official SBS V2.0 code it should always have carried. Still illustrative rules — the payer's real Table of Benefits arrives at eligibility.",
       "status": "illustrative-dev-subset"
     },
     {
