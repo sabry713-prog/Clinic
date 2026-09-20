@@ -171,7 +171,14 @@ sections alone, so the failure would have been **divergence**, not destruction: 
 their first saved value while the note moved on, and stage 2 analysing a note the clinician had
 already rewritten.
 
-Still open: E4c (checklist persistence — genuinely absent), G5 (the AI Team reachable from inside the
+**E4c shipped** (`b12f58f`, `b87...`): the checklist's non-derivable decisions — manual ticks and
+per-encounter dismissals — now survive a refresh, keyed on the encounter. The table stores decisions
+only; everything derivable stays computed, so a stored value cannot disagree with the note it came
+from. Two limits recorded: un-ticking a row the derivation would tick does not survive a reload (a
+third state is the fix if it annoys), and the client wiring has **no round-trip test** — backend 4/4,
+suite green, typecheck clean, but the provider is heavy to mount and the case was not written.
+
+Still open: G5 (the AI Team reachable from inside the
 journey), auto-running the read-only agents, auto-linking order↔diagnosis when unambiguous, the
 recording-refusal flag, G7 (signing inside stage 1), and Phase 3's retirement of the duplicates —
 which needs an explicit decision, since nothing here deletes a surface without one.
