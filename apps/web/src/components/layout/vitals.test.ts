@@ -26,9 +26,9 @@ function obs(partial: RawObservation): ObservationItem {
     value_numeric: (partial.value_numeric ?? null) as unknown as number | null,
     value_text: partial.value_text ?? null,
     unit: partial.unit ?? null,
-    ref_range_low: null,
-    ref_range_high: null,
-    ref_range_text: null,
+    ref_range_low: partial.ref_range_low ?? null,
+    ref_range_high: partial.ref_range_high ?? null,
+    ref_range_text: partial.ref_range_text ?? null,
     effective_at: partial.effective_at ?? "2026-08-13T09:00:00Z",
   };
 }
@@ -119,5 +119,43 @@ describe("mergeObjective", () => {
 
   it("leaves the objective untouched when the record has no vitals", () => {
     expect(mergeObjective(null, "Chest clear.")).toBe("Chest clear.");
+  });
+});
+
+describe("the recorded range note", () => {
+  // The rule the owner set: highlight ONLY against a range the record itself carries. The colour is a
+  // transmission of the HIS's fact, never our judgement — so no range means no note, and there is no
+  // default threshold anywhere in the code.
+  const withRange = (numeric: string, low: number | null, high: number | null): ObservationItem[] => [
+    obs({ code: "8867-4", code_display: "Heart rate", value_numeric: numeric, unit: "bpm", ref_range_low: low, ref_range_high: high }),
+  ];
+
+  it("says when a value is above the recorded range", () => {
+    const vitals = formatNurseVitals(withRange("112", 60, 100));
+    expect(vitals!.text).toBe("HR 112, above the recorded range 60–100.");
+  });
+
+  it("says when a value is below the recorded range", () => {
+    const vitals = formatNurseVitals(withRange("48", 60, 100));
+    expect(vitals!.text).toBe("HR 48, below the recorded range 60–100.");
+  });
+
+  it("says nothing when the value sits inside the recorded range", () => {
+    const vitals = formatNurseVitals(withRange("72", 60, 100));
+    expect(vitals!.text).toBe("HR 72.");
+  });
+
+  it("says nothing when the record carries no range — no range is not 'normal', it is unmeasured", () => {
+    const vitals = formatNurseVitals(withRange("112", null, null));
+    expect(vitals!.text).toBe("HR 112.");
+    // And a half-range is not a range: annotating from one bound would be inventing the other.
+    expect(formatNurseVitals(withRange("112", 60, null))!.text).toBe("HR 112.");
+  });
+
+  it("never annotates blood pressure, whose value is the panel's text rather than one number", () => {
+    const vitals = formatNurseVitals([
+      obs({ code: "85354-9", code_display: "Blood pressure", value_text: "150/95", unit: "mmHg", ref_range_low: 90, ref_range_high: 120 }),
+    ]);
+    expect(vitals!.text).toBe("BP 150/95.");
   });
 });

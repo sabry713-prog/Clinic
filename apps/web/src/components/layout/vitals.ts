@@ -8,7 +8,8 @@
  * generated, and the clinician can still edit the field afterwards.
  *
  * Pure functions only: no fetching, no LLM, no defaults invented. A vital for
- * which the record holds no value is simply omitted rather than guessed.
+ * which the record holds no value is simply omitted rather than guessed, and a value is only
+ * annotated against a range the record itself carries (see rangeNote).
  */
 
 import type { ObservationItem } from "../../lib/api";
@@ -53,6 +54,26 @@ function round(value: number, decimals: number): string {
   return value.toFixed(decimals);
 }
 
+/**
+ * How this value sits against the range the RECORD carries — and nothing else.
+ *
+ * Two rules, both deliberate:
+ *  - no recorded numeric range -> no note. A value with no range is not "normal", it is unmeasured
+ *    against anything, and inventing a threshold (140/90 for blood pressure, say) would put OUR
+ *    judgement in the note where the HIS's fact belongs. The colour is a transmission, not a verdict.
+ *  - the wording describes, it never diagnoses: "above the recorded range 60–100" is arithmetic
+ *    against a recorded number; "abnormal" or "critical" would be a clinical statement.
+ */
+function rangeNote(value: number | null, row: ObservationItem): string | null {
+  if (value === null) return null;
+  const low = toNumber(row.ref_range_low);
+  const high = toNumber(row.ref_range_high);
+  if (low === null || high === null) return null;
+  if (value > high) return `, above the recorded range ${low}–${high}`;
+  if (value < low) return `, below the recorded range ${low}–${high}`;
+  return null;
+}
+
 /** Newest row per code. The API returns rows ordered `effective_at DESC`. */
 function latestByCode(rows: readonly ObservationItem[]): Map<string, ObservationItem> {
   const byCode = new Map<string, ObservationItem>();
@@ -82,6 +103,10 @@ export function formatNurseVitals(rows: readonly ObservationItem[]): NurseVitals
 
   for (const spec of VITAL_RENDERERS) {
     let rendered: string | null = null;
+    // Blood pressure is deliberately not annotated: the panel row's value is text ("134/69"), so
+    // there is no single number to compare against a range, and comparing the systolic instead would
+    // be our reading of the panel rather than the record's.
+    let note: string | null = null;
     let source: ObservationItem | null = null;
 
     if (spec.label === "BP") {
@@ -108,8 +133,11 @@ export function formatNurseVitals(rows: readonly ObservationItem[]): NurseVitals
         const numeric = toNumber(row.value_numeric);
         if (numeric !== null) {
           rendered = `${round(numeric, spec.decimals)}${spec.unit}`;
+          note = rangeNote(numeric, row);
         } else if (text.length > 0 && /^[0-9.]+$/.test(text)) {
-          rendered = `${Number(text).toFixed(spec.decimals)}${spec.unit}`;
+          const parsed = Number(text);
+          rendered = `${parsed.toFixed(spec.decimals)}${spec.unit}`;
+          note = rangeNote(parsed, row);
         }
         if (rendered !== null) {
           source = row;
@@ -119,7 +147,7 @@ export function formatNurseVitals(rows: readonly ObservationItem[]): NurseVitals
     }
 
     if (rendered !== null) {
-      parts.push(`${spec.label} ${rendered}`);
+      parts.push(`${spec.label} ${rendered}${note ?? ""}`);
       if (source) used.push(source);
     }
   }
