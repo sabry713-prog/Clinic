@@ -811,6 +811,9 @@ export function CortexProvider({
   const [soapOverride, setSoapOverride] = useState<Partial<SoapNote>>({});
   const [checklist, setChecklist] = useState<readonly ChecklistItem[]>(CHECKLIST_TEMPLATE);
   const dismissedChecklistIds = useRef<ReadonlySet<string>>(new Set());
+  /** Mirrors `checklist` for callbacks that must read the current value (a toggle persists the value
+   *  it just produced, and a state closure would read the render it was created in). */
+  const checklistRef = useRef<readonly ChecklistItem[]>(CHECKLIST_TEMPLATE);
   const touchedChecklistIds = useRef<ReadonlySet<string>>(new Set());
   /** Supporting quotes for LLM-derived suggestions (tooltip provenance). */
   const checklistQuotes = useRef<ReadonlyMap<string, string>>(new Map());
@@ -1381,10 +1384,59 @@ export function CortexProvider({
     [],
   );
 
-  const removeChecklistItem = useCallback((id: string) => {
-    dismissedChecklistIds.current = new Set([...dismissedChecklistIds.current, id]);
-    setChecklist((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  // Persist a decision. Only decisions are stored: entries and the ticks that follow from the note
+  // are derived, so persisting them would create a second source of truth that could disagree with
+  // the note. A lost write must not break the encounter — the clinician can simply repeat it.
+  const persistChecklistDecision = useCallback(
+    (itemId: string, state: "done" | "dismissed" | null) => {
+      if (!patientId || !encounterId) return;
+      void api.patients.setChecklistDecision(patientId, encounterId, itemId, state).catch(() => {
+        /* the checklist keeps working in memory */
+      });
+    },
+    [patientId, encounterId],
+  );
+
+  useEffect(() => {
+    checklistRef.current = checklist;
+  }, [checklist]);
+
+  // The clinician's decisions come back with the encounter. Dismissals used to live in a ref, so a
+  // refresh handed the same suggestion back — and a dismissal made at one visit came back at the
+  // next, where it may not apply at all.
+  useEffect(() => {
+    if (!patientId || !encounterId) return;
+    let live = true;
+    void api.patients
+      .checklistDecisions(patientId, encounterId)
+      .then((r) => {
+        if (!live) return;
+        const dismissed = new Set(r.data.filter((d) => d.state === "dismissed").map((d) => d.item_id));
+        const doneIds = new Set(r.data.filter((d) => d.state === "done").map((d) => d.item_id));
+        dismissedChecklistIds.current = new Set([...dismissedChecklistIds.current, ...dismissed]);
+        touchedChecklistIds.current = new Set([...touchedChecklistIds.current, ...doneIds]);
+        setChecklist((prev) =>
+          prev
+            .filter((i) => !dismissed.has(i.id))
+            .map((i) => (doneIds.has(i.id) ? { ...i, done: true } : i)),
+        );
+      })
+      .catch(() => {
+        /* the checklist still works in memory; the decisions simply do not return */
+      });
+    return () => {
+      live = false;
+    };
+  }, [patientId, encounterId]);
+
+  const removeChecklistItem = useCallback(
+    (id: string) => {
+      dismissedChecklistIds.current = new Set([...dismissedChecklistIds.current, id]);
+      setChecklist((prev) => prev.filter((item) => item.id !== id));
+      persistChecklistDecision(id, "dismissed");
+    },
+    [persistChecklistDecision],
+  );
 
   const toggleChecklistItem = useCallback((id: string) => {
     // Remember the manual toggle. Derivation runs again on every note change, and without this
@@ -1393,7 +1445,13 @@ export function CortexProvider({
     setChecklist((items) =>
       items.map((i) => (i.id === id ? { ...i, done: !i.done } : i)),
     );
-  }, []);
+    const next = !(checklistRef.current?.find((i) => i.id === id)?.done ?? false);
+    // A tick is a decision worth keeping. Un-ticking clears the stored decision instead of storing a
+    // negative one, so a row only ever means "the clinician decided this" — but that also means an
+    // un-tick does not survive a reload when the derivation would have ticked the row. A third state
+    // is the fix if that proves annoying; it is recorded rather than guessed at now.
+    persistChecklistDecision(id, next ? "done" : null);
+  }, [persistChecklistDecision]);
 
   const setActiveAgent = useCallback((agent: AgentId) => setActiveAgentState(agent), []);
 

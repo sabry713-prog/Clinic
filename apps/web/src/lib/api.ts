@@ -1422,6 +1422,24 @@ export const api = {
 
     /** Payer-rulebook verdicts for candidate order→diagnosis pairs —
      * informational only; the system never suggests the clinician's link. */
+    /** The clinician's checklist decisions for one encounter: ticks the derivation did not catch,
+     *  and dismissals (which are per encounter — a suggestion inapplicable today may apply later). */
+    checklistDecisions: (patientId: string, encounterId: string) =>
+      request<{ data: { item_id: string; state: "done" | "dismissed" }[] }>(
+        `/api/v1/patients/${patientId}/checklist?encounter_id=${encodeURIComponent(encounterId)}`,
+      ),
+
+    setChecklistDecision: (
+      patientId: string,
+      encounterId: string,
+      itemId: string,
+      state: "done" | "dismissed" | null,
+    ) =>
+      request<void>(
+        `/api/v1/patients/${patientId}/checklist?encounter_id=${encodeURIComponent(encounterId)}`,
+        { method: "PUT", body: JSON.stringify({ item_id: itemId, state }) },
+      ),
+
     linkageVerdicts: (patientId: string) =>
       request<LinkageVerdicts>(`/api/v1/patients/${patientId}/nphies/linkage/verdicts`),
 
