@@ -352,6 +352,8 @@ export class DraftService {
       sections: Record<string, string>;
       condensedKeys?: readonly string[] | undefined;
       translatedKeys?: readonly string[] | undefined;
+      /** The encounter this note documents. Set by the Journey, which knows it; absent elsewhere. */
+      encounterId?: string | undefined;
       /** Keys whose text the reviewing clinician authored (ambient Scribe). */
       authored?: Record<string, string> | undefined;
     },
@@ -466,19 +468,19 @@ export class DraftService {
     const res = await this.pool.query<DraftRow>(
       `INSERT INTO app.document_draft
          (patient_id, document_type, language, specialty, sections_json, generated_text,
-          blocklist_triggered, disclaimer, generated_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+          blocklist_triggered, disclaimer, generated_by, encounter_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::uuid)
        RETURNING ${DRAFT_COLS}`,
-      [patientId, documentType, language, specialty, JSON.stringify(sections), generated, blocked, disclaimer, userId],
+      [patientId, documentType, language, specialty, JSON.stringify(sections), generated, blocked, disclaimer, userId, prefill?.encounterId ?? null],
     );
     return res.rows[0]!;
   }
 
   // List this patient's drafts + signed documents (newest first).
-  async listForPatient(userId: string, patientId: string): Promise<{ id: string; document_type: string; language: string; status: string; created_at: string; signed_at: string | null }[]> {
+  async listForPatient(userId: string, patientId: string): Promise<{ id: string; document_type: string; language: string; status: string; created_at: string; signed_at: string | null; encounter_id?: string | null }[]> {
     await this.scope.assertPatientInScope(userId, patientId);
     const res = await this.pool.query(
-      `SELECT id, document_type, language, status, created_at::text, signed_at::text
+      `SELECT id, document_type, language, status, created_at::text, signed_at::text, encounter_id
          FROM app.document_draft WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
       [patientId]);
     return res.rows as DraftRow[];
@@ -675,13 +677,16 @@ export class DraftService {
   }
 }
 
-const DRAFT_COLS = `id, patient_id, document_type, language, specialty, status, sections_json,
+const DRAFT_COLS = `id, patient_id, encounter_id, document_type, language, specialty, status, sections_json,
   generated_text, edited_text, blocklist_triggered, disclaimer,
   generated_by, signed_by, signed_at::text AS signed_at, signed_text,
   created_at::text AS created_at`;
 
 export interface DraftRow {
   id: string;
+  /** The encounter this note documents. Null on rows written before the column existed; the readers
+   *  fall back to the newest note for the patient in that case. */
+  encounter_id?: string | null;
   patient_id: string;
   document_type: string;
   language: string;

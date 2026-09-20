@@ -101,6 +101,10 @@ function AutoSaveNote({ patientId, encounterId, onAdvance }: { readonly patientI
       } else {
         const transcriptText = transcript.map((l) => `${l.speaker}: ${l.text}`).join("\n");
         const created = await api.patients.createDraft(patientId, "encounter_note", "en", "general", {
+          // The encounter this note belongs to, so the readers stop guessing by recency. Conditional
+          // spread: the project builds with exactOptionalPropertyTypes, where an explicit undefined is
+          // not an absent property.
+          ...(encounterId ? { encounterId } : {}),
           transcript: transcriptText,
           sections: [],
           // The clinician's own words rather than a transcript extract, so they are authored sections:

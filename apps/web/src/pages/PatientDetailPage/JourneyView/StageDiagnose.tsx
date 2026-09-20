@@ -45,11 +45,15 @@ function readSessionAssessment(patientId: string): string {
  * the stage while the note sat on the record. Stage 1 already saves the reviewed note through the
  * drafts API, and its comment promises later stages can reach it; this is that promise kept.
  */
-async function loadSoapAssessment(patientId: string): Promise<string> {
+async function loadSoapAssessment(patientId: string, encounterId?: string | null): Promise<string> {
   try {
     const list = await api.patients.listDrafts(patientId);
     const notes = (list.data ?? [])
       .filter((d) => d.document_type === "encounter_note")
+      // This encounter's note when the row identifies one. Rows written before the column existed
+      // carry none and fall back to the newest — all the older data allows, and the reason the
+      // column was added: on a two-encounter day, recency picks the other visit's note.
+      .filter((d) => !encounterId || !d.encounter_id || d.encounter_id === encounterId)
       .slice()
       .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
     const newest = notes[0];
@@ -81,7 +85,7 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
   useEffect(() => {
     let live = true;
     const load = (): void => {
-      void loadSoapAssessment(patient.id).then((text) => {
+      void loadSoapAssessment(patient.id, encounterId).then((text) => {
         if (live) setAssessment(text);
       });
     };
@@ -91,7 +95,7 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
       live = false;
       window.removeEventListener("focus", load);
     };
-  }, [patient.id]);
+  }, [patient.id, encounterId]);
   const hasDocumentedDiagnosis = documented.length > 0;
 
   useEffect(() => {

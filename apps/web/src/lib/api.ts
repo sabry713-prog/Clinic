@@ -693,6 +693,8 @@ export interface CodedTerm {
 
 export interface DraftSummary {
   readonly id: string;
+  /** The encounter this note documents, when the row carries one (older rows do not). */
+  readonly encounter_id?: string | null;
   readonly document_type: string;
   readonly language: string;
   readonly status: "draft" | "signed";
@@ -1209,6 +1211,9 @@ export const api = {
          * `authored_sections` so the server records them with authored
          * provenance instead of running the transcript-containment gate. */
         authoredSections?: readonly PrefillSection[];
+        /** The encounter this note documents. The Journey knows it; without it the readers fall
+         *  back to "the newest note for the patient", which is wrong on a two-encounter day. */
+        encounterId?: string;
       },
     ) =>
       request<DocumentDraft>(`/api/v1/patients/${id}/drafts`, {
@@ -1222,6 +1227,7 @@ export const api = {
                 transcript: prefill.transcript,
                 prefill_sections: prefill.sections,
                 authored_sections: prefill.authoredSections,
+                encounter_id: prefill.encounterId,
                 condensed_keys: prefill.condensedKeys,
                 translated_keys: prefill.translatedKeys,
               }

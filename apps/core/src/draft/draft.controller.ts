@@ -47,6 +47,12 @@ class CreateDraftDto {
   @MaxLength(20000)
   transcript?: string;
 
+  // The encounter this note documents (the Journey supplies it). Without it the readers can only
+  // guess "the newest note for the patient", which is wrong on a day with two encounters.
+  @IsOptional()
+  @IsString()
+  encounter_id?: string;
+
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(10)
@@ -171,6 +177,7 @@ export class DraftController {
           authored: authoredSections,
           condensedKeys: body.condensed_keys,
           translatedKeys: body.translated_keys,
+          encounterId: body.encounter_id,
         }
       : body.prefill_sections?.length && body.transcript
         ? {
@@ -178,6 +185,7 @@ export class DraftController {
             sections: namedSections,
             condensedKeys: body.condensed_keys,
             translatedKeys: body.translated_keys,
+            encounterId: body.encounter_id,
           }
         : undefined;
     const draft = await this.drafts.generate(uid(req), id, body.document_type, body.language ?? "en", body.specialty ?? "general", prefill);

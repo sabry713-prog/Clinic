@@ -414,6 +414,37 @@ describe("JourneyView", () => {
     expect(await screen.findByText(/Nothing to approve — every order is coded and linked/i)).toBeInTheDocument();
   });
 
+  // The encounter column exists so this read stops guessing by recency. On a day with two encounters,
+  // "the newest note for the patient" is the OTHER visit's note, and the stage would analyse text from
+  // an encounter it is not documenting. The fixture's journey is encounter "e1", so the older row wins.
+  it("reads this encounter's note rather than the newest one", async () => {
+    mocked.listDrafts.mockResolvedValueOnce({
+      data: [
+        { id: "other-visit", document_type: "encounter_note", status: "draft", created_at: "2026-09-19T11:00:00Z", encounter_id: "e2" },
+        { id: "this-visit", document_type: "encounter_note", status: "draft", created_at: "2026-09-19T10:00:00Z", encounter_id: "e1" },
+      ],
+    } as never);
+    vi.mocked(api.drafts.get).mockImplementation(((id: string) =>
+      Promise.resolve({
+        sections_json: [
+          {
+            key: "assessment",
+            title: "Assessment",
+            policy: "clinician_authored_only",
+            text: id === "this-visit" ? "acute bronchitis" : "text from the other encounter",
+          },
+        ],
+      })) as never);
+    mocked.suggestCodes.mockClear();
+
+    renderJourney();
+    gotoStage("diagnose");
+
+    await waitFor(() => expect(mocked.suggestCodes).toHaveBeenCalledWith("acute bronchitis"));
+    expect(vi.mocked(api.drafts.get)).toHaveBeenCalledWith("this-visit");
+    expect(vi.mocked(api.drafts.get)).not.toHaveBeenCalledWith("other-visit");
+  });
+
   // Item 5 of the consolidation plan: the confirmed diagnosis carries its provenance. Without the
   // encounter on the write, the problem list cannot answer "what was this visit for?" from the
   // record — the gap that started this whole assessment — and the claim has no encounter-level
