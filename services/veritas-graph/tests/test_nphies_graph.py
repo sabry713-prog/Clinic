@@ -3,6 +3,12 @@
 A fake GraphClient stands in for Neo4j, evaluating the two queries against
 the real CSV/JSON dev data -- same "test the helper's contract and the seed
 data together, no live database" philosophy as tests/test_necessity.py.
+
+The service codes here are the OFFICIAL SBS V2.0 ones. They were previously the
+dev file's root-real/suffix-invented codes, which the necessity CSV no longer
+contains: reading the CSV with codes the CSV does not carry makes every verdict
+fall through to RED, and the tests failed for a reason that had nothing to do
+with the code under test.
 """
 from __future__ import annotations
 
@@ -69,14 +75,14 @@ def graph():
 
 def test_sciatica_lumbar_mri_is_yellow_with_preauth_required(graph):
     # The task's own required test case.
-    result = validate_order_necessity("M54.3", "56241-00-10", client=graph)
+    result = validate_order_necessity("M54.3", "90901-03-60", client=graph)
     assert result["status"] == "YELLOW"
     assert result["pre_auth_required"] is True
     assert result["suggested_codes"] == []
 
 
 def test_hypertension_ecg_is_green_without_preauth(graph):
-    result = validate_order_necessity("I10", "11700-00-10", client=graph)
+    result = validate_order_necessity("I10", "11700-00-00", client=graph)
     assert result["status"] == "GREEN"
     assert result["pre_auth_required"] is False
     assert result["suggested_codes"] == []
@@ -92,7 +98,7 @@ def test_drug_pairing_is_green_without_preauth(graph):
 def test_undocumented_pairing_is_red_with_suggested_diagnoses(graph):
     # Headache has no documented rule at all -- but M54.3 does justify this
     # same lumbar MRI code, so it should come back as a suggestion.
-    result = validate_order_necessity("R51", "56241-00-10", client=graph)
+    result = validate_order_necessity("R51", "90901-03-60", client=graph)
     assert result["status"] == "RED"
     assert result["pre_auth_required"] is True  # conservative default, not a fabricated rule
     assert result["suggested_codes"] == [{"icd10": "M54.3", "description": "Sciatica"}]
@@ -101,19 +107,19 @@ def test_undocumented_pairing_is_red_with_suggested_diagnoses(graph):
 def test_red_result_never_exceeds_three_suggestions(graph):
     # Fabricate extra rules all targeting the same service to prove the LIMIT.
     rows = list(graph.rows) + [
-        {"diagnosis_icd10": f"Z{i}", "target_code": "11700-00-10", "target_type": "service",
+        {"diagnosis_icd10": f"Z{i}", "target_code": "11700-00-00", "target_type": "service",
          "pre_auth_required": False, "rule_id": f"X{i}", "source": "test", "note": ""}
         for i in range(5)
     ]
     graph2 = FakeGraph(rows=rows)
-    result = validate_order_necessity("UNRELATED", "11700-00-10", client=graph2)
+    result = validate_order_necessity("UNRELATED", "11700-00-00", client=graph2)
     assert result["status"] == "RED"
     assert len(result["suggested_codes"]) == 3
 
 
 @pytest.mark.parametrize(
     ("icd10", "code"),
-    [("", "56241-00-10"), ("M54.3", ""), ("", ""), (None, None)],
+    [("", "90901-03-60"), ("M54.3", ""), ("", ""), (None, None)],
 )
 def test_empty_or_missing_codes_return_safe_red_without_querying(icd10, code):
     graph = FakeGraph()
@@ -125,7 +131,7 @@ def test_empty_or_missing_codes_return_safe_red_without_querying(icd10, code):
 
 
 def test_codes_are_normalized_case_and_whitespace(graph):
-    result = validate_order_necessity(" m54.3 ", " 56241-00-10 ", client=graph)
+    result = validate_order_necessity(" m54.3 ", " 90901-03-60 ", client=graph)
     assert result["status"] == "YELLOW"
 
 
@@ -136,7 +142,7 @@ def test_codes_are_normalized_case_and_whitespace(graph):
 
 
 def test_chain_carries_verdict_values_and_verbatim_cypher(graph):
-    result = validate_order_necessity("M54.3", "56241-00-10", client=graph)
+    result = validate_order_necessity("M54.3", "90901-03-60", client=graph)
     chain = result["evidence_chain"]
     assert [s["node_type"] for s in chain["steps"]] == [
         "NphiesDiagnosis",
@@ -144,7 +150,7 @@ def test_chain_carries_verdict_values_and_verbatim_cypher(graph):
         "NecessityRule",
     ]
     assert chain["steps"][0]["properties"] == {"icd10": "M54.3"}
-    assert chain["steps"][1]["properties"] == {"code": "56241-00-10"}
+    assert chain["steps"][1]["properties"] == {"code": "90901-03-60"}
     assert chain["steps"][2]["properties"] == {"pre_auth_required": True, "status": "YELLOW"}
     # Object-equality with the executed query: the displayed Cypher IS the
     # constant passed to graph.run (FakeGraph records every call).
@@ -156,7 +162,7 @@ def test_chain_carries_verdict_values_and_verbatim_cypher(graph):
 
 
 def test_red_chain_includes_the_suggestion_lookup_cypher(graph):
-    result = validate_order_necessity("R51", "56241-00-10", client=graph)
+    result = validate_order_necessity("R51", "90901-03-60", client=graph)
     chain = result["evidence_chain"]
     assert chain["cypher"] == [NECESSITY_LOOKUP_CYPHER, SUGGESTED_DIAGNOSES_CYPHER]
     assert chain["steps"][-1]["properties"]["status"] == "RED"
@@ -181,7 +187,14 @@ class _FakeIngestGraph:
 def test_ingest_ontology_nodes_merges_all_three_types():
     graph = _FakeIngestGraph()
     counts = nphies_ontology.ingest_ontology_nodes(client=graph)
-    assert counts == {"diagnoses": 6, "services": 5, "drugs": 3}
+    # Counted from the files, not pinned as literals. The service catalog was replaced with the
+    # official SBS V2.0 list (10,081 entries) and a literal 5 turned that correction into a failure
+    # that said nothing about the ingest — the same stale-constant pattern as the demo-data gate.
+    assert counts == {
+        "diagnoses": len(nphies_ontology._load_json_nodes(nphies_ontology.DIAGNOSES_FILE)),
+        "services": len(nphies_ontology._load_json_nodes(nphies_ontology.SERVICES_FILE)),
+        "drugs": len(nphies_ontology._load_json_nodes(nphies_ontology.DRUGS_FILE)),
+    }
     # Idempotent: running again produces the same counts (MERGE, not duplicate).
     counts2 = nphies_ontology.ingest_ontology_nodes(client=graph)
     assert counts2 == counts
@@ -236,7 +249,7 @@ def test_validate_necessity_endpoint_green_path(monkeypatch):
     with TestClient(api_router.app) as client:
         resp = client.post(
             "/api/v1/nphies/validate-necessity",
-            json={"icd10_code": "I10", "service_or_drug_code": "11700-00-10"},
+            json={"icd10_code": "I10", "service_or_drug_code": "11700-00-00"},
         )
     assert resp.status_code == 200
     body = resp.json()
@@ -259,7 +272,7 @@ def test_validate_necessity_endpoint_red_path(monkeypatch):
     with TestClient(api_router.app) as client:
         resp = client.post(
             "/api/v1/nphies/validate-necessity",
-            json={"icd10_code": "Z00.0", "service_or_drug_code": "56241-00-10"},
+            json={"icd10_code": "Z00.0", "service_or_drug_code": "90901-03-60"},
         )
     assert resp.status_code == 200
     body = resp.json()
