@@ -6,7 +6,7 @@
  * tests pin the replacement — save as you write, into ONE draft, with nothing signed.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import StageDocument from "./StageDocument";
 import { api } from "../../../lib/api";
 
@@ -30,7 +30,12 @@ vi.mock("../../../components/layout/panes/AmbientScribePane", () => ({
 }));
 vi.mock("../../../lib/api", () => ({
   api: {
-    patients: { listDrafts: vi.fn(), createDraft: vi.fn() },
+    patients: {
+      listDrafts: vi.fn(),
+      createDraft: vi.fn(),
+      setDocumentation: vi.fn(),
+      documentation: vi.fn(),
+    },
     drafts: { updateSections: vi.fn() },
   },
   ApiError: class ApiError extends Error {},
@@ -46,6 +51,7 @@ describe("StageDocument — the working copy saves itself", () => {
     mocked.listDrafts.mockResolvedValue({ data: [] } as never);
     mocked.createDraft.mockResolvedValue({ id: "d1" } as never);
     drafts.updateSections.mockResolvedValue({ id: "d1" } as never);
+    mocked.setDocumentation.mockResolvedValue({ source: "manual", recording_declined: false } as never);
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -97,6 +103,21 @@ describe("StageDocument — the working copy saves itself", () => {
       "assessment",
       "plan",
     ]);
+  });
+
+  // The patient's reason is the one thing about capture that cannot be derived, so it is the one thing
+  // asked for. Everything else is recorded on the clinician's behalf when the note is saved.
+  it("records the mechanism without being asked, and the refusal when it is given", async () => {
+    render(<StageDocument patientId="p1" encounterId="e1" onDone={vi.fn()} />);
+    await vi.advanceTimersByTimeAsync(2_600);
+
+    // A transcript exists in this fixture, so the capture produced the note — no press required.
+    expect(mocked.setDocumentation).toHaveBeenCalledWith("p1", "e1", "ambient", false);
+
+    const box = screen.getByTestId("recording-declined") as HTMLInputElement;
+    fireEvent.click(box);
+
+    expect(mocked.setDocumentation).toHaveBeenLastCalledWith("p1", "e1", "ambient", true);
   });
 
   it("says it is a working copy, not signed documentation", async () => {

@@ -123,6 +123,7 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
           {stage === "document" && (
             <StageDocument
               patientId={patient.id}
+              encounterId={encounterId}
               onDone={(d) => markCompleted("document", d)}
               onAdvance={() => setStage("diagnose")}
             />

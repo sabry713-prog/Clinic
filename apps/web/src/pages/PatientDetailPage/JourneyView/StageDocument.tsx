@@ -18,6 +18,9 @@ import { api, ApiError } from "../../../lib/api";
 
 interface StageDocumentProps {
   readonly patientId: string;
+  /** The encounter this note belongs to — the key for its provenance (how it was captured) and for
+   *  the checklist decisions that ride on the same encounter. */
+  readonly encounterId?: string | null;
   readonly onDone: (done: boolean) => void;
   /** Called once the reviewed note is in the record, so the journey can move
    * the clinician on to the next stage. */
@@ -48,9 +51,13 @@ function CompletionProbe({ onDone }: { readonly onDone: (done: boolean) => void 
  * since app.document_draft has no encounter column. One open note per patient is the assumption; a
  * draft.encounter_id is the real fix and is recorded in the assessment.
  */
-function AutoSaveNote({ patientId, onAdvance }: { readonly patientId: string; readonly onAdvance?: (() => void) | undefined }): JSX.Element | null {
+function AutoSaveNote({ patientId, encounterId, onAdvance }: { readonly patientId: string; readonly encounterId?: string | null | undefined; readonly onAdvance?: (() => void) | undefined }): JSX.Element | null {
   const { soap, transcript } = useCortex();
   const [draftId, setDraftId] = useState<string | null>(null);
+  // The refusal. Everything else about how the note was captured can be derived: a transcript means
+  // ambient capture, none means it was written. Only the patient's reason has to be asked for — the
+  // system cannot infer it, and inventing it would put a refusal in the record that never happened.
+  const [declined, setDeclined] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -101,12 +108,22 @@ function AutoSaveNote({ patientId, onAdvance }: { readonly patientId: string; re
       }
       setDraftId(id);
       setSavedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      // Record the mechanism with no one pressing anything: a transcript means the ambient capture
+      // produced the note, and no transcript means it was written. The refusal is the only part that
+      // had to be asked (the checkbox below), and it is carried through here.
+      if (encounterId) {
+        void api.patients
+          .setDocumentation(patientId, encounterId, transcript.length > 0 ? "ambient" : "manual", declined)
+          .catch(() => {
+            /* provenance, not the note: a lost write must not undo the save that just succeeded */
+          });
+      }
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not save the working copy");
     } finally {
       setSaving(false);
     }
-  }, [patientId, sections, transcript, hasNote, saving, draftId]);
+  }, [patientId, encounterId, sections, transcript, hasNote, saving, draftId, declined]);
 
   useEffect(() => {
     if (!hasNote) return;
@@ -136,6 +153,27 @@ function AutoSaveNote({ patientId, onAdvance }: { readonly patientId: string; re
           documentation.
         </span>
       )}
+      <label className="flex items-center gap-1.5 text-xs text-ink-soft">
+        <input
+          type="checkbox"
+          checked={declined}
+          disabled={!encounterId}
+          onChange={(e) => {
+            const next = e.target.checked;
+            setDeclined(next);
+            if (encounterId) {
+              void api.patients
+                .setDocumentation(patientId, encounterId, transcript.length > 0 ? "ambient" : "manual", next)
+                .catch(() => {
+                  /* provenance only — the note is unaffected */
+                });
+            }
+          }}
+          className="h-3.5 w-3.5 accent-brand-indigo"
+          data-testid="recording-declined"
+        />
+        Patient declined recording — the note is written by hand
+      </label>
       {error && (
         <span className="text-xs text-status-rej" role="alert">
           {error}
@@ -154,7 +192,7 @@ function AutoSaveNote({ patientId, onAdvance }: { readonly patientId: string; re
   );
 }
 
-export default function StageDocument({ patientId, onDone, onAdvance }: StageDocumentProps): JSX.Element {
+export default function StageDocument({ patientId, encounterId, onDone, onAdvance }: StageDocumentProps): JSX.Element {
   return (
     <section aria-label="Stage: Document" data-testid="journey-stage-panel-document" className="space-y-3">
       <header>
@@ -182,7 +220,7 @@ export default function StageDocument({ patientId, onDone, onAdvance }: StageDoc
             <AiTeamDrawer />
           </div>
         </div>
-        <AutoSaveNote patientId={patientId} onAdvance={onAdvance} />
+        <AutoSaveNote patientId={patientId} encounterId={encounterId} onAdvance={onAdvance} />
       </CortexProvider>
     </section>
   );

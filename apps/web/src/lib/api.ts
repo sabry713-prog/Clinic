@@ -1422,6 +1422,24 @@ export const api = {
 
     /** Payer-rulebook verdicts for candidate order→diagnosis pairs —
      * informational only; the system never suggests the clinician's link. */
+    /** How this encounter's note was captured — and whether the patient declined to be recorded.
+     *  Two facts kept apart: a clinician may prefer typing on a patient who was happy to be recorded. */
+    documentation: (patientId: string, encounterId: string) =>
+      request<{ data: { source: "ambient" | "manual"; recording_declined: boolean } | null }>(
+        `/api/v1/patients/${patientId}/documentation?encounter_id=${encodeURIComponent(encounterId)}`,
+      ),
+
+    setDocumentation: (
+      patientId: string,
+      encounterId: string,
+      source: "ambient" | "manual",
+      recordingDeclined: boolean,
+    ) =>
+      request<{ source: "ambient" | "manual"; recording_declined: boolean }>(
+        `/api/v1/patients/${patientId}/documentation?encounter_id=${encodeURIComponent(encounterId)}`,
+        { method: "PUT", body: JSON.stringify({ source, recording_declined: recordingDeclined }) },
+      ),
+
     /** The clinician's checklist decisions for one encounter: ticks the derivation did not catch,
      *  and dismissals (which are per encounter — a suggestion inapplicable today may apply later). */
     checklistDecisions: (patientId: string, encounterId: string) =>
