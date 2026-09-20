@@ -508,6 +508,65 @@ export class DraftService {
     return res.rows[0]!;
   }
 
+  /**
+   * Update a draft's sections in place — the persistence path auto-save needs.
+   *
+   * Why this exists rather than reusing update(): update() writes `edited_text` only, and the sections
+   * are a SECOND representation of the same note — stage 2 reads the assessment section, and sign()
+   * freezes edited_text. Auto-saving through update() alone would leave the sections frozen at their
+   * first saved value while the text moved on, so a later stage would read a note the clinician had
+   * already changed. Sections have to move with their text, or the reader silently goes stale.
+   *
+   * Each incoming section is treated exactly as create treats an authored one: the clinician reviewed
+   * it in the SOAP editor, so it is their own text — recorded with authored provenance, and no
+   * transcript-containment gate (with no recording there is no transcript to contain it in). The
+   * stored row's title and policy are preserved, so auto-save cannot quietly rewrite the template.
+   */
+  async updateSections(
+    userId: string,
+    draftId: string,
+    sections: readonly { key: string; text: string }[],
+  ): Promise<DraftRow> {
+    const draft = await this.get(userId, draftId);
+    if (draft.status === "signed") throw new BadRequestException("Cannot edit a signed draft");
+
+    interface StoredSection {
+      key: string;
+      title?: string;
+      policy?: string;
+      text?: string;
+      authored?: boolean;
+    }
+    const stored = ((draft.sections_json ?? []) as unknown as StoredSection[]).slice();
+    const incoming = new Map(sections.map((s) => [s.key, s.text]));
+
+    // Stored order is the document's order; only the text changes.
+    const merged: StoredSection[] = stored.map((s) =>
+      incoming.has(s.key) ? { ...s, text: incoming.get(s.key) ?? s.text ?? "", authored: true } : s,
+    );
+    // A key the stored row does not carry yet is appended, never dropped on the floor.
+    for (const s of sections) {
+      if (!stored.some((x) => x.key === s.key)) merged.push({ key: s.key, text: s.text, authored: true });
+    }
+
+    // edited_text is what sign() freezes, so it must carry the same note the sections now hold.
+    // Plain section text in document order — no invented labels, no formatting the template did not ask
+    // for. `identity` is assembled from the record rather than written, so it is left out.
+    const frozen = merged
+      .filter((s) => s.key !== "identity")
+      .map((s) => (s.text ?? "").trim())
+      .filter((t) => t.length > 0)
+      .join("\n\n");
+
+    const res = await this.pool.query<DraftRow>(
+      `UPDATE app.document_draft
+          SET sections_json = $2::jsonb, edited_text = $3, updated_at = now()
+        WHERE id = $1 RETURNING ${DRAFT_COLS}`,
+      [draftId, JSON.stringify(merged), frozen],
+    );
+    return res.rows[0]!;
+  }
+
   async sign(userId: string, draftId: string): Promise<DraftRow> {
     const draft = await this.get(userId, draftId);
     if (draft.status === "signed") throw new BadRequestException("Draft already signed");

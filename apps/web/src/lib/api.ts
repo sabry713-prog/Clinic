@@ -1500,6 +1500,16 @@ export const api = {
 
   drafts: {
     get: (draftId: string) => request<DocumentDraft>(`/api/v1/drafts/${draftId}`),
+    /** Auto-save: the sections, not the flattened text. The later stages read the sections, so a save
+     *  that moved only the text would leave them frozen while the note changed. */
+    updateSections: (
+      draftId: string,
+      sections: readonly { key: string; text: string }[],
+    ) =>
+      request<DocumentDraft>(`/api/v1/drafts/${draftId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ sections }),
+      }),
     update: (draftId: string, editedText: string) =>
       request<DocumentDraft>(`/api/v1/drafts/${draftId}`, {
         method: "PATCH",

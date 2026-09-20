@@ -110,8 +110,20 @@ class ReformatDto {
 }
 
 class UpdateDraftDto {
+  /** The existing callers send the whole text and nothing else. */
+  @IsOptional()
   @IsString()
-  edited_text!: string;
+  edited_text?: string;
+
+  // Auto-save sends the sections instead. Sections are the representation the later stages read
+  // (stage 2 reads the assessment section), so a save that moved only the text would leave them
+  // frozen while the note changed — see DraftService.updateSections.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => PrefillSectionDto)
+  sections?: PrefillSectionDto[];
 }
 
 function uid(req: Request): string {
@@ -211,10 +223,15 @@ export class DraftController {
   }
 
   @Patch("drafts/:draftId")
-  @ApiOperation({ summary: "Edit a draft (clinician-authored)" })
+  @ApiOperation({
+    summary: "Edit a draft (clinician-authored) — whole text, or the sections auto-save holds open",
+  })
   async update(@Req() req: Request, @Param("draftId") draftId: string, @Body() body: UpdateDraftDto) {
-    const draft = await this.drafts.update(uid(req), draftId, body.edited_text);
-    await this.audit(req, "DRAFT_EDITED", draftId, {});
+    const draft =
+      body.sections != null
+        ? await this.drafts.updateSections(uid(req), draftId, body.sections)
+        : await this.drafts.update(uid(req), draftId, body.edited_text ?? "");
+    await this.audit(req, "DRAFT_EDITED", draftId, body.sections != null ? { sections: body.sections.length } : {});
     return draft;
   }
 

@@ -381,6 +381,81 @@ describe("DraftService clinician-authored ambient note (audit C10)", () => {
     ).rejects.toThrow(/verbatim substring/);
   });
 
+  // Auto-save (consolidation item 2) writes the SECTIONS, not just the text. Sections are the
+  // representation the later stages read — stage 2 reads the assessment section — so a save that
+  // moved only edited_text would leave them frozen while the note changed, and the reader would
+  // silently analyse a note the clinician had already rewritten.
+  describe("updateSections (auto-save)", () => {
+    const stored = {
+      id: "draft-1",
+      status: "draft",
+      sections_json: [
+        { key: "identity", title: "Identity", policy: "assembled_facts", text: "Name: Test Patient" },
+        { key: "subjective", title: "Subjective", policy: "clinician_authored_only", text: "old S" },
+        { key: "assessment", title: "Assessment", policy: "clinician_authored_only", text: "old A" },
+      ],
+      edited_text: null,
+      generated_text: "old S\n\nold A",
+    };
+
+    function makeUpdatePool(row: Record<string, unknown>) {
+      const query = jest.fn().mockImplementation((sql: string, params?: unknown[]) => {
+        if (sql.includes("SELECT") && sql.includes("app.document_draft")) {
+          return Promise.resolve({ rows: [row] });
+        }
+        if (sql.includes("UPDATE app.document_draft")) {
+          return Promise.resolve({
+            rows: [
+              {
+                ...row,
+                sections_json: JSON.parse((params?.[1] as string) ?? "[]"),
+                edited_text: params?.[2],
+              },
+            ],
+          });
+        }
+        return Promise.resolve({ rows: [] });
+      });
+      return { query } as unknown as import("pg").Pool;
+    }
+
+    it("moves the section text in place, keeps the template, and refreshes what sign() freezes", async () => {
+      const service = new DraftService(makeUpdatePool(stored), makeScope(), makeEncryption());
+      const out = await service.updateSections("user-1", "draft-1", [
+        { key: "subjective", text: "cough for three days" },
+        { key: "assessment", text: "acute bronchitis" },
+      ]);
+      const sections = out.sections_json as unknown as {
+        key: string;
+        title?: string;
+        policy?: string;
+        text: string;
+        authored?: boolean;
+      }[];
+      const assessment = sections.find((s) => s.key === "assessment");
+      expect(assessment?.text).toBe("acute bronchitis");
+      // The template the auto-save did not ask about is untouched.
+      expect(assessment?.title).toBe("Assessment");
+      expect(assessment?.policy).toBe("clinician_authored_only");
+      // The clinician's own words, recorded as such — same rule as the create path.
+      expect(assessment?.authored).toBe(true);
+      // Document order survives, and the assembled identity section stays out of the frozen text.
+      expect(sections.map((s) => s.key)).toEqual(["identity", "subjective", "assessment"]);
+      expect(out.edited_text).toBe("cough for three days\n\nacute bronchitis");
+    });
+
+    it("refuses to edit a signed draft", async () => {
+      const service = new DraftService(
+        makeUpdatePool({ ...stored, status: "signed" }),
+        makeScope(),
+        makeEncryption(),
+      );
+      await expect(
+        service.updateSections("user-1", "draft-1", [{ key: "assessment", text: "too late" }]),
+      ).rejects.toThrow(/signed draft/i);
+    });
+  });
+
   // Raised in review: a patient may decline to be recorded, so the clinician writes the note by
   // hand. Then there is no transcript at all and every section is theirs. The containment gate must
   // not refuse it — they are the author of record, and there is no transcript for the text to be
