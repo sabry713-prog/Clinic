@@ -178,6 +178,23 @@ from. Two limits recorded: un-ticking a row the derivation would tick does not s
 third state is the fix if it annoys), and the client wiring has **no round-trip test** — backend 4/4,
 suite green, typecheck clean, but the provider is heavy to mount and the case was not written.
 
+**Item 7 (auto-run the read-only agents) — resolved by NOT building it.** Applying the rule again,
+in order: is it needed? Nothing downstream consumes an agent summary, unlike the checklist which feeds
+the doctor's own work. Merge? It is already one click. Automate? It could run on mount, but that costs
+a paid generation per encounter for an answer the clinician may not want. The item was over-reach — the
+same error the AI Team was corrected for, caught this time before any code was written.
+
+**E4a is already wired, so there is nothing to build there either.**
+`runAgentAction` (`CortexContext.tsx:1464`) dispatches four actions to live backends — Regenerate SOAP
+to the orchestrator, Summarise prior encounters to the narrative endpoint, Show related results to
+observations, Submit Pre-Auth to the existing flow — and six carry `pendingIntegration: true` (Insert
+into chart, Adjust Dosage, Check formulary tier, Fix code mismatch, Book follow-up, Send visit
+summary), which returns early and says so. That is exactly the disposition the backlog asked for.
+
+**The pattern worth naming:** three items on this plan (E4b, E4a, item 7) were resolved by verifying,
+not building — the backlog and this assessment both overstated what was missing. Verification before
+construction has now saved three builds, which is the case for keeping option (ب) as the method.
+
 Still open: G5 (the AI Team reachable from inside the
 journey), auto-running the read-only agents, auto-linking order↔diagnosis when unambiguous, the
 recording-refusal flag, G7 (signing inside stage 1), and Phase 3's retirement of the duplicates —
