@@ -36,7 +36,7 @@ vi.mock("../../../lib/api", () => ({
       setDocumentation: vi.fn(),
       documentation: vi.fn(),
     },
-    drafts: { updateSections: vi.fn() },
+    drafts: { updateSections: vi.fn(), sign: vi.fn() },
   },
   ApiError: class ApiError extends Error {},
 }));
@@ -52,6 +52,7 @@ describe("StageDocument — the working copy saves itself", () => {
     mocked.createDraft.mockResolvedValue({ id: "d1" } as never);
     drafts.updateSections.mockResolvedValue({ id: "d1" } as never);
     mocked.setDocumentation.mockResolvedValue({ source: "manual", recording_declined: false } as never);
+    drafts.sign.mockResolvedValue({ id: "d1", status: "signed", signed_at: "2026-09-19T12:00:00Z" } as never);
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -118,6 +119,53 @@ describe("StageDocument — the working copy saves itself", () => {
     fireEvent.click(box);
 
     expect(mocked.setDocumentation).toHaveBeenLastCalledWith("p1", "e1", "ambient", true);
+  });
+
+  // G7: signing belongs inside the encounter, not on a surface the clinician has to go and find. It
+  // stays an explicit act — nothing here signs anything — and it persists BEFORE it freezes, so the
+  // note of record is the note on screen rather than whatever was last auto-saved.
+  it("signs from inside the stage, persisting first so the frozen note is the one on screen", async () => {
+    mocked.listDrafts.mockResolvedValue({
+      data: [
+        { id: "d9", document_type: "encounter_note", status: "draft", created_at: "2026-09-19T10:00:00Z" },
+      ],
+    } as never);
+    render(<StageDocument patientId="p1" encounterId="e1" onDone={vi.fn()} />);
+    await vi.advanceTimersByTimeAsync(2_600);
+    drafts.updateSections.mockClear();
+
+    fireEvent.click(screen.getByTestId("sign-note"));
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(drafts.updateSections).toHaveBeenCalledTimes(1);
+    expect(drafts.sign).toHaveBeenCalledWith("d9");
+    // Order matters: the update must land before the freeze.
+    const updateOrder = drafts.updateSections.mock.invocationCallOrder[0]!;
+    const signOrder = drafts.sign.mock.invocationCallOrder[0]!;
+    expect(updateOrder).toBeLessThan(signOrder);
+    // Sync assertion, not findBy: with fake timers a findBy would wait on real time. The sign
+    // resolved inside advanceTimersByTimeAsync above, so the state is already flushed.
+    expect(screen.getByTestId("note-signed")).toHaveTextContent(/Signed/i);
+  });
+
+  // Once signed the note is frozen, so the auto-save stops rather than retrying into a refusal from
+  // the service ("Cannot edit a signed draft").
+  it("stops saving after the note is signed", async () => {
+    mocked.listDrafts.mockResolvedValue({
+      data: [
+        { id: "d9", document_type: "encounter_note", status: "draft", created_at: "2026-09-19T10:00:00Z" },
+      ],
+    } as never);
+    render(<StageDocument patientId="p1" encounterId="e1" onDone={vi.fn()} />);
+    await vi.advanceTimersByTimeAsync(2_600);
+
+    fireEvent.click(screen.getByTestId("sign-note"));
+    await vi.advanceTimersByTimeAsync(0);
+    drafts.updateSections.mockClear();
+
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(drafts.updateSections).not.toHaveBeenCalled();
   });
 
   it("says it is a working copy, not signed documentation", async () => {

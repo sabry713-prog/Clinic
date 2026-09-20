@@ -58,6 +58,10 @@ function AutoSaveNote({ patientId, encounterId, onAdvance }: { readonly patientI
   // ambient capture, none means it was written. Only the patient's reason has to be asked for — the
   // system cannot infer it, and inventing it would put a refusal in the record that never happened.
   const [declined, setDeclined] = useState(false);
+  // Signing is the one act this stage must not make easy to do by accident, and must not do itself.
+  // The drafts flow already had the right shape — persist, THEN freeze — so it is reused verbatim.
+  const [signedAt, setSignedAt] = useState<string | null>(null);
+  const [signing, setSigning] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -125,13 +129,32 @@ function AutoSaveNote({ patientId, encounterId, onAdvance }: { readonly patientI
     }
   }, [patientId, encounterId, sections, transcript, hasNote, saving, draftId, declined]);
 
+  const signNote = useCallback(async (): Promise<void> => {
+    if (draftId == null || signing || signedAt) return;
+    setSigning(true);
+    setError(null);
+    try {
+      // Persist what is on screen, then freeze it — the same order the drafts panel uses, so signing
+      // can never freeze a stale copy. The service refuses to edit a signed draft afterwards, which is
+      // why the auto-save below stops rather than retrying into an error.
+      await api.drafts.updateSections(draftId, sections);
+      const out = await api.drafts.sign(draftId);
+      setSignedAt(out.signed_at ?? new Date().toISOString());
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Could not sign the note");
+    } finally {
+      setSigning(false);
+    }
+  }, [draftId, sections, signing, signedAt]);
+
   useEffect(() => {
-    if (!hasNote) return;
+    // A signed note is frozen: nothing more to save, and the service would refuse anyway.
+    if (!hasNote || signedAt) return;
     const timer = setTimeout(() => {
       void save();
     }, 2_500);
     return () => clearTimeout(timer);
-  }, [save, hasNote]);
+  }, [save, hasNote, signedAt]);
 
   if (!hasNote) return null;
 
@@ -141,11 +164,13 @@ function AutoSaveNote({ patientId, encounterId, onAdvance }: { readonly patientI
       data-testid="note-autosave"
     >
       <span className="text-sm text-ink-soft">
-        {saving
-          ? "Saving the working copy…"
-          : savedAt
-            ? `Working copy saved ${savedAt} — not signed.`
-            : "The note saves itself as you write."}
+        {signedAt
+          ? "Signed — the auto-save has stopped and the note is frozen."
+          : saving
+            ? "Saving the working copy…"
+            : savedAt
+              ? `Working copy saved ${savedAt} — not signed.`
+              : "The note saves itself as you write."}
       </span>
       {savedAt && (
         <span className="text-[11px] text-ink-faint">
@@ -177,6 +202,22 @@ function AutoSaveNote({ patientId, encounterId, onAdvance }: { readonly patientI
       {error && (
         <span className="text-xs text-status-rej" role="alert">
           {error}
+        </span>
+      )}
+      {savedAt && !signedAt && (
+        <button
+          type="button"
+          onClick={() => void signNote()}
+          disabled={signing || draftId == null}
+          data-testid="sign-note"
+          className="px-3 py-1.5 rounded-full bg-grad-accent text-white text-sm font-semibold shadow-pill hover:brightness-110 disabled:opacity-50 transition-all"
+        >
+          {signing ? "Signing…" : "Sign the note"}
+        </button>
+      )}
+      {signedAt && (
+        <span className="text-sm font-semibold text-status-ok" data-testid="note-signed">
+          ✓ Signed {new Date(signedAt).toLocaleString("en-GB")} — this is the note of record.
         </span>
       )}
       {savedAt && onAdvance && (
