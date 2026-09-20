@@ -307,7 +307,43 @@ Phase 3 therefore covers **only the duplicate menu chips** — Diagnosis, Orders
 second entrance to a stage the Journey already owns — and that retirement still needs its own explicit
 word, since nothing here deletes a surface without one.
 
-## 11. Boundary note
+## 11. Status — what this plan actually produced
+
+**Shipped and verified** (each with the evidence in its commit):
+
+| Item | Commit | Evidence |
+|---|---|---|
+| 1 — stage 2 reads the saved note | `d03a2c8` | Journey suite; a test asserts the record beats the session |
+| 2 — auto-save + section-preserving PATCH | `66899b6`, `cc27f26` | draft suite 32/32; `StageDocument.autosave` covers create-once, update-same, not-signed |
+| 3 — "nothing to decide" on both stages | `a1dfacf`, `5651d42` | one case per branch, so neither is dead code |
+| 5 — encounter on the confirmed diagnosis | `de35738` | migration read back (columns + index) |
+| G10 — vocabulary search inside stage 2 | `c21bbe1` | search-then-add end to end, and the vocabulary-gap message |
+| E4c — checklist decisions persist | `b12f58f`, `3cbf0ec` | service 4/4; migration read back |
+| G5 — AI Team reachable in the encounter | `f4dfe96` | a case asserts the drawer is in the stage's tree |
+| refusal flag — how the note was captured | `349e4fe`, `686b8d8` | service 3/3; stage 1 5/5; migration read back |
+| G7 — signing inside stage 1 | `b4ffc23` | persist-then-freeze asserted by invocation ORDER |
+| `draft.encounter_id` | `3949880` | the read test asserts the other encounter's note is never opened |
+
+**Resolved by NOT building, five of them** — and that is the more useful half of the record:
+
+* **E4b** and **E4a** were already implemented (the backlog's "never called" and "do nothing" were
+  both stale).
+* **Auto-running the agents** should not be done: nothing consumes a summary, and it costs a paid
+  generation per encounter.
+* **Auto-linking order↔diagnosis** should not be done: the link *is* the clinical assertion the payer
+  checks, and stage 4's stated posture is that the system never suggests it.
+* **Carrying the refusal into the claim** is unnecessary: claim readiness checks that required
+  documentation exists, not how it was written.
+
+Verification before construction saved three builds outright and prevented two more. That is the
+argument for keeping option (ب) as the method on this codebase, and for the §6 filter being applied to
+the plan as readily as to the code.
+
+**Still open, one item, awaiting a decision:** retiring the four duplicate menu chips (Diagnosis,
+Orders, Scribe, Coder). Nothing here deletes a surface without an explicit word, and the `encounter`
+view is explicitly NOT a candidate — the timeline stays where it is.
+
+## 12. Boundary note
 
 None of this adds clinical judgement. Every item is persistence, linkage, or surfacing a fact that
 already exists. The one item that changes what the doctor is *told* — P2's provisional coding — is
