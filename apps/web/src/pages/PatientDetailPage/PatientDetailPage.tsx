@@ -171,7 +171,11 @@ export default function PatientDetailPage(): JSX.Element {
         {view === "chart" && <PatientFilePage patient={patient} />}
         {view === "journey" && (
           <div className={journeyView ? "" : ""}>
-            <JourneyView patient={patient} encounterId={activeEncounterId} />
+            <JourneyView
+              patient={patient}
+              encounterId={activeEncounterId}
+              onPatientChanged={() => void refreshPatient()}
+            />
           </div>
         )}
         {view === "encounter" && (

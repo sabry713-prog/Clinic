@@ -42,12 +42,20 @@ interface JourneyViewProps {
   readonly patient: PatientDetail;
   /** Encounter the pre-auth flow submits against, when one is open. */
   readonly encounterId: string | null;
+  /** Told when a stage has written something to the record, so the page can re-read the patient.
+   *  Without it the stages refresh their own view of a patient object that never changes: a confirmed
+   *  diagnosis was written and the "On file" list above it stayed as it was, which reads as the write
+   *  having failed. */
+  readonly onPatientChanged?: (() => void) | undefined;
 }
 
-export default function JourneyView({ patient, encounterId }: JourneyViewProps): JSX.Element {
+export default function JourneyView({ patient, encounterId, onPatientChanged }: JourneyViewProps): JSX.Element {
   const { stage, setStage, completed, markCompleted } = useJourneyState(patient.id);
   const [refreshKey, setRefreshKey] = useState(0);
-  const bumpRefresh = (): void => setRefreshKey((k) => k + 1);
+  const bumpRefresh = (): void => {
+    setRefreshKey((k) => k + 1);
+    onPatientChanged?.();
+  };
 
   const stageIndex = JOURNEY_STAGES.indexOf(stage);
 
@@ -137,7 +145,14 @@ export default function JourneyView({ patient, encounterId }: JourneyViewProps):
               onChanged={bumpRefresh}
             />
           )}
-          {stage === "order" && <StageOrder patientId={patient.id} onDone={(d) => markCompleted("order", d)} onChanged={bumpRefresh} />}
+          {stage === "order" && (
+            <StageOrder
+              patientId={patient.id}
+              encounterId={encounterId}
+              onDone={(d) => markCompleted("order", d)}
+              onChanged={bumpRefresh}
+            />
+          )}
           {stage === "codelink" && (
             <StageCodeLink
               patientId={patient.id}

@@ -39,6 +39,8 @@ function NecessityBadge({ verdict }: { readonly verdict: NecessityVerdict }): JS
 
 interface StageOrderProps {
   readonly patientId: string;
+  /** Encounter whose saved note supplies the plan text, when one is open. */
+  readonly encounterId?: string | null;
   readonly onDone: (done: boolean) => void;
   readonly onChanged: () => void;
 }
@@ -47,20 +49,54 @@ function keyOf(c: ServiceCandidate): string {
   return `${c.code}|${c.code_display}`;
 }
 
-function readSoapText(patientId: string): string {
+/** The plan text this stage matches orders against: the SAVED note first, the browser session only
+ *  as a fallback — the same rule stage 2 learned the hard way.
+ *
+ *  Reported from testing as "I cannot move to the 3rd step": this stage read the browser session
+ *  alone, so any refresh, sign-out, or fresh tab emptied it while the record still held the note.
+ *  Stage 2 (which reads the saved draft) showed the diagnoses; stage 3 showed "nothing new to
+ *  propose" from the same encounter, and the two screens disagreed about the same note. A stage may
+ *  not depend on a browser tab having survived; the record is the source of truth. */
+async function loadSoapText(patientId: string, encounterId?: string | null): Promise<string> {
+  const fromSession = (): string => {
+    try {
+      const raw = sessionStorage.getItem(`cortex.scribe.${patientId}`);
+      if (!raw) return "";
+      const parsed = JSON.parse(raw) as { soap?: Partial<Record<"subjective" | "objective" | "assessment" | "plan", string>> };
+      return [parsed.soap?.subjective, parsed.soap?.objective, parsed.soap?.assessment, parsed.soap?.plan]
+        .filter((p): p is string => typeof p === "string" && p.trim().length > 0)
+        .join(" ");
+    } catch {
+      return "";
+    }
+  };
+
   try {
-    const raw = sessionStorage.getItem(`cortex.scribe.${patientId}`);
-    if (!raw) return "";
-    const parsed = JSON.parse(raw) as { soap?: Partial<Record<"subjective" | "objective" | "assessment" | "plan", string>> };
-    return [parsed.soap?.subjective, parsed.soap?.objective, parsed.soap?.assessment, parsed.soap?.plan]
-      .filter((p): p is string => typeof p === "string" && p.trim().length > 0)
-      .join(" ");
+    // Same lookup as stage 2's loadSoapAssessment — this encounter's note when the row identifies one,
+    // the newest otherwise.
+    const list = await api.patients.listDrafts(patientId);
+    const notes = (list.data ?? [])
+      .filter((d) => d.document_type === "encounter_note")
+      .filter((d) => !encounterId || !d.encounter_id || d.encounter_id === encounterId)
+      .slice()
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    const newest = notes[0];
+    if (newest) {
+      const draft = await api.drafts.get(newest.id);
+      const saved = (draft.sections_json ?? [])
+        .filter((s) => s.text?.trim())
+        .map((s) => s.text.trim())
+        .join(" ");
+      if (saved) return saved;
+    }
   } catch {
-    return "";
+    /* fall through to the session */
   }
+
+  return fromSession();
 }
 
-export default function StageOrder({ patientId, onDone, onChanged }: StageOrderProps): JSX.Element {
+export default function StageOrder({ patientId, encounterId, onDone, onChanged }: StageOrderProps): JSX.Element {
   const [existing, setExisting] = useState<readonly ServiceRequestItem[]>([]);
   const [rows, setRows] = useState<readonly ServiceCandidate[]>([]);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
@@ -77,13 +113,28 @@ export default function StageOrder({ patientId, onDone, onChanged }: StageOrderP
   useEffect(() => {
     let cancelled = false;
     refresh();
-    const soapText = readSoapText(patientId);
     setLoading(true);
+    // A stage that can stall forever is a stage a clinician cannot leave. Every lookup below is
+    // therefore capped: whatever arrives in time is proposed, and the step opens either way. This
+    // was reported as "I cannot move to the 3rd step" — the step had opened, and sat on
+    // "Analyzing notes and the SOAP draft…" past the point where anyone waits.
+    const capped = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+      Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
     Promise.all([
-      api.patients.serviceRequestCandidates(patientId).then((r) => r.data).catch(() => [] as readonly ServiceCandidate[]),
-      soapText
-        ? api.patients.matchQuickEntry(patientId, soapText).then((r) => r.data).catch(() => [] as readonly ServiceCandidate[])
-        : Promise.resolve([] as readonly ServiceCandidate[]),
+      capped(
+        api.patients.serviceRequestCandidates(patientId).then((r) => r.data).catch(() => [] as readonly ServiceCandidate[]),
+        8000,
+        [] as readonly ServiceCandidate[],
+      ),
+      capped(
+        loadSoapText(patientId, encounterId).then((soapText) =>
+          soapText
+            ? api.patients.matchQuickEntry(patientId, soapText).then((r) => r.data).catch(() => [] as readonly ServiceCandidate[])
+            : Promise.resolve([] as readonly ServiceCandidate[]),
+        ),
+        8000,
+        [] as readonly ServiceCandidate[],
+      ),
     ]).then(([fromNotes, fromSoap]) => {
       if (cancelled) return;
       const merged = new Map<string, ServiceCandidate>();
@@ -93,7 +144,7 @@ export default function StageOrder({ patientId, onDone, onChanged }: StageOrderP
       setSelected(new Set(list.map(keyOf)));
     }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [patientId, refresh]);
+  }, [patientId, encounterId, refresh]);
 
   useEffect(() => {
     onDone(existing.length > 0);
