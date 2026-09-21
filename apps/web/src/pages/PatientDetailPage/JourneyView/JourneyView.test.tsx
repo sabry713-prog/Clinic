@@ -445,6 +445,29 @@ describe("JourneyView", () => {
     expect(vi.mocked(api.drafts.get)).not.toHaveBeenCalledWith("other-visit");
   });
 
+  // Reported from testing as "cannot find the diagnosis from step 1". The proposals were there and
+  // pre-selected; what was missing was any statement that they are not on the problem list until the
+  // clinician confirms. A design the reader cannot see reads as a broken screen.
+  it("says the proposals are not on the problem list until confirmed", async () => {
+    sessionStorage.setItem(
+      `cortex.scribe.${PATIENT.id}`,
+      JSON.stringify({ soap: { assessment: "type 2 diabetes", plan: "" } }),
+    );
+    mocked.suggestCodes.mockResolvedValueOnce({
+      suggestions: [
+        { code: "44054006", code_display: "Diabetes mellitus type 2", code_system: "http://snomed.info/sct" },
+      ],
+    } as never);
+
+    renderJourney();
+    gotoStage("diagnose");
+
+    expect(await screen.findByTestId("diagnose-not-yet-on-file")).toHaveTextContent(
+      /not yet on the problem list/i,
+    );
+    expect(screen.getByRole("button", { name: /Add selected/i })).toBeInTheDocument();
+  });
+
   // Item 5 of the consolidation plan: the confirmed diagnosis carries its provenance. Without the
   // encounter on the write, the problem list cannot answer "what was this visit for?" from the
   // record — the gap that started this whole assessment — and the claim has no encounter-level

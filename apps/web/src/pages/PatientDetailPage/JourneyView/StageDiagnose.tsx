@@ -266,6 +266,15 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
           <h3 className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink-faint mb-1">
             Suggested from this encounter's assessment — proposed by the system, approved by you
           </h3>
+          {/* Reported from testing as "I cannot find the diagnosis from step 1": the proposals are
+              below, pre-selected and ready — but they are NOT on the problem list above, and nothing
+              said so. The step proposes and the clinician confirms; that is the design, and a design
+              the reader cannot see is a design that looks broken. */}
+          <p className="text-xs text-ink-soft mb-2" data-testid="diagnose-not-yet-on-file">
+            These are proposals, not yet on the problem list. Press <span className="font-semibold">Add
+            selected</span> to put them on it — they then appear under “On file” above, in this
+            patient's record.
+          </p>
           <ul className="space-y-1.5">
             {candidates.map((t) => (
               <li key={t.code}>
