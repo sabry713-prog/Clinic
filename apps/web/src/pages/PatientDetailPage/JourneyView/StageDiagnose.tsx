@@ -207,7 +207,11 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
         <p className="text-sm text-ink-soft">
           {assessment
             ? "The SOAP assessment was analyzed. Confirm what belongs on the problem list — you author the diagnosis and confirm its code."
-            : "This encounter's SOAP note has no assessment yet. Write it in step 1 and suggestions appear here on their own — you author the diagnosis and confirm its code."}
+            : "This encounter's SOAP note has no assessment yet. Write it in step 1 and suggestions " +
+              "appear here on their own — you author the diagnosis and confirm its code. During a " +
+              "dictation the note fills progressively, so this step catches up as soon as the " +
+              "assessment lands; until then there is nothing to suggest, which is the honest state " +
+              "rather than a broken one."}
         </p>
       </header>
 
