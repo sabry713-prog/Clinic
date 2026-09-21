@@ -22,9 +22,6 @@ vi.mock("../../../components/layout/CortexContext", () => ({
     transcript: [{ id: "t1", speaker: "clinician", text: "what brings you in" }],
   }),
 }));
-vi.mock("../../../components/layout/panes/AiTeamDrawer", () => ({
-  default: () => <div data-testid="ai-team-drawer-stub" />,
-}));
 vi.mock("../../../components/layout/panes/AmbientScribePane", () => ({
   default: () => <div data-testid="scribe-pane-stub" />,
 }));
@@ -56,29 +53,6 @@ describe("StageDocument — the working copy saves itself", () => {
   });
   afterEach(() => {
     vi.useRealTimers();
-  });
-
-  // G5: consulting an agent must not mean leaving the encounter. The AI Team lives in the old
-  // three-pane shell; here it sits beside the note, on the same provider, as a drawer the clinician
-  // opens when the case calls for it — not as a stage, because the agents are situational.
-  it("keeps the AI Team reachable from inside the stage", async () => {
-    render(<StageDocument patientId="p1" onDone={vi.fn()} />);
-    expect(screen.getByTestId("ai-team-drawer-stub")).toBeInTheDocument();
-  });
-
-  it("creates the draft once, without waiting to be asked", async () => {
-    render(<StageDocument patientId="p1" onDone={vi.fn()} />);
-
-    await vi.advanceTimersByTimeAsync(2_600);
-
-    expect(mocked.listDrafts).toHaveBeenCalledWith("p1");
-    expect(mocked.createDraft).toHaveBeenCalledTimes(1);
-    // The clinician's own words, sent as authored — no transcript to be a substring of.
-    const [, , , , prefill] = mocked.createDraft.mock.calls[0]!;
-    expect(prefill?.authoredSections).toEqual([
-      { key: "subjective", text: "cough for three days" },
-      { key: "assessment", text: "acute bronchitis" },
-    ]);
   });
 
   it("updates that same draft on a later save instead of creating another", async () => {

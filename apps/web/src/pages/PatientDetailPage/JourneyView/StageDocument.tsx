@@ -13,7 +13,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CortexProvider, useCortex } from "../../../components/layout/CortexContext";
 import AmbientScribePane from "../../../components/layout/panes/AmbientScribePane";
-import AiTeamDrawer from "../../../components/layout/panes/AiTeamDrawer";
 import { api, ApiError } from "../../../lib/api";
 
 interface StageDocumentProps {
@@ -251,19 +250,17 @@ export default function StageDocument({ patientId, encounterId, onDone, onAdvanc
           same SOAP/transcript state. A second provider here would create
           an isolated context whose SOAP is always empty. */}
       <CortexProvider patientId={patientId} autoStream>
-        <div className="flex gap-3">
-          <div className="rounded-2xl border border-line overflow-hidden h-[480px] flex-1 min-w-0 bg-wash">
-            <CompletionProbe onDone={onDone} />
-            <AmbientScribePane />
-          </div>
-          {/* G5: the AI Team used to be reachable only from the old three-pane shell, so consulting an
-              agent meant leaving the journey and carrying the encounter with it. It is a collapsible
-              drawer rather than a stage — the agents are situational, and per the review the only
-              requirement is that they open without losing the encounter. The drawer manages its own
-              collapsed rail, so nothing here decides whether it is open. */}
-          <div className="h-[480px] shrink-0">
-            <AiTeamDrawer />
-          </div>
+        {/* The AI Team is NOT here, and the reason is worth recording.
+            G5 put it beside the note on the theory that consulting an agent should not mean leaving the
+            encounter. Rendered in practice it was worse than the problem it solved: the drawer takes
+            width, so the moment it opens it covers the SOAP form the clinician is writing, and the note
+            — the entire product of this stage — is squeezed into a sliver. Reported from testing as
+            "confusing, and I cannot see the benefit", which is the right verdict: nothing in the drawer
+            is needed to document an encounter, and the encounter pays for it in the one place it cannot
+            afford to. It stays where it already worked, in the shell reachable from the sidebar. */}
+        <div className="rounded-2xl border border-line overflow-hidden h-[480px] bg-wash">
+          <CompletionProbe onDone={onDone} />
+          <AmbientScribePane />
         </div>
         <AutoSaveNote patientId={patientId} encounterId={encounterId} onAdvance={onAdvance} />
       </CortexProvider>
