@@ -1242,13 +1242,22 @@ export function CortexProvider({
   // In live mode, the DeepSeek-generated SOAP note replaces the canned stages.
   // In demo mode, the canned stages are preserved (no backend call).
   const soap = useMemo<SoapNote>(() => {
-    const base = liveSoap ?? SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
+    // The mode decides which source is authoritative — liveSoap must NOT win in demo mode.
+    //
+    // It used to: `liveSoap ?? SOAP_STAGES[...]`, so a single live call poisoned the note for the rest
+    // of the encounter. The generator is formatting-only, so a thin transcript returns a note whose
+    // sections are empty — and in demo mode that empty note permanently shadowed the canned stages,
+    // with the Objective still carrying the nurse's vitals. The screen looked like a playback that did
+    // nothing, while the transcript filled normally behind it. Reported from testing, reproduced, and
+    // this is the line that was wrong.
+    const staged = SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
+    const base = dictationMode === "demo" ? staged : (liveSoap ?? staged);
     // Objective leads with the vitals the nurse recorded before the encounter.
     // They are read from the record, and the clinician's own edits still win
     // because soapOverride is applied last.
     const merged: SoapNote = { ...base, objective: mergeObjective(nurseVitals, base.objective) };
     return { ...merged, ...soapOverride };
-  }, [liveSoap, lineCount, soapOverride, nurseVitals]);
+  }, [dictationMode, liveSoap, lineCount, soapOverride, nurseVitals]);
 
   // Mirror the *effective* note on every change, so a reload and every later
   // journey stage see exactly what the clinician reviewed. Persisting only the
