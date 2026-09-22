@@ -70,6 +70,11 @@ async function loadSoapAssessment(patientId: string, encounterId?: string | null
 
 export default function StageDiagnose({ patient, encounterId, onAdvance, onDone, onChanged }: StageDiagnoseProps): JSX.Element {
   const documented = patient.conditions ?? [];
+  // The ten most recent, newest first. The list arrives in insertion order, so the diagnosis the
+  // clinician just confirmed is the last entry — and a plain first-ten slice hid exactly that one.
+  // Reported as "diagnoses is not appears in the diagnoses after been added": the count went up and
+  // the new diagnosis was nowhere in sight.
+  const recentDocumented = documented.slice(-10).reverse();
   const [candidates, setCandidates] = useState<readonly CodedTerm[]>([]);
   const [didYouMean, setDidYouMean] = useState<readonly CodedTerm[]>([]);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
@@ -221,7 +226,7 @@ export default function StageDiagnose({ patient, encounterId, onAdvance, onDone,
         </h3>
         {documented.length > 0 ? (
           <ul className="flex flex-wrap gap-1.5" dir="ltr">
-            {documented.slice(0, 10).map((c) => (
+            {recentDocumented.map((c) => (
               <li key={c.id} className="text-xs px-2.5 py-1 rounded-full border border-line bg-mist text-ink-deep">
                 {c.code_display ?? "Unknown"}
                 <span className="text-ink-faint"> · {c.status ?? ""}</span>
