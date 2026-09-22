@@ -414,10 +414,16 @@ export class PatientService {
         [patientId],
       ),
       this.pool.query<ConditionItem>(
+        // Newest recorded first. Ordering by onset_date alone buried every diagnosis the clinician
+        // entered: that path legitimately carries no onset date, so NULLS LAST pushed the doctor's
+        // own confirmation behind every seeded row — and any screen showing a fixed window of the
+        // list could never reach it. Reported as "diagnoses is not appears in the diagnoses after
+        // been added". last_synced_at is set on insert, so it always puts the newest entry where
+        // the clinician looks; onset_date stays as the tiebreak for rows sharing a sync time.
         `SELECT id, code, code_display, status, onset_date::text as onset_date
          FROM hospital.condition
          WHERE patient_id = $1
-         ORDER BY onset_date DESC NULLS LAST`,
+         ORDER BY last_synced_at DESC, onset_date DESC NULLS LAST`,
         [patientId],
       ),
     ]);
@@ -736,12 +742,14 @@ export class PatientService {
       status: string | null;
       onset_date: string | null;
       is_symptom: boolean;
+      // Same ordering as the diagnosis list, for the same reason: a clinician-entered diagnosis
+      // carries no onset date and must not fall behind the seeded rows.
     }>(
       `SELECT code, code_display, status, onset_date::text AS onset_date,
               (code_display LIKE '%(reported at%') AS is_symptom
        FROM hospital.condition
        WHERE patient_id = $1
-       ORDER BY onset_date DESC NULLS LAST`,
+       ORDER BY last_synced_at DESC, onset_date DESC NULLS LAST`,
       [patientId],
     );
 
