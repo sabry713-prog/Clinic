@@ -140,10 +140,17 @@ interface CatalogMatch {
 function matchCatalog(text: string): CatalogMatch[] {
   const matches: CatalogMatch[] = [];
   const displays = new Set<string>();
+  const codes = new Set<string>();
   for (const item of CATALOG) {
     if (!item.re.test(text)) continue;
+    // Two rules may answer differently to the same examination — a specific "kidney ultrasound" and
+    // a generic "ultrasound" both describe one study, and they carry the same code. The specific
+    // rule is earlier in CATALOG, so the first match of a code wins and the clinician sees one row
+    // naming what was actually asked for.
+    if (codes.has(item.code)) continue;
     displays.add(item.code_display);
     if (item.code_display === "X-ray" && displays.has("Chest X-ray")) continue;
+    codes.add(item.code);
     matches.push({
       category: item.category,
       code_system: item.code_system,
