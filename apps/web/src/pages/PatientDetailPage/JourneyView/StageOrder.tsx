@@ -101,6 +101,7 @@ export default function StageOrder({ patientId, encounterId, onDone, onChanged }
   const [rows, setRows] = useState<readonly ServiceCandidate[]>([]);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [soapTimedOut, setSoapTimedOut] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -118,8 +119,16 @@ export default function StageOrder({ patientId, encounterId, onDone, onChanged }
     // therefore capped: whatever arrives in time is proposed, and the step opens either way. This
     // was reported as "I cannot move to the 3rd step" — the step had opened, and sat on
     // "Analyzing notes and the SOAP draft…" past the point where anyone waits.
-    const capped = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
-      Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+    // The cap keeps the step from hanging, but a timeout must not read as "there was nothing to
+    // find": resolving to an empty list made a slow lookup indistinguishable from a clean one, and
+    // the clinician was told "nothing new to propose" while the note still held a plan. A timeout is
+    // recorded here and said out loud below.
+    let soapTimedOut = false;
+    const capped = <T,>(p: Promise<T>, ms: number, fallback: T, note?: () => void): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<T>((resolve) => setTimeout(() => { note?.(); resolve(fallback); }, ms)),
+      ]);
     Promise.all([
       capped(
         api.patients.serviceRequestCandidates(patientId).then((r) => r.data).catch(() => [] as readonly ServiceCandidate[]),
@@ -134,6 +143,7 @@ export default function StageOrder({ patientId, encounterId, onDone, onChanged }
         ),
         8000,
         [] as readonly ServiceCandidate[],
+        () => { soapTimedOut = true; },
       ),
     ]).then(([fromNotes, fromSoap]) => {
       if (cancelled) return;
@@ -142,7 +152,7 @@ export default function StageOrder({ patientId, encounterId, onDone, onChanged }
       const list = [...merged.values()];
       setRows(list);
       setSelected(new Set(list.map(keyOf)));
-    }).finally(() => { if (!cancelled) setLoading(false); });
+    }).finally(() => { if (!cancelled) { setSoapTimedOut(soapTimedOut); setLoading(false); } });
     return () => { cancelled = true; };
   }, [patientId, encounterId, refresh]);
 
@@ -282,6 +292,13 @@ export default function StageOrder({ patientId, encounterId, onDone, onChanged }
             {busy ? "Creating…" : `Create selected orders (${rowsToCreate.length})`}
           </button>
         </div>
+      )}
+
+      {!loading && soapTimedOut && (
+        <p className="text-xs text-amber-800 mb-1" data-testid="order-soap-timeout">
+          This encounter's note could not be read in time, so the plan it holds is not reflected
+          above. Reload this step to try again.
+        </p>
       )}
 
       {!loading && rows.length === 0 && (
