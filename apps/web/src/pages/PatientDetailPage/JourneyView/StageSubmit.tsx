@@ -72,6 +72,11 @@ export default function StageSubmit({ patientId, refreshKey, onDone }: StageSubm
   };
 
   const ready = draft?.ready === true;
+  // The gate's verdict now gates the click, not just the display. Until this, the button answered to
+  // the draft alone: a blocked pre-authorization -- the rejection this product exists to prevent --
+  // was listed as a note and the claim left anyway, which made the readiness gate a report.
+  const gateBlocked = readiness?.overall === "blocked";
+  const canSubmit = ready && !gateBlocked;
 
   return (
     <section aria-label="Stage: Submit" data-testid="journey-stage-panel-submit" className="space-y-4">
@@ -134,12 +139,18 @@ export default function StageSubmit({ patientId, refreshKey, onDone }: StageSubm
       <button
         type="button"
         onClick={submit}
-        disabled={busy || !ready}
+        disabled={busy || !canSubmit}
         data-testid="submit-claim"
         className="px-5 py-2.5 rounded-full bg-grad-accent text-white text-sm font-bold shadow-pill hover:brightness-110 disabled:opacity-50 disabled:shadow-none transition-all"
       >
         {busy ? "Submitting…" : "Submit claim"}
       </button>
+      {gateBlocked && (
+        <p className="text-sm text-status-rej" data-testid="submit-blocked">
+          Submission is blocked by the readiness checks above — resolve the failing check(s), then
+          submit.
+        </p>
+      )}
       <p className="text-[11px] text-ink-faint">
         Simulated payer — the stub returns an administrative acceptance for demo purposes; it never represents a real NPHIES submission.
       </p>
