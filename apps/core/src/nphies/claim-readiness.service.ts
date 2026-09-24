@@ -422,17 +422,37 @@ export class ClaimReadinessService {
     } catch {
       rulesReachable = false;
     }
+    // Which of the required authorizations are actually on record. Without this the check could only
+    // say the payer requires one; with it, "required and never obtained" is a finding rather than a
+    // note -- which is the difference between a warning and a gate.
+    let outstanding = preAuthOrders.length;
+    if (rulesReachable && preAuthOrders.length > 0) {
+      const recorded = await this.pool.query<{ n: string }>(
+        `SELECT count(DISTINCT service_code)::text AS n FROM app.nphies_preauth
+          WHERE patient_id = $1
+            AND service_code = ANY($2::text[])
+            AND status IN ('queued','submitted','approved')`,
+        [patientId, preAuthOrders.map((o) => (o as { service_code?: string }).service_code ?? "")],
+      );
+      outstanding = preAuthOrders.length - Number(recorded.rows[0]?.n ?? "0");
+    }
     checks.push({
       id: "pre_authorization",
       label: "Pre-authorization",
       // Unreachable rules are NOT a pass: reporting "nothing needs pre-authorization" because the
       // rulebook could not be read would be the gate inventing a clean bill of health.
-      status: !rulesReachable ? "not_applicable" : preAuthOrders.length === 0 ? "pass" : "warning",
+      status: !rulesReachable
+        ? "not_applicable"
+        : preAuthOrders.length === 0 || outstanding === 0
+          ? "pass"
+          : "fail",
       detail: !rulesReachable
         ? "The payer's rules could not be reached, so pre-authorization could not be checked. Not a pass."
         : preAuthOrders.length === 0
           ? "No ordered service requires pre-authorization under the current rules."
-          : `${preAuthOrders.length} ordered service(s) require pre-authorization before the service is provided — see the orders step.`,
+          : outstanding === 0
+            ? `${preAuthOrders.length} ordered service(s) require pre-authorization, and all are on record.`
+            : `${outstanding} of ${preAuthOrders.length} required pre-authorization(s) are outstanding — none on record for those services.`,
     });
 
     const overall: ClaimReadiness["overall"] = checks.some((c) => c.status === "fail")

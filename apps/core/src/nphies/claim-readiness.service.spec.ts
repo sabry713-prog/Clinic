@@ -57,6 +57,10 @@ function makeSequencedPool(mdsRows: MdsRow[]): Pool {
     // R15 order prerequisites — the check added after these mocks were written. The chain is
     // positional, so a new query in evaluate() needs its slot here or it consumes the next mock.
     .mockResolvedValueOnce({ rows: [] } as unknown as QueryResult);
+  // A query beyond the scripted chain is not a scripting mistake to explode on: the service grew a
+  // check after these mocks were written, and an empty result is what a real query would return for
+  // a patient the test never gave data to. Without this the new check read `undefined.rows`.
+  query.mockResolvedValue({ rows: [] });
   return { query } as unknown as Pool;
 }
 
@@ -249,7 +253,7 @@ describe("ClaimReadinessService — R16 pre-authorization", () => {
     return svc.evaluate(USER_ID, PATIENT_ID);
   };
 
-  it("warns and counts the orders the payer requires pre-authorization for", async () => {
+  it("fails when the payer requires pre-authorization and none is on record", async () => {
     const out = await run(
       stubLinkage({
         graph_available: true,
@@ -257,8 +261,23 @@ describe("ClaimReadinessService — R16 pre-authorization", () => {
       }),
     );
     const check = out.checks.find((c) => c.id === "pre_authorization")!;
-    expect(check.status).toBe("warning");
-    expect(check.detail).toContain("1 ordered service");
+    // Required-but-outstanding is the case that produces a rejection, so it is a failure, not a note.
+    expect(check.status).toBe("fail");
+    expect(check.detail).toContain("1 of 1");
+    expect(check.detail).toContain("outstanding");
+  });
+
+  it("passes when every required authorization is on record", async () => {
+    const pool = makeSequencedPool([]);
+    // The record query is the only pool call after the reasoning above, so a default answer of one
+    // row is all it takes to represent "already requested".
+    (pool.query as unknown as jest.Mock).mockResolvedValue({ rows: [{ n: "1" }] });
+    const svc = new ClaimReadinessService(pool, scope, stubLinkage({
+      graph_available: true,
+      pairs: [{ pre_auth_required: true }],
+    }));
+    const out = await svc.evaluate(USER_ID, PATIENT_ID);
+    expect(out.checks.find((c) => c.id === "pre_authorization")!.status).toBe("pass");
   });
 
   it("passes only when the rules were reached and required nothing", async () => {
