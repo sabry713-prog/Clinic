@@ -52,8 +52,10 @@ function makeSequencedPool(mdsRows: MdsRow[]): Pool {
     // R8 medications total/coded (no active meds)
     .mockResolvedValueOnce({ rows: [{ total: "0", coded: "0" }] } as QueryResult)
     // R9 eligibility (none in last 7 days)
+    .mockResolvedValueOnce({ rows: [] } as unknown as QueryResult)
+    // R15 order prerequisites — the check added after these mocks were written. The chain is
+    // positional, so a new query in evaluate() needs its slot here or it consumes the next mock.
     .mockResolvedValueOnce({ rows: [] } as unknown as QueryResult);
-
   return { query } as unknown as Pool;
 }
 

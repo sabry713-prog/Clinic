@@ -376,6 +376,36 @@ export class ClaimReadinessService {
         : "Not checked in the last 7 days. Run the eligibility check before claim submission.",
     });
 
+    // R15 — order prerequisites. An order whose payer rule requires a prior step is only complete
+    // when that step is on record ("MRI requires Echocardiography" is the seeded example). Driven by
+    // app.order_prerequisite rather than a list written here: the rules change, and a second copy in
+    // this file would drift from the one the ordering step already reads.
+    const prereq = await this.pool.query<{
+      order_display: string;
+      requires_display: string;
+      rationale: string | null;
+    }>(
+      `SELECT p.order_display, p.requires_display, p.rationale
+         FROM app.order_prerequisite p
+        WHERE EXISTS (SELECT 1 FROM app.service_request s
+                       WHERE s.patient_id = $1 AND s.code = p.order_code)
+          AND NOT EXISTS (SELECT 1 FROM app.service_request r
+                           WHERE r.patient_id = $1 AND r.code = p.requires_code)`,
+      [patientId],
+    );
+    const unmet = prereq.rows;
+    checks.push({
+      id: "order_prerequisites",
+      label: "Order prerequisites",
+      status: unmet.length === 0 ? "pass" : "warning",
+      detail:
+        unmet.length === 0
+          ? "No ordered service is waiting on a prerequisite step."
+          : unmet
+              .map((r) => `${r.order_display} needs ${r.requires_display}`)
+              .join("; ") + ".",
+    });
+
     const overall: ClaimReadiness["overall"] = checks.some((c) => c.status === "fail")
       ? "blocked"
       : checks.some((c) => c.status === "warning")
