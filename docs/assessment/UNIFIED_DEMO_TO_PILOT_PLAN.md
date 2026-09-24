@@ -203,3 +203,50 @@ journey order stays as designed and step 4's confirmation remains the authority.
 
 **Considered and not chosen:** moving the coding step before the ordering step. Cleanest data,
 but it changes the designed journey — a product decision, not an engineering one.
+
+---
+
+## Agreed 2026-09-22, deferred — the three items from live testing of steps 2-3
+
+Reported while testing MRN-006 and MRN-009, confirmed in the running app, **deliberately not fixed**.
+Each is recorded with the evidence so it can be picked up without re-deriving the diagnosis.
+
+### D1 — the diagnosis step re-offers a diagnosis already on the problem list
+
+`StageDiagnose` derives its proposals from the encounter's assessment alone and does not check the
+patient's documented conditions, so a term the record already carries is offered again. Confirmed on
+MRN-006: the panel proposed **Urinary tract infection `68566005`** for an assessment whose diagnosis
+was already on the list, and the record now holds **two active entries** for it.
+
+The "Nothing to add" branch covers only the case where *every* match is already documented; there is
+no per-row filter. **Fix**: drop a candidate whose code is already in `documented` before it is
+rendered, and say why the row is absent rather than staying silent.
+
+### D2 — "Since last visit" excludes every diagnosis the clinician enters
+
+`getSinceLastVisit` (`apps/core/src/patient/patient.service.ts`) filters `onset_date >= $2::date`. A
+**clinician-entered** diagnosis carries no onset date — the Journey never sends one — so it can never
+satisfy that predicate and is **absent from the whole view**.
+
+This is the same root cause as `7e4ef92`: ordering by `onset_date` with `NULLS LAST` had buried those
+rows at the foot of the problem list, and this view excludes them outright. **Fix**: decide the
+question the view is really asking — "what changed since last visit" is a question about when the
+record was **written**, not when the condition **began** — then include rows by `last_synced_at` where
+`onset_date` is null, or state in the view that undated entries are out of scope. A product decision
+first, then one predicate.
+
+### D3 — the order step's candidate lookup is slow enough to need a timeout
+
+`GET /service-requests/candidates` and `POST /service-requests/quick-entry` take long enough that the
+step needed an 8-second cap, and a cap hit is what produced the false "nothing new to propose"
+(`b1e12f8`). The timeout is now honest, but the latency is still there and it is the difference
+between a proposal appearing and not appearing. The step also caps both calls, so a slow backend
+degrades silently rather than failing loudly. **Fix**: measure both endpoints under the real seed, find
+where the time goes, and make the step's loading state reflect it — while keeping the cap, which is
+what stops the step from hanging at all.
+
+---
+
+**Not to be lost**: today's fixes sit on top of these. `7e4ef92` (ordering), `9c9b3d2` (the matcher's
+vocabulary), `b1e12f8` (the honest timeout) and `7b944df` (a killed DB connection no longer kills the
+API) all stand on their own; these three are what remains visible to a testing clinician.
