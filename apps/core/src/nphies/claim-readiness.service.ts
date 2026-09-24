@@ -17,6 +17,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PG_POOL } from "../database/database.module";
 import type { Pool } from "pg";
+import { LinkageVerdictsService } from "./linkage-verdicts.service";
 import { PatientScopeService } from "../patient/patient-scope.service";
 
 export type CheckStatus = "pass" | "warning" | "fail" | "not_applicable";
@@ -41,6 +42,7 @@ export class ClaimReadinessService {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly scope: PatientScopeService,
+    private readonly linkage: LinkageVerdictsService,
   ) {}
 
   /**
@@ -404,6 +406,33 @@ export class ClaimReadinessService {
           : unmet
               .map((r) => `${r.order_display} needs ${r.requires_display}`)
               .join("; ") + ".",
+    });
+
+    // R16 — pre-authorization. The payer's own rules decide which orders need a pre-auth before the
+    // service is provided; submitting one without it is a rejection this gate exists to prevent. The
+    // verdicts come from LinkageVerdictsService, which already pairs each order with the diagnosis
+    // its necessity was judged against -- asking a second time here would be the second answer to
+    // one question, free to drift from the first.
+    let preAuthOrders: readonly { order_id: string }[] = [];
+    let rulesReachable = true;
+    try {
+      const verdicts = await this.linkage.verdicts(userId, patientId);
+      rulesReachable = verdicts.graph_available;
+      preAuthOrders = verdicts.pairs.filter((pair) => pair.pre_auth_required === true);
+    } catch {
+      rulesReachable = false;
+    }
+    checks.push({
+      id: "pre_authorization",
+      label: "Pre-authorization",
+      // Unreachable rules are NOT a pass: reporting "nothing needs pre-authorization" because the
+      // rulebook could not be read would be the gate inventing a clean bill of health.
+      status: !rulesReachable ? "not_applicable" : preAuthOrders.length === 0 ? "pass" : "warning",
+      detail: !rulesReachable
+        ? "The payer's rules could not be reached, so pre-authorization could not be checked. Not a pass."
+        : preAuthOrders.length === 0
+          ? "No ordered service requires pre-authorization under the current rules."
+          : `${preAuthOrders.length} ordered service(s) require pre-authorization before the service is provided — see the orders step.`,
     });
 
     const overall: ClaimReadiness["overall"] = checks.some((c) => c.status === "fail")

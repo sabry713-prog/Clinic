@@ -6,6 +6,7 @@
  * discriminator across the many similarly-shaped completeness checks.
  */
 
+import { LinkageVerdictsService } from "./linkage-verdicts.service";
 import { ClaimReadinessService } from "./claim-readiness.service";
 import type { PatientScopeService } from "../patient/patient-scope.service";
 import type { Pool, QueryResult } from "pg";
@@ -81,7 +82,7 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
         has_note_type: false,
       },
     ]);
-    const svc = new ClaimReadinessService(pool, mockScopeService);
+    const svc = new ClaimReadinessService(pool, mockScopeService, stubLinkage());
     const result = await svc.evaluate(USER_ID, PATIENT_ID);
 
     const check = result.checks.find((c) => c.id === "mds_evidence_complete:sr-1:R07.4");
@@ -102,7 +103,7 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
         has_note_type: false,
       },
     ]);
-    const svc = new ClaimReadinessService(pool, mockScopeService);
+    const svc = new ClaimReadinessService(pool, mockScopeService, stubLinkage());
     const result = await svc.evaluate(USER_ID, PATIENT_ID);
 
     const check = result.checks.find((c) => c.id === "mds_evidence_complete:sr-1:R07.4");
@@ -122,7 +123,7 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
         has_note_type: false,
       },
     ]);
-    const svc = new ClaimReadinessService(pool, mockScopeService);
+    const svc = new ClaimReadinessService(pool, mockScopeService, stubLinkage());
     const result = await svc.evaluate(USER_ID, PATIENT_ID);
 
     const check = result.checks.find((c) => c.id === "mds_evidence_complete:sr-1:R07.4");
@@ -143,7 +144,7 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
         has_note_type: false,
       },
     ]);
-    const svc = new ClaimReadinessService(pool, mockScopeService);
+    const svc = new ClaimReadinessService(pool, mockScopeService, stubLinkage());
     const result = await svc.evaluate(USER_ID, PATIENT_ID);
 
     const check = result.checks.find((c) => c.id === "mds_evidence_complete:sr-1:R07.4");
@@ -153,7 +154,7 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
 
   it("adds no mds_evidence_complete check when no order has a mapping with MDS requirements", async () => {
     const pool = makeSequencedPool([]);
-    const svc = new ClaimReadinessService(pool, mockScopeService);
+    const svc = new ClaimReadinessService(pool, mockScopeService, stubLinkage());
     const result = await svc.evaluate(USER_ID, PATIENT_ID);
 
     expect(result.checks.some((c) => c.id.startsWith("mds_evidence_complete:"))).toBe(false);
@@ -182,7 +183,7 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
         has_note_type: false,
       },
     ]);
-    const svc = new ClaimReadinessService(pool, mockScopeService);
+    const svc = new ClaimReadinessService(pool, mockScopeService, stubLinkage());
     const result = await svc.evaluate(USER_ID, PATIENT_ID);
 
     const mdsChecks = result.checks.filter((c) => c.id.startsWith("mds_evidence_complete:sr-1"));
@@ -207,7 +208,7 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
         has_note_type: false,
       },
     ]);
-    const svc = new ClaimReadinessService(pool, mockScopeService);
+    const svc = new ClaimReadinessService(pool, mockScopeService, stubLinkage());
     const result = await svc.evaluate(USER_ID, PATIENT_ID);
 
     // Defense-in-depth: this check only ever reports presence/absence, so
@@ -218,5 +219,61 @@ describe("ClaimReadinessService — R11 MDS evidence completeness", () => {
         expect(check.detail.toLowerCase()).not.toContain(word);
       }
     }
+  });
+});
+
+/** LinkageVerdictsService would query the pool and the graph. Stubbed offline: graph_available
+ *  false is the honest default here, because "the rules could not be reached" is a state the gate
+ *  must handle -- and these tests should exercise it rather than assume a verdict arrived. */
+function stubLinkage(
+  over: { graph_available?: boolean; pairs?: readonly unknown[] } = {},
+): LinkageVerdictsService {
+  return {
+    verdicts: async () => ({
+      patient_id: "patient-001",
+      pairs: over.pairs ?? [],
+      graph_available: over.graph_available ?? false,
+      disclaimer: "",
+    }),
+  } as unknown as LinkageVerdictsService;
+}
+
+describe("ClaimReadinessService — R16 pre-authorization", () => {
+  const USER_ID = "user-001";
+  const PATIENT_ID = "patient-001";
+  const scope = { assertPatientInScope: jest.fn().mockResolvedValue(undefined) } as unknown as PatientScopeService;
+
+  const run = async (linkage: LinkageVerdictsService) => {
+    const pool = makeSequencedPool([]);
+    const svc = new ClaimReadinessService(pool, scope, linkage);
+    return svc.evaluate(USER_ID, PATIENT_ID);
+  };
+
+  it("warns and counts the orders the payer requires pre-authorization for", async () => {
+    const out = await run(
+      stubLinkage({
+        graph_available: true,
+        pairs: [{ pre_auth_required: true }, { pre_auth_required: false }],
+      }),
+    );
+    const check = out.checks.find((c) => c.id === "pre_authorization")!;
+    expect(check.status).toBe("warning");
+    expect(check.detail).toContain("1 ordered service");
+  });
+
+  it("passes only when the rules were reached and required nothing", async () => {
+    const out = await run(stubLinkage({ graph_available: true, pairs: [{ pre_auth_required: false }] }));
+    expect(out.checks.find((c) => c.id === "pre_authorization")!.status).toBe("pass");
+  });
+
+  it("does NOT pass when the rulebook could not be reached", async () => {
+    // The failure this guards: an unreachable rulebook reported as "nothing needs pre-authorization",
+    // which is the gate inventing a clean bill of health.
+    const out = await run(stubLinkage({ graph_available: false }));
+    const check = out.checks.find((c) => c.id === "pre_authorization")!;
+    expect(check.status).toBe("not_applicable");
+    expect(check.status).not.toBe("pass");
+    expect(check.detail).toContain("Not a pass");
+    expect(out.overall).not.toBe("ready");
   });
 });
