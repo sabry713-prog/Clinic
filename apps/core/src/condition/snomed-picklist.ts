@@ -10,6 +10,11 @@
 export interface CodedTerm {
   readonly code: string;
   readonly code_display: string;
+  /** Words a clinician may write for this concept. The display is a formal term; a note says
+   *  "blockage in his small intestine", which shares no word with "Intestinal obstruction". Without
+   *  these the correct note produces no suggestion at all -- the failure is silence, not a wrong
+   *  answer, so nobody notices it. Codes stay the single source of truth; only the vocabulary grows. */
+  readonly synonyms?: readonly string[];
 }
 
 export const SNOMED_PICKLIST: readonly CodedTerm[] = [
@@ -33,6 +38,10 @@ export const SNOMED_PICKLIST: readonly CodedTerm[] = [
   { code: "267036007", code_display: "Dyspnea (shortness of breath)" },
   { code: "29857009", code_display: "Chest pain" },
   { code: "21522001", code_display: "Abdominal pain" },
+  { code: "81060008", code_display: "Intestinal obstruction",
+    synonyms: ["bowel obstruction", "small bowel obstruction", "blocked bowel", "blockage", "obstruction", "ileus", "small intestine"] },
+  { code: "14760008", code_display: "Constipation",
+    synonyms: ["constipated", "severe constipation", "bowels not opened", "infrequent bowel movement"] },
   { code: "161891005", code_display: "Backache" },
   { code: "57676002", code_display: "Joint pain (arthralgia)" },
   { code: "422587007", code_display: "Nausea" },
@@ -87,7 +96,9 @@ export function suggestCodes(query: string, limit = 5): CodedTerm[] {
   const scored = SNOMED_PICKLIST.map((term) => {
     const display = term.code_display.toLowerCase();
     const head = display.split(" (")[0]!;
-    const words = significantWords(display);
+    // The display for the label, the synonyms for the search: a note says "blockage", the code
+    // says "Intestinal obstruction", and matching on the display alone finds nothing.
+    const words = significantWords([display, ...(term.synonyms ?? [])].join(" "));
     const matched = words.filter((w) => qWords.has(w)).length;
     const coverage = words.length === 0 ? 0 : matched / words.length;
     const qualifies = matched >= 2 || coverage >= 0.5 || (words.length === 1 && matched === 1);

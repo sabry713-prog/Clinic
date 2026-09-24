@@ -39,7 +39,11 @@ describe("suggestCodes — exact matching unchanged", () => {
   });
 
   it("still returns nothing for unmatched wording (no guessing)", () => {
-    expect(suggestCodes("intestinal obstruction")).toEqual([]);
+    // Was "intestinal obstruction", which returned [] only because the vocabulary lacked the term.
+    // That term now exists -- verified against SNOMED CT 81060008 -- so the guard needs wording that
+    // is genuinely outside the picklist; otherwise it would fail the moment the vocabulary grew,
+    // which is exactly what happened.
+    expect(suggestCodes("discussed diet and exercise")).toEqual([]);
   });
 });
 
@@ -59,5 +63,24 @@ describe("suggestCodes — a reported case", () => {
       expect.arrayContaining(["Cough", "Fever"]),
     );
     expect(suggestCodes("diabetes").map((t) => t.code_display)).toContain("Diabetes mellitus");
+  });
+});
+
+describe("suggestCodes — vocabulary the clinician actually writes", () => {
+  it("finds intestinal obstruction from a note that shares no word with the display", () => {
+    // Reported from the running app: this assessment produced "Urinary tract infection" (a stale
+    // note) and, once that was fixed, nothing at all -- "Intestinal obstruction" shares no word
+    // with "blockage in his small intestine".
+    const out = suggestCodes("blockage in his small intestine");
+    expect(out.map((t) => t.code)).toContain("81060008");
+  });
+
+  it("finds constipation, which the clinician names outright", () => {
+    const out = suggestCodes("severe constipation for more than 10 days");
+    expect(out.map((t) => t.code)).toContain("14760008");
+  });
+
+  it("still proposes nothing for a note with no clinical term", () => {
+    expect(suggestCodes("review in one week").length).toBe(0);
   });
 });
