@@ -249,6 +249,21 @@ describe("JourneyView", () => {
     expect(await screen.findByTestId("submit-msg")).toBeInTheDocument();
   });
 
+  it("a blocked readiness verdict keeps submit disabled even when the draft is ready", async () => {
+    // The case this guards: the draft is ready, a readiness check has failed, and the claim must not
+    // leave. Before the button consumed the gate's verdict it was enabled here -- the checks were
+    // displayed and then ignored, which made the gate a report.
+    mocked.claimReadiness.mockResolvedValue({ overall: "blocked", checks: [] } as never);
+    mocked.claimDraft.mockResolvedValue({ ready: true, blockers: [], bundle: {} } as never);
+
+    renderJourney();
+    gotoStage("submit");
+    const btn = await screen.findByTestId("submit-claim");
+    await waitFor(() => expect(btn).toBeDisabled());
+    expect(await screen.findByTestId("submit-blocked")).toBeInTheDocument();
+    expect(mocked.submitClaim).not.toHaveBeenCalled();
+  });
+
   it("submit stays disabled while blockers remain", async () => {
     mocked.claimReadiness.mockResolvedValue({ overall: "blocked", checks: [] } as never);
     mocked.claimDraft.mockResolvedValue({ ready: false, blockers: ["link orders"], bundle: null } as never);
