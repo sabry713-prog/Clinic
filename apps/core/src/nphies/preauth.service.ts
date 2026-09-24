@@ -1,3 +1,5 @@
+import type { Pool } from "pg";
+import { PG_POOL } from "../database/database.module";
 /**
  * PreAuthService — proxies the NPHIES engine (services/nphies-engine, Sprint 9).
  *
@@ -14,7 +16,7 @@
  *                     as an RxJS Observable for NestJS's @Sse() decorator.
  */
 
-import { Injectable, Logger, ServiceUnavailableException } from "@nestjs/common";
+import { Injectable, Inject, Logger, ServiceUnavailableException } from "@nestjs/common";
 import type { MessageEvent } from "@nestjs/common";
 import { Observable } from "rxjs";
 
@@ -66,11 +68,16 @@ export class PreAuthService {
   private readonly logger = new Logger(PreAuthService.name);
   private readonly engineUrl: string;
 
-  constructor() {
+  constructor(@Inject(PG_POOL) private readonly pool: Pool) {
     this.engineUrl = process.env.NPHIES_ENGINE_URL ?? "http://127.0.0.1:5006";
   }
 
-  async submitPreAuth(body: PreAuthSubmission): Promise<QueuedResult> {
+  /**
+   * @param patientId The patient whose claim this pre-auth belongs to. Passed explicitly rather than
+   *   read off the body: the URL owns the patient, and a body-supplied patient id is a value the
+   *   caller could point at someone else's record.
+   */
+  async submitPreAuth(patientId: string, body: PreAuthSubmission): Promise<QueuedResult> {
     let response: Response;
     try {
       response = await fetch(`${this.engineUrl}/api/v1/nphies/prior-auth`, {
@@ -89,7 +96,36 @@ export class PreAuthService {
       this.logger.error("nphies_engine_error", { status: response.status });
       throw unavailable("NPHIES engine returned an error");
     }
-    return (await response.json()) as QueuedResult;
+    const queued = (await response.json()) as QueuedResult;
+
+    // Record it. Without a row the payer's answer to "does this need authorization" is the only thing
+    // that survives, so the gate can warn but never prevent a submission whose authorization is
+    // outstanding. A failure here must not lose the submission the engine already accepted, so it is
+    // logged and the queue result is still returned -- but it is never swallowed silently.
+    try {
+      await this.pool.query(
+        `INSERT INTO app.nphies_preauth
+           (patient_id, encounter_id, service_code, service_display, diagnosis_icd10,
+            status, mode, engine_reference, response_json)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [
+          patientId,
+          body.encounter_id || null,
+          body.sbs_code,
+          body.sbs_display ?? null,
+          body.icd10_code,
+          queued.status,
+          (queued as { mode?: string }).mode ?? "unknown",
+          (queued as { id?: string }).id ?? null,
+          queued,
+        ],
+      );
+    } catch (err) {
+      this.logger.error("preauth_record_failed", {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return queued;
   }
 
   /**

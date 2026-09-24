@@ -301,7 +301,7 @@ export class NphiesController {
   ) {
     // Scope is enforced by the same service every other patient route uses.
     await this.scope.assertPatientInScope(uid(req), patientId);
-    const result = await this.preAuth.submitPreAuth(body);
+    const result = await this.preAuth.submitPreAuth(patientId, body);
 
     // Codes and identifiers only -- the clinical_document (SOAP note) is never
     // written to the audit metadata (PHI).
