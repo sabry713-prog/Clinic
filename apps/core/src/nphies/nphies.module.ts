@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { NphiesController } from "./nphies.controller";
+import { NecessityLookupService } from "./necessity-lookup.service";
 import { ClaimReadinessService } from "./claim-readiness.service";
 import { IcdCodingService } from "./icd-coding.service";
 import { SbsCodingService } from "./sbs-coding.service";
@@ -15,7 +16,7 @@ import { AuthModule } from "../auth/auth.module";
 @Module({
   imports: [PatientModule, RbacModule, AuthModule],
   controllers: [NphiesController],
-  providers: [ClaimReadinessService, IcdCodingService, SbsCodingService, LinkageService, LinkageVerdictsService, NphiesConnectorService, RejectionRiskService, PreAuthService],
+  providers: [NecessityLookupService, ClaimReadinessService, IcdCodingService, SbsCodingService, LinkageService, LinkageVerdictsService, NphiesConnectorService, RejectionRiskService, PreAuthService],
   // ClaimReadinessService is re-exported for the claim-integrity module's
   // batch simulator, which reuses the exact same deterministic checks.
   exports: [ClaimReadinessService],

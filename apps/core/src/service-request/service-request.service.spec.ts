@@ -5,6 +5,7 @@
  * confirm the matchCatalog() extraction didn't change its behavior.
  */
 
+import { NecessityLookupService } from "../nphies/necessity-lookup.service";
 import { ServiceRequestService } from "./service-request.service";
 import type { PatientScopeService } from "../patient/patient-scope.service";
 import type { EncryptionService } from "../security/encryption.service";
@@ -48,7 +49,7 @@ describe("ServiceRequestService", () => {
 
   describe("extractFromAdHocText", () => {
     it("matches without any ORDER_CONTEXT wording (quick-entry box is itself an ordering context)", async () => {
-      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption(), stubNecessity());
       const result = await svc.extractFromAdHocText(USER_ID, PATIENT_ID, "chest x-ray, CBC");
 
       const displays = result.map((c) => c.code_display).sort();
@@ -61,7 +62,7 @@ describe("ServiceRequestService", () => {
     it("extracts ECHO, the dictated shorthand for echocardiography", async () => {
       // Reported from a live test: the Plan read "ECHO. And MRI." and only MRI came back,
       // because the catalogue pattern expected "echocardiogram"/"echocardiography" spelled out.
-      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption(), stubNecessity());
       const result = await svc.extractFromAdHocText(USER_ID, PATIENT_ID, "ECHO. And MRI.");
 
       const displays = result.map((c) => c.code_display).sort();
@@ -69,7 +70,7 @@ describe("ServiceRequestService", () => {
     });
 
     it("drops the generic X-ray when Chest X-ray also matches the same phrase", async () => {
-      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption(), stubNecessity());
       const result = await svc.extractFromAdHocText(USER_ID, PATIENT_ID, "chest x-ray");
 
       expect(result.map((c) => c.code_display)).toEqual(["Chest X-ray"]);
@@ -77,7 +78,7 @@ describe("ServiceRequestService", () => {
 
     it("returns empty for blank input without touching the pool", async () => {
       const pool = { query: jest.fn() } as unknown as Pool;
-      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption(), stubNecessity());
       const result = await svc.extractFromAdHocText(USER_ID, PATIENT_ID, "   ");
 
       expect(result).toEqual([]);
@@ -85,7 +86,7 @@ describe("ServiceRequestService", () => {
     });
 
     it("returns empty when nothing in the catalog matches", async () => {
-      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService({} as Pool, mockScopeService, makeEncryption(), stubNecessity());
       const result = await svc.extractFromAdHocText(USER_ID, PATIENT_ID, "check on the patient");
 
       expect(result).toEqual([]);
@@ -100,7 +101,7 @@ describe("ServiceRequestService", () => {
         ],
         "app.document_draft": [],
       });
-      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption(), stubNecessity());
       const result = await svc.extractCandidates(USER_ID, PATIENT_ID);
 
       // "Chest x-ray was normal" has no ordering verb -> not a candidate.
@@ -118,7 +119,7 @@ describe("ServiceRequestService", () => {
           { id: "draft-1", signed_text: "enc:CBC ordered on discharge.", signed_text_key_id: "test:v1" },
         ],
       });
-      const svc = new ServiceRequestService(pool, mockScopeService, encryption);
+      const svc = new ServiceRequestService(pool, mockScopeService, encryption, stubNecessity());
       const result = await svc.extractCandidates(USER_ID, PATIENT_ID);
 
       expect(encryption.decrypt).toHaveBeenCalledWith("enc:CBC ordered on discharge.", "test:v1");
@@ -134,7 +135,7 @@ describe("ServiceRequestService", () => {
           { id: "draft-1", signed_text: "CBC ordered on discharge.", signed_text_key_id: null },
         ],
       });
-      const svc = new ServiceRequestService(pool, mockScopeService, encryption);
+      const svc = new ServiceRequestService(pool, mockScopeService, encryption, stubNecessity());
       const result = await svc.extractCandidates(USER_ID, PATIENT_ID);
 
       expect(encryption.decrypt).not.toHaveBeenCalled();
@@ -159,7 +160,7 @@ describe("ServiceRequestService", () => {
           },
         ],
       });
-      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption(), stubNecessity());
 
       // Client sends a bogus excerpt/category alongside a valid code — only
       // the code is used as the lookup key; everything else must be re-derived.
@@ -203,7 +204,7 @@ describe("ServiceRequestService", () => {
         "hospital.document_reference": [],
         "app.document_draft": [],
       });
-      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption());
+      const svc = new ServiceRequestService(pool, mockScopeService, makeEncryption(), stubNecessity());
 
       const created = await svc.confirmAndCreate(
         USER_ID,
@@ -216,3 +217,10 @@ describe("ServiceRequestService", () => {
     });
   });
 });
+
+/** The necessity lookup would call the graph service. Stubbed so these tests stay offline, and
+ *  returning null is the honest default: "the rules could not be reached" is a state the caller
+ *  must handle, so the tests should exercise it rather than pretend a verdict arrived. */
+function stubNecessity(): NecessityLookupService {
+  return { lookup: async () => null } as unknown as NecessityLookupService;
+}

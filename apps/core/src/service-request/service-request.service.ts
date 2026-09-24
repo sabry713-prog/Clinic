@@ -11,6 +11,7 @@
 import { Injectable, Inject } from "@nestjs/common";
 import type { Pool } from "pg";
 import { PG_POOL } from "../database/database.module";
+import { NecessityLookupService } from "../nphies/necessity-lookup.service";
 import { PatientScopeService } from "../patient/patient-scope.service";
 import { EncryptionService } from "../security/encryption.service";
 
@@ -169,6 +170,7 @@ export class ServiceRequestService {
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly scope: PatientScopeService,
     private readonly encryption: EncryptionService,
+    private readonly necessity: NecessityLookupService,
   ) {
     this.graphUrl = process.env.GRAPH_SERVICE_URL ?? "http://127.0.0.1:5004";
   }
@@ -322,36 +324,13 @@ export class ServiceRequestService {
   }
 
   /** One deterministic necessity lookup. Null when the graph is unreachable -- never a guess. */
+  /** Delegates to NecessityLookupService so the ordering step and the submission gate ask the
+   *  payer the same question. Kept as a method so no call site changed when it moved. */
   private async lookupNecessity(
     icd10Code: string,
     sbsCode: string,
-  ): Promise<{
-    status: "GREEN" | "YELLOW" | "RED";
-    pre_auth_required: boolean | null;
-    suggested_codes: { icd10: string; description: string }[];
-  } | null> {
-    try {
-      const response = await fetch(`${this.graphUrl}/api/v1/nphies/validate-necessity`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ icd10_code: icd10Code, service_or_drug_code: sbsCode }),
-        signal: AbortSignal.timeout(30_000),
-      });
-      if (!response.ok) return null;
-      const body = (await response.json()) as {
-        status?: string;
-        pre_auth_required?: boolean;
-        suggested_codes?: { icd10: string; description: string }[];
-      };
-      if (body.status !== "GREEN" && body.status !== "YELLOW" && body.status !== "RED") return null;
-      return {
-        status: body.status,
-        pre_auth_required: body.pre_auth_required ?? null,
-        suggested_codes: body.suggested_codes ?? [],
-      };
-    } catch {
-      return null;
-    }
+  ): Promise<import("../nphies/necessity-lookup.service").NecessityVerdict | null> {
+    return this.necessity.lookup(icd10Code, sbsCode);
   }
 
   /**
