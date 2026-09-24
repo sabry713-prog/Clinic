@@ -203,6 +203,8 @@ interface CortexState {
   toggleChecklistItem: (id: string) => void;
   /** Remove a suggested checklist entry for this encounter (the deselect). */
   removeChecklistItem: (id: string) => void;
+  /** Add the clinician's own row (see the implementation: never tagged as a suggestion). */
+  addChecklistItem: (label: string) => void;
   /** Supporting transcript quote for an LLM-derived suggestion, if any. */
   checklistQuote: (id: string) => string | undefined;
   setActiveAgent: (agent: AgentId) => void;
@@ -1446,6 +1448,21 @@ export function CortexProvider({
     };
   }, [patientId, encounterId]);
 
+  /** The clinician's OWN checklist row, typed by them.
+   *
+   *  Stored with `proposed: false` on purpose: this is the clinician's assertion, not a system
+   *  suggestion, so it must not wear the "recommended" tag or the quote-from-dictation tooltip. The
+   *  system never invents a row here -- it only keeps the one the clinician asked for. */
+  const addChecklistItem = useCallback((label: string) => {
+    const text = label.trim();
+    if (!text) return;
+    setChecklist((prev) => {
+      // A row the clinician already has, however it got there, is not duplicated.
+      if (prev.some((i) => i.label.trim().toLowerCase() === text.toLowerCase())) return prev;
+      return [...prev, { id: `phys-${Date.now().toString(36)}`, label: text, done: false }];
+    });
+  }, []);
+
   const removeChecklistItem = useCallback(
     (id: string) => {
       dismissedChecklistIds.current = new Set([...dismissedChecklistIds.current, id]);
@@ -1612,6 +1629,7 @@ export function CortexProvider({
       updateSoap,
       toggleChecklistItem,
       removeChecklistItem,
+      addChecklistItem,
       checklistQuote,
       setActiveAgent,
       toggleDrawer,

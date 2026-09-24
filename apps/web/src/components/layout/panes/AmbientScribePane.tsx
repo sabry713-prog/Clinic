@@ -45,7 +45,7 @@ function Waveform({ active }: { readonly active: boolean }): JSX.Element {
 export default function AmbientScribePane(): JSX.Element {
   const {
     recording, elapsedSeconds, transcript, soap, soapError, soapLoading, checklist,
-    toggleRecording, updateSoap, toggleChecklistItem, removeChecklistItem, checklistQuote,
+    toggleRecording, updateSoap, toggleChecklistItem, removeChecklistItem, addChecklistItem, checklistQuote,
     dictationMode, patientId, transcribing, dictationError,
     setDictationMode, appendTranscriptLine, setTranscribing, setDictationError,
     activeSpeaker, setActiveSpeaker,
@@ -109,6 +109,13 @@ export default function AmbientScribePane(): JSX.Element {
       el.scrollTop = el.scrollHeight;
     }
   }, [transcript.length]);
+
+  /** The clinician's own row, being typed. */
+  const [newItem, setNewItem] = useState("");
+  const commitNewItem = (): void => {
+    addChecklistItem(newItem);
+    setNewItem("");
+  };
 
   const doneCount = checklist.filter((c) => c.done).length;
 
@@ -365,6 +372,31 @@ export default function AmbientScribePane(): JSX.Element {
               </li>
             ))}
           </ul>
+
+          {/* The clinician's own row. Everything above comes from the note; when the note does not
+              name what they need, they must be able to say it rather than be told the list is
+              complete. Their row is stored as theirs -- never tagged as a system suggestion. */}
+          <div className="mt-2 flex gap-1.5">
+            <input
+              type="text"
+              value={newItem}
+              onChange={(e) => setNewItem(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") commitNewItem(); }}
+              placeholder="Add your own item…"
+              aria-label="Add a checklist item"
+              data-testid="checklist-add-input"
+              className="min-w-0 flex-1 rounded-full border border-line bg-white px-2.5 py-1 text-[11px] text-ink"
+            />
+            <button
+              type="button"
+              onClick={commitNewItem}
+              disabled={newItem.trim().length === 0}
+              data-testid="checklist-add-button"
+              className="shrink-0 rounded-full border border-line bg-white px-2 py-1 text-[11px] text-ink-soft hover:border-brand-indigo disabled:opacity-50"
+            >
+              + Add
+            </button>
+          </div>
         </div>
       </div>
     </section>

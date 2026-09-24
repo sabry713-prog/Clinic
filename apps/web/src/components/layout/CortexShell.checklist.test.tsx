@@ -177,6 +177,30 @@ describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
     expect(deriveChecklistDone("", false).size).toBe(0);
   });
 
+    it("keeps a row the clinician adds when the note did not name it", async () => {
+      // The complaint this answers: the list is built from the note, so a row the note never mentions
+      // simply was not there -- and the clinician had no way to say it. Adding it is their assertion;
+      // the system's job is to keep it, not to have thought of it.
+      renderScribe([]);
+      fireEvent.change(screen.getByTestId("checklist-add-input"), {
+        target: { value: "Check stool sample" },
+      });
+      fireEvent.click(screen.getByTestId("checklist-add-button"));
+      expect(await screen.findByLabelText("Check stool sample")).toBeInTheDocument();
+    });
+
+    it("adds nothing for an empty box, and does not duplicate an existing row", async () => {
+      renderScribe([]);
+      fireEvent.click(screen.getByTestId("checklist-add-button"));
+      expect(screen.queryAllByLabelText(/^\s*$/)).toHaveLength(0);
+
+      for (const _ of [1, 2]) {
+        fireEvent.change(screen.getByTestId("checklist-add-input"), { target: { value: "Review diet" } });
+        fireEvent.click(screen.getByTestId("checklist-add-button"));
+      }
+      expect(await screen.findAllByLabelText("Review diet")).toHaveLength(1);
+    });
+
   it("ticks what the pasted note documents, and leaves vitals to the record", async () => {
     const container = renderScribe([]);
     const textareas = container.querySelectorAll("textarea");
