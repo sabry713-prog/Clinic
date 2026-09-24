@@ -186,10 +186,12 @@ describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
     fireEvent.change(textareas[1] as HTMLTextAreaElement, {
       target: { value: "Heart sounds NOT NORMAL, murmurs. Chest unclear." },
     });
-    // onset/duration + cardiovascular examination, and NOT vitals: the mocked API returns no
-    // observations for this encounter, so the row stays open.
+    // onset/duration only, out of the two rows true of any encounter, and NOT vitals: the mocked API
+    // returns no observations for this encounter, so that row stays open. This note used to tick a
+    // third row -- cardiovascular examination -- which was in the template for every patient
+    // regardless of complaint; it now arrives from the note only when the note raises it.
     await waitFor(() => {
-      expect(screen.getByText(/^2\/6$/)).toBeInTheDocument();
+      expect(screen.getByText(/^1\/2$/)).toBeInTheDocument();
     });
   });
 

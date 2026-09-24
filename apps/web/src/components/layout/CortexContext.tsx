@@ -355,13 +355,21 @@ export function mergeChecklistItems(
  * flag never depended on the encounter -- it did not move no matter what the note said. Rows now
  * start open and are ticked by evidence below.
  */
+/**
+ * Rows true of every encounter, whatever the complaint.
+ *
+ * This list used to carry a cardiac workup -- cardiovascular examination, ECG, lipid profile -- for
+ * every patient, so a clinician documenting an abdominal complaint was shown three rows that could
+ * never apply and had to dismiss them. A checklist that names the wrong organ is one nobody reads,
+ * and dismissing rows that should never have been there costs exactly the time this is meant to save.
+ *
+ * Anything complaint-specific comes from proposeChecklist, which reads the note and the transcript.
+ * The catalog already covers each row removed here, so nothing was lost: "ECG" reappears when the
+ * note says ECG, and not before.
+ */
 const CHECKLIST_TEMPLATE: readonly ChecklistItem[] = [
   { id: "c1", label: "Document onset and duration", done: false },
   { id: "c2", label: "Record vital signs", done: false },
-  { id: "c3", label: "Cardiovascular examination", done: false },
-  { id: "c4", label: "Order ECG", done: false },
-  { id: "c5", label: "Review lipid profile", done: false },
-  { id: "c6", label: "Arrange follow-up", done: false },
 ];
 
 /**

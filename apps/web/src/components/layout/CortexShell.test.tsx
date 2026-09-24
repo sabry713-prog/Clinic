@@ -61,7 +61,9 @@ describe("Ambient scribe pane", () => {
 
   it("toggles smart checklist items", () => {
     renderShell();
-    const item = screen.getByLabelText("Order ECG") as HTMLInputElement;
+    // The template no longer carries a cardiac workup for every patient; "Record vital signs" is
+    // one of the two rows true of any encounter, so it is what this toggle test should exercise.
+    const item = screen.getByLabelText("Record vital signs") as HTMLInputElement;
     expect(item.checked).toBe(false);
     fireEvent.click(item);
     expect(item.checked).toBe(true);
