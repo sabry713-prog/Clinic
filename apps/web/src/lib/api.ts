@@ -699,6 +699,9 @@ export interface DraftSummary {
   readonly language: string;
   readonly status: "draft" | "signed";
   readonly created_at: string;
+  /** When the note was last written. Later stages pick the newest note from this list, so this --
+   *  not created_at -- is what decides which note they analyse. */
+  readonly updated_at: string;
   readonly signed_at: string | null;
 }
 

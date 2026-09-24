@@ -53,10 +53,17 @@ async function loadSoapAssessment(patientId: string, encounterId?: string | null
       // This encounter's note when the row identifies one. Rows written before the column existed
       // carry none and fall back to the newest — all the older data allows, and the reason the
       // column was added: on a two-encounter day, recency picks the other visit's note.
-      .filter((d) => !encounterId || !d.encounter_id || d.encounter_id === encounterId)
+      // Sorted by when the note was last written, not created: a clinician editing an existing note
+      // updates it in place, so created_at ordered notes by a past that no longer exists. Ordering by
+      // creation once put an older draft ahead of the note the doctor had just written, and the
+      // suggestions then described a note that was no longer on the record.
       .slice()
-      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
-    const newest = notes[0];
+      .sort((a, b) => ((a.updated_at ?? a.created_at) < (b.updated_at ?? b.created_at) ? 1 : -1));
+    // Prefer this encounter's note, but a note stamped for another encounter must not empty the
+    // step: falling through to the browser session is how a demo transcript once supplied the
+    // assessment for suggestions that had nothing to do with the patient in front of the doctor.
+    const scoped = notes.filter((d) => !encounterId || !d.encounter_id || d.encounter_id === encounterId);
+    const newest = scoped[0] ?? notes[0];
     if (newest) {
       const draft = await api.drafts.get(newest.id);
       const saved = (draft.sections_json ?? []).find((s) => s.key === "assessment")?.text?.trim() ?? "";

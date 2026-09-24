@@ -477,11 +477,17 @@ export class DraftService {
   }
 
   // List this patient's drafts + signed documents (newest first).
-  async listForPatient(userId: string, patientId: string): Promise<{ id: string; document_type: string; language: string; status: string; created_at: string; signed_at: string | null; encounter_id?: string | null }[]> {
+  async listForPatient(userId: string, patientId: string): Promise<{ id: string; document_type: string; language: string; status: string; created_at: string; updated_at: string; signed_at: string | null; encounter_id?: string | null }[]> {
     await this.scope.assertPatientInScope(userId, patientId);
     const res = await this.pool.query(
-      `SELECT id, document_type, language, status, created_at::text, signed_at::text, encounter_id
-         FROM app.document_draft WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      // Ordered by when the note was last WRITTEN, not when the row was first created: a clinician
+      // editing an existing note updates it in place, so created_at described a note that no longer
+      // exists while a newer-created row (an earlier demo draft, say) won the sort and was read
+      // instead. Later stages pick "the newest note" from this list, so the order decides what they
+      // analyse.
+      `SELECT id, document_type, language, status, created_at::text, updated_at::text AS updated_at,
+              signed_at::text, encounter_id
+         FROM app.document_draft WHERE patient_id = $1 ORDER BY updated_at DESC LIMIT 50`,
       [patientId]);
     return res.rows as DraftRow[];
   }
@@ -684,6 +690,10 @@ const DRAFT_COLS = `id, patient_id, encounter_id, document_type, language, speci
 
 export interface DraftRow {
   id: string;
+  /** When the note was last written. Readers that ask for "the newest note" order on this: a
+   *  clinician editing an existing note updates it in place, so created_at describes a past the
+   *  note no longer reflects. */
+  updated_at: string;
   /** The encounter this note documents. Null on rows written before the column existed; the readers
    *  fall back to the newest note for the patient in that case. */
   encounter_id?: string | null;
