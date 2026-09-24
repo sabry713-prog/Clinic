@@ -296,3 +296,36 @@ describe("ClaimReadinessService — R16 pre-authorization", () => {
     expect(out.overall).not.toBe("ready");
   });
 });
+
+describe("ClaimReadinessService — R15 order prerequisites", () => {
+  const USER_ID = "user-001";
+  const PATIENT_ID = "patient-001";
+  const scope = { assertPatientInScope: jest.fn().mockResolvedValue(undefined) } as unknown as PatientScopeService;
+
+  /** Answers by SQL, not by call order: the checks' sequence is an implementation detail, and a test
+   *  that pins it breaks every time a check is added -- which is what happened to the mocks above. */
+  const poolAnswering = (prereqRows: readonly unknown[]) => {
+    const pool = makeSequencedPool([]);
+    (pool.query as unknown as jest.Mock).mockImplementation(async (sql: string) =>
+      /order_prerequisite/.test(String(sql)) ? { rows: prereqRows } : { rows: [] },
+    );
+    return pool;
+  };
+
+  const run = async (prereqRows: readonly unknown[]) => {
+    const svc = new ClaimReadinessService(poolAnswering(prereqRows), scope, stubLinkage());
+    return svc.evaluate(USER_ID, PATIENT_ID);
+  };
+
+  // The warning path (a prerequisite genuinely unmet) is NOT covered here. The mock would not
+  // return the prerequisite rows for this query, and after two attempts the honest move is to record
+  // the gap rather than keep tweaking a test until it agrees -- a test bent to pass proves nothing.
+  // That path is verified against the live database instead: a seeded patient has an MRI with no
+  // echocardiography on record, and the check names it.
+  it("passes when no ordered service is waiting on a prerequisite", async () => {
+    const out = await run([]);
+    const check = out.checks.find((c) => c.id === "order_prerequisites")!;
+    expect(check.status).toBe("pass");
+    expect(check.detail).toContain("No ordered service");
+  });
+});
