@@ -136,7 +136,14 @@
     "aiReceptionist": "AI Receptionist",
     "encounterView": "Encounter view",
     "resizeScribe": "Resize the scribe pane",
-    "resizeTeam": "Resize the AI team pane"
+    "resizeTeam": "Resize the AI team pane",
+    "tools": {
+      "narrative": "Researcher",
+      "handoff": "Handoff",
+      "refills": "Refills",
+      "interpreter": "Interpreter",
+      "search": "Search"
+    }
   },
   "claimSim": {
     "title": "Claim simulator — check before you send",
