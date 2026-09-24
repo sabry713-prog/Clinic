@@ -127,14 +127,17 @@ export default function AppShell(): JSX.Element {
 
   const onPatientPage = activePatientId !== null && location.pathname === `/patients/${activePatientId}`;
   const viewParam = onPatientPage ? searchParams.get("view") : null;
+  // Must agree with PatientDetailPage's own default: with no ?view= the page renders
+  // the Journey, so defaulting to "workspace" here highlighted Copilot while the
+  // Journey was on screen. Two places deciding one default is how they drift.
   const currentView = onPatientPage
     ? viewParam === "chart"
       ? "chart"
       : viewParam === "encounter"
         ? "encounter"
-        : viewParam === "journey"
-          ? "journey"
-          : "workspace"
+        : viewParam === "workspace"
+          ? "workspace"
+          : "journey"
     : null;
   const openCardParam = onPatientPage ? searchParams.get("open") : null;
 
