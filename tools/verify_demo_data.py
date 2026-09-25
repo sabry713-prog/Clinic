@@ -217,11 +217,37 @@ def report_totals() -> None:
         print(f"  {label:<42} {int(cypher(query)):>8}")
 
 
+def check_reference_data() -> None:
+    """The catalogues the product reads are data, so no unit test reads them.
+
+    During a repository consolidation a five-entry dev subset replaced the 10,081-entry official
+    service list. Every test stayed green, the graph gate stayed green, and the product could offer
+    five services while nothing said so. An equality check cannot catch that on its own -- seed the
+    graph from the same stub and both sides agree -- so this asserts a floor.
+    """
+    print("\nREFERENCE DATA -- the catalogues are real, not stubs")
+    path = ROOT / "data" / "ontologies" / "nphies_services.json"
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        check("nphies_services.json is readable", False, str(exc))
+        return
+    nodes = doc.get("nodes", [])
+    # A floor, not an exact count: CHI republishes and the list grows, and a gate that fails on a
+    # legitimate update gets switched off -- which is worse than the gap it was added for.
+    check("nphies_services.json holds the full catalogue, not a stub", len(nodes) >= 9000,
+          f"{len(nodes)} services")
+    malformed = [n for n in nodes[:200] if not (n.get("sbs_code") and n.get("description"))]
+    check("service entries carry an sbs_code and a description", not malformed,
+          f"{len(malformed)} of the first 200 malformed" if malformed else "sampled 200")
+
+
 def main() -> int:
     try:
         check_schema()
         check_seed()
         check_graph()
+        check_reference_data()
         report_totals()
     except (RuntimeError, ValueError, FileNotFoundError) as exc:
         print(f"\nverification could not run: {exc}", file=sys.stderr)
