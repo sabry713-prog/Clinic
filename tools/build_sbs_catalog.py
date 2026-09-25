@@ -72,7 +72,7 @@ def main() -> None:
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     print(f"wrote {OUT} -- {len(nodes):,} services, {OUT.stat().st_size:,} bytes")
-    for probe in ("55113-00-00", "63001-00-10", "11700-00-00", "90901-03-60", "73050-18-50", "11506-00-00", "57518-03-11"):
+    for probe in ("55113-00-00", "90901-03-60", "11700-00-00", "90901-03-60", "73050-18-50", "11506-00-00", "57518-03-11"):
         hit = next((n for n in nodes if n["sbs_code"] == probe), None)
         print(f"  {probe:13s} {'OK  ' + hit['description'][:52] if hit else 'NOT IN THE OFFICIAL CATALOGUE'}")
 

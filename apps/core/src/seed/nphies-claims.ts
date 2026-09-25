@@ -281,7 +281,7 @@ async function seed(): Promise<void> {
       { mrn: "MRN-008", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b2", orderCode: "43396009", category: "laboratory", sbsCode: "73050-18-50" },
       // E11.9 (T2DM) -> lumbar MRI: NO documented rule -> RED (conservative
       // pre-auth default) -- the at-risk finding for the coder review queue.
-      { mrn: "MRN-007", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b3", orderCode: "113091000", category: "imaging", sbsCode: "63001-00-10" },
+      { mrn: "MRN-007", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b3", orderCode: "113091000", category: "imaging", sbsCode: "90901-03-60" },
     ];
 
     for (const demoCase of SIMULATOR_CASES) {
