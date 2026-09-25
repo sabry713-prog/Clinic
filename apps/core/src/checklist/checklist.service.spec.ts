@@ -45,7 +45,19 @@ describe("ChecklistService", () => {
 
     const [sql, params] = (pool.query as jest.Mock).mock.calls[0]!;
     expect(sql).toContain("ON CONFLICT (encounter_id, item_id)");
-    expect(params).toEqual(["patient-1", "enc-1", "ecg", "done", "user-1"]);
+    // the sixth slot is the label: a catalog row carries none (see ChecklistService.set)
+    expect(params).toEqual(["patient-1", "enc-1", "ecg", "done", "user-1", null]);
+  });
+
+  it("stores the text of a row the clinician typed, so it survives the next page load", async () => {
+    const pool = makePool();
+    const service = new ChecklistService(pool, makeScope());
+
+    await service.set("user-1", "patient-1", "enc-1", "phys-abc", "done", "  Check stool sample  ");
+
+    const [sql, params] = (pool.query as jest.Mock).mock.calls[0]!;
+    expect(sql).toContain("label");
+    expect(params[5]).toBe("Check stool sample"); // trimmed: leading space is not content
   });
 
   it("clears a decision by deleting the row — absence is the cleared state", async () => {

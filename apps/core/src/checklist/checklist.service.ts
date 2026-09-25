@@ -16,6 +16,9 @@ export type ChecklistState = "done" | "dismissed";
 export interface ChecklistDecision {
   readonly item_id: string;
   readonly state: ChecklistState;
+  /** Present only for a row the CLINICIAN typed: a catalog row's text lives in the catalogs both
+   *  sides already have, and copying it here would give the record two texts to disagree about. */
+  readonly label?: string | null;
 }
 
 @Injectable()
@@ -28,7 +31,7 @@ export class ChecklistService {
   async list(userId: string, patientId: string, encounterId: string): Promise<readonly ChecklistDecision[]> {
     await this.scope.assertPatientInScope(userId, patientId);
     const res = await this.pool.query<ChecklistDecision>(
-      `SELECT item_id, state FROM app.encounter_checklist
+      `SELECT item_id, state, label FROM app.encounter_checklist
         WHERE patient_id = $1 AND encounter_id = $2
         ORDER BY item_id`,
       [patientId, encounterId],
@@ -46,6 +49,7 @@ export class ChecklistService {
     encounterId: string,
     itemId: string,
     state: ChecklistState | null,
+    label?: string | null,
   ): Promise<void> {
     await this.scope.assertPatientInScope(userId, patientId);
     const item = (itemId ?? "").trim();
@@ -60,11 +64,13 @@ export class ChecklistService {
     }
 
     await this.pool.query(
-      `INSERT INTO app.encounter_checklist (patient_id, encounter_id, item_id, state, updated_by)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO app.encounter_checklist (patient_id, encounter_id, item_id, state, updated_by, label)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (encounter_id, item_id)
-       DO UPDATE SET state = EXCLUDED.state, updated_by = EXCLUDED.updated_by, updated_at = now()`,
-      [patientId, encounterId, item, state, userId],
+       DO UPDATE SET state = EXCLUDED.state, updated_by = EXCLUDED.updated_by,
+                     label = COALESCE(EXCLUDED.label, app.encounter_checklist.label),
+                     updated_at = now()`,
+      [patientId, encounterId, item, state, userId, label?.trim() ? label.trim() : null],
     );
   }
 }

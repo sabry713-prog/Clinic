@@ -19,6 +19,19 @@ class SetChecklistDto {
   @IsOptional()
   @IsIn(["done", "dismissed", null])
   state?: ChecklistState | null;
+
+  /**
+   * The text of a row the clinician typed. Catalog rows omit it -- their text lives in the catalogs
+   * both sides already hold.
+   *
+   * It is deliberately NOT written to the audit event below: the audit contract excludes free text
+   * (see the comment there), and this is the clinician's own wording. The row is recorded; the words
+   * stay in the checklist table where they belong.
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  label?: string;
 }
 
 function uid(req: Request): string {
@@ -51,7 +64,7 @@ export class ChecklistController {
   @HttpCode(200)
   @ApiOperation({ summary: "Set or clear one checklist decision (done / dismissed / cleared)" })
   async set(@Req() req: Request, @Param("id") id: string, @Query("encounter_id") encounterId: string, @Body() body: SetChecklistDto) {
-    await this.checklist.set(uid(req), id, (encounterId ?? "").toString(), body.item_id, body.state ?? null);
+    await this.checklist.set(uid(req), id, (encounterId ?? "").toString(), body.item_id, body.state ?? null, body.label ?? null);
     // The decision itself, not the note: no clinical content, no free text (audit contract §7).
     await writeAuditEvent(this.pool, {
       actor_id: uid(req) as UserId,
