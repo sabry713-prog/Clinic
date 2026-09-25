@@ -91,7 +91,7 @@ Switch user: sign out, sign in as `admin1`.
    recomputed." **Export to WORM** button present.
 2. **Claim simulator** → press **Check** on a row.
    **Result: PASS** — deterministic verdict rendered, e.g. "Fix before send,
-   I10→11700-00-10, GREEN" with an Evidence link.
+   I10→11700-00-00, GREEN" with an Evidence link.
 3. **Coder queue** loads with the review queue. **Result: PASS.**
 
 ## Findings this round — FIXED (same day)

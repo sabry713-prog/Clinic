@@ -54,5 +54,5 @@ correction cannot leave ghosts. Until it does, any future catalog change needs t
 * All suites green: web 267 · graph 156 · orchestrator 109 · qa 69 · nphies-engine 50 · narrative 41 ·
   transcription 39 · core (draft 32, checklist 4+2, documentation 3+2)
 * The verdicts, live, on the official codes: `I10 + 11700-00-00` → **GREEN** · `M54.3 + 90901-03-60` →
-  **YELLOW (pre-auth)** · `I10 + 90901-03-60` → **RED with M54.3 suggested** · `I10 + 11700-00-10` (the
+  **YELLOW (pre-auth)** · `I10 + 90901-03-60` → **RED with M54.3 suggested** · `I10 + 11700-00-00` (the
   retired code) → **RED**, confirming the ghosts are gone

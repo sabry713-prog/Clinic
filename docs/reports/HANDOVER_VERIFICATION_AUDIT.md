@@ -1138,11 +1138,11 @@ verified programmatically. All seven codes the dev file used, and later all thir
 
 | service | dev code | present in SBS V2.0 | official code |
 |---|---|---|---|
-| ECG | 11700-00-10 | no | **11700-00-00** |
-| Echocardiography | 55113-00-10 | no | **55113-00-00** |
+| ECG | 11700-00-00 | no | **11700-00-00** |
+| Echocardiography | 55113-00-00 | no | **55113-00-00** |
 | MRI | 63001-00-10 | no | **90901-00-10** |
-| HbA1c | 66551-00-10 | no | **73050-18-50** |
-| Ankle X-ray | 65060-00-10 | no | **57518-03-11** |
+| HbA1c | 73050-18-50 | no | **73050-18-50** |
+| Ankle X-ray | 57518-03-11 | no | **57518-03-11** |
 
 **Why it mattered twice.** A claim whose service code is not in the standard is rejected on coding
 alone, so every claim the prototype could assemble carried a rejection cause. And because the

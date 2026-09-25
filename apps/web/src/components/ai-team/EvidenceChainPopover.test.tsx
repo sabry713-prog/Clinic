@@ -71,10 +71,10 @@ LIMIT 1
   const GRAPH_NECESSITY_CHAIN: EvidenceChain = {
     steps: [
       { node_type: "NphiesDiagnosis", properties: { icd10: "I10" } },
-      { node_type: "NphiesService", properties: { code: "11700-00-10" } },
+      { node_type: "NphiesService", properties: { code: "11700-00-00" } },
       { node_type: "NecessityRule", properties: { pre_auth_required: false, status: "GREEN" } },
     ],
-    rendered: "NphiesDiagnosis(icd10=I10) -> NphiesService(code=11700-00-10) -> NecessityRule(pre_auth_required=False, status=GREEN)",
+    rendered: "NphiesDiagnosis(icd10=I10) -> NphiesService(code=11700-00-00) -> NecessityRule(pre_auth_required=False, status=GREEN)",
     cypher: [NECESSITY_LOOKUP_CYPHER],
   };
 
@@ -83,7 +83,7 @@ LIMIT 1
       <EvidenceChainPopover
         evidenceChain={GRAPH_NECESSITY_CHAIN}
         triggerLabel="Evidence"
-        title="Necessity verdict: I10→11700-00-10"
+        title="Necessity verdict: I10→11700-00-00"
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Evidence" }));
@@ -91,7 +91,7 @@ LIMIT 1
 
     // Assertion title renders.
     expect(within(dialog).getByTestId("evidence-title")).toHaveTextContent(
-      "Necessity verdict: I10→11700-00-10",
+      "Necessity verdict: I10→11700-00-00",
     );
 
     // Object-equality, steps: every node_type from the chain object appears.

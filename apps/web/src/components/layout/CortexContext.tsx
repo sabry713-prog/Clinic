@@ -518,7 +518,7 @@ const MOCK_ORDERS: readonly OrderLine[] = [
     id: "o1",
     category: "imaging",
     display: "Electrocardiogram (ECG), 12 lead",
-    code: "11700-00-10",
+    code: "11700-00-00",
     codeSystem: "SBS",
     nphiesStatus: "green",
     nphiesDetail: "Approved / covered — NPHIES code matched to documented diagnosis I10 (essential hypertension).",

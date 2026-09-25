@@ -63,9 +63,9 @@ def graph():
 @pytest.mark.parametrize(
     "diagnosis,service",
     [
-        ("I10", "11700-00-10"),      # hypertension -> ECG
-        ("E11.9", "66551-00-10"),    # T2DM -> HbA1c
-        ("J45.9", "11506-00-10"),    # asthma -> spirometry
+        ("I10", "11700-00-00"),      # hypertension -> ECG
+        ("E11.9", "73050-18-50"),    # T2DM -> HbA1c
+        ("J45.9", "11506-00-00"),    # asthma -> spirometry
         ("R07.4", "58500-00-10"),    # chest pain -> chest X-ray
         ("N18.3", "66500-00-10"),    # CKD3 -> renal profile
     ],
@@ -91,10 +91,10 @@ def test_justified_medication_pairings_return_true(graph, diagnosis, medication)
 @pytest.mark.parametrize(
     "diagnosis,service",
     [
-        ("S93.4", "66551-00-10"),   # ankle sprain -> HbA1c: not a recorded rule
+        ("S93.4", "73050-18-50"),   # ankle sprain -> HbA1c: not a recorded rule
         ("J06.9", "11000-00-10"),   # URTI -> EEG: not a recorded rule
         ("I10", "R03AC02"),         # hypertension -> salbutamol: not recorded
-        ("Z99.9", "11700-00-10"),   # unknown diagnosis
+        ("Z99.9", "11700-00-00"),   # unknown diagnosis
         ("I10", "99999-00-10"),     # unknown service
     ],
 )
@@ -103,12 +103,12 @@ def test_unjustified_pairings_return_false(graph, diagnosis, service):
 
 
 def test_codes_are_normalized_case_and_whitespace(graph):
-    assert check_nphies_necessity("  i10  ", " 11700-00-10 ", client=graph) is True
+    assert check_nphies_necessity("  i10  ", " 11700-00-00 ", client=graph) is True
 
 
 @pytest.mark.parametrize(
     "diagnosis,service",
-    [("", "11700-00-10"), ("I10", ""), ("", ""), (None, None)],
+    [("", "11700-00-00"), ("I10", ""), ("", ""), (None, None)],
 )
 def test_empty_codes_return_false_without_querying(graph, diagnosis, service):
     assert check_nphies_necessity(diagnosis, service, client=graph) is False
@@ -116,7 +116,7 @@ def test_empty_codes_return_false_without_querying(graph, diagnosis, service):
 
 
 def test_result_is_a_real_bool(graph):
-    result = check_nphies_necessity("I10", "11700-00-10", client=graph)
+    result = check_nphies_necessity("I10", "11700-00-00", client=graph)
     assert isinstance(result, bool)
 
 
@@ -126,14 +126,14 @@ def test_empty_result_set_is_false():
         def run(self, cypher, **params):
             return []
 
-    assert check_nphies_necessity("I10", "11700-00-10", client=EmptyGraph()) is False
+    assert check_nphies_necessity("I10", "11700-00-00", client=EmptyGraph()) is False
 
 
 def test_query_uses_parameters_not_string_interpolation(graph):
-    check_nphies_necessity("I10", "11700-00-10", client=graph)
+    check_nphies_necessity("I10", "11700-00-00", client=graph)
     cypher, params = graph.calls[0]
     assert cypher == NECESSITY_CYPHER
-    assert params == {"diagnosis_code": "I10", "service_code": "11700-00-10"}
+    assert params == {"diagnosis_code": "I10", "service_code": "11700-00-00"}
     assert "I10" not in cypher  # code never embedded in the statement
 
 
@@ -141,14 +141,14 @@ def test_query_uses_parameters_not_string_interpolation(graph):
 # explain_nphies_necessity
 # --------------------------------------------------------------------------
 def test_explain_returns_rule_provenance(graph):
-    rows = explain_nphies_necessity("I10", "11700-00-10", client=graph)
+    rows = explain_nphies_necessity("I10", "11700-00-00", client=graph)
     assert len(rows) == 1
     assert rows[0]["rule_id"] == "NEC-0001"
     assert rows[0]["target_type"] == "service"
 
 
 def test_explain_returns_empty_for_unjustified(graph):
-    assert explain_nphies_necessity("S93.4", "66551-00-10", client=graph) == []
+    assert explain_nphies_necessity("S93.4", "73050-18-50", client=graph) == []
 
 
 # --------------------------------------------------------------------------

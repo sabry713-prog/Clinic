@@ -276,9 +276,9 @@ async function seed(): Promise<void> {
       sbsCode: string;
     }[] = [
       // I10 (hypertension) -> ECG: documented rule, no pre-auth -> GREEN.
-      { mrn: "MRN-006", conditionSnomed: "38341003", orderId: "00000000-0000-4000-8000-0000000000b1", orderCode: "29303009", category: "procedure", sbsCode: "11700-00-10" },
+      { mrn: "MRN-006", conditionSnomed: "38341003", orderId: "00000000-0000-4000-8000-0000000000b1", orderCode: "29303009", category: "procedure", sbsCode: "11700-00-00" },
       // E11.9 (T2DM) -> HbA1c: documented rule, no pre-auth -> GREEN.
-      { mrn: "MRN-008", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b2", orderCode: "43396009", category: "laboratory", sbsCode: "66551-00-10" },
+      { mrn: "MRN-008", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b2", orderCode: "43396009", category: "laboratory", sbsCode: "73050-18-50" },
       // E11.9 (T2DM) -> lumbar MRI: NO documented rule -> RED (conservative
       // pre-auth default) -- the at-risk finding for the coder review queue.
       { mrn: "MRN-007", conditionSnomed: "44054006", orderId: "00000000-0000-4000-8000-0000000000b3", orderCode: "113091000", category: "imaging", sbsCode: "63001-00-10" },

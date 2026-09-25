@@ -51,7 +51,7 @@ describe("LinkageVerdictsService", () => {
 
   it("returns graph verdicts per candidate pair (order with SBS × coded active condition)", async () => {
     const { service, query } = makeService("ok");
-    query.mockResolvedValueOnce({ rows: [{ id: "o1", sbs_code: "11700-00-10" }] });
+    query.mockResolvedValueOnce({ rows: [{ id: "o1", sbs_code: "11700-00-00" }] });
     query.mockResolvedValueOnce({ rows: [{ id: "c1", icd10_code: "I10" }] });
 
     const result = await service.verdicts("u1", "p1");

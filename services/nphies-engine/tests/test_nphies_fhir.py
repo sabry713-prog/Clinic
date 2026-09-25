@@ -379,9 +379,9 @@ async def test_stub_prior_auth_never_simulates_an_approval():
 async def test_stub_outcome_is_deterministic_per_submission():
     client = NphiesFhirClient(mode="stub")
     try:
-        first = await client.submit_prior_auth("enc-det", "I10", "11700-00-10", SOAP_NOTE)
-        second = await client.submit_prior_auth("enc-det", "I10", "11700-00-10", SOAP_NOTE)
-        other = await client.submit_prior_auth("enc-other", "I10", "11700-00-10", SOAP_NOTE)
+        first = await client.submit_prior_auth("enc-det", "I10", "11700-00-00", SOAP_NOTE)
+        second = await client.submit_prior_auth("enc-det", "I10", "11700-00-00", SOAP_NOTE)
+        other = await client.submit_prior_auth("enc-other", "I10", "11700-00-00", SOAP_NOTE)
     finally:
         await client.aclose()
     assert first["outcome"] == second["outcome"]

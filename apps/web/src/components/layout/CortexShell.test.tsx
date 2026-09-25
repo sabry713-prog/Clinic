@@ -80,7 +80,7 @@ describe("Timeline & orders pane", () => {
   it("renders order lines with their codes", () => {
     renderShell();
     expect(screen.getByText("Electrocardiogram (ECG), 12 lead")).toBeInTheDocument();
-    expect(screen.getByText("SBS 11700-00-10")).toBeInTheDocument();
+    expect(screen.getByText("SBS 11700-00-00")).toBeInTheDocument();
   });
 
   it("renders an NPHIES badge for every order line", () => {

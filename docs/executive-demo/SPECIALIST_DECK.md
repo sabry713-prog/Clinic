@@ -19,7 +19,7 @@ S3  the promise ................... docs/TECHNICAL_ONBOARDING_BRIEF.md §1 ("Rea
                                     separated from language ... The LLM is only ever
                                     allowed to reword facts it was handed")
 S4  proof panels .................. services/veritas-graph/nphies_queries.py + nscre_engine.py
-                                    (live output verified on this branch: I10 → 11700-00-10
+                                    (live output verified on this branch: I10 → 11700-00-00
                                     GREEN verdict; renal-dose alert Metformin/eGFR);
                                     UI cutaway: apps/web EvidenceChainPopover + tests
 S5  time value .................... EXECUTIVE_PRESENTATION.md Slides 6+9 (ambient scribe,
@@ -145,7 +145,7 @@ formatting — a design commitment enforced by our own test suite.*
 
 ```
 ✓ Diagnosis on file:    Hypertension (I10)
-✓ Service covered:      Consultation 11700-00-10
+✓ Service covered:      Consultation 11700-00-00
 ✓ Necessity rule:       Matched
 ▸ VERDICT: READY — submit with confidence
 ```

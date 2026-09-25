@@ -122,7 +122,7 @@ describe("ClaimSimulatorService", () => {
     const readiness = fakeReadinessService(() => "ready");
     const pool = makePool(
       [{ id: "p-red", mrn: "MRN-3", display_name: "C", claims: "1", rejections: "0" }],
-      [{ order_id: "sr-1", order_display: "Lumbar MRI", icd10_code: "Z00.0", sbs_code: "56241-00-10" }],
+      [{ order_id: "sr-1", order_display: "Lumbar MRI", icd10_code: "Z00.0", sbs_code: "90901-03-60" }],
     );
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -144,7 +144,7 @@ describe("ClaimSimulatorService", () => {
     const readiness = fakeReadinessService(() => "ready");
     const pool = makePool(
       [{ id: "p-yellow", mrn: "MRN-4", display_name: "D", claims: "1", rejections: "0" }],
-      [{ order_id: "sr-2", order_display: "Lumbar MRI", icd10_code: "M54.3", sbs_code: "56241-00-10" }],
+      [{ order_id: "sr-2", order_display: "Lumbar MRI", icd10_code: "M54.3", sbs_code: "90901-03-60" }],
     );
     global.fetch = graphFetch("YELLOW");
 
@@ -156,7 +156,7 @@ describe("ClaimSimulatorService", () => {
   it("degrades honestly to UNAVAILABLE when the graph service is unreachable", async () => {
     const readiness = fakeReadinessService(() => "ready");
     const pool = makePool(PATIENTS, [
-      { order_id: "sr-1", order_display: "ECG", icd10_code: "I10", sbs_code: "11700-00-10" },
+      { order_id: "sr-1", order_display: "ECG", icd10_code: "I10", sbs_code: "11700-00-00" },
     ]);
     global.fetch = jest.fn().mockRejectedValue(
       new Error("connection refused"),
