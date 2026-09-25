@@ -207,17 +207,9 @@ describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
    * complaints. Each was found by looking at the running app -- the slowest, most expensive way.
    * These are the assertions that would have caught them, and they run in a second, not after a demo.
    */
-  // NOT COVERED HERE: "all four SOAP fields fill in demo playback".
-  //
-  // Attempted three times and it does not pass in this harness: the stream that fills the note does
-  // not advance under fake timers, and under real timers the fields were still empty after twenty
-  // seconds. In the running app the behaviour is correct -- it was verified in the browser, and it is
-  // the bug that was fixed -- so this is a harness limitation, not a product failure.
-  //
-  // It is written here rather than left as an unfinished test because a test that cannot observe its
-  // subject gets deleted or ignored, and then the fix it was meant to protect is unprotected. Closing
-  // it means driving the provider's stream directly instead of the pane's mode toggle.
-
+  // The SOAP-source rule that regressed is covered by soapSource.test.ts. Extracting it into a pure
+  // function made the assertion possible without this provider and without timers -- the two things
+  // that defeated three attempts to test it here. What failed was the harness, never the product.
   it("shows only rows true of any encounter when the note says nothing clinical yet", () => {
     // The regression: a cardiac workup (cardiovascular examination, ECG, lipid profile) was in the
     // template for every patient, so an abdominal complaint came with rows that could not apply.

@@ -227,6 +227,24 @@ const MOCK_TRANSCRIPT: readonly TranscriptLine[] = [
   { id: "t7", speaker: "clinician", text: "Let's get an ECG and review your lipid profile, then follow up in a week.", at: "09:08" },
 ];
 
+/**
+ * Which note the encounter shows, decided in one place.
+ *
+ * Extracted because choosing the source is what regressed: the rule was a line inside an effect, where
+ * no test could see it, and it read `liveSoap ?? SOAP_STAGES[...]` -- so a single live call that
+ * returned an empty note shadowed the staged note for the rest of the encounter, and the form sat
+ * blank during demo playback while the transcript kept going. In demo mode the staged note wins,
+ * unconditionally, however much live text has accumulated.
+ */
+export function resolveSoapBase(
+  dictationMode: "live" | "demo",
+  lineCount: number,
+  liveSoap: SoapNote | null,
+): SoapNote {
+  const staged = SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
+  return dictationMode === "demo" ? staged : (liveSoap ?? staged);
+}
+
 const EMPTY_SOAP: SoapNote = { subjective: "", objective: "", assessment: "", plan: "" };
 
 /** SOAP text revealed progressively as the mock transcript streams in.
@@ -1260,8 +1278,7 @@ export function CortexProvider({
     // with the Objective still carrying the nurse's vitals. The screen looked like a playback that did
     // nothing, while the transcript filled normally behind it. Reported from testing, reproduced, and
     // this is the line that was wrong.
-    const staged = SOAP_STAGES[Math.min(lineCount, SOAP_STAGES.length - 1)] ?? EMPTY_SOAP;
-    const base = dictationMode === "demo" ? staged : (liveSoap ?? staged);
+    const base = resolveSoapBase(dictationMode, lineCount, liveSoap);
     // Objective leads with the vitals the nurse recorded before the encounter.
     // They are read from the record, and the clinician's own edits still win
     // because soapOverride is applied last.
