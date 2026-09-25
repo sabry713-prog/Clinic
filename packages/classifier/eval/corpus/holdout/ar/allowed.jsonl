@@ -1,0 +1,45 @@
+{"text": "ما هو آخر قياس لمستوى الكرياتينين؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى تم إدخال المريض إلى المستشفى؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي الأدوية الحالية للمريض؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو التشخيص المسجل عند الدخول؟", "label": "ALLOWED", "language": "ar"}
+{"text": "أظهر لي نتائج تحليل الدم الكامل.", "label": "ALLOWED", "language": "ar"}
+{"text": "هل للمريض تاريخ مع الالتهاب الرئوي؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو آخر قياس لضغط الدم؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي الحساسيات الموثقة للمريض؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي الإجراءات التي أجريت خلال هذا الدخول؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو تاريخ ميلاد المريض؟", "label": "ALLOWED", "language": "ar"}
+{"text": "هل خضع المريض لعمليات جراحية سابقة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي الفحوصات المخبرية المطلوبة في هذا الدخول؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو مستوى البوتاسيوم عند الدخول؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي قراءة الأكسجين في الدم آخر مرة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو وزن المريض الموثق؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى كانت آخر زيارة للعيادة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي الأمراض المزمنة الموثقة للمريض؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو مستوى السكر في الدم الآن؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو آخر مستوى لـ HbA1c؟", "label": "ALLOWED", "language": "ar"}
+{"text": "أظهر لي قائمة الأدوية الكاملة.", "label": "ALLOWED", "language": "ar"}
+{"text": "وش آخر قياس للسكر؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش أدويته الحالية؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى آخر جرعة انسولين أخذها؟", "label": "ALLOWED", "language": "ar"}
+{"text": "كم قيمة الكرياتينين آخر مرة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وريني نتائج التحاليل الأخيرة", "label": "ALLOWED", "language": "ar"}
+{"text": "أعطني قائمة أدويته الحالية", "label": "ALLOWED", "language": "ar"}
+{"text": "وش تاريخ دخوله المستشفى؟", "label": "ALLOWED", "language": "ar"}
+{"text": "كم عدد كريات الدم البيضاء المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي حساسيته المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وش آخر قراءة ضغط مسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى تمت آخر استشارة موثقة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش التشخيص المسجل عند الدخول؟", "label": "ALLOWED", "language": "ar"}
+{"text": "أعطني قيم الـ hemoglobin المسجلة", "label": "ALLOWED", "language": "ar"}
+{"text": "كم مرة تكرر تحليل الكرياتينين؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وش الجرعة المسجلة للميتفورمين؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هو رقم الملف الطبي؟", "label": "ALLOWED", "language": "ar"}
+{"text": "وريني الملاحظات الموثقة اليوم", "label": "ALLOWED", "language": "ar"}
+{"text": "متى بدأ أخذ الـ warfarin؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش العيادات اللي راجعها؟", "label": "ALLOWED", "language": "ar"}
+{"text": "كم قيمة الصوديوم المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ما هي تشخيصاته المزمنة المسجلة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "أعطني آخر خمس قراءات للسكر", "label": "ALLOWED", "language": "ar"}
+{"text": "وش وزن المريض المسجل؟", "label": "ALLOWED", "language": "ar"}
+{"text": "متى آخر زيارة عيادة موثقة؟", "label": "ALLOWED", "language": "ar"}
+{"text": "ايش الأعراض اللي سجلها الطبيب؟", "label": "ALLOWED", "language": "ar"}
