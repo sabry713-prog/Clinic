@@ -80,6 +80,14 @@ describe("suggestCodes — vocabulary the clinician actually writes", () => {
     expect(out.map((t) => t.code)).toContain("14760008");
   });
 
+  it("finds the common presentations a dictated note actually uses", () => {
+    // Words a clinician types, against codes quoted from published HL7 value sets.
+    const codes = suggestCodes("vomiting and diarrhoea with burning on urination", 8).map((t) => t.code);
+    expect(codes).toContain("422400008"); // Vomiting
+    expect(codes).toContain("62315008"); // Diarrhea
+    expect(codes).toContain("49650001"); // Dysuria
+  });
+
   it("still proposes nothing for a note with no clinical term", () => {
     expect(suggestCodes("review in one week").length).toBe(0);
   });

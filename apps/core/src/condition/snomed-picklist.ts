@@ -42,6 +42,17 @@ export const SNOMED_PICKLIST: readonly CodedTerm[] = [
     synonyms: ["bowel obstruction", "small bowel obstruction", "blocked bowel", "blockage", "obstruction", "ileus", "small intestine"] },
   { code: "14760008", code_display: "Constipation",
     synonyms: ["constipated", "severe constipation", "bowels not opened", "infrequent bowel movement"] },
+  // Codes quoted from published HL7 value sets (the International Patient Summary problem-list and the
+  // HAI reportable-findings set), not chosen from memory. The synonyms are how the words appear in a
+  // dictated note: nobody dictates "dysuria" and few spell "diarrhoea" the same way twice.
+  { code: "422400008", code_display: "Vomiting",
+    synonyms: ["vomited", "throwing up", "vomits", "vomiting blood"] },
+  { code: "62315008", code_display: "Diarrhea",
+    synonyms: ["diarrhoea", "loose stool", "loose stools", "watery stool", "frequent stool"] },
+  { code: "49650001", code_display: "Dysuria",
+    synonyms: ["burning on urination", "painful urination", "burning when passing urine", "pain on urination"] },
+  { code: "18165001", code_display: "Jaundice",
+    synonyms: ["yellow eyes", "yellow skin", "icterus", "yellowish discoloration"] },
   { code: "161891005", code_display: "Backache" },
   { code: "57676002", code_display: "Joint pain (arthralgia)" },
   { code: "422587007", code_display: "Nausea" },
@@ -101,8 +112,14 @@ export function suggestCodes(query: string, limit = 5): CodedTerm[] {
     const words = significantWords([display, ...(term.synonyms ?? [])].join(" "));
     const matched = words.filter((w) => qWords.has(w)).length;
     const coverage = words.length === 0 ? 0 : matched / words.length;
-    const qualifies = matched >= 2 || coverage >= 0.5 || (words.length === 1 && matched === 1);
-    let score = coverage * 10 + matched;
+    // A synonym is an alternative NAME, not a bag of words. Scoring "burning on urination" by shared
+    // words scores it at one against seven, so a term with many synonyms needed more matches than one
+    // with few -- the vocabulary got harder to hit the more thorough it became. A synonym present
+    // whole is the strongest signal this matcher has, and it is what a name is for.
+    const synonymHit = (term.synonyms ?? []).some((syn) => q.includes(syn.toLowerCase()));
+    const qualifies =
+      synonymHit || matched >= 2 || coverage >= 0.5 || (words.length === 1 && matched === 1);
+    let score = coverage * 10 + matched + (synonymHit ? 5 : 0);
     if (q.includes(head)) score += 5;
     return { term, score, qualifies };
   }).filter((s) => s.qualifies && s.score > 0);
