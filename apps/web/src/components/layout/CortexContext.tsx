@@ -1407,9 +1407,9 @@ export function CortexProvider({
   // are derived, so persisting them would create a second source of truth that could disagree with
   // the note. A lost write must not break the encounter — the clinician can simply repeat it.
   const persistChecklistDecision = useCallback(
-    (itemId: string, state: "done" | "dismissed" | null) => {
+    (itemId: string, state: "done" | "dismissed" | null, label?: string | null) => {
       if (!patientId || !encounterId) return;
-      void api.patients.setChecklistDecision(patientId, encounterId, itemId, state).catch(() => {
+      void api.patients.setChecklistDecision(patientId, encounterId, itemId, state, label).catch(() => {
         /* the checklist keeps working in memory */
       });
     },
@@ -1434,11 +1434,20 @@ export function CortexProvider({
         const doneIds = new Set(r.data.filter((d) => d.state === "done").map((d) => d.item_id));
         dismissedChecklistIds.current = new Set([...dismissedChecklistIds.current, ...dismissed]);
         touchedChecklistIds.current = new Set([...touchedChecklistIds.current, ...doneIds]);
-        setChecklist((prev) =>
-          prev
+        setChecklist((prev) => {
+          const next = prev
             .filter((i) => !dismissed.has(i.id))
-            .map((i) => (doneIds.has(i.id) ? { ...i, done: true } : i)),
-        );
+            .map((i) => (doneIds.has(i.id) ? { ...i, done: true } : i));
+          // A row the clinician typed lives in no catalog, so it exists only if the record says so:
+          // its text comes back with the decision, and without this the item they added is gone the
+          // next time the page loads -- the one thing adding it was meant to prevent.
+          for (const d of r.data) {
+            if (d.label && !next.some((i) => i.id === d.item_id)) {
+              next.push({ id: d.item_id, label: d.label, done: d.state === "done" });
+            }
+          }
+          return next;
+        });
       })
       .catch(() => {
         /* the checklist still works in memory; the decisions simply do not return */
@@ -1459,9 +1468,17 @@ export function CortexProvider({
     setChecklist((prev) => {
       // A row the clinician already has, however it got there, is not duplicated.
       if (prev.some((i) => i.label.trim().toLowerCase() === text.toLowerCase())) return prev;
-      return [...prev, { id: `phys-${Date.now().toString(36)}`, label: text, done: false }];
+      const item = { id: `phys-${Date.now().toString(36)}`, label: text, done: false };
+      // Persist with the text: the id alone means nothing to anyone reading the row back, so without
+      // this the clinician's own item is gone the next time the page loads.
+      if (patientId && encounterId) {
+        void api.patients
+          .setChecklistDecision(patientId, encounterId, item.id, "done", text)
+          .catch(() => { /* the row stays for this encounter; the next load will not find it */ });
+      }
+      return [...prev, item];
     });
-  }, []);
+  }, [patientId, encounterId]);
 
   const removeChecklistItem = useCallback(
     (id: string) => {

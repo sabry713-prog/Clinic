@@ -1452,7 +1452,7 @@ export const api = {
     /** The clinician's checklist decisions for one encounter: ticks the derivation did not catch,
      *  and dismissals (which are per encounter — a suggestion inapplicable today may apply later). */
     checklistDecisions: (patientId: string, encounterId: string) =>
-      request<{ data: { item_id: string; state: "done" | "dismissed" }[] }>(
+      request<{ data: { item_id: string; state: "done" | "dismissed"; label?: string | null }[] }>(
         `/api/v1/patients/${patientId}/checklist?encounter_id=${encodeURIComponent(encounterId)}`,
       ),
 
@@ -1461,10 +1461,12 @@ export const api = {
       encounterId: string,
       itemId: string,
       state: "done" | "dismissed" | null,
+      // Only a row the clinician typed carries one; catalog rows are keyed by an id both sides know.
+      label?: string | null,
     ) =>
       request<void>(
         `/api/v1/patients/${patientId}/checklist?encounter_id=${encodeURIComponent(encounterId)}`,
-        { method: "PUT", body: JSON.stringify({ item_id: itemId, state }) },
+        { method: "PUT", body: JSON.stringify({ item_id: itemId, state, ...(label ? { label } : {}) }) },
       ),
 
     linkageVerdicts: (patientId: string) =>
