@@ -303,29 +303,70 @@ describe("ClaimReadinessService — R15 order prerequisites", () => {
   const scope = { assertPatientInScope: jest.fn().mockResolvedValue(undefined) } as unknown as PatientScopeService;
 
   /** Answers by SQL, not by call order: the checks' sequence is an implementation detail, and a test
-   *  that pins it breaks every time a check is added -- which is what happened to the mocks above. */
-  const poolAnswering = (prereqRows: readonly unknown[]) => {
-    const pool = makeSequencedPool([]);
-    (pool.query as unknown as jest.Mock).mockImplementation(async (sql: string) =>
-      /order_prerequisite/.test(String(sql)) ? { rows: prereqRows } : { rows: [] },
-    );
-    return pool;
-  };
+   *  that pins it breaks every time a check is added -- which is what happened to the mocks above.
+   *
+   *  Built directly rather than on makeSequencedPool: that helper's chain already ends with a slot
+   *  answering this query, and a scripted answer beats an implementation, so the rows below never
+   *  arrived. A mock whose answer depends on precedence between two mechanisms is a mock that will
+   *  lie again. */
+  const poolAnswering = (prereqRows: readonly unknown[]): Pool =>
+    ({
+      query: jest.fn(async (sql: unknown) =>
+        /order_prerequisite/.test(String(sql)) ? { rows: prereqRows } : { rows: [] },
+      ),
+    }) as unknown as Pool;
 
   const run = async (prereqRows: readonly unknown[]) => {
     const svc = new ClaimReadinessService(poolAnswering(prereqRows), scope, stubLinkage());
     return svc.evaluate(USER_ID, PATIENT_ID);
   };
 
-  // The warning path (a prerequisite genuinely unmet) is NOT covered here. The mock would not
-  // return the prerequisite rows for this query, and after two attempts the honest move is to record
-  // the gap rather than keep tweaking a test until it agrees -- a test bent to pass proves nothing.
-  // That path is verified against the live database instead: a seeded patient has an MRI with no
-  // echocardiography on record, and the check names it.
+  it("warns and names the order that is waiting on its prerequisite", async () => {
+    // The gap this closes: the warning path was verified only against the live database, because the
+    // mock could not answer the query. The cause was mock precedence, not the check.
+    const out = await run([{ order_display: "MRI", requires_display: "Echocardiography", rationale: null }]);
+    const check = out.checks.find((c) => c.id === "order_prerequisites")!;
+    expect(check.status).toBe("warning");
+    expect(check.detail).toContain("MRI needs Echocardiography");
+  });
+
   it("passes when no ordered service is waiting on a prerequisite", async () => {
     const out = await run([]);
     const check = out.checks.find((c) => c.id === "order_prerequisites")!;
     expect(check.status).toBe("pass");
     expect(check.detail).toContain("No ordered service");
+  });
+});
+
+describe("ClaimReadinessService — a lapsed pre-authorization is not an authorization", () => {
+  const USER_ID = "user-001";
+  const PATIENT_ID = "patient-001";
+  const scope = { assertPatientInScope: jest.fn().mockResolvedValue(undefined) } as unknown as PatientScopeService;
+
+  it("never counts an expired row as obtained", async () => {
+    // The state exists in the schema and nothing sets it yet, which is exactly why the READ side has
+    // to be pinned: the day something starts marking rows expired, an overly broad filter would turn
+    // a lapsed authorization into a satisfied requirement, and the gate would wave the claim through.
+    const sqls: string[] = [];
+    const pool = {
+      // Answer per query, not one shape for all: a blanket row made the eligibility check read it as
+      // an eligibility record and dereference fields it does not have.
+      query: jest.fn(async (sql: unknown) => {
+        const s = String(sql);
+        sqls.push(s);
+        return /nphies_preauth/.test(s) ? { rows: [{ n: "0" }] } : { rows: [] };
+      }),
+    } as unknown as Pool;
+    const svc = new ClaimReadinessService(pool, scope, stubLinkage({
+      graph_available: true,
+      pairs: [{ pre_auth_required: true }],
+    }));
+
+    await svc.evaluate(USER_ID, PATIENT_ID);
+
+    const recordQuery = sqls.find((s) => /nphies_preauth/.test(s));
+    expect(recordQuery).toBeDefined();
+    expect(recordQuery).toContain("status IN ('queued','submitted','approved')");
+    expect(recordQuery).not.toContain("'expired'");
   });
 });

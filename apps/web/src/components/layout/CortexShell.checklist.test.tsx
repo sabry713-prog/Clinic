@@ -201,6 +201,33 @@ describe("Smart checklist auto-proposal — wiring (CortexProvider)", () => {
       expect(await screen.findAllByLabelText("Review diet")).toHaveLength(1);
     });
 
+  /**
+   * Step 1 — Document. This stage has been "fixed" more than once and come back: the SOAP fields
+   * stopped filling, an AI Team drawer covered the form, a cardiac checklist appeared for abdominal
+   * complaints. Each was found by looking at the running app -- the slowest, most expensive way.
+   * These are the assertions that would have caught them, and they run in a second, not after a demo.
+   */
+  // NOT COVERED HERE: "all four SOAP fields fill in demo playback".
+  //
+  // Attempted three times and it does not pass in this harness: the stream that fills the note does
+  // not advance under fake timers, and under real timers the fields were still empty after twenty
+  // seconds. In the running app the behaviour is correct -- it was verified in the browser, and it is
+  // the bug that was fixed -- so this is a harness limitation, not a product failure.
+  //
+  // It is written here rather than left as an unfinished test because a test that cannot observe its
+  // subject gets deleted or ignored, and then the fix it was meant to protect is unprotected. Closing
+  // it means driving the provider's stream directly instead of the pane's mode toggle.
+
+  it("shows only rows true of any encounter when the note says nothing clinical yet", () => {
+    // The regression: a cardiac workup (cardiovascular examination, ECG, lipid profile) was in the
+    // template for every patient, so an abdominal complaint came with rows that could not apply.
+    renderScribe([]);
+    expect(screen.getByLabelText("Document onset and duration")).toBeInTheDocument();
+    expect(screen.getByLabelText("Record vital signs")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Order ECG")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Review lipid profile")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Cardiovascular examination")).not.toBeInTheDocument();
+  });
   it("ticks what the pasted note documents, and leaves vitals to the record", async () => {
     const container = renderScribe([]);
     const textareas = container.querySelectorAll("textarea");
